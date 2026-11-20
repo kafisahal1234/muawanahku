@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "preact/hooks";
 import htm from "htm";
 import { subscribe, onToast } from "./store.js";
 import { LOGO } from "./data.js";
+import { Ikon, adaIkon, WARNA } from "./ikon.js";
 export const html = htm.bind(h);
 
 // ---------------- navigasi (tombol/gesture kembali Android & iOS ikut bekerja) ----------------
@@ -85,6 +86,8 @@ const P = {
   printer: "M6 9V3h12v6M6 18H4v-7h16v7h-2M7 14h10v7H7z",
   mail: "M4 6h16v12H4zM4 7l8 6 8-6",
   send: "M4 12l16-8-6 16-2.5-6.5zM11.5 13.5L20 4",
+  chat: "M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-8l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM8 10.5h.01M12 10.5h.01M16 10.5h.01",
+  right: "M9 6l6 6-6 6",
   chev: "M9 6l6 6-6 6",
   sparkle: "M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8zM5 2l.6 1.4L7 4l-1.4.6L5 6l-.6-1.4L3 4l1.4-.6z",
   camera: "M4 7h4l2-3h4l2 3h4v13H4zM12 10a4 4 0 1 1 0 8 4 4 0 0 1 0-8z",
@@ -98,7 +101,8 @@ export const TILE = { emerald: ["#22B573", "#0B7A45"], blue: ["#4B8DF0", "#1D58C
 // ---------------- komponen ----------------
 export const Logo = ({ s = 44 }) => html`<span class="logo" style=${`width:${s}px;height:${s}px`}><img src=${LOGO} alt="Logo Kampung Qur'an Al Muawanah" /></span>`;
 export function Tile({ icon, label, color = "emerald", badge, onClick }) {
-  return html`<button class="tile" onClick=${onClick}><span class="tile-ic" style=${`background:linear-gradient(145deg,${(TILE[color] || TILE.emerald)[0]},${(TILE[color] || TILE.emerald)[1]});--sh:${(TILE[color] || TILE.emerald)[1]}`}><${Icon} n=${icon} s=${24} c="#fff" w=${2} />${badge ? html`<b class="badge">${badge}</b>` : null}</span><span class="tile-lb">${label}</span></button>`;
+  const w = WARNA[color] || WARNA.emerald;
+  return html`<button class="tile" onClick=${onClick}><span class="tile-ic" style=${`background:${w[2]}`}>${adaIkon(icon) ? html`<${Ikon} n=${icon} warna=${color} s=${34} />` : html`<${Icon} n=${icon} s=${28} c=${w[1]} w=${2.2} />`}${badge ? html`<b class="badge">${badge > 99 ? "99+" : badge}</b>` : null}</span><span class="tile-lb">${label}</span></button>`;
 }
 export function Card({ title, right, children, cls = "" }) {
   return html`<section class=${"card " + cls}>${title ? html`<div class="card-h"><h3>${title}</h3>${right || null}</div>` : null}${children}</section>`;

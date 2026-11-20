@@ -11,6 +11,8 @@ import { slotStatus } from "./s_kurikulum.js";
 import { VERSI } from "./s_system.js";
 import { KartuAI, ringkasWali } from "./s_ai.js";
 import { KartuAsisten } from "./s_asisten.js";
+import { Ikon, WARNA } from "./ikon.js";
+import { LOGO } from "./data.js";
 import { aiAda } from "./ai.js";
 const PrivasiIsi = () => html`<div class="prose"><p>Data dipakai hanya untuk administrasi pendidikan pondok: hafalan, absensi, nilai, perizinan, dan pembinaan santri. Data tidak dijual, tidak untuk iklan, dan tidak dibagikan ke pihak luar. Setiap pengguna hanya melihat data sesuai perannya; wali hanya melihat anaknya sendiri. Kebijakan lengkap ada di menu Akun setelah masuk.</p></div>`;
 
@@ -161,14 +163,69 @@ function tasksFor(st) {
   return out.slice(0, 3);
 }
 
-function Hero({ name, sub, chips, bell, foto, children }) {
-  return html`<header class="appbar"><${Logo} s=${40} /><div class="brand"><b>Muawanah<i>Ku</i></b><small>Kampung Qur'an Al Muawanah</small></div>
-      ${aiAda() ? html`<button class="ab-btn ab-ai" aria-label="Asisten AI" onClick=${() => nav.go("asisten")}><${Icon} n="sparkle" s=${22} /></button>` : null}
-      <button class="ab-btn" aria-label=${bell ? `Pengumuman, ${bell} baru` : "Pengumuman"} onClick=${() => nav.go("pengumuman")}><${Icon} n="bell" s=${24} />${bell ? html`<b>${bell}</b>` : null}</button></header>
-    <div class="hero-wrap"><section class="hero-card"><div class="hc-top"><div class="hc-t"><small>Assalamu'alaikum,</small><h2>${name}</h2><span class="tgl">${L.fmtTgl(L.today())}</span></div>
-      <button class="hc-foto" aria-label="Akun saya" onClick=${() => nav.setTab("akun")}><${FotoAv} src=${foto} nama=${name} size=${58} /></button></div>
-      <div class="chips">${chips.map((c, i) => html`<span class=${"chip " + (i === 0 ? "gold" : "")}>${c}</span>`)}</div>${sub ? html`<div class="small" style="color:#CFE6D9;margin-top:8px">${sub}</div>` : null}
-      ${children ? html`<div class="hc-in">${children}</div>` : null}</section></div>`;
+// ---------- kepala beranda (gaya aplikasi: header solid, kartu ringkasan menimpa header) ----------
+function HomeTop({ nama, sub, bell, foto, children }) {
+  return html`<header class="ht"><div class="ht-row"><span class="ht-logo"><img src=${LOGO} alt="Logo Kampung Qur'an Al Muawanah" /></span>
+      <div class="ht-hi"><small>Assalamu'alaikum,</small><b>${nama}</b></div>
+      <button class="ht-btn ab-btn" aria-label=${bell ? `Pengumuman, ${bell} baru` : "Pengumuman"} onClick=${() => nav.go("pengumuman")}><${Icon} n="bell" s=${23} w=${2.2} />${bell ? html`<b>${bell}</b>` : null}</button>
+      ${aiAda() ? html`<button class="ht-btn ab-btn ab-ai" aria-label="Asisten AI" onClick=${() => nav.go("asisten")}><${Icon} n="chat" s=${23} w=${2.2} /></button>` : null}
+      <button class="ht-foto" aria-label="Akun saya" onClick=${() => nav.setTab("akun")}><${FotoAv} src=${foto} nama=${nama} size=${42} /></button></div>
+      ${sub ? html`<div class="ht-sub">${sub}</div>` : null}</header>
+    <section class="hc">${children}</section>`;
+}
+function Pintas({ items }) {
+  return html`<div class="pintas">${items.slice(0, 4).map(([ic, lab, warna, go, badge]) => html`<button class="pin" onClick=${go}><span class="pin-ic" style=${`background:${(WARNA[warna] || WARNA.emerald)[2]}`}><${Ikon} n=${ic} warna=${warna} s=${32} />${badge ? html`<b class="badge">${badge}</b>` : null}</span><span>${lab}</span></button>`)}</div>`;
+}
+function quickFor(st) {
+  const r = st.roles, q = [], add = (...x) => { if (!q.find(y => y[1] === x[1])) q.push(x); };
+  const hq = L.halaqahOf(st.id), a = L.asramaOf(st.id), mp = [...new Set((st.ajar || []).map(([m]) => m))];
+  if (r.includes("guru_tahfidz") && hq) { add("absen", "Absen Halaqah", "emerald", () => nav.go("absenHalaqah", { sesi: L.sesiNow() })); add("ziyadah", "Ziyadah", "blue", () => nav.go("setorList", { jenis: "ziyadah" }), L.santriHalaqah(hq.id).filter(s => !L.kunci(s).sudah).length || null); }
+  if (r.includes("musyrif") && a) { add("masjid", "MOTD", "indigo", () => nav.go("motd")); add("ceklis", "Mutaba'ah", "teal", () => nav.go("mutabaah")); }
+  if (r.includes("guru_mapel") && mp.length) { add("absen", "Absen Kelas", "orange", () => nav.go("absenKelasPilih", { mapel: mp[0] })); add("nilai", "Input Nilai", "purple", () => nav.go("nilaiPilih", { mapel: mp[0] })); }
+  if (r.includes("wadir_tahfidz")) { add("atur", "Pengelolaan", "emerald", () => nav.go("pengelolaan")); add("unggah", "Data Awal", "teal", () => nav.go("dataAwal")); }
+  if (r.includes("wadir_kurikulum")) add("kalender", "Jadwal", "orange", () => nav.go("jadwal"));
+  if (r.includes("wadir_kesantrian")) { add("pintu", "Surat Izin", "coral", () => nav.go("suratIzin")); add("bap", "Form BAP", "coral", () => nav.go("formBap")); }
+  if (r.includes("admin")) { add("database", "Data Santri", "slate", () => nav.go("santriAdmin")); add("unggah", "Impor Data", "purple", () => nav.go("impor")); }
+  if (r.some(x => ["mudir", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian", "musyrif", "guru_mapel"].includes(x))) add("grafik", "Rekap", "teal", () => nav.go("rekap"));
+  if (r.includes("mudir")) add("medali", "Rapor", "gold", () => nav.go("raporList"));
+  add("toa", "Pengumuman", "gold", () => nav.go("pengumuman"));
+  add("kalender2", "Kalender", "pink", () => nav.go("kalender"));
+  return q;
+}
+// Banner geser (karosel) dengan ornamen geometri
+function Banner({ items }) {
+  const [i, setI] = useState(0);
+  if (!items.length) return null;
+  return html`<div class="bn-wrap"><div class="bn" onScroll=${e => { const el = e.currentTarget; setI(Math.round(el.scrollLeft / (el.firstChild ? el.firstChild.offsetWidth + 12 : 1))); }}>
+      ${items.map(([judul, isi, warna, go, ic]) => html`<button class=${"bn-it " + warna} onClick=${go}><span class="bn-t"><b>${judul}</b><small>${isi}</small></span><span class="bn-ic"><${Ikon} n=${ic} warna=${warna === "bn-emas" ? "gold" : warna === "bn-biru" ? "blue" : "emerald"} s=${46} /></span></button>`)}</div>
+    ${items.length > 1 ? html`<div class="bn-dot">${items.map((_, k) => html`<i class=${k === i ? "on" : ""}></i>`)}</div>` : null}</div>`;
+}
+function bannerFor(st) {
+  const r = st.roles, b = [];
+  if (r.some(x => ["mudir", "wadir_tahfidz", "guru_tahfidz"].includes(x))) { const cs = L.santriList().map(s => L.capaianJuz(s)), ok = cs.filter(c => c.tercapai).length;
+    b.push([`Target ${L.targetSemester()} juz hafalan baru`, `${ok} dari ${cs.length} santri sudah mencapai target semester ini`, "bn-hijau", () => nav.go(r.includes("guru_tahfidz") && !r.includes("mudir") && !r.includes("wadir_tahfidz") ? "tahfidz" : "pengelolaan", r.includes("mudir") ? { ro: true } : {}), "quran"]); }
+  if (aiAda()) b.push(["Tanya Asisten AI", "Cek data santri, cara pakai aplikasi, atau minta dibuatkan kalimat", "bn-biru", () => nav.go("asisten"), "obrolan"]);
+  if (r.includes("admin")) b.push(["Isi data lebih cepat", "Unggah Excel, Word, PDF, atau foto daftar santri, dibaca otomatis", "bn-emas", () => nav.go("impor"), "unggah"]);
+  else if (r.includes("wadir_tahfidz")) b.push(["Unggah data awal hafalan", "Rekap hafalan dari dokumen apa pun langsung terbaca", "bn-emas", () => nav.go("imporAwal"), "unggah"]);
+  else if (r.includes("guru_mapel")) b.push(["Nilai dari Excel atau foto", "Buka Input Nilai, lalu Isi nilai dari dokumen", "bn-emas", () => nav.go("nilaiPilih", { mapel: st.ajar[0][0] }), "nilai"]);
+  return b;
+}
+// Cari fitur: semua menu yang bisa diakses akun ini
+function fiturFor(st, tiles) {
+  const f = tiles.map(t => [t.icon, t.label, t.color, t.go]);
+  quickFor(st).forEach(([ic, lab, w, go]) => { if (!f.find(x => x[1] === lab)) f.push([ic, lab, w, go]); });
+  [["clock", "Riwayat Input", "slate", () => nav.setTab("riwayat")], ["user", "Profil", "blue", () => nav.go("profil")], ["lock", "Ubah Kata Sandi", "slate", () => nav.go("ubahSandi")],
+    ["lock", "Email Pemulihan", "slate", () => nav.go("keamanan")], ["calendar", "Jadwal Saya", "orange", () => nav.setTab("jadwal")], ["users", "Cari Santri", "emerald", () => nav.setTab("cari")]]
+    .forEach(x => { if (!f.find(y => y[1] === x[1])) f.push(x); });
+  if (aiAda()) f.push(["obrolan", "Asisten AI", "blue", () => nav.go("asisten")]);
+  return f;
+}
+function SemuaMenu({ st, tiles }) {
+  const [q, setQ] = useState("");
+  const fit = fiturFor(st, tiles), cari = q.trim().toLowerCase(), hasil = cari ? fit.filter(x => x[1].toLowerCase().includes(cari)) : null;
+  return html`<div class="menu-h"><label class="cari-fitur"><${Icon} n="search" s=${20} w=${2.3} /><input value=${q} placeholder="Cari fitur" aria-label="Cari fitur" onInput=${e => setQ(e.target.value)} />${q ? html`<button type="button" aria-label="Hapus pencarian" onClick=${() => setQ("")}><${Icon} n="x" s=${16} /></button>` : null}</label></div>
+    <div class="menu-box">${hasil ? (hasil.length ? html`<div class="tiles">${hasil.map(([ic, lab, w, go]) => html`<${Tile} icon=${ic} label=${lab} color=${w} onClick=${go} />`)}</div>` : html`<p class="small" style="text-align:center;margin:8px 0">Fitur “${q}” tidak ditemukan.</p>`)
+      : html`<div class="tiles">${tiles.map(t => html`<${Tile} icon=${t.icon} label=${t.label} color=${t.color} badge=${t.badge} onClick=${t.go} />`)}</div>`}</div>`;
 }
 const newPeng = () => all("pengumuman").filter(p => Date.now() - p.ts < 7 * 864e5).length;
 
@@ -181,11 +238,17 @@ function chipsFor(st) {
 
 export function Beranda() {
   useApp();
-  const st = me(), tiles = tilesFor(st), tasks = tasksFor(st), peng = all("pengumuman").sort((a, b) => b.ts - a.ts).slice(0, 2);
-  return html`<${Hero} name=${st.nama} chips=${chipsFor(st)} bell=${newPeng()} foto=${fotoUser(nav.user)}><${Summary} st=${st} /></${Hero}><div class="wrap">
-    <${KartuAsisten} />
-    <${Card} title="Modul" right=${html`<small>Sesuai peran</small>`}><div class="tiles">${tiles.map(t => html`<${Tile} icon=${t.icon} label=${t.label} color=${t.color} badge=${t.badge} onClick=${t.go} />`)}</div></${Card}>
-    ${tasks.length ? html`<${Card} title="Perlu diperhatikan"><div class="list">${tasks.map(([t, s, c, go]) => html`<button class="row" onClick=${go}><span class="row-ic" style=${`background:${c === "coral" ? "#FDE7E3" : c === "gold" ? "#FDF0D3" : "#E6EEFC"};color:${c === "coral" ? "#B3261E" : c === "gold" ? "#8A5A00" : "#1F56B5"}`}><${Icon} n="alert" s=${18} /></span>
+  const st = me(), tiles = tilesFor(st), tasks = tasksFor(st), peng = all("pengumuman").sort((a, b) => b.ts - a.ts)[0];
+  const strip = tasks[0] ? { t: tasks[0][0], s: tasks[0][1], go: tasks[0][3], ic: "bap", w: tasks[0][2] === "coral" ? "coral" : "gold" } : peng ? { t: peng.judul, s: "Pengumuman terbaru", go: () => nav.go("pengumuman"), ic: "toa", w: "gold" } : null;
+  return html`<${HomeTop} nama=${st.pendek || st.nama} sub=${chipsFor(st).join(" · ")} bell=${newPeng()} foto=${fotoUser(nav.user)}>
+      <div class="sum"><${Summary} st=${st} /><button class="sum-go" onClick=${() => (st.roles.some(r => ["mudir", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian", "musyrif", "guru_mapel"].includes(r)) ? nav.go("rekap") : nav.setTab("riwayat"))}>
+        <span>${st.roles.some(r => ["mudir", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian", "musyrif", "guru_mapel"].includes(r)) ? "Lihat rekap lengkap" : "Lihat riwayat input"}</span><${Icon} n="right" s=${20} w=${2.4} /></button></div>
+      <${Pintas} items=${quickFor(st)} /></${HomeTop}>
+    <div class="wrap">
+    ${strip ? html`<button class="strip" onClick=${strip.go}><span class="strip-ic" style=${`background:${WARNA[strip.w][2]}`}><${Ikon} n=${strip.ic} warna=${strip.w} s=${28} /></span><span class="strip-t"><b>${strip.t}</b><small>${strip.s}</small></span><span class="strip-go">Lihat <${Icon} n="right" s=${16} w=${2.4} /></span></button>` : null}
+    <${Banner} items=${bannerFor(st)} />
+    <${SemuaMenu} st=${st} tiles=${tiles} />
+    ${tasks.length > 1 ? html`<${Card} title="Perlu diperhatikan"><div class="list">${tasks.slice(1).map(([t, s, c, go]) => html`<button class="row" onClick=${go}><span class="row-ic" style=${`background:${c === "coral" ? "#FDE7E3" : c === "gold" ? "#FDF0D3" : "#E6EEFC"};color:${c === "coral" ? "#B3261E" : c === "gold" ? "#8A5A00" : "#1F56B5"}`}><${Icon} n="alert" s=${18} /></span>
       <span class="row-t"><b style="white-space:normal">${t}</b><small>${s}</small></span><${Icon} n="right" s=${18} c="#9AB0A5" /></button>`)}</div></${Card}>` : null}
     </div>`;
 }
@@ -250,7 +313,14 @@ export function WaliBeranda() {
   L.motdCatatan(s.id).forEach(c => kab.push([c.ts || 0, `${c.st === "A" ? "Alpa" : "Masbuq"} ${L.WAKTU.find(x => x[0] === c.waktu)[1]} · pelanggaran ringan`, "moon"]));
   kab.sort((x, y) => y[0] - x[0]);
   const peng = all("pengumuman").sort((x, y) => y.ts - x.ts).slice(0, 2);
-  return html`<${Hero} name=${s.nama} chips=${["Kelas " + s.kelas, "Asrama " + a.nama, L.namaHalaqah(s)]} bell=${newPeng()} foto=${fotoUser(nav.user)} /><div class="wrap"><${KartuAsisten} /><${HafalanCard} s=${s} />
+  const h = L.hafalan(s), c = L.capaianJuz(s);
+  return html`<${HomeTop} nama=${"Wali " + (s.panggilan || s.nama.split(" ")[0])} sub=${`${s.nama} · Kelas ${s.kelas} · ${a.nama}`} bell=${newPeng()} foto=${fotoUser(nav.user)}>
+      <div class="sum"><div class="sum-in"><small>Total hafalan ananda</small><div class="sum-big">${L.fmtJumlah(h)}</div>
+        <div class="sum-row"><span>Semester ini <b>${c.juz.toLocaleString("id-ID")}/${c.target} juz</b></span><span>${h.khatam ? "Khatam 30 juz" : `Sedang Juz ${h.aktif}`}</span></div>
+        <span class="sum-bar"><i style=${`width:${c.pct}%`}></i></span></div>
+        <button class="sum-go" onClick=${() => nav.setTab("hafalan")}><span>Lihat perkembangan hafalan</span><${Icon} n="right" s=${20} w=${2.4} /></button></div>
+      <${Pintas} items=${[["quran", "Hafalan", "emerald", () => nav.setTab("hafalan")], ["pintu", "Izin", "coral", () => nav.setTab("izin")], ["orang", "Ananda", "blue", () => nav.setTab("ananda")], aiAda() ? ["obrolan", "Asisten AI", "purple", () => nav.go("asisten")] : ["toa", "Pengumuman", "gold", () => nav.go("pengumuman")]]} /></${HomeTop}>
+    <div class="wrap"><${HafalanCard} s=${s} />
     ${(() => { const rg = L.periodeRange("bulanan"), kh = L.kehadiranHalaqah(s.id, rg), mp = L.mutPersen(s.id, rg), po = L.poinSantri(s.id);
       return html`<${Card} title="Bulan ini" right=${html`<small>${rg.label}</small>`}><div class="stats"><${Stat} label="Hadir halaqah" value=${kh.pct == null ? "—" : kh.pct + "%"} /><${Stat} label="Mutaba'ah" value=${mp.ibadah == null ? "—" : Math.round((mp.ibadah + mp.adab) / 2) + "%"} /><${Stat} label="Poin catatan" value=${po.total} tone=${po.total ? "gold" : ""} /></div></${Card}>`; })()}
     <${KartuAI} judul="Ringkasan untuk Ayah/Bunda" tombol="Buat ringkasan perkembangan" ket="AI merangkum perkembangan ananda dari data pondok dalam bahasa yang mudah dipahami." buat=${() => ringkasWali(s)} />
