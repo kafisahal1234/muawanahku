@@ -27,7 +27,7 @@ export async function initStore() {
     if (window.claude && typeof window.claude.use === "function") got = await window.claude.use("db");
   } catch (e) { got = null; }
   let cloud = false;
-  if (!got && FIREBASE_CONFIG) { try { got = await connectFirestore(FIREBASE_CONFIG); cloud = true; } catch (e) { got = null; } }
+  if (!got && FIREBASE_CONFIG && /^https?:$/.test(location.protocol)) { try { got = await connectFirestore(FIREBASE_CONFIG); cloud = true; } catch (e) { got = null; } }
   if (!got) { S.ready = true; emit(); return; }
   db = got; S.mode = "db"; S.note = cloud ? "Data tersinkron antarperangkat (Firebase)." : "Data tersimpan bersama (semua akun demo melihat data yang sama).";
   COLS.forEach(c => (S.data[c] = {}));
@@ -45,6 +45,7 @@ export async function initStore() {
       pending.delete(c);
       if (pending.size === 0) { S.ready = true; clearTimeout(timer); }
       if (err && err.code === "revoked") S.readonly = true;
+      if (err && err.code === "permission-denied") S.note = "Database menolak akses. Periksa aturan Firestore & login Anonymous.";
       emit();
     });
   });
