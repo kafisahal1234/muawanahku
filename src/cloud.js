@@ -13,7 +13,7 @@ export const FIREBASE_CONFIG = {
 export const FIREBASE_CONFIG = { apiKey: "…", authDomain: "muawanahku.firebaseapp.com", projectId: "muawanahku", appId: "…" };
 */
 // Kunci situs reCAPTCHA v3 untuk App Check (kunci publik, aman ditaruh di kode). Kosong = App Check tidak dipakai.
-export const RECAPTCHA_SITE_KEY = "";
+export const RECAPTCHA_SITE_KEY = "6Lf_niouAAAAAKFfLbbhqqlEmbb_8rvdO5eSYM4K";
 export const V = "13.4.0", imp = new Function("u", "return import(u)");
 let APP = null;
 export const firebaseApp = () => APP;
