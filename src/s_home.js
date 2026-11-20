@@ -44,7 +44,7 @@ export function Login() {
       ${err ? html`<div class="note red"><${Icon} n="alert" s=${18} />${err}</div>` : null}
       <${Btn} type="submit" disabled=${busy}>${busy ? "Memeriksa…" : "Masuk"}</${Btn}>
       <div class="mt8"><${Btn} kind="ghost" icon="users" onClick=${() => setDemo(true)}>Lihat semua akun demo</${Btn}></div></form>
-    <p class="mode">MuawanahKu ${VERSI} ${S.mode === "db" ? "· data tersinkron" : "· data tersimpan di perangkat ini"}<br /><button class="link" style="min-height:44px" onClick=${() => setPriv(true)}>Kebijakan Privasi</button></p>
+    <p class="mode">MuawanahKu ${VERSI} ${S.mode === "db" ? (S.ready ? "· data tersinkron" : "· menyambungkan database…") : "· data tersimpan di perangkat ini"}${S.cloudErr ? html`<br /><small style="color:#B3261E">Database: ${S.cloudErr}</small>` : null}<br /><button class="link" style="min-height:44px" onClick=${() => setPriv(true)}>Kebijakan Privasi</button></p>
     <${Sheet} open=${priv} title="Kebijakan Privasi" onClose=${() => setPriv(false)}><${PrivasiIsi} /></${Sheet}>
     <${Sheet} open=${demo} title="Akun demo" onClose=${() => setDemo(false)}>
       <p class="small" style="margin-top:0">Ketuk akun untuk langsung masuk. Guru: username + sandi (username + 123). Wali: satu kode akses (nama panggilan + tanggal lahir).</p>

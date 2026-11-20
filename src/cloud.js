@@ -21,7 +21,7 @@ export async function connectFirestore(cfg) {
   const [{ initializeApp }, fs, au] = await Promise.all([
     imp(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`), imp(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`), imp(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`)]);
   const app = initializeApp(cfg);
-  try { await au.signInAnonymously(au.getAuth(app)); } catch (e) { /* aturan Firestore boleh tanpa auth */ }
+  try { await au.signInAnonymously(au.getAuth(app)); } catch (e) { console.warn("Login anonim gagal", e); throw new Error("Login Anonymous belum aktif (" + (e.code || e.message) + ")"); }
   const d = fs.initializeFirestore(app, { localCache: fs.persistentLocalCache() });
   return {
     collection: name => ({
