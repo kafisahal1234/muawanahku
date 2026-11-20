@@ -27,6 +27,15 @@ python3 build.py     # hasil: dist/index.html (buka langsung di browser)
 python3 test/flow.py # uji alur (perlu playwright + chrome)
 ```
 
+## Deploy (GitHub Pages)
+
+Setiap push ke `main` otomatis dibangun dan dipasang oleh `.github/workflows/deploy.yml`.
+Aktifkan sekali: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+Alamatnya: `https://kafisahal1234.github.io/muawanahku/`
+
+Catatan: di GitHub Pages data tersimpan di browser masing-masing (localStorage), belum bersama antarperangkat.
+Data bersama butuh backend (Base44 / Firebase / Supabase).
+
 ## Aturan penting
 
 - KBM mapel Senin–Jumat (Jam 1 10.15–11.45, Jam 2 13.00–14.30); halaqah Senin–Sabtu, Sabtu hanya Shubuh; Ahad libur.
