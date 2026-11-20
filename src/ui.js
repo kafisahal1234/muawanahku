@@ -83,6 +83,9 @@ const P = {
   briefcase: "M4 8h16v12H4zM9 8V5h6v3M4 13h16",
   target: "M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zM12 11a1 1 0 1 1 0 2 1 1 0 0 1 0-2z",
   printer: "M6 9V3h12v6M6 18H4v-7h16v7h-2M7 14h10v7H7z",
+  send: "M4 12l16-8-6 16-2.5-6.5zM11.5 13.5L20 4",
+  chev: "M9 6l6 6-6 6",
+  sparkle: "M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8zM5 2l.6 1.4L7 4l-1.4.6L5 6l-.6-1.4L3 4l1.4-.6z",
   camera: "M4 7h4l2-3h4l2 3h4v13H4zM12 10a4 4 0 1 1 0 8 4 4 0 0 1 0-8z",
 };
 export function Icon({ n, s = 22, w = 2, c = "currentColor" }) {

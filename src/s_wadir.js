@@ -4,6 +4,7 @@ import { S, all, get, put, toast } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
 import { me } from "./common.js";
+import { AwalSheet } from "./s_ai.js";
 
 export const target = () => L.targetSemester();
 export function halaqahStat(a) {
@@ -40,21 +41,16 @@ export function DataAwal() {
   const [q, setQ] = useState(""); const [sel, setSel] = useState(null);
   const list = L.santriList().filter(s => s.nama.toLowerCase().includes(q.toLowerCase()));
   return html`<${SubHeader} title="Data Awal Hafalan" sub="Diisi Wadir Tahfidz, jadi titik mulai hitungan" />
-    <div class="wrap"><${Hint}>Isi posisi hafalan setiap santri di awal semester. Ketuk santri untuk mengubahnya.</${Hint}>
+    <div class="wrap"><${Hint}>Isi posisi hafalan setiap santri di awal semester. Ketuk santri untuk mengubahnya, atau unggah rekap hafalan sekaligus.</${Hint}>
+    <button class="up-cta" onClick=${() => nav.go("imporAwal")}><span class="up-ic"><${Icon} n="upload" s=${22} /></span><span><b>Unggah dari dokumen</b><small>Excel, Word, PDF, atau foto · dibaca AI</small></span><${Icon} n="chev" s=${18} /></button>
     <${SearchBox} value=${q} onInput=${setQ} /><${Card}><div class="list">${list.map(s => { const a = L.dataAwal(s);
       return html`<${Row} name=${s.nama} sub=${`Hafal: ${a.selesai.length ? a.selesai.join(", ") : "—"} · ${L.posLabel(a.aktif, a.baris)}`} right=${(S.data.dataAwal || {})[s.id] ? html`<${Pill} t="Diubah" tone="blue" />` : null} onClick=${() => setSel(s.id)} />`; })}</div></${Card}>
     ${sel ? html`<${EditAwal} sid=${sel} onClose=${() => setSel(null)} />` : null}</div>`;
 }
 function EditAwal({ sid, onClose }) {
-  const s = L.santriById(sid), a = L.dataAwal(s);
-  const [sel, setSel] = useState(new Set(a.selesai)); const [aktif, setAktif] = useState(a.aktif); const [baris, setBaris] = useState(a.baris);
-  const tog = j => { const n = new Set(sel); n.has(j) ? n.delete(j) : n.add(j); setSel(n); if (n.has(aktif)) setAktif(DATA.urutanJuz.find(x => !n.has(x)) || 30); };
-  const save = async () => { if (await put("dataAwal", sid, { selesai: DATA.urutanJuz.filter(j => sel.has(j)), aktif: Number(aktif), baris: Math.min(L.juzLines(Number(aktif)), Number(baris) || 0) })) { toast("Data awal hafalan disimpan"); onClose(); } };
-  return html`<${Sheet} open=${true} title=${s.nama} onClose=${onClose}>
-    <${Field} label="Juz yang sudah hafal (ketuk untuk memilih)"><div class="chips">${DATA.urutanJuz.map(j => html`<button class=${"pill " + (sel.has(j) ? "green" : "muted")} style="padding:7px 10px;font-size:12.5px" onClick=${() => tog(j)}>${j}</button>`)}</div></${Field}>
-    <${Field} label="Juz yang sedang dihafal"><select class="in" value=${aktif} onChange=${e => setAktif(Number(e.target.value))}>${DATA.urutanJuz.filter(j => !sel.has(j)).map(j => html`<option value=${j}>Juz ${j}</option>`)}</select></${Field}>
-    <${Field} label="Baris yang sudah dihafal di juz ini" hint=${`Maksimal ${L.juzLines(Number(aktif))} baris · ${L.posLabel(Number(aktif), Number(baris) || 0)}`}><${Stepper} value=${baris} onChange=${setBaris} max=${L.juzLines(Number(aktif))} label="baris" /></${Field}>
-    <${Btn} onClick=${save} icon="check">Simpan</${Btn}></${Sheet}>`;
+  const s = L.santriById(sid);
+  const save = async a => { if (await put("dataAwal", sid, a)) { toast("Data awal hafalan disimpan"); onClose(); } };
+  return html`<${AwalSheet} judul=${s.nama} awal=${L.dataAwal(s)} onClose=${onClose} onSimpan=${save} tombol="Simpan" />`;
 }
 
 export function TargetHafalan() {

@@ -7,6 +7,7 @@ import { RP_HEAD, RP_FOOT } from "./rapor_assets.js";
 import * as L from "./logic.js";
 import { me } from "./common.js";
 import { useDownloads, unduh, esc } from "./s_system.js";
+import { AiBtn, useAIRun, tulisCatatanRapor } from "./s_ai.js";
 
 const J30 = ["An Naas", "Al Falaq", "Al Ikhlas", "Al Lahab", "An Nashr", "Al Kaafiruun", "Al Kautsar", "Al Maa'un", "Quraisy", "Al Fiil", "Al Humazah", "Al 'Ashr", "At Takaatsur",
   "Al Qaari'ah", "Al 'Aadiyaat", "Az Zalzalah", "Al Bayyinah", "Al Qadr", "Al 'Alaq", "At Tiin", "Asy Syarh", "Adh Dhuha", "Al Lail", "Asy Syams", "Al Balad", "Al Fajr",
@@ -151,9 +152,11 @@ export function RaporView({ sid }) {
   const bolehCatat = m && (a.musyrif === m.id || (L.guruHalaqah(s) || {}).id === m.id);
   const hal = periode === "mid" ? 1 : 4, dlOk = useDownloads(), w = useWidth(), k = zoom ? 1 : (w - 32) / 794;
   const simpan = async () => { if (await put("raporCatatan", key, { santri: sid, periode, teks, oleh: m.id, ts: Date.now() })) toast("Catatan wali asrama tersimpan"); };
+  const [aiBusy, aiRun] = useAIRun();
   return html`<${SubHeader} title="Rapor" sub=${s.nama}><${Seg} items=${[["mid", "Tengah semester"], ["smt", "Akhir semester"]]} value=${periode} onChange=${setPeriode} /></${SubHeader}>
     <style>${RP_CSS}</style><div class="wrap">
       ${bolehCatat ? html`<${Card} title=${periode === "mid" ? "Catatan wali asrama · tengah semester" : "D. Catatan wali asrama · akhir semester"}><${Field} label="Catatan untuk rapor"><textarea class="in" maxLength="400" value=${teks} placeholder="Misal: Alhamdulillah hafalan lancar, perlu meningkatkan murojaah." onInput=${e => setTeks(e.target.value)}></textarea></${Field}>
+        <${AiBtn} kecil label="Tulis draf dengan AI" busy=${aiBusy} onClick=${() => aiRun(async () => { setTeks(await tulisCatatanRapor(s, periode)); toast("Draf catatan dibuat. Periksa lalu simpan."); })} />
         <${Btn} kind="ghost" onClick=${simpan}>Simpan catatan</${Btn}></${Card}>` : null}
       <div style="display:flex;justify-content:space-between;align-items:center;margin:0 2px 8px"><b style="font-size:14px">Pratinjau rapor · ${hal} halaman</b>
         <button class="link" onClick=${() => setZoom(!zoom)}>${zoom ? "Muat ke layar" : "Perbesar"}</button></div>

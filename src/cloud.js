@@ -12,7 +12,9 @@ export const FIREBASE_CONFIG = {
 /* contoh:
 export const FIREBASE_CONFIG = { apiKey: "…", authDomain: "muawanahku.firebaseapp.com", projectId: "muawanahku", appId: "…" };
 */
-const V = "10.12.2", imp = new Function("u", "return import(u)");
+export const V = "13.4.0", imp = new Function("u", "return import(u)");
+let APP = null;
+export const firebaseApp = () => APP;
 // Firestore tidak menerima array di dalam array (misal ajar: [["it","9A"]]): dibungkus saat simpan, dibuka saat baca
 const enc = v => (Array.isArray(v) ? v.map(x => (Array.isArray(x) ? { _arr: enc(x) } : enc(x))) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, enc(x)])) : v);
 const dec = v => (Array.isArray(v) ? v.map(dec) : v && typeof v === "object" ? (Object.keys(v).length === 1 && Array.isArray(v._arr) ? dec(v._arr) : Object.fromEntries(Object.entries(v).map(([k, x]) => [k, dec(x)]))) : v);
@@ -23,6 +25,7 @@ export async function connectFirestore(cfg) {
   const app = initializeApp(cfg);
   try { await au.signInAnonymously(au.getAuth(app)); } catch (e) { console.warn("Login anonim gagal", e); throw new Error("Login Anonymous belum aktif (" + (e.code || e.message) + ")"); }
   const d = fs.initializeFirestore(app, { localCache: fs.persistentLocalCache() });
+  APP = app;
   return {
     collection: name => ({
       // saat offline, tulisan diantre di perangkat dan dikirim otomatis begitu online; jangan menunggu server terlalu lama

@@ -2,6 +2,11 @@ import subprocess, sys
 r = subprocess.run(["npx", "esbuild", "src/main.js", "--bundle", "--format=iife", "--minify", "--target=es2019", "--outfile=dist/app.js"], capture_output=True, text=True)
 print(r.stdout, r.stderr)
 if r.returncode: sys.exit(1)
+# pustaka pembaca dokumen (dimuat hanya saat dibutuhkan)
+import os, shutil
+os.makedirs("dist/vendor", exist_ok=True)
+for src, dst in [("vendor/pdf.min.mjs", "pdf.min.mjs"), ("vendor/pdf.worker.min.mjs", "pdf.worker.min.mjs"), ("vendor/mammoth.browser.min.js", "mammoth.browser.min.js"), ("vendor/xlsx.mjs", "xlsx.mjs")]:
+    shutil.copy(src, "dist/vendor/" + dst)
 css = open("src/theme.css").read() + open("src/skin.css").read()
 js = open("dist/app.js").read().replace("</script", "<\\/script")
 # ikon aplikasi (PWA) dari logo
@@ -21,7 +26,7 @@ json.dump({"name": "MuawanahKu", "short_name": "MuawanahKu", "description": "Apl
               {"src": "icon-maskable-512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}], "id": "./"},
     open("dist/manifest.webmanifest", "w"))
 open("dist/sw.js", "w").write("""// Service worker: utamakan jaringan (selalu versi terbaru), cadangan cache saat offline
-const C = "mk-v2";
+const C = "mk-v3";
 self.addEventListener("install", e => { self.skipWaiting(); e.waitUntil(caches.open(C).then(c => c.addAll(["./", "./index.html", "./icon-192.png"]))); });
 self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
 self.addEventListener("fetch", e => {

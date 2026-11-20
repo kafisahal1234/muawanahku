@@ -17,6 +17,8 @@ import * as RK from "./s_rekap.js";
 import * as HQ from "./s_halaqah.js";
 import * as PF from "./s_profil.js";
 import * as KO from "./s_koreksi.js";
+import * as AI from "./s_ai.js";
+import * as AS from "./s_asisten.js";
 import { me } from "./common.js";
 import { LOGO } from "./data.js";
 
@@ -28,7 +30,7 @@ const SCREENS = {
   kurikulum: K.Kurikulum, jamPelajaran: K.JamPelajaran, jadwal: K.Jadwal, pengampu: K.Pengampu, kinerjaGuru: K.KinerjaGuru, rekapKehadiran: K.RekapKehadiran, rekapNilai: K.RekapNilai, rekapIzinGuru: K.RekapIzinGuru,
   kesantrian: KS.Kesantrian, suratIzin: KS.SuratIzin, izinView: KS.IzinView, catatKembali: KS.CatatKembali, formBap: KS.FormBap, bapView: KS.BapView, histori: KS.Histori, rekapIzin: KS.RekapIzin, rekapPelanggaran: KS.RekapPelanggaran, rekapMotd: KS.RekapMotd,
   pengelolaan: W.Pengelolaan, dataAwal: W.DataAwal, targetHafalan: W.TargetHafalan, kinerjaTahfidz: W.KinerjaTahfidz, rekapHalaqah: W.RekapHalaqah, peringkat: W.Peringkat, rekapTasmi: W.RekapTasmi, bawahKkm: W.BawahKkm,
-  dataMaster: AD.DataMaster, santriAdmin: AD.SantriAdmin, akunAdmin: AD.AkunAdmin, asramaAdmin: AD.AsramaAdmin, kelasAdmin: AD.KelasAdmin, impor: AD.Impor, pengumuman: AD.Pengumuman,
+  dataMaster: AD.DataMaster, santriAdmin: AD.SantriAdmin, akunAdmin: AD.AkunAdmin, asramaAdmin: AD.AsramaAdmin, kelasAdmin: AD.KelasAdmin, impor: AI.ImporSantri, imporAwal: AI.ImporAwal, asisten: AS.Asisten, imporJadwal: AI.ImporJadwal, pengumuman: AD.Pengumuman,
   ubahSandi: SY.UbahSandi, privasi: SY.Privasi, bantuan: SY.Bantuan, tentang: SY.Tentang,
   santri: SA.SantriDetail, raporList: SA.RaporList, raporView: SA.RaporView, motdAll: SA.MotdRekapAll, kinerjaAll: SA.KinerjaAll,
   profil: PF.Profil, keamanan: PF.Keamanan, waliProfil: PF.WaliProfil,

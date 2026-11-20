@@ -7,6 +7,7 @@ import { KoreksiSheet } from "./s_koreksi.js";
 import { me } from "./common.js";
 import { target } from "./s_wadir.js";
 import { useDownloads, unduh, docHtml, esc } from "./s_system.js";
+import { KartuAI, ringkasStaf } from "./s_ai.js";
 
 export function HafalanCard({ s }) {
   const h = L.hafalan(s), cj = L.capaianJuz(s);
@@ -55,7 +56,7 @@ export function SantriDetail({ sid, tab: t0 }) {
   const m = me(), canNilai = m && !m.roles.every(r => r === "admin");
   return html`<${SubHeader} title=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaById(s.asrama).nama} · ${L.namaHalaqah(s)}`}>
     <${Seg} small items=${[["hafalan", "Hafalan"], ["hadir", "Kehadiran"], ...(canNilai ? [["nilai", "Nilai"]] : []), ["catatan", "Catatan"]]} value=${tab} onChange=${setTab} /></${SubHeader}>
-    <div class="wrap">${tab === "hafalan" ? html`<${HafalanCard} s=${s} /><${Section} t="Riwayat setoran" /><${Card}><${RiwayatSetoran} sid=${s.id} koreksi=${!!me()} /></${Card}>`
+    <div class="wrap">${tab === "hafalan" ? html`<${HafalanCard} s=${s} />${m ? html`<${KartuAI} judul="Ringkasan AI" tombol="Ringkas kondisi santri" buat=${() => ringkasStaf(s)} />` : null}<${Section} t="Riwayat setoran" /><${Card}><${RiwayatSetoran} sid=${s.id} koreksi=${!!me()} /></${Card}>`
       : tab === "hadir" ? html`<${KehadiranCard} s=${s} />` : tab === "nilai" ? html`<${NilaiCard} s=${s} />` : html`<${CatatanCard} s=${s} />`}</div>`;
 }
 

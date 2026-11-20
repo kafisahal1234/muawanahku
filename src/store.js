@@ -29,7 +29,7 @@ export async function initStore() {
   let cloud = false;
   if (!got && FIREBASE_CONFIG && /^https?:$/.test(location.protocol)) { try { got = await connectFirestore(FIREBASE_CONFIG); cloud = true; } catch (e) { got = null; S.cloudErr = String((e && (e.code || e.message)) || e).slice(0, 160); } }
   if (!got) { S.ready = true; emit(); return; }
-  db = got; S.mode = "db"; S.note = cloud ? "Data tersinkron antarperangkat (Firebase)." : "Data tersimpan bersama (semua akun demo melihat data yang sama).";
+  db = got; S.mode = "db"; S.cloud = cloud; S.note = cloud ? "Data tersinkron antarperangkat (Firebase)." : "Data tersimpan bersama (semua akun demo melihat data yang sama).";
   COLS.forEach(c => (S.data[c] = {}));
   let pending = new Set(COLS);
   const timer = setTimeout(() => { if (!S.ready) { S.ready = true; S.note = "Data bersama belum terjangkau, mungkin belum terbaru."; emit(); } }, 10000);

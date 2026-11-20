@@ -5,6 +5,8 @@ import { DATA } from "./data.js";
 import * as L from "./logic.js";
 import { me, SantriPicker, compressImage } from "./common.js";
 import { useDownloads, unduh, docHtml, esc } from "./s_system.js";
+import { AiBtn, useAIRun } from "./s_ai.js";
+import { tanyaAI, SISTEM_DASAR } from "./ai.js";
 
 const inPondok = (p, sid) => { const s = L.santriById(sid); return s && (!p || L.pondokOfSantri(s) === p); };
 
@@ -111,6 +113,17 @@ export function FormBap() {
   const [ask, setAsk] = useState(false);
   const foto = async e => { const file = e.target.files && e.target.files[0]; if (!file) return; try { set("foto", await compressImage(file)); } catch (err) { toast("Foto tidak bisa dibaca", "err"); } };
   const ok = f.santri && pel && f.kronologi;
+  const [aiBusy, aiRun] = useAIRun();
+  const rapikan = () => aiRun(async () => {
+    const j = await tanyaAI({ sistem: SISTEM_DASAR, json: true, teks: `Rapikan kronologi berita acara pelanggaran santri berikut menjadi kalimat baku, objektif, orang ketiga, urut waktu, maksimal 4 kalimat. Pertahankan semua fakta persis dan jangan menambah fakta atau tuduhan baru. Sebut santri sebagai "santri" saja.
+Lalu pilih jenis pelanggaran yang paling sesuai dari daftar (id|nama|tingkat), atau null bila tidak ada yang cocok:
+${DATA.pelanggaran.map(x => `${x.id}|${x.nama}|${x.tingkat}`).join("\n")}
+Tempat: ${f.tempat || "-"}
+Kronologi asli: ${f.kronologi}
+Jawab JSON: {"kronologi":"","pelanggaran_id":null}` });
+    setF(x => ({ ...x, kronologi: j.kronologi || x.kronologi, pel: x.pel || (DATA.pelanggaran.some(p => p.id === j.pelanggaran_id) ? j.pelanggaran_id : "") }));
+    toast(f.pel || !j.pelanggaran_id ? "Kronologi dirapikan. Periksa kembali." : "Kronologi dirapikan dan jenis pelanggaran disarankan. Periksa kembali.");
+  });
   const save = async () => {
     setAsk(false); const id = uid("b");
     if (await put("bap", id, { santri: f.santri, tanggal: f.tanggal, tempat: f.tempat, pelanggaran: pel.id, pelanggaranNama: pel.nama, tingkat: pel.tingkat, poin: pel.poin, kronologi: f.kronologi, saksi: f.saksi, sanksi: f.sanksi, foto: f.foto, ttdSantri: f.ttdSantri, ttdPetugas: f.ttdPetugas, oleh: me().id, ts: Date.now() })) {
@@ -126,6 +139,7 @@ export function FormBap() {
       <${Field} label="Jenis pelanggaran" hint="Daftar contoh sementara, menunggu daftar resmi pondok."><select class="in" value=${f.pel} onChange=${e => set("pel", e.target.value)}><option value="">Pilih pelanggaran</option>
         ${DATA.pelanggaran.map(x => html`<option value=${x.id}>${x.nama} · ${x.tingkat} · ${x.poin} poin</option>`)}</select></${Field}>
       <${Field} label="Kronologi"><textarea class="in" value=${f.kronologi} onInput=${e => set("kronologi", e.target.value)} placeholder="Ceritakan singkat kejadiannya"></textarea></${Field}>
+      <${AiBtn} kecil label=${f.pel ? "Rapikan kronologi" : "Rapikan & sarankan jenis pelanggaran"} busy=${aiBusy} onClick=${() => (f.kronologi.trim().length > 10 ? rapikan() : toast("Tulis kronologinya dulu", "err"))} />
       <${Field} label="Saksi"><input class="in" value=${f.saksi} onInput=${e => set("saksi", e.target.value)} placeholder="Misal: Ust. Ugi (wali asrama)" /></${Field}></${Card}>
     <${Card} title="Bukti dan tanda tangan"><${Field} label="Foto bukti"><input type="file" accept="image/*" class="in" onChange=${foto} />${f.foto ? html`<img class="photo" src=${f.foto} alt="Foto bukti" />` : null}</${Field}>
       <div class="btn-row"><${SigPad} label="Santri" value=${f.ttdSantri} onChange=${v => set("ttdSantri", v)} /><${SigPad} label="Petugas" value=${f.ttdPetugas} onChange=${v => set("ttdPetugas", v)} /></div>

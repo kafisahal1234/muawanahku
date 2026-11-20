@@ -4,6 +4,7 @@ import { S, all, get, put, toast } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
 import { me } from "./common.js";
+import { ImporNilai } from "./s_ai.js";
 
 const kelasAjar = (st, mapel) => st.ajar.filter(([m]) => m === mapel).map(([, k]) => k);
 
@@ -87,8 +88,22 @@ export function NilaiMapel({ mapel, kelas }) {
   const num = (val, lab, on) => html`<input type="number" min="0" max="100" inputmode="numeric" value=${val ?? ""} aria-label=${lab} onInput=${e => on(e.target.value)} />`;
   const nm = s => html`<td style="min-width:120px;position:sticky;left:0;background:#fff;z-index:1"><b style="font-size:12.5px">${s.nama}</b></td>`;
   const cur = pl.find(p => p.id === pa);
+  const [imp, setImp] = useState(false);
+  const pakaiImpor = (h, info) => {
+    let npl = [...pl], npn = JSON.parse(JSON.stringify(pn));
+    h.projekNama.forEach((nama, i) => { if (!h.projek[i]) return; let p = npl.find(x => x.nama.toLowerCase() === nama.toLowerCase());
+      if (!p) { const kosong = npl.find(x => !Object.keys(npn[x.id] || {}).length); if (kosong && npl.length === 1 && /^projek 1$/i.test(kosong.nama)) { kosong.nama = nama; p = kosong; } else { p = { id: "p" + (Math.max(0, ...npl.map(x => Number(x.id.slice(1)) || 0)) + 1), nama }; npl.push(p); } }
+      npn[p.id] = { ...(npn[p.id] || {}), ...h.projek[i] }; });
+    setPl(npl); setPn(npn); if (npl[0]) setPa(npl[0].id);
+    setV({ pts: { ...v.pts, ...h.pts }, pas: { ...v.pas, ...h.pas } });
+    const na = { ...asp }; Object.entries(h.aspek).forEach(([sid, o]) => { na[sid] = { ...(na[sid] || {}), ...o }; }); setAsp(na);
+    setImp(false);
+    toast(`Nilai ${info.cocok} santri terisi dari ${info.dok}${info.lewat.length ? ` · ${info.lewat.length} nama tidak dikenali` : ""}. Periksa lalu Simpan nilai.`);
+  };
   return html`<${SubHeader} title=${`Nilai ${m.nama} · ${kelas}`} sub="Kehadiran dihitung otomatis dari absen kelas"><${Seg} items=${[["projek", `Projek (${pl.length})`], ["komponen", "PTS & PAS"], ["aspek", "Aspek rapor"]]} value=${tab} onChange=${setTab} /></${SubHeader}>
-    <div class="wrap">${tab === "projek" ? html`<${Hint}>Tambahkan setiap projek yang diberikan semester ini. Nilai projek di rapor = rata-rata semua projek yang sudah dinilai.</${Hint}>
+    <div class="wrap"><button class="up-cta" onClick=${() => setImp(true)}><span class="up-ic"><${Icon} n="upload" s=${22} /></span><span><b>Isi nilai dari dokumen</b><small>Excel, foto daftar nilai, PDF · dibaca AI</small></span><${Icon} n="chev" s=${18} /></button>
+    ${imp ? html`<${ImporNilai} mapel=${mapel} kelas=${kelas} onClose=${() => setImp(false)} onHasil=${pakaiImpor} />` : null}
+    ${tab === "projek" ? html`<${Hint}>Tambahkan setiap projek yang diberikan semester ini. Nilai projek di rapor = rata-rata semua projek yang sudah dinilai.</${Hint}>
       <div class="proj-chips">${pl.map(p => html`<button type="button" class=${"pchip " + (p.id === pa ? "on" : "")} aria-pressed=${p.id === pa} onClick=${() => (p.id === pa ? setEd({ ...p }) : setPa(p.id))}>${p.nama}${p.id === pa ? html` <${Icon} n="edit" s=${14} />` : null}</button>`)}
         <button type="button" class="pchip add" onClick=${tambah}><${Icon} n="plus" s=${16} /> Projek</button></div>
       ${cur ? html`<${Card} title=${cur.nama} right=${html`<small>${Object.values(pn[cur.id] || {}).filter(x => x !== "" && x != null).length}/${list.length} dinilai</small>`}><div class="scroll-x"><table class="tbl"><thead><tr><th>Santri</th><th class="c">Nilai</th><th class="c">Rata projek</th></tr></thead><tbody>

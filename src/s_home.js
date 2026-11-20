@@ -8,6 +8,9 @@ import { me, FotoAv, fotoUser } from "./common.js";
 import { HafalanCard, RiwayatSetoran, KehadiranCard, CatatanCard } from "./s_santri.js";
 import { slotStatus } from "./s_kurikulum.js";
 import { VERSI } from "./s_system.js";
+import { KartuAI, ringkasWali } from "./s_ai.js";
+import { KartuAsisten } from "./s_asisten.js";
+import { aiAda } from "./ai.js";
 const PrivasiIsi = () => html`<div class="prose"><p>Data dipakai hanya untuk administrasi pendidikan pondok: hafalan, absensi, nilai, perizinan, dan pembinaan santri. Data tidak dijual, tidak untuk iklan, dan tidak dibagikan ke pihak luar. Setiap pengguna hanya melihat data sesuai perannya; wali hanya melihat anaknya sendiri. Kebijakan lengkap ada di menu Akun setelah masuk.</p></div>`;
 
 // ---------------- login ----------------
@@ -136,6 +139,7 @@ function tasksFor(st) {
 
 function Hero({ name, sub, chips, bell, foto, children }) {
   return html`<header class="appbar"><${Logo} s=${40} /><div class="brand"><b>Muawanah<i>Ku</i></b><small>Kampung Qur'an Al Muawanah</small></div>
+      ${aiAda() ? html`<button class="ab-btn ab-ai" aria-label="Asisten AI" onClick=${() => nav.go("asisten")}><${Icon} n="sparkle" s=${22} /></button>` : null}
       <button class="ab-btn" aria-label=${bell ? `Pengumuman, ${bell} baru` : "Pengumuman"} onClick=${() => nav.go("pengumuman")}><${Icon} n="bell" s=${24} />${bell ? html`<b>${bell}</b>` : null}</button></header>
     <div class="hero-wrap"><section class="hero-card"><div class="hc-top"><div class="hc-t"><small>Assalamu'alaikum,</small><h2>${name}</h2><span class="tgl">${L.fmtTgl(L.today())}</span></div>
       <button class="hc-foto" aria-label="Akun saya" onClick=${() => nav.setTab("akun")}><${FotoAv} src=${foto} nama=${name} size=${58} /></button></div>
@@ -155,6 +159,7 @@ export function Beranda() {
   useApp();
   const st = me(), tiles = tilesFor(st), tasks = tasksFor(st), peng = all("pengumuman").sort((a, b) => b.ts - a.ts).slice(0, 2);
   return html`<${Hero} name=${st.nama} chips=${chipsFor(st)} bell=${newPeng()} foto=${fotoUser(nav.user)}><${Summary} st=${st} /></${Hero}><div class="wrap">
+    <${KartuAsisten} />
     <${Card} title="Modul" right=${html`<small>Sesuai peran</small>`}><div class="tiles">${tiles.map(t => html`<${Tile} icon=${t.icon} label=${t.label} color=${t.color} badge=${t.badge} onClick=${t.go} />`)}</div></${Card}>
     ${tasks.length ? html`<${Card} title="Perlu diperhatikan"><div class="list">${tasks.map(([t, s, c, go]) => html`<button class="row" onClick=${go}><span class="row-ic" style=${`background:${c === "coral" ? "#FDE7E3" : c === "gold" ? "#FDF0D3" : "#E6EEFC"};color:${c === "coral" ? "#B3261E" : c === "gold" ? "#8A5A00" : "#1F56B5"}`}><${Icon} n="alert" s=${18} /></span>
       <span class="row-t"><b style="white-space:normal">${t}</b><small>${s}</small></span><${Icon} n="right" s=${18} c="#9AB0A5" /></button>`)}</div></${Card}>` : null}
@@ -221,9 +226,10 @@ export function WaliBeranda() {
   L.motdCatatan(s.id).forEach(c => kab.push([c.ts || 0, `${c.st === "A" ? "Alpa" : "Masbuq"} ${L.WAKTU.find(x => x[0] === c.waktu)[1]} · pelanggaran ringan`, "moon"]));
   kab.sort((x, y) => y[0] - x[0]);
   const peng = all("pengumuman").sort((x, y) => y.ts - x.ts).slice(0, 2);
-  return html`<${Hero} name=${s.nama} chips=${["Kelas " + s.kelas, "Asrama " + a.nama, L.namaHalaqah(s)]} bell=${newPeng()} foto=${fotoUser(nav.user)} /><div class="wrap"><${HafalanCard} s=${s} />
+  return html`<${Hero} name=${s.nama} chips=${["Kelas " + s.kelas, "Asrama " + a.nama, L.namaHalaqah(s)]} bell=${newPeng()} foto=${fotoUser(nav.user)} /><div class="wrap"><${KartuAsisten} /><${HafalanCard} s=${s} />
     ${(() => { const rg = L.periodeRange("bulanan"), kh = L.kehadiranHalaqah(s.id, rg), mp = L.mutPersen(s.id, rg), po = L.poinSantri(s.id);
       return html`<${Card} title="Bulan ini" right=${html`<small>${rg.label}</small>`}><div class="stats"><${Stat} label="Hadir halaqah" value=${kh.pct == null ? "—" : kh.pct + "%"} /><${Stat} label="Mutaba'ah" value=${mp.ibadah == null ? "—" : Math.round((mp.ibadah + mp.adab) / 2) + "%"} /><${Stat} label="Poin catatan" value=${po.total} tone=${po.total ? "gold" : ""} /></div></${Card}>`; })()}
+    <${KartuAI} judul="Ringkasan untuk Ayah/Bunda" tombol="Buat ringkasan perkembangan" ket="AI merangkum perkembangan ananda dari data pondok dalam bahasa yang mudah dipahami." buat=${() => ringkasWali(s)} />
     <${Card} title="Kabar terbaru">${kab.length ? html`<div class="list">${kab.slice(0, 6).map(([ts, t, ic]) => html`<${Row} name=${t} sub=${ts ? `${L.fmtTgl(L.ymd(new Date(ts)))}` : ""} icon=${html`<${Icon} n=${ic} s=${18} />`} />`)}</div>` : html`<${Empty} t="Belum ada kabar baru tentang ananda." icon="heart" />`}</${Card}>
 </div>`;
 }

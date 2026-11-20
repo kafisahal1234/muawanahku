@@ -5,6 +5,8 @@ import { DATA } from "./data.js";
 import * as L from "./logic.js";
 import { logUbah } from "./s_koreksi.js";
 import { me, has } from "./common.js";
+import { AiBtn, useAIRun } from "./s_ai.js";
+import { tanyaAI, SISTEM_DASAR } from "./ai.js";
 
 export function DataMaster() {
   useApp();
@@ -29,6 +31,7 @@ export function SantriAdmin({ asrama, kelas }) {
   const list = L.santriList().filter(s => (!asrama || s.asrama === asrama) && (k === "all" || s.kelas === k) && s.nama.toLowerCase().includes(q.toLowerCase()));
   return html`<${SubHeader} title="Data Santri" sub=${asrama ? "Asrama " + L.asramaById(asrama).nama : `${list.length} santri`}><${Seg} small items=${[["all", "Semua"], ["7", "Kls 7"], ["8", "Kls 8"], ["9A", "9A"], ["9B", "9B"]]} value=${k} onChange=${setK} /></${SubHeader}>
     <div class="wrap"><${SearchBox} value=${q} onInput=${setQ} />
+    <button class="up-cta" onClick=${() => nav.go("impor")}><span class="up-ic"><${Icon} n="upload" s=${22} /></span><span><b>Impor / lengkapi dari dokumen</b><small>Tgl lahir, NIS, orang tua · dibaca AI</small></span><${Icon} n="chev" s=${18} /></button>
     <${Btn} kind="ghost" icon="plus" onClick=${() => setEd({ baru: true, nama: "", kelas: "7", asrama: asrama || "a1" })}>Tambah santri</${Btn}>
     <div class="mt12"><${Card}><div class="list">${list.map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaById(s.asrama).nama} · akun wali: ${s.wali}`} onClick=${() => setEd({ ...s })} />`)}</div></${Card}></div>
     ${ed ? html`<${EditSantri} e=${ed} onClose=${() => setEd(null)} />` : null}</div>`;
@@ -135,55 +138,25 @@ export function KelasAdmin() {
     ${L.KELAS.map(k => html`<${Row} name=${k.nama} sub=${`Pondok ${k.pondok} · ${L.santriKelas(k.id).length} santri`} icon=${html`<${Icon} n="grid" s=${18} />`} onClick=${() => nav.go("santriAdmin", { kelas: k.id })} />`)}</div></${Card}></div>`;
 }
 
-const norm = s => s.toLowerCase().replace(/\b(muhammad|muhamad|m)\b\.?/g, " ").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
-function sim(a, b) {
-  a = norm(a); b = norm(b); if (a === b) return 1;
-  const bg = s => { const o = new Map(); for (let i = 0; i < s.length - 1; i++) { const k = s.slice(i, i + 2); o.set(k, (o.get(k) || 0) + 1); } return o; };
-  const A = bg(a), B = bg(b); let inter = 0; A.forEach((v, k) => (inter += Math.min(v, B.get(k) || 0)));
-  return (2 * inter) / Math.max(1, a.length - 1 + b.length - 1);
-}
-export function Impor() {
-  useApp();
-  const [txt, setTxt] = useState(""); const [kelas, setKelas] = useState("7"); const [asr, setAsr] = useState("a4"); const [res, setRes] = useState(null);
-  const file = async e => { const f = e.target.files && e.target.files[0]; if (!f) return; if (/\.(txt|csv)$/i.test(f.name)) setTxt(await f.text()); else toast("Demo ini membaca file .txt atau .csv. Di Base44, AI membaca Excel, PDF, Word, dan foto.", "err"); };
-  const cek = () => {
-    const names = txt.split(/\n|;/).map(x => x.replace(/^\s*\d+[\.\)]?\s*/, "").split(/[,\t]/)[0].trim()).filter(x => x.length > 2);
-    const all2 = L.santriList();
-    setRes(names.map(n => { let best = null, sc = 0; all2.forEach(s => { const v = sim(n, s.nama); if (v > sc) { sc = v; best = s; } });
-      return { n, best, sc, st: sc >= 0.92 ? "cocok" : sc >= 0.6 ? "cek" : "baru" }; }));
-  };
-  const simpan = async () => {
-    const baru = res.filter(r => r.st === "baru"); let n = 0;
-    for (const r of baru) { const w = r.n.split(/\s+/).find(x => !/^(m\.?|muhammad|muhamad|ahmad)$/i.test(x)) || "santri"; if (await put("santriEdit", uid("s"), { nama: r.n, kelas, asrama: asr, wali: w.toLowerCase().replace(/[^a-z]/g, "") + Math.floor(10 + Math.random() * 89), panggilan: w })) n++; }
-    toast(`${n} santri baru ditambahkan`); setRes(null); setTxt("");
-  };
-  const c = k => (res || []).filter(r => r.st === k).length;
-  return html`<${SubHeader} title="Impor Data" sub="Pratinjau sebelum disimpan" />
-    <div class="wrap"><${Hint}>Tempel daftar nama atau unggah file .txt/.csv (satu nama per baris).</${Hint}>
-    <${Card}><${Field} label="Daftar nama"><textarea class="in" style="min-height:140px" value=${txt} placeholder=${"1. Adiyatma Wira Teja\n2. M Raya Anugrah\n3. Nama Santri Baru"} onInput=${e => setTxt(e.target.value)}></textarea></${Field}>
-      <${Field} label="Atau unggah file"><input type="file" accept=".txt,.csv,.xlsx,.pdf,.docx,image/*" class="in" onChange=${file} /></${Field}>
-      <div class="btn-row"><${Field} label="Kelas untuk santri baru"><select class="in" value=${kelas} onChange=${e => setKelas(e.target.value)}>${L.KELAS.map(k => html`<option value=${k.id}>${k.nama}</option>`)}</select></${Field}>
-      <${Field} label="Asrama"><select class="in" value=${asr} onChange=${e => setAsr(e.target.value)}>${L.ASRAMA.map(a => html`<option value=${a.id}>${a.nama}</option>`)}</select></${Field}></div>
-      <${Btn} disabled=${!txt.trim()} onClick=${cek} icon="search">Periksa data</${Btn}></${Card}>
-    ${res ? html`<${Card} title="Pratinjau"><div class="stats mb8"><${Stat} label="Cocok" value=${c("cocok")} /><${Stat} label="Cek ejaan" value=${c("cek")} tone="gold" /><${Stat} label="Baru" value=${c("baru")} tone="blue" /></div>
-      <div class="list">${res.map(r => html`<${Row} name=${r.n} sub=${r.st === "baru" ? "Tidak ada di data, akan ditambahkan" : `${r.st === "cek" ? "Mungkin maksudnya" : "Sama dengan"}: ${r.best.nama} (${r.best.kelas})`}
-        right=${html`<${Pill} t=${r.st === "cocok" ? "Cocok" : r.st === "cek" ? "Cek ejaan" : "Baru"} tone=${r.st === "cocok" ? "green" : r.st === "cek" ? "gold" : "blue"} />`} />`)}</div>
-      <div class="mt12"><${Btn} disabled=${!c("baru")} onClick=${simpan} icon="check">Simpan ${c("baru")} santri baru</${Btn}></div></${Card}>` : null}</div>`;
-}
-
 export function Pengumuman() {
   useApp();
   const can = has("admin") || has("mudir");
   const [f, setF] = useState({ judul: "", isi: "", lampiran: "" }); const [ask, setAsk] = useState(null);
   const l = all("pengumuman").sort((a, b) => b.ts - a.ts);
+  const [aiBusy, aiRun] = useAIRun();
+  const rapikan = () => aiRun(async () => {
+    const j = await tanyaAI({ sistem: SISTEM_DASAR, json: true, teks: `Rapikan pengumuman pondok berikut agar jelas, sopan, dan mudah dibaca ustadz serta wali santri. Pertahankan semua fakta (tanggal, jam, tempat, nama) persis; jangan menambah fakta baru. Boleh memakai butir "- " untuk rincian. Awali isi dengan salam bila cocok. Judul maksimal 70 karakter.\nJudul: ${f.judul}\nIsi/poin: ${f.isi}\nJawab JSON: {"judul":"","isi":""}` });
+    setF({ ...f, judul: (j.judul || f.judul).slice(0, 90), isi: j.isi || f.isi }); toast("Pengumuman dirapikan. Periksa sebelum dikirim.");
+  });
   const save = async () => { if (await put("pengumuman", uid("p"), { ...f, oleh: me() ? me().id : "", ts: Date.now() })) { toast("Pengumuman terkirim ke semua akun"); setF({ judul: "", isi: "", lampiran: "" }); } };
   return html`<${SubHeader} title="Pengumuman" sub=${can ? "Tampil di semua akun" : "Dari Admin dan Mudir"} />
     <div class="wrap">${can ? html`<${Card} title="Buat pengumuman"><${Field} label="Judul"><input class="in" value=${f.judul} onInput=${e => setF({ ...f, judul: e.target.value })} placeholder="Misal: Jadwal perpulangan akhir semester" /></${Field}>
-      <${Field} label="Isi"><textarea class="in" value=${f.isi} onInput=${e => setF({ ...f, isi: e.target.value })}></textarea></${Field}>
+      <${Field} label="Isi"><textarea class="in" style="min-height:110px" value=${f.isi} placeholder="Boleh tulis poin-poinnya saja, lalu rapikan dengan AI" onInput=${e => setF({ ...f, isi: e.target.value })}></textarea></${Field}>
+      <${AiBtn} kecil label="Rapikan dengan AI" busy=${aiBusy} onClick=${() => (f.judul.trim() || f.isi.trim() ? rapikan() : toast("Tulis judul atau poin isinya dulu", "err"))} />
       <${Field} label="Lampiran PDF (nama file saja di demo)"><input type="file" accept="application/pdf" class="in" onChange=${e => setF({ ...f, lampiran: e.target.files[0] ? e.target.files[0].name : "" })} /></${Field}>
       <${Btn} disabled=${!f.judul.trim()} onClick=${save} icon="megaphone">Kirim pengumuman</${Btn}></${Card}>` : null}
     <${Section} t="Semua pengumuman" /><${Card}>${l.length ? html`<div class="list">${l.map(p => html`<div class="row" style="align-items:flex-start"><span class="row-ic"><${Icon} n="megaphone" s=${18} /></span><span class="row-t"><b style="white-space:normal">${p.judul}</b>
-      <small>${p.oleh ? L.staffById(p.oleh).nama : "Pondok"} · ${L.fmtTgl(L.ymd(new Date(p.ts)))}${p.lampiran ? " · 📎 " + p.lampiran : ""}</small>${p.isi ? html`<p style="margin:6px 0 0;font-size:13.5px;line-height:1.5">${p.isi}</p>` : null}</span>
+      <small>${p.oleh ? L.staffById(p.oleh).nama : "Pondok"} · ${L.fmtTgl(L.ymd(new Date(p.ts)))}${p.lampiran ? " · 📎 " + p.lampiran : ""}</small>${p.isi ? html`<p style="margin:6px 0 0;font-size:13.5px;line-height:1.5;white-space:pre-line">${p.isi}</p>` : null}</span>
       ${can ? html`<button class="icon-btn" aria-label="Hapus pengumuman" onClick=${() => setAsk(p)}><${Icon} n="x" s=${16} /></button>` : null}</div>`)}</div>` : html`<${Empty} t="Belum ada pengumuman." icon="megaphone" />`}</${Card}>
     <${Confirm} open=${!!ask} danger title="Hapus pengumuman?" text=${ask ? ask.judul : ""} yes="Hapus" onYes=${() => { del("pengumuman", ask.id); setAsk(null); }} onNo=${() => setAsk(null)} /></div>`;
 }

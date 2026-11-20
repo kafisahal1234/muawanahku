@@ -8,6 +8,8 @@ import * as L from "./logic.js";
 import { me } from "./common.js";
 import { logUbah } from "./s_koreksi.js";
 import { unduh, docHtml, esc } from "./s_system.js";
+import { KartuAI } from "./s_ai.js";
+import { tanyaAI, SISTEM_DASAR } from "./ai.js";
 
 const tone = v => (v == null ? "muted" : v >= 90 ? "green" : v >= 75 ? "blue" : v >= 60 ? "gold" : "red");
 const P = v => (v == null ? "—" : v + "%");
@@ -160,6 +162,8 @@ export function RekapDetail({ jenis, aid, hid, kelas, pondok, pj, guru }) {
   const nm = hid ? L.halaqahById(hid).nama : aid ? L.asramaById(aid).nama : pondok ? "Pondok " + pondok : "Kelas " + kelas;
   return html`<${SubHeader} title=${judul} sub=${`${nm} · ${rg.label}`} />
     <div class="wrap"><${Hint}>${jenis === "hafalan" ? "Diurutkan dari hafalan baru paling sedikit." : jenis === "kes" ? "Diurutkan dari poin terbanyak." : "Diurutkan dari yang paling rendah. Hari/sesi yang tidak diinput ikut dihitung sehingga persentase turun."}</${Hint}>
+    <${KartuAI} judul="Analisis AI" tombol="Analisis rekap ini" ket="AI merangkum temuan penting dan saran tindak lanjut dari tabel di bawah."
+      buat=${() => tanyaAI({ sistem: SISTEM_DASAR, teks: `Analisis rekap pondok berikut untuk pimpinan.\nJenis: ${judul}\nKelompok: ${nm}\nPeriode: ${rg.label}\nCatatan: hari/sesi tanpa input dihitung tidak terlaksana.\nData per santri (nama: nilai · rincian):\n${rows.map(([s, v, sub, teks]) => `${s.nama}: ${teks != null ? teks : v == null ? "belum ada data" : v + "%"} · ${sub}`).join("\n")}\n\nFormat jawaban: 1 kalimat kesimpulan umum (sebut rata-rata bila relevan), lalu butir "- " berisi: santri yang perlu perhatian (maks. 5 nama), pola yang terlihat (misal input sering kosong), dan 2–3 saran tindak lanjut yang konkret. Maksimal 150 kata.` })} />
     <${Card}><div class="list">${rows.map(([s, v, sub, teks]) => html`<${Row} name=${s.nama} sub=${sub} right=${html`<${Pill} t=${teks != null ? teks : P(v)} tone=${teks != null ? "green" : tone(v)} />`} onClick=${() => nav.go("santri", { sid: s.id })} />`)}</div></${Card}></div>`;
 }
 

@@ -48,7 +48,7 @@ export function Jadwal({ ro }) {
   const kelas = ["7", "8", "9A", "9B"];
   const nB = (() => { const all2 = L.jadwalAll(); return all2.filter(j => L.bentrok(j, j.id).length).length; })();
   return html`<${SubHeader} title="Jadwal Mengajar" sub="Semester ganjil 2026/2027"><${Seg} small items=${DATA.hari.map(h => [h, h.slice(0, 3)])} value=${hari} onChange=${setHari} /></${SubHeader}>
-    <div class="wrap">${nB ? html`<div class="note red"><${Icon} n="alert" s=${18} />Ada ${nB} jadwal bentrok. Periksa sel bergaris merah.</div>` : null}
+    <div class="wrap">${!ro ? html`<button class="up-cta" onClick=${() => nav.go("imporJadwal")}><span class="up-ic"><${Icon} n="upload" s=${22} /></span><span><b>Impor jadwal dari dokumen</b><small>Excel, Word, PDF, atau foto · dibaca AI</small></span><${Icon} n="chev" s=${18} /></button>` : null}${nB ? html`<div class="note red"><${Icon} n="alert" s=${18} />Ada ${nB} jadwal bentrok. Periksa sel bergaris merah.</div>` : null}
     <${Card} title=${hari} right=${!ro ? html`<small>Ketuk sel untuk ubah</small>` : null}><div class="grid-j"><span class="hd">Jam</span>${kelas.map(k => html`<span class="hd">${k}</span>`)}
       ${DATA.jam.map(jm => html`<span class="hd" style="text-align:left;font-size:10.5px">${jm.nama}<br /><small>${jm.mulai}</small></span>${kelas.map(k => { const c = cell(jm.id, k), b = c && L.bentrok(c, c.id).length;
         return html`<button class=${"cell " + (c ? "c-" + c.mapel : "empty")} style=${b ? "outline:2px solid #D9432F" : ""} disabled=${ro} onClick=${() => setEdit({ hari, jam: jm.id, kelas: k, cur: c })}>
