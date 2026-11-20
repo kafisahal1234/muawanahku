@@ -7,7 +7,7 @@ import { LOGO } from "./data.js";
 import * as L from "./logic.js";
 import { me, has } from "./common.js";
 
-export const VERSI = "1.0.0";
+export const VERSI = "1.0.0 (" + (typeof __BUILD__ !== "undefined" ? __BUILD__ : "dev") + ")";
 
 // ---------- unduhan ----------
 let dlp = null;

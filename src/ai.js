@@ -28,14 +28,16 @@ function bersihJSON(t) {
 }
 
 function pesanGalat(e) {
-  const m = String((e && (e.message || e.code)) || e || "");
-  if (/api-not-enabled|firebasevertexai|SERVICE_DISABLED|has not been used/i.test(m)) return "AI belum diaktifkan di Firebase. Admin perlu membuka Firebase → AI Logic → Get started (pilih Gemini Developer API).";
-  if (/app ?check|appcheck|401|UNAUTHENTICATED/i.test(m)) return "AI ditolak App Check. Di Firebase buka Security → App Check → tab APIs, lalu ubah Firebase AI Logic menjadi Unenforced.";
-  if (/429|quota|RESOURCE_EXHAUSTED|rate/i.test(m)) return "Kuota AI gratis sedang penuh. Tunggu 1–2 menit lalu coba lagi.";
+  const m = String((e && (e.message || e.code)) || e || ""), st = (m.match(/\[(\d{3})/) || [])[1] || "";
+  const kode = st ? ` (kode ${st})` : "";
+  if (/app ?check|appcheck|UNAUTHENTICATED/i.test(m) || st === "401") return "AI ditolak App Check" + kode + ". Tutup aplikasi lalu buka lagi; bila masih, tunggu 10 menit (kunci reCAPTCHA baru perlu waktu).";
+  if (/api-not-enabled|SERVICE_DISABLED|has not been used|is disabled/i.test(m)) return "AI belum diaktifkan di Firebase" + kode + ". Admin perlu membuka Firebase → AI Logic → Get started (pilih Gemini Developer API).";
+  if (/429|quota|RESOURCE_EXHAUSTED/i.test(m)) return "Kuota AI gratis sedang penuh. Tunggu 1–2 menit lalu coba lagi.";
   if (/not_granted/i.test(m)) return "Izin memakai AI belum diberikan.";
-  if (/fetch|network|Failed to fetch|offline/i.test(m)) return "Tidak tersambung ke internet. Periksa koneksi lalu coba lagi.";
+  if (st === "403") return "AI ditolak server" + kode + ": " + m.replace(/^.*\]\s*/, "").slice(0, 160);
+  if (/Failed to fetch|NetworkError|network|offline/i.test(m)) return "Tidak tersambung ke internet. Periksa koneksi lalu coba lagi.";
   if (/blocked|SAFETY/i.test(m)) return "AI menolak memproses isi ini. Coba ubah kata-katanya.";
-  return m.length > 180 ? m.slice(0, 180) + "…" : m || "AI gagal menjawab.";
+  return (m.replace(/https?:\/\/\S+/g, "").slice(0, 200)) || "AI gagal menjawab.";
 }
 
 async function viaClaude({ teks, sistem, gambar, json }) {

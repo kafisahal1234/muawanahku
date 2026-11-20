@@ -1,5 +1,6 @@
-import subprocess, sys
-r = subprocess.run(["npx", "esbuild", "src/main.js", "--bundle", "--format=iife", "--minify", "--target=es2019", "--outfile=dist/app.js"], capture_output=True, text=True)
+import subprocess, sys, datetime
+BUILD = (datetime.datetime.utcnow() + datetime.timedelta(hours=7)).strftime("%d%m%y.%H%M")
+r = subprocess.run(["npx", "esbuild", "src/main.js", "--bundle", "--format=iife", "--minify", "--target=es2019", "--define:__BUILD__=\"" + BUILD + "\"", "--outfile=dist/app.js"], capture_output=True, text=True)
 print(r.stdout, r.stderr)
 if r.returncode: sys.exit(1)
 # pustaka pembaca dokumen (dimuat hanya saat dibutuhkan)
@@ -26,12 +27,13 @@ json.dump({"name": "MuawanahKu", "short_name": "MuawanahKu", "description": "Apl
               {"src": "icon-maskable-512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}], "id": "./"},
     open("dist/manifest.webmanifest", "w"))
 open("dist/sw.js", "w").write("""// Service worker: utamakan jaringan (selalu versi terbaru), cadangan cache saat offline
-const C = "mk-v3";
+const C = "mk-v4";
 self.addEventListener("install", e => { self.skipWaiting(); e.waitUntil(caches.open(C).then(c => c.addAll(["./", "./index.html", "./icon-192.png"]))); });
 self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET" || new URL(e.request.url).origin !== location.origin) return;
-  e.respondWith(fetch(e.request).then(r => { const k = r.clone(); caches.open(C).then(c => c.put(e.request, k)); return r; }).catch(() => caches.match(e.request).then(r => r || caches.match("./index.html"))));
+  const nav = e.request.mode === "navigate" || /\/(index\.html)?$/.test(new URL(e.request.url).pathname);
+  e.respondWith(fetch(nav ? new Request(e.request, { cache: "no-store" }) : e.request).then(r => { const k = r.clone(); caches.open(C).then(c => c.put(e.request, k)); return r; }).catch(() => caches.match(e.request).then(r => r || caches.match("./index.html"))));
 });
 """)
 html = f"""<!DOCTYPE html>
