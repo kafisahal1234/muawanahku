@@ -6,7 +6,7 @@ import { LOGO } from "./data.js";
 import * as L from "./logic.js";
 import { me, has } from "./common.js";
 
-export const VERSI = "1.0.0 (demo)";
+export const VERSI = "1.0.0";
 
 // ---------- unduhan ----------
 let dlp = null;
@@ -134,8 +134,6 @@ export function Tentang() {
     <div class="wrap"><${Card}><div class="center" style="padding:8px 0 4px"><img src=${LOGO} alt="Logo MuawanahKu" style="width:72px;height:72px;object-fit:contain" />
       <h3 style="margin:8px 0 2px;font-size:18px">Muawanah<span style="color:#B7790A">Ku</span></h3><p class="small" style="margin:0">Versi ${VERSI}</p></div>
       <div class="kv mt12"><span>Pemilik</span><b>Kampung Qur'an Al Muawanah</b></div><div class="kv"><span>Pengembang</span><b>Tim IT pondok</b></div>
-      <div class="kv"><span>Penyimpanan data</span><b>${S.mode === "db" ? "Server bersama" : "Browser ini"}</b></div></${Card}>
-    <${Card}><button class="menu-row" onClick=${() => nav.go("privasi")}><${Icon} n="shield" s=${22} /><span>Kebijakan Privasi</span><${Icon} n="right" s=${18} /></button>
-      <button class="menu-row" onClick=${() => nav.go("bantuan")}><${Icon} n="bookopen" s=${22} /><span>Bantuan</span><${Icon} n="right" s=${18} /></button></${Card}>
+      <div class="kv"><span>Penyimpanan data</span><b>${S.mode === "db" ? "Tersinkron antarperangkat" : "Perangkat ini"}</b></div></${Card}>
     <p class="fab-note">© 2026 Kampung Qur'an Al Muawanah</p></div>`;
 }

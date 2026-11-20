@@ -36,7 +36,7 @@ export function JamPelajaran() {
     <${Card} title="Hari aktif"><div class="kv"><span>KBM mapel</span><b>Senin – Jumat</b></div><div class="kv"><span>Halaqah tahfidz</span><b>Senin – Sabtu</b></div><div class="kv"><span>Sabtu</span><b>Halaqah Shubuh saja</b></div><div class="kv"><span>Ahad</span><b>Libur</b></div>
       <div class="chips mt8">${DATA.hari.map(h => html`<${Pill} t=${h} />`)}</div></${Card}>
     <${Card} title="Jam pelajaran"><div class="list">${DATA.jam.map(j => html`<${Row} name=${j.nama} sub=${`${j.mulai} – ${j.selesai}`} icon=${html`<${Icon} n="clock" s=${18} />`} />`)}</div></${Card}>
-    <p class="fab-note">Di versi Base44, hari dan jam bisa diubah. Di demo ini tampil saja.</p></div>`;
+    <p class="fab-note">Hari libur dan semester diatur di menu Kalender.</p></div>`;
 }
 
 export function Jadwal({ ro }) {

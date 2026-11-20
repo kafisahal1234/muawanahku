@@ -152,7 +152,9 @@ export function Sheet({ open, onClose, title, children }) {
 }
 export function Confirm({ open, title, text, yes = "Ya", onYes, onNo, danger }) {
   if (!open) return null;
-  return html`<div class="sheet-bg center"><div class="dialog" role="alertdialog"><h3>${title}</h3><p>${text}</p><div class="dlg-btn"><${Btn} kind="ghost" onClick=${onNo}>Batal</${Btn}><${Btn} kind=${danger ? "danger" : "primary"} onClick=${onYes}>${yes}</${Btn}></div></div></div>`;
+  return html`<div class="sheet-bg center" onClick=${e => { if (e.target.classList.contains("sheet-bg")) onNo(); }}><div class="dialog" role="alertdialog" aria-labelledby="dlg-t">
+    ${danger ? html`<span class="dlg-ic"><${Icon} n="alert" s=${26} c="#B3261E" /></span>` : null}<h3 id="dlg-t">${title}</h3><p>${text}</p>
+    <div class="dlg-stack"><${Btn} kind=${danger ? "danger" : "primary"} onClick=${onYes}>${yes}</${Btn}><${Btn} kind="text" onClick=${onNo}>Batal</${Btn}></div></div></div>`;
 }
 export function ToastHost() {
   const [t, setT] = useState(null); const tm = useRef(0);

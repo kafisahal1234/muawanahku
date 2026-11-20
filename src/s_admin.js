@@ -48,7 +48,7 @@ function EditSantri({ e, onClose }) {
   return html`<${Sheet} open=${true} title=${e.baru ? "Tambah santri" : "Ubah data santri"} onClose=${onClose}>
     <${Field} label="Nama lengkap"><input class="in" value=${f.nama} onInput=${x => set("nama", x.target.value)} /></${Field}>
     <div class="btn-row"><${Field} label="NIS" hint="Tampil di rapor"><input class="in" inputmode="numeric" value=${f.nis || ""} onInput=${x => set("nis", x.target.value)} /></${Field}>
-    <${Field} label="Tanggal lahir" hint=${f.lahir ? "Untuk kode akses wali" : "Belum diisi · demo pakai tanggal contoh"}><input class="in" type="date" value=${f.lahir || ""} onInput=${x => set("lahir", x.target.value)} /></${Field}></div>
+    <${Field} label="Tanggal lahir" hint=${f.lahir ? "Untuk kode akses wali" : "Belum diisi · sementara pakai tanggal contoh"}><input class="in" type="date" value=${f.lahir || ""} onInput=${x => set("lahir", x.target.value)} /></${Field}></div>
     ${!e.baru ? html`<div class="pos" style="margin:0 0 12px"><span>Kode akses wali</span><b>${L.kodeAkses({ ...e, ...f, lahir: f.lahir || e.lahir })}</b></div>` : null}
     <div class="btn-row"><${Field} label="Kelas"><select class="in" value=${f.kelas} onChange=${x => set("kelas", x.target.value)}>${L.KELAS.map(k => html`<option value=${k.id}>${k.nama}</option>`)}</select></${Field}>
     <${Field} label="Asrama"><select class="in" value=${f.asrama} onChange=${x => set("asrama", x.target.value)}>${L.ASRAMA.map(a => html`<option value=${a.id}>${a.nama}</option>`)}</select></${Field}></div>
@@ -123,7 +123,6 @@ function EditStaff({ e, onClose }) {
 export function AsramaAdmin({ halaqah }) {
   useApp();
   return html`<${SubHeader} title=${halaqah ? "Halaqah" : "Asrama"} sub="11 asrama di 2 pondok" /><div class="wrap">
-    ${halaqah ? html`<${Hint}>Di demo, halaqah mengikuti asrama. Pembagian final menunggu data pondok.</${Hint}>` : null}
     ${["29", "21"].map(p => html`<${Card} title=${"Pondok " + p}><div class="list">${L.ASRAMA.filter(a => a.pondok === p).map(a => html`<${Row} name=${(halaqah ? "Halaqah " : "") + (halaqah ? L.staffById(a.musyrif).pendek : a.nama)} sub=${halaqah ? `Asrama ${a.nama} · ${L.santriAsrama(a.id).length} santri` : `${L.staffById(a.musyrif).nama} · ${L.santriAsrama(a.id).length} santri`} onClick=${() => nav.go("santriAdmin", { asrama: a.id })} />`)}</div></${Card}>`)}</div>`;
 }
 
@@ -157,7 +156,7 @@ export function Impor() {
   };
   const c = k => (res || []).filter(r => r.st === k).length;
   return html`<${SubHeader} title="Impor Data" sub="Pratinjau sebelum disimpan" />
-    <div class="wrap"><${Hint}>Demo: tempel daftar nama atau unggah .txt/.csv. Di versi Base44, AI membaca Excel, PDF, Word, dan foto.</${Hint}>
+    <div class="wrap"><${Hint}>Tempel daftar nama atau unggah file .txt/.csv (satu nama per baris).</${Hint}>
     <${Card}><${Field} label="Daftar nama"><textarea class="in" style="min-height:140px" value=${txt} placeholder=${"1. Adiyatma Wira Teja\n2. M Raya Anugrah\n3. Nama Santri Baru"} onInput=${e => setTxt(e.target.value)}></textarea></${Field}>
       <${Field} label="Atau unggah file"><input type="file" accept=".txt,.csv,.xlsx,.pdf,.docx,image/*" class="in" onChange=${file} /></${Field}>
       <div class="btn-row"><${Field} label="Kelas untuk santri baru"><select class="in" value=${kelas} onChange=${e => setKelas(e.target.value)}>${L.KELAS.map(k => html`<option value=${k.id}>${k.nama}</option>`)}</select></${Field}>

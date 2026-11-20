@@ -15,6 +15,7 @@ import * as HM from "./s_home.js";
 import * as SY from "./s_system.js";
 import * as RK from "./s_rekap.js";
 import * as HQ from "./s_halaqah.js";
+import * as PF from "./s_profil.js";
 import * as KO from "./s_koreksi.js";
 import { me } from "./common.js";
 import { LOGO } from "./data.js";
@@ -30,6 +31,7 @@ const SCREENS = {
   dataMaster: AD.DataMaster, santriAdmin: AD.SantriAdmin, akunAdmin: AD.AkunAdmin, asramaAdmin: AD.AsramaAdmin, kelasAdmin: AD.KelasAdmin, impor: AD.Impor, pengumuman: AD.Pengumuman,
   ubahSandi: SY.UbahSandi, privasi: SY.Privasi, bantuan: SY.Bantuan, tentang: SY.Tentang,
   santri: SA.SantriDetail, raporList: SA.RaporList, raporView: SA.RaporView, motdAll: SA.MotdRekapAll, kinerjaAll: SA.KinerjaAll,
+  profil: PF.Profil, keamanan: PF.Keamanan,
   halaqahAdmin: HQ.HalaqahAdmin, halaqahEdit: HQ.HalaqahEdit,
   rekap: RK.RekapHub, rekapDetail: RK.RekapDetail, kalender: RK.Kalender, logUbah: KO.LogPerubahan,
 };
@@ -83,4 +85,18 @@ function App() {
     ${nav.splash ? html`<${Splash} nama=${wali ? "Wali " + L.santriById(u.id).nama : L.staffById(u.id).pendek} />` : null}
     ${!online ? html`<div class="loadpill" role="status" style="color:#A8261C">Tidak ada koneksi. Perubahan dikirim saat online lagi.</div>` : !S.ready ? html`<div class="loadpill" role="status">Menyambungkan data…</div>` : null}<${BottomNav} wali=${wali} /><${ToastHost} /></div>`;
 }
+// Rasa aplikasi asli: tanpa zoom cubit/ketuk-ganda, efek sentuh (ripple), service worker di hosting sendiri
+try {
+  ["gesturestart", "gesturechange"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
+  document.addEventListener("touchmove", e => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  document.addEventListener("pointerdown", e => {
+    const el = e.target.closest && e.target.closest(".btn,button.row,.menu-row,.sched,.demo-acc,.rk,.pchip");
+    if (!el || el.disabled) return;
+    const r = el.getBoundingClientRect(), d = Math.max(r.width, r.height) * 2, sp = document.createElement("span");
+    sp.className = "rpl"; sp.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - r.left - d / 2}px;top:${e.clientY - r.top - d / 2}px`;
+    if (getComputedStyle(el).position === "static") el.style.position = "relative";
+    el.style.overflow = "hidden"; el.appendChild(sp); setTimeout(() => sp.remove(), 600);
+  }, { passive: true });
+  if ("serviceWorker" in navigator && location.protocol === "https:" && window.top === window && !/claude|anthropic/.test(location.hostname)) navigator.serviceWorker.register("sw.js").catch(() => {});
+} catch (e) { }
 render(html`<${App} />`, document.getElementById("root"));

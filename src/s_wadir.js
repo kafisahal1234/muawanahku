@@ -40,7 +40,7 @@ export function DataAwal() {
   const [q, setQ] = useState(""); const [sel, setSel] = useState(null);
   const list = L.santriList().filter(s => s.nama.toLowerCase().includes(q.toLowerCase()));
   return html`<${SubHeader} title="Data Awal Hafalan" sub="Diisi Wadir Tahfidz, jadi titik mulai hitungan" />
-    <div class="wrap"><${Hint}>Data awal di demo masih contoh. Ketuk santri untuk mengubahnya.</${Hint}>
+    <div class="wrap"><${Hint}>Isi posisi hafalan setiap santri di awal semester. Ketuk santri untuk mengubahnya.</${Hint}>
     <${SearchBox} value=${q} onInput=${setQ} /><${Card}><div class="list">${list.map(s => { const a = L.dataAwal(s);
       return html`<${Row} name=${s.nama} sub=${`Hafal: ${a.selesai.length ? a.selesai.join(", ") : "—"} · ${L.posLabel(a.aktif, a.baris)}`} right=${(S.data.dataAwal || {})[s.id] ? html`<${Pill} t="Diubah" tone="blue" />` : null} onClick=${() => setSel(s.id)} />`; })}</div></${Card}>
     ${sel ? html`<${EditAwal} sid=${sel} onClose=${() => setSel(null)} />` : null}</div>`;
@@ -83,7 +83,6 @@ export function KinerjaTahfidz() {
 export function RekapHalaqah() {
   useApp();
   return html`<${SubHeader} title="Rekap Halaqah" sub="11 halaqah · 103 santri" /><div class="wrap">
-    <${Hint}>Di demo, halaqah mengikuti asrama. Pembagian final menunggu data pondok.</${Hint}>
     ${L.ASRAMA.map(a => { const st = halaqahStat(a); return html`<${Card} title=${a.nama} right=${html`<button class="link" onClick=${() => nav.go("progres", { aid: a.id })}>Detail</button>`}>
       <div class="small mb8">${L.staffById(a.musyrif).nama} · Pondok ${a.pondok}</div>
       <div class="stats"><${Stat} label="Santri" value=${st.n} /><${Stat} label="Rata hafalan" value=${st.avg.toFixed(1)} sub="juz" /><${Stat} label="Hadir" value=${st.hadir == null ? "—" : st.hadir + "%"} /></div></${Card}>`; })}</div>`;

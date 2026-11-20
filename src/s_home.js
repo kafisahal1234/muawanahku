@@ -44,7 +44,7 @@ export function Login() {
       ${err ? html`<div class="note red"><${Icon} n="alert" s=${18} />${err}</div>` : null}
       <${Btn} type="submit" disabled=${busy}>${busy ? "Memeriksa…" : "Masuk"}</${Btn}>
       <div class="mt8"><${Btn} kind="ghost" icon="users" onClick=${() => setDemo(true)}>Lihat semua akun demo</${Btn}></div></form>
-    <p class="mode">Versi demo ${S.mode === "db" ? "· data tersimpan bersama" : "· data tersimpan di browser ini"}<br /><button class="link" style="min-height:44px" onClick=${() => setPriv(true)}>Kebijakan Privasi</button></p>
+    <p class="mode">MuawanahKu ${VERSI} ${S.mode === "db" ? "· data tersinkron" : "· data tersimpan di perangkat ini"}<br /><button class="link" style="min-height:44px" onClick=${() => setPriv(true)}>Kebijakan Privasi</button></p>
     <${Sheet} open=${priv} title="Kebijakan Privasi" onClose=${() => setPriv(false)}><${PrivasiIsi} /></${Sheet}>
     <${Sheet} open=${demo} title="Akun demo" onClose=${() => setDemo(false)}>
       <p class="small" style="margin-top:0">Ketuk akun untuk langsung masuk. Guru: username + sandi (username + 123). Wali: satu kode akses (nama panggilan + tanggal lahir).</p>
@@ -137,7 +137,7 @@ function tasksFor(st) {
 function Hero({ name, sub, chips, bell }) {
   return html`<div class="hero"><div class="topbar"><${Logo} s=${44} /><div class="brand"><b>Muawanah<i>Ku</i></b><small>Kampung Qur'an Al Muawanah</small></div>
     <button class="bell" aria-label="Pengumuman" onClick=${() => nav.go("pengumuman")}><${Icon} n="bell" />${bell ? html`<b>${bell}</b>` : null}</button></div>
-    <div class="greet"><small>Assalamu'alaikum,</small><h2>${name}</h2><div class="chips">${chips.map((c, i) => html`<span class=${"chip " + (i === 0 ? "gold" : "")}>${c}</span>`)}</div>${sub ? html`<div class="small" style="color:#CFE6D9;margin-top:8px">${sub}</div>` : null}</div></div>`;
+    <div class="greet"><small>Assalamu'alaikum,</small><h2>${name}</h2><span class="tgl">${L.fmtTgl(L.today())}</span><div class="chips">${chips.map((c, i) => html`<span class=${"chip " + (i === 0 ? "gold" : "")}>${c}</span>`)}</div>${sub ? html`<div class="small" style="color:#CFE6D9;margin-top:8px">${sub}</div>` : null}</div></div>`;
 }
 const newPeng = () => all("pengumuman").filter(p => Date.now() - p.ts < 7 * 864e5).length;
 
@@ -163,7 +163,7 @@ export function JadwalSaya() {
   useApp();
   const st = me(), a = L.halaqahOf(st.id), days = a ? DATA.hariHalaqah : DATA.hari; const [hari, setHari] = useState(days.includes(L.hariIni()) ? L.hariIni() : "Senin");
   const sl = L.jadwalAll().filter(j => j.guru === st.id && j.hari === hari).sort((x, y) => x.jam.localeCompare(y.jam));
-  return html`<div class="sub-h"><div class="sub-row"><div class="sub-t"><h1>Jadwal Saya</h1><p>${st.nama}</p></div></div><${Seg} small items=${days.map(h => [h, h.slice(0, 3)])} value=${hari} onChange=${setHari} /></div>
+  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Jadwal Saya</h1><p>${st.nama}</p></div></div><${Seg} small items=${days.map(h => [h, h.slice(0, 3)])} value=${hari} onChange=${setHari} /></div>
     <div class="wrap">${a ? html`<${Card} title=${hari === "Sabtu" ? "Halaqah · Sabtu hanya Shubuh" : "Halaqah"}><div class="list">${L.sesiHariNama(hari).map(s => html`<${Row} name=${"Halaqah " + s} sub=${`${a.nama} · ${L.santriHalaqah(a.id).length} santri`} icon=${html`<${Icon} n=${s === "Malam" ? "moon" : "sun"} s=${18} />`} onClick=${hari === L.hariIni() ? () => nav.go("absenHalaqah", { sesi: s }) : null} />`)}</div></${Card}>` : null}
     ${st.roles.includes("guru_mapel") ? html`<${Card} title="Mengajar">${sl.length ? sl.map(j => { const jm = L.jamById(j.jam); return html`<button class="sched" onClick=${() => hari === L.hariIni() && nav.go("absenKelas", { jid: j.id, kelas: j.kelas, mapel: j.mapel })}><span class="tm">${jm.nama}<small>${jm.mulai}–${jm.selesai}</small></span><span style="flex:1"><b>${L.mapelById(j.mapel).nama} · ${j.kelas}</b><div class="small">${L.santriKelas(j.kelas).length} santri</div></span></button>`; })
       : html`<${Empty} t=${hari === "Sabtu" ? "Tidak ada KBM mapel hari Sabtu. KBM berjalan Senin–Jumat." : `Tidak ada jadwal mengajar hari ${hari}.`} icon="calendar" />`}</${Card}>` : null}
@@ -173,7 +173,7 @@ export function JadwalSaya() {
 export function CariSantri() {
   useApp();
   const [q, setQ] = useState(""); const list = L.santriScope(nav.user).filter(s => s.nama.toLowerCase().includes(q.toLowerCase()));
-  return html`<div class="sub-h"><div class="sub-row"><div class="sub-t"><h1>Cari Santri</h1><p>${list.length} santri sesuai akses Anda</p></div></div></div>
+  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Cari Santri</h1><p>${list.length} santri sesuai akses Anda</p></div></div></div>
     <div class="wrap"><${SearchBox} value=${q} onInput=${setQ} /><${Card}><div class="list">${list.slice(0, 80).map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaById(s.asrama).nama}`} onClick=${() => nav.go("santri", { sid: s.id })} />`)}</div></${Card}></div>`;
 }
 
@@ -181,7 +181,7 @@ export function RiwayatSaya() {
   useApp();
   const m = me(); const [sel, setSel] = useState(null); const [n, setN] = useState(40);
   const ev = kumpulRiwayat(m.id, false);
-  return html`<div class="sub-h"><div class="sub-row"><div class="sub-t"><h1>Riwayat</h1><p>Hanya yang Anda catat · ketuk untuk ubah atau hapus</p></div></div></div>
+  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Riwayat</h1><p>Hanya yang Anda catat · ketuk untuk ubah atau hapus</p></div></div></div>
     <div class="wrap"><${Card}>${ev.length ? html`<div class="list">${ev.slice(0, n).map(x => { const e = entriRiwayat(x.col, x.list), r = x.list[0];
       return html`<${Row} name=${e.jud} sub=${`${e.det} · ${L.fmtShort(L.ymd(new Date(x.ts)))} ${L.fmtJam(x.ts)}`} icon=${html`<${Icon} n=${e.ic} s=${18} />`}
         right=${r.diubah ? html`<${Pill} t="Dikoreksi" tone="blue" />` : null} onClick=${() => setSel(x)} />`; })}</div>
@@ -192,19 +192,19 @@ export function RiwayatSaya() {
 export function Akun() {
   useApp();
   const u = nav.user, st = u.kind === "staff" ? me() : null, sa = u.kind === "wali" ? L.santriById(u.id) : null;
-  const [ask, setAsk] = useState(null); const [busy, setBusy] = useState(false);
-  const reset = async () => { setAsk(null); setBusy(true); await resetAll(); setBusy(false); toast("Semua data demo dihapus"); };
-  const item = (ic, t, go, danger) => html`<button class="menu-row" onClick=${go} style=${danger ? "color:#B3261E" : ""}><${Icon} n=${ic} s=${22} c=${danger ? "#B3261E" : "#5E7266"} /><span>${t}</span><${Icon} n="right" s=${18} /></button>`;
-  return html`<div class="sub-h"><div class="sub-row"><div class="sub-t"><h1>Akun</h1></div></div></div>
-    <div class="wrap"><${Card}><div style="display:flex;gap:12px;align-items:center"><span class="av" style="width:52px;height:52px;border-radius:26px;font-size:17px">${L.initials((st ? st.pendek : sa.nama).replace(/^(Ust\.|Ustdzh\.)\s*/, ""))}</span>
-      <div style="min-width:0"><b style="font-size:16px">${st ? st.nama : "Wali " + sa.nama}</b><div class="small">${L.usernameOf(u)} · ${st ? st.roles.map(r => L.ROLE_LABEL[r]).join(", ") : "Wali Santri · Kelas " + sa.kelas}</div></div></div></${Card}>
-    ${st ? html`<${Section} t="Keamanan" /><${Card}>${item("lock", "Ubah kata sandi", () => nav.go("ubahSandi"))}</${Card}>` : null}
-    ${st && st.roles.some(r => ["mudir", "admin", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian"].includes(r)) ? html`<${Section} t="Pengawasan" /><${Card}>${item("clipboard", "Log perubahan data", () => nav.go("logUbah"))}</${Card}>` : null}
-    <${Section} t="Informasi" /><${Card}>${item("bookopen", "Bantuan", () => nav.go("bantuan"))}${item("shield", "Kebijakan Privasi", () => nav.go("privasi"))}${item("settings", "Tentang aplikasi · " + VERSI, () => nav.go("tentang"))}</${Card}>
-    ${st ? html`<${Section} t="Data demo" /><${Card}>${item("x", busy ? "Menghapus…" : "Hapus semua data demo", () => setAsk("reset"))}</${Card}>` : null}
-    <${Card}>${item("logout", "Keluar", () => setAsk("out"))}</${Card}>
-    <${Confirm} open=${ask === "reset"} danger title="Hapus semua data demo?" text="Semua absen, setoran, izin, BAP, nilai, dan pengumuman yang sudah diisi akan dihapus untuk semua akun. Data santri dan akun tetap." yes="Hapus" onYes=${reset} onNo=${() => setAsk(null)} />
-    <${Confirm} open=${ask === "out"} title="Keluar dari akun?" text="Anda perlu memasukkan username dan kata sandi lagi untuk masuk." yes="Keluar" onYes=${() => { setAsk(null); nav.setUser(null); }} onNo=${() => setAsk(null)} /></div>`;
+  const [ask, setAsk] = useState(false);
+  const item = (ic, t, sub, go, tone) => html`<button class="menu-row" onClick=${go}><span class=${"mr-ic " + (tone || "")}><${Icon} n=${ic} s=${20} /></span><span class="mr-t">${t}${sub ? html`<small>${sub}</small>` : null}</span><${Icon} n="right" s=${18} /></button>`;
+  const pengawas = st && st.roles.some(r => ["mudir", "admin", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian"].includes(r)), pr = st ? get("profil", st.id) : null;
+  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Akun</h1></div></div></div>
+    <div class="wrap">
+      <div class="acc-head"><span class="prof-av sm">${L.initials((st ? st.pendek : sa.nama).replace(/^(Ust\.|Ustdzh\.)\s*/, ""))}</span>
+        <span class="acc-t"><b>${st ? st.nama : "Wali " + sa.nama}</b><small>${st ? st.roles.map(r => L.ROLE_LABEL[r]).join(" · ") : `Kelas ${sa.kelas} · ${L.asramaById(sa.asrama).nama}`}</small></span></div>
+      ${st ? html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil", pr ? "Biodata diri" : "Lengkapi biodata diri", () => nav.go("profil"), "green")}${item("lock", "Keamanan", "Username & kata sandi", () => nav.go("keamanan"), "blue")}</div>` : null}
+      ${pengawas ? html`<${Section} t="Pengawasan" /><div class="group">${item("clipboard", "Log perubahan data", "Jejak koreksi & penghapusan", () => nav.go("logUbah"), "gold")}</div>` : null}
+      <${Section} t="Informasi" /><div class="group">${item("bookopen", "Bantuan", null, () => nav.go("bantuan"), "teal")}${item("shield", "Kebijakan Privasi", null, () => nav.go("privasi"), "purple")}${item("settings", "Tentang aplikasi", VERSI, () => nav.go("tentang"), "slate")}</div>
+      <div class="group mt12"><button class="menu-row out" onClick=${() => setAsk(true)}><span class="mr-ic red"><${Icon} n="logout" s=${20} /></span><span class="mr-t">Keluar</span></button></div>
+      <p class="fab-note">MuawanahKu ${VERSI} · Pondok Tahfidz Modern Kampung Qur'an Al Muawanah</p>
+    <${Confirm} open=${ask} danger title="Keluar dari akun?" text=${st ? "Anda perlu memasukkan username dan kata sandi lagi untuk masuk." : "Anda perlu memasukkan kode akses lagi untuk masuk."} yes="Keluar" onYes=${() => { setAsk(false); nav.setUser(null); }} onNo=${() => setAsk(false)} /></div>`;
 }
 
 // ---------------- wali ----------------
@@ -227,11 +227,11 @@ export function WaliBeranda() {
 }
 export function WaliHafalan() {
   useApp(); const s = L.santriById(nav.user.id);
-  return html`<div class="sub-h"><div class="sub-row"><div class="sub-t"><h1>Hafalan Ananda</h1><p>${s.nama}</p></div></div></div><div class="wrap"><${HafalanCard} s=${s} /><${Section} t="Riwayat setoran dan tasmi'" /><${Card}><${RiwayatSetoran} sid=${s.id} n=${20} /></${Card}></div>`;
+  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Hafalan Ananda</h1><p>${s.nama}</p></div></div></div><div class="wrap"><${HafalanCard} s=${s} /><${Section} t="Riwayat setoran dan tasmi'" /><${Card}><${RiwayatSetoran} sid=${s.id} n=${20} /></${Card}></div>`;
 }
 export function WaliAnanda() {
   useApp(); const s = L.santriById(nav.user.id);
-  return html`<div class="sub-h"><div class="sub-row"><div class="sub-t"><h1>Ananda</h1><p>${s.nama} · Kelas ${s.kelas}</p></div></div></div><div class="wrap"><${KehadiranCard} s=${s} />
+  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Ananda</h1><p>${s.nama} · Kelas ${s.kelas}</p></div></div></div><div class="wrap"><${KehadiranCard} s=${s} />
     <${Card} title="Nilai projek"><div class="list">${DATA.mapel.map(m => { const d = get("nilaiMapel", L.nilaiKey(m.id, s.kelas)), v = d && d.projek ? d.projek[s.id] : null, kk = L.kehadiranKelas(s.id, m.id);
       const pj = d && d.projekList ? d.projekList.map(p => [p.nama, ((d.projekNilai || {})[p.id] || {})[s.id]]).filter(([, x]) => x !== "" && x != null) : [];
       return html`<${Row} name=${m.nama} sub=${`${pj.length ? pj.map(([n, x]) => `${n}: ${x}`).join(" · ") + " · " : ""}Kehadiran kelas ${kk.pct == null ? "—" : kk.pct + "%"}`} icon=${html`<${Icon} n="award" s=${18} />`} right=${v == null || v === "" ? html`<${Pill} t="Belum" tone="muted" />` : html`<${Pill} t=${(pj.length > 1 ? "Rata " : "Projek ") + v} tone=${v >= 70 ? "green" : "red"} />`} />`; })}</div></${Card}>
@@ -239,6 +239,6 @@ export function WaliAnanda() {
 }
 export function WaliIzin() {
   useApp(); const s = L.santriById(nav.user.id);
-  return html`<div class="sub-h"><div class="sub-row"><div class="sub-t"><h1>Izin & Catatan</h1><p>${s.nama}</p></div></div></div><div class="wrap">
+  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Izin & Catatan</h1><p>${s.nama}</p></div></div></div><div class="wrap">
     <p class="hint">Untuk izin pulang atau keluar, hubungi Wadir Kesantrian Pondok ${L.pondokOfSantri(s)}. Setelah disetujui, izin tampil di sini.</p><${CatatanCard} s=${s} /></div>`;
 }
