@@ -7,6 +7,7 @@ import os, shutil
 os.makedirs("dist/vendor", exist_ok=True)
 for src, dst in [("vendor/pdf.min.mjs", "pdf.min.mjs"), ("vendor/pdf.worker.min.mjs", "pdf.worker.min.mjs"), ("vendor/mammoth.browser.min.js", "mammoth.browser.min.js"), ("vendor/xlsx.mjs", "xlsx.mjs")]:
     shutil.copy(src, "dist/vendor/" + dst)
+shutil.copy("tools/rc.html", "dist/rc.html")
 css = open("src/theme.css").read() + open("src/skin.css").read()
 js = open("dist/app.js").read().replace("</script", "<\\/script")
 # ikon aplikasi (PWA) dari logo

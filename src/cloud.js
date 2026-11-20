@@ -12,6 +12,8 @@ export const FIREBASE_CONFIG = {
 /* contoh:
 export const FIREBASE_CONFIG = { apiKey: "…", authDomain: "muawanahku.firebaseapp.com", projectId: "muawanahku", appId: "…" };
 */
+// Kunci situs reCAPTCHA v3 untuk App Check (kunci publik, aman ditaruh di kode). Kosong = App Check tidak dipakai.
+export const RECAPTCHA_SITE_KEY = "";
 export const V = "13.4.0", imp = new Function("u", "return import(u)");
 let APP = null;
 export const firebaseApp = () => APP;
@@ -23,6 +25,11 @@ export async function connectFirestore(cfg) {
   const [{ initializeApp }, fs, au] = await Promise.all([
     imp(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`), imp(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`), imp(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`)]);
   const app = initializeApp(cfg);
+  if (RECAPTCHA_SITE_KEY) {
+    try { const ac = await imp(`https://www.gstatic.com/firebasejs/${V}/firebase-app-check.js`);
+      ac.initializeAppCheck(app, { provider: new ac.ReCaptchaV3Provider(RECAPTCHA_SITE_KEY), isTokenAutoRefreshEnabled: true }); }
+    catch (e) { console.warn("App Check gagal dimuat", e); }
+  }
   try { await au.signInAnonymously(au.getAuth(app)); } catch (e) { console.warn("Login anonim gagal", e); throw new Error("Login Anonymous belum aktif (" + (e.code || e.message) + ")"); }
   const d = fs.initializeFirestore(app, { localCache: fs.persistentLocalCache() });
   APP = app;
