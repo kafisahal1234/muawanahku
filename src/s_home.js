@@ -4,7 +4,7 @@ import { S, all, get, resetAll, toast } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
 import { kumpulRiwayat, entriRiwayat, KoreksiSheet } from "./s_koreksi.js";
-import { me } from "./common.js";
+import { me, FotoAv, fotoUser } from "./common.js";
 import { HafalanCard, RiwayatSetoran, KehadiranCard, CatatanCard } from "./s_santri.js";
 import { slotStatus } from "./s_kurikulum.js";
 import { VERSI } from "./s_system.js";
@@ -134,10 +134,13 @@ function tasksFor(st) {
   return out.slice(0, 3);
 }
 
-function Hero({ name, sub, chips, bell }) {
-  return html`<div class="hero"><div class="topbar"><${Logo} s=${44} /><div class="brand"><b>Muawanah<i>Ku</i></b><small>Kampung Qur'an Al Muawanah</small></div>
-    <button class="bell" aria-label="Pengumuman" onClick=${() => nav.go("pengumuman")}><${Icon} n="bell" />${bell ? html`<b>${bell}</b>` : null}</button></div>
-    <div class="greet"><small>Assalamu'alaikum,</small><h2>${name}</h2><span class="tgl">${L.fmtTgl(L.today())}</span><div class="chips">${chips.map((c, i) => html`<span class=${"chip " + (i === 0 ? "gold" : "")}>${c}</span>`)}</div>${sub ? html`<div class="small" style="color:#CFE6D9;margin-top:8px">${sub}</div>` : null}</div></div>`;
+function Hero({ name, sub, chips, bell, foto, children }) {
+  return html`<header class="appbar"><${Logo} s=${40} /><div class="brand"><b>Muawanah<i>Ku</i></b><small>Kampung Qur'an Al Muawanah</small></div>
+      <button class="ab-btn" aria-label=${bell ? `Pengumuman, ${bell} baru` : "Pengumuman"} onClick=${() => nav.go("pengumuman")}><${Icon} n="bell" s=${24} />${bell ? html`<b>${bell}</b>` : null}</button></header>
+    <div class="hero-wrap"><section class="hero-card"><div class="hc-top"><div class="hc-t"><small>Assalamu'alaikum,</small><h2>${name}</h2><span class="tgl">${L.fmtTgl(L.today())}</span></div>
+      <button class="hc-foto" aria-label="Akun saya" onClick=${() => nav.setTab("akun")}><${FotoAv} src=${foto} nama=${name} size=${58} /></button></div>
+      <div class="chips">${chips.map((c, i) => html`<span class=${"chip " + (i === 0 ? "gold" : "")}>${c}</span>`)}</div>${sub ? html`<div class="small" style="color:#CFE6D9;margin-top:8px">${sub}</div>` : null}
+      ${children ? html`<div class="hc-in">${children}</div>` : null}</section></div>`;
 }
 const newPeng = () => all("pengumuman").filter(p => Date.now() - p.ts < 7 * 864e5).length;
 
@@ -151,8 +154,7 @@ function chipsFor(st) {
 export function Beranda() {
   useApp();
   const st = me(), tiles = tilesFor(st), tasks = tasksFor(st), peng = all("pengumuman").sort((a, b) => b.ts - a.ts).slice(0, 2);
-  return html`<${Hero} name=${st.nama} chips=${chipsFor(st)} bell=${newPeng()} />
-    <div class="lift"><${Summary} st=${st} /></div><div class="wrap" style="padding-top:0">
+  return html`<${Hero} name=${st.nama} chips=${chipsFor(st)} bell=${newPeng()} foto=${fotoUser(nav.user)}><${Summary} st=${st} /></${Hero}><div class="wrap">
     <${Card} title="Modul" right=${html`<small>Sesuai peran</small>`}><div class="tiles">${tiles.map(t => html`<${Tile} icon=${t.icon} label=${t.label} color=${t.color} badge=${t.badge} onClick=${t.go} />`)}</div></${Card}>
     ${tasks.length ? html`<${Card} title="Perlu diperhatikan"><div class="list">${tasks.map(([t, s, c, go]) => html`<button class="row" onClick=${go}><span class="row-ic" style=${`background:${c === "coral" ? "#FDE7E3" : c === "gold" ? "#FDF0D3" : "#E6EEFC"};color:${c === "coral" ? "#B3261E" : c === "gold" ? "#8A5A00" : "#1F56B5"}`}><${Icon} n="alert" s=${18} /></span>
       <span class="row-t"><b style="white-space:normal">${t}</b><small>${s}</small></span><${Icon} n="right" s=${18} c="#9AB0A5" /></button>`)}</div></${Card}>` : null}
@@ -197,9 +199,10 @@ export function Akun() {
   const pengawas = st && st.roles.some(r => ["mudir", "admin", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian"].includes(r)), pr = st ? get("profil", st.id) : null;
   return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Akun</h1></div></div></div>
     <div class="wrap">
-      <div class="acc-head"><span class="prof-av sm">${L.initials((st ? st.pendek : sa.nama).replace(/^(Ust\.|Ustdzh\.)\s*/, ""))}</span>
+      <div class="acc-head"><${FotoAv} src=${fotoUser(u)} nama=${st ? st.pendek : sa.nama} size=${58} />
         <span class="acc-t"><b>${st ? st.nama : "Wali " + sa.nama}</b><small>${st ? st.roles.map(r => L.ROLE_LABEL[r]).join(" · ") : `Kelas ${sa.kelas} · ${L.asramaById(sa.asrama).nama}`}</small></span></div>
-      ${st ? html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil", pr ? "Biodata diri" : "Lengkapi biodata diri", () => nav.go("profil"), "green")}${item("lock", "Keamanan", "Username & kata sandi", () => nav.go("keamanan"), "blue")}</div>` : null}
+      ${st ? html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil", pr ? "Biodata & foto profil" : "Lengkapi biodata & foto profil", () => nav.go("profil"), "green")}${item("lock", "Keamanan", "Username & kata sandi", () => nav.go("keamanan"), "blue")}</div>`
+        : html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil Ananda", fotoUser(u) ? "Biodata & foto profil" : "Biodata · tambahkan foto profil", () => nav.go("waliProfil"), "green")}</div>`}
       ${pengawas ? html`<${Section} t="Pengawasan" /><div class="group">${item("clipboard", "Log perubahan data", "Jejak koreksi & penghapusan", () => nav.go("logUbah"), "gold")}</div>` : null}
       <${Section} t="Informasi" /><div class="group">${item("bookopen", "Bantuan", null, () => nav.go("bantuan"), "teal")}${item("shield", "Kebijakan Privasi", null, () => nav.go("privasi"), "purple")}${item("settings", "Tentang aplikasi", VERSI, () => nav.go("tentang"), "slate")}</div>
       <div class="group mt12"><button class="menu-row out" onClick=${() => setAsk(true)}><span class="mr-ic red"><${Icon} n="logout" s=${20} /></span><span class="mr-t">Keluar</span></button></div>
@@ -218,8 +221,7 @@ export function WaliBeranda() {
   L.motdCatatan(s.id).forEach(c => kab.push([c.ts || 0, `${c.st === "A" ? "Alpa" : "Masbuq"} ${L.WAKTU.find(x => x[0] === c.waktu)[1]} · pelanggaran ringan`, "moon"]));
   kab.sort((x, y) => y[0] - x[0]);
   const peng = all("pengumuman").sort((x, y) => y.ts - x.ts).slice(0, 2);
-  return html`<${Hero} name=${s.nama} chips=${["Kelas " + s.kelas, "Asrama " + a.nama, L.namaHalaqah(s)]} bell=${newPeng()} />
-    <div class="lift"><${HafalanCard} s=${s} /></div><div class="wrap" style="padding-top:0">
+  return html`<${Hero} name=${s.nama} chips=${["Kelas " + s.kelas, "Asrama " + a.nama, L.namaHalaqah(s)]} bell=${newPeng()} foto=${fotoUser(nav.user)} /><div class="wrap"><${HafalanCard} s=${s} />
     ${(() => { const rg = L.periodeRange("bulanan"), kh = L.kehadiranHalaqah(s.id, rg), mp = L.mutPersen(s.id, rg), po = L.poinSantri(s.id);
       return html`<${Card} title="Bulan ini" right=${html`<small>${rg.label}</small>`}><div class="stats"><${Stat} label="Hadir halaqah" value=${kh.pct == null ? "—" : kh.pct + "%"} /><${Stat} label="Mutaba'ah" value=${mp.ibadah == null ? "—" : Math.round((mp.ibadah + mp.adab) / 2) + "%"} /><${Stat} label="Poin catatan" value=${po.total} tone=${po.total ? "gold" : ""} /></div></${Card}>`; })()}
     <${Card} title="Kabar terbaru">${kab.length ? html`<div class="list">${kab.slice(0, 6).map(([ts, t, ic]) => html`<${Row} name=${t} sub=${ts ? `${L.fmtTgl(L.ymd(new Date(ts)))}` : ""} icon=${html`<${Icon} n=${ic} s=${18} />`} />`)}</div>` : html`<${Empty} t="Belum ada kabar baru tentang ananda." icon="heart" />`}</${Card}>

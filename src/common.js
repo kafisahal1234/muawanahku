@@ -1,6 +1,7 @@
 import { useState } from "preact/hooks";
 import { html, nav, Icon, Sheet, SearchBox, Row, Pill } from "./ui.js";
 import { staffById, santriById, initials } from "./logic.js";
+import { get } from "./store.js";
 
 export const me = () => (nav.user && nav.user.kind === "staff" ? staffById(nav.user.id) : null);
 export const has = r => { const m = me(); return !!m && m.roles.includes(r); };
@@ -34,5 +35,24 @@ export async function compressImage(file, max = 900, q = 0.72) {
     let out = c.toDataURL("image/jpeg", q);
     if (out.length > 150000) out = c.toDataURL("image/jpeg", 0.5);
     return out;
+  } finally { URL.revokeObjectURL(url); }
+}
+
+// ---------- foto profil ----------
+export const kunciFoto = user => (user.kind === "wali" ? "s_" + user.id : user.id);
+export const fotoUser = user => ((user && get("profil", kunciFoto(user))) || {}).foto || null;
+export const fotoSantri = sid => (get("profil", "s_" + sid) || {}).foto || null;
+export function FotoAv({ src, nama, size = 48, cls = "" }) {
+  const t = initials((nama || "?").replace(/^(Ust\.|Ustdzh\.)\s*/, ""));
+  return html`<span class=${"foto-av " + cls} style=${`width:${size}px;height:${size}px;font-size:${Math.round(size * 0.36)}px`}>${src ? html`<img src=${src} alt=${"Foto " + (nama || "")} />` : t}</span>`;
+}
+// potong tengah jadi persegi lalu kompres (foto profil ringan)
+export async function fotoPersegi(file, n = 320) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const s = Math.min(img.width, img.height), c = document.createElement("canvas"); c.width = n; c.height = n;
+    c.getContext("2d").drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, n, n);
+    return c.toDataURL("image/jpeg", 0.78);
   } finally { URL.revokeObjectURL(url); }
 }

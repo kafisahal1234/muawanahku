@@ -31,7 +31,7 @@ const SCREENS = {
   dataMaster: AD.DataMaster, santriAdmin: AD.SantriAdmin, akunAdmin: AD.AkunAdmin, asramaAdmin: AD.AsramaAdmin, kelasAdmin: AD.KelasAdmin, impor: AD.Impor, pengumuman: AD.Pengumuman,
   ubahSandi: SY.UbahSandi, privasi: SY.Privasi, bantuan: SY.Bantuan, tentang: SY.Tentang,
   santri: SA.SantriDetail, raporList: SA.RaporList, raporView: SA.RaporView, motdAll: SA.MotdRekapAll, kinerjaAll: SA.KinerjaAll,
-  profil: PF.Profil, keamanan: PF.Keamanan,
+  profil: PF.Profil, keamanan: PF.Keamanan, waliProfil: PF.WaliProfil,
   halaqahAdmin: HQ.HalaqahAdmin, halaqahEdit: HQ.HalaqahEdit,
   rekap: RK.RekapHub, rekapDetail: RK.RekapDetail, kalender: RK.Kalender, logUbah: KO.LogPerubahan,
 };
@@ -45,9 +45,12 @@ const STAFF_TABS = { home: HM.Beranda, jadwal: HM.JadwalSaya, cari: HM.CariSantr
 const WALI_TABS = { home: HM.WaliBeranda, hafalan: HM.WaliHafalan, ananda: HM.WaliAnanda, izin: HM.WaliIzin, akun: HM.Akun };
 
 function BottomNav({ wali }) {
+  // 5 tab; tab tengah tampil sebagai tombol bulat menonjol (pola aplikasi dompet/santri)
   const items = wali ? [["home", "Beranda", "home"], ["hafalan", "Hafalan", "bookopen"], ["ananda", "Ananda", "heart"], ["izin", "Izin", "door"], ["akun", "Akun", "user"]]
     : [["home", "Beranda", "home"], ["jadwal", "Jadwal", "calendar"], ["cari", "Cari", "search"], ["riwayat", "Riwayat", "clock"], ["akun", "Akun", "user"]];
-  return html`<nav class="bnav" aria-label="Navigasi utama">${items.map(([k, lab, ic]) => html`<button class=${nav.tab === k ? "on" : ""} aria-current=${nav.tab === k ? "page" : null} onClick=${() => nav.setTab(k)}><i><${Icon} n=${ic} s=${24} /></i>${lab}</button>`)}</nav>`;
+  return html`<nav class="bnav" aria-label="Navigasi utama">${items.map(([k, lab, ic], i) => i === 2
+    ? html`<button class=${"fab-tab " + (nav.tab === k ? "on" : "")} aria-current=${nav.tab === k ? "page" : null} onClick=${() => nav.setTab(k)}><span class="fab"><${Icon} n=${ic} s=${28} w=${2.4} /></span><em>${lab}</em></button>`
+    : html`<button class=${nav.tab === k ? "on" : ""} aria-current=${nav.tab === k ? "page" : null} onClick=${() => nav.setTab(k)}><i><${Icon} n=${ic} s=${26} /></i><em>${lab}</em></button>`)}</nav>`;
 }
 function useOnline() {
   const [on, setOn] = useState(typeof navigator === "undefined" || navigator.onLine !== false);
