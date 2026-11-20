@@ -206,7 +206,7 @@ export function Akun() {
       ${pengawas ? html`<${Section} t="Pengawasan" /><div class="group">${item("clipboard", "Log perubahan data", "Jejak koreksi & penghapusan", () => nav.go("logUbah"), "gold")}</div>` : null}
       <${Section} t="Informasi" /><div class="group">${item("bookopen", "Bantuan", null, () => nav.go("bantuan"), "teal")}${item("shield", "Kebijakan Privasi", null, () => nav.go("privasi"), "purple")}${item("settings", "Tentang aplikasi", VERSI, () => nav.go("tentang"), "slate")}</div>
       <div class="group mt12"><button class="menu-row out" onClick=${() => setAsk(true)}><span class="mr-ic red"><${Icon} n="logout" s=${20} /></span><span class="mr-t">Keluar</span></button></div>
-      <p class="fab-note">MuawanahKu ${VERSI} · Pondok Tahfidz Modern Kampung Qur'an Al Muawanah</p>
+      <p class="fab-note">Muawanah<b style="color:#E2A93B">Ku</b> ${VERSI} · Pondok Tahfidz Modern Kampung Qur'an Al Muawanah</p>
     <${Confirm} open=${ask} danger title="Keluar dari akun?" text=${st ? "Anda perlu memasukkan username dan kata sandi lagi untuk masuk." : "Anda perlu memasukkan kode akses lagi untuk masuk."} yes="Keluar" onYes=${() => { setAsk(false); nav.setUser(null); }} onNo=${() => setAsk(false)} /></div>`;
 }
 

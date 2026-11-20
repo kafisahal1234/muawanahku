@@ -132,7 +132,7 @@ export function Bantuan() {
 export function Tentang() {
   return html`<${SubHeader} title="Tentang aplikasi" />
     <div class="wrap"><${Card}><div class="center" style="padding:8px 0 4px"><img src=${LOGO} alt="Logo MuawanahKu" style="width:72px;height:72px;object-fit:contain" />
-      <h3 style="margin:8px 0 2px;font-size:18px">Muawanah<span style="color:#B7790A">Ku</span></h3><p class="small" style="margin:0">Versi ${VERSI}</p></div>
+      <h3 style="margin:8px 0 2px;font-size:18px">Muawanah<span style="color:#E2A93B">Ku</span></h3><p class="small" style="margin:0">Versi ${VERSI}</p></div>
       <div class="kv mt12"><span>Pemilik</span><b>Kampung Qur'an Al Muawanah</b></div><div class="kv"><span>Pengembang</span><b>Tim IT pondok</b></div>
       <div class="kv"><span>Penyimpanan data</span><b>${S.mode === "db" ? "Tersinkron antarperangkat" : "Perangkat ini"}</b></div></${Card}>
     <p class="fab-note">© 2026 Kampung Qur'an Al Muawanah</p></div>`;
