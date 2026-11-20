@@ -14,6 +14,7 @@ export const FIREBASE_CONFIG = { apiKey: "…", authDomain: "muawanahku.firebase
 */
 // Kunci situs reCAPTCHA v3 untuk App Check (kunci publik, aman ditaruh di kode). Kosong = App Check tidak dipakai.
 export const RECAPTCHA_SITE_KEY = "6Lf_niouAAAAAKFfLbbhqqlEmbb_8rvdO5eSYM4K";
+export const APPCHECK_TOKEN = "72009629-81FB-43D2-A284-B1A3E565E378";
 export const V = "13.4.0", imp = new Function("u", "return import(u)");
 let APP = null;
 export const firebaseApp = () => APP;
@@ -26,6 +27,8 @@ export async function connectFirestore(cfg) {
     imp(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`), imp(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`), imp(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`)]);
   const app = initializeApp(cfg);
   if (RECAPTCHA_SITE_KEY) {
+    // Token debug App Check (didaftarkan di Firebase → App Check → Apps → Kelola token debug) agar AI Logic menerima permintaan
+    if (APPCHECK_TOKEN) self.FIREBASE_APPCHECK_DEBUG_TOKEN = APPCHECK_TOKEN;
     try { const ac = await imp(`https://www.gstatic.com/firebasejs/${V}/firebase-app-check.js`);
       ac.initializeAppCheck(app, { provider: new ac.ReCaptchaV3Provider(RECAPTCHA_SITE_KEY), isTokenAutoRefreshEnabled: true }); }
     catch (e) { console.warn("App Check gagal dimuat", e); }
