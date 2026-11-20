@@ -6,7 +6,7 @@ import { LOGO } from "./data.js";
 export const html = htm.bind(h);
 
 // ---------------- navigasi (tombol/gesture kembali Android & iOS ikut bekerja) ----------------
-const N = { stack: [], tab: "home", user: null, ver: 0 };
+const N = { stack: [], tab: "home", user: null, ver: 0, dir: "tab", splash: false };
 const nsubs = new Set();
 let live = 0, ignore = false;
 function nemit() { N.ver++; nsubs.forEach(f => f(N.ver)); }
@@ -15,18 +15,18 @@ try {
   window.addEventListener("popstate", () => {
     if (ignore) { ignore = false; return; }
     if (live > 0) live--;
-    if (N.stack.length) { N.stack.pop(); nemit(); window.scrollTo(0, 0); }
-    else if (N.user && N.tab !== "home") { N.tab = "home"; nemit(); }
+    if (N.stack.length) { N.dir = "back"; N.stack.pop(); nemit(); window.scrollTo(0, 0); }
+    else if (N.user && N.tab !== "home") { N.dir = "back"; N.tab = "home"; nemit(); }
   });
 } catch (e) { }
 export const nav = {
-  get user() { return N.user; }, get tab() { return N.tab; }, get top() { return N.stack[N.stack.length - 1]; }, get depth() { return N.stack.length; },
-  setUser(u) { unwind(); N.user = u; N.stack = []; N.tab = "home"; try { u ? sessionStorage.setItem("mk_user", JSON.stringify(u)) : sessionStorage.removeItem("mk_user"); } catch (e) { } nemit(); },
-  go(screen, params = {}) { N.stack.push({ screen, params }); try { history.pushState({ mk: N.stack.length }, ""); live++; } catch (e) { } nemit(); window.scrollTo(0, 0); },
-  replace(screen, params = {}) { N.stack[N.stack.length - 1] = { screen, params }; nemit(); },
-  back() { if (live > 0) { try { history.back(); return; } catch (e) { } } N.stack.pop(); nemit(); window.scrollTo(0, 0); },
-  home() { unwind(); N.stack = []; N.tab = "home"; nemit(); window.scrollTo(0, 0); },
-  setTab(t) { unwind(); N.stack = []; N.tab = t; nemit(); window.scrollTo(0, 0); },
+  get user() { return N.user; }, get tab() { return N.tab; }, get dir() { return N.dir; }, get splash() { return N.splash; }, endSplash() { N.splash = false; nemit(); }, get top() { return N.stack[N.stack.length - 1]; }, get depth() { return N.stack.length; },
+  setUser(u, opt = {}) { unwind(); N.user = u; N.stack = []; N.tab = "home"; N.dir = "tab"; N.splash = !!(u && opt.splash); try { u ? sessionStorage.setItem("mk_user", JSON.stringify(u)) : sessionStorage.removeItem("mk_user"); } catch (e) { } nemit(); },
+  go(screen, params = {}) { N.dir = "fwd"; N.stack.push({ screen, params }); try { history.pushState({ mk: N.stack.length }, ""); live++; } catch (e) { } nemit(); window.scrollTo(0, 0); },
+  replace(screen, params = {}) { N.dir = "fwd"; N.stack[N.stack.length - 1] = { screen, params }; nemit(); },
+  back() { if (live > 0) { try { history.back(); return; } catch (e) { } } N.dir = "back"; N.stack.pop(); nemit(); window.scrollTo(0, 0); },
+  home() { unwind(); N.dir = "back"; N.stack = []; N.tab = "home"; nemit(); window.scrollTo(0, 0); },
+  setTab(t) { unwind(); N.dir = "tab"; N.stack = []; N.tab = t; nemit(); window.scrollTo(0, 0); },
 };
 export function useApp() {
   const [, set] = useState(0);
@@ -156,8 +156,9 @@ export function Confirm({ open, title, text, yes = "Ya", onYes, onNo, danger }) 
 }
 export function ToastHost() {
   const [t, setT] = useState(null); const tm = useRef(0);
-  useEffect(() => onToast((msg, kind) => { setT({ msg, kind }); clearTimeout(tm.current); tm.current = setTimeout(() => setT(null), 2600); }), []);
-  return t ? html`<div class=${"toast " + t.kind} role="status"><${Icon} n=${t.kind === "err" ? "alert" : "check"} s=${18} />${t.msg}</div>` : null;
+  useEffect(() => onToast((msg, kind) => { setT({ msg, kind, id: Date.now() }); clearTimeout(tm.current); tm.current = setTimeout(() => setT(null), 2600); }), []);
+  return t ? html`${t.kind !== "err" ? html`<div class="ok-burst" key=${t.id} aria-hidden="true"><span><${Icon} n="check" s=${40} w=${3} c="#fff" /></span></div>` : null}
+    <div class=${"toast " + t.kind} key=${"t" + t.id} role="status"><span class="t-ic"><${Icon} n=${t.kind === "err" ? "alert" : "check"} s=${16} w=${2.6} /></span>${t.msg}</div>` : null;
 }
 export function SearchBox({ value, onInput, ph = "Cari nama santri" }) {
   return html`<div class="search"><${Icon} n="search" s=${18} c="#7A8F85" /><input value=${value} placeholder=${ph} onInput=${e => onInput(e.target.value)} /></div>`;

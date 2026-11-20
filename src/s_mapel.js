@@ -26,8 +26,7 @@ export function Mapel({ mapel }) {
       <${Card} title="Menu"><div class="tiles">
         <${Tile} icon="checksq" label="Absen & Jurnal" color="blue" onClick=${() => nav.go("absenKelasPilih", { mapel })} />
         <${Tile} icon="edit" label="Input Nilai" color="orange" onClick=${() => nav.go("nilaiPilih", { mapel })} />
-        <${Tile} icon="chart" label="Rekap Kehadiran" color="teal" onClick=${() => nav.go("rekapKelasPilih", { mapel })} />
-        <${Tile} icon="briefcase" label="Izin Guru" color="slate" onClick=${() => nav.go("izinGuru")} /></div></${Card}>
+</div></${Card}>
       </div>`;
 }
 
@@ -62,30 +61,51 @@ export function NilaiPilih({ mapel }) {
       return html`<${Row} name=${"Kelas " + k} sub=${`${L.santriKelas(k).length} santri`} icon=${html`<${Icon} n="edit" s=${18} />`} right=${html`<${Pill} t=${n ? n + " terisi" : "Belum"} tone=${n ? "green" : "muted"} />`} onClick=${() => nav.go("nilaiMapel", { mapel, kelas: k })} />`; })}</div></${Card}></div>`;
 }
 
+// Nilai projek bisa lebih dari satu: guru menambah projek (nama), nilai projek di rapor = rata-rata semua projek yang sudah dinilai
 export function NilaiMapel({ mapel, kelas }) {
   useApp();
   const m = L.mapelById(mapel), list = L.santriKelas(kelas), key = L.nilaiKey(mapel, kelas), ex = get("nilaiMapel", key) || {};
-  const [tab, setTab] = useState("komponen");
-  const [v, setV] = useState(() => ({ projek: { ...(ex.projek || {}) }, pts: { ...(ex.pts || {}) }, pas: { ...(ex.pas || {}) } }));
+  const [tab, setTab] = useState("projek");
+  const [pl, setPl] = useState(() => ex.projekList ? ex.projekList.map(x => ({ ...x })) : ex.projek && Object.keys(ex.projek).length ? [{ id: "p1", nama: "Projek 1" }] : [{ id: "p1", nama: "Projek 1" }]);
+  const [pn, setPn] = useState(() => JSON.parse(JSON.stringify(ex.projekNilai || (ex.projek ? { p1: ex.projek } : {}))));
+  const [pa, setPa] = useState(pl[0] ? pl[0].id : null); const [ed, setEd] = useState(null);
+  const [v, setV] = useState(() => ({ pts: { ...(ex.pts || {}) }, pas: { ...(ex.pas || {}) } }));
   const [asp, setAsp] = useState(() => JSON.parse(JSON.stringify(ex.aspek || {})));
   const clamp = val => (val === "" ? "" : Math.max(0, Math.min(100, Number(val))));
   const set = (f, id, val) => setV({ ...v, [f]: { ...v[f], [id]: clamp(val) } });
+  const setP = (pid, id, val) => setPn({ ...pn, [pid]: { ...(pn[pid] || {}), [id]: clamp(val) } });
   const setA = (id, i, val) => setAsp({ ...asp, [id]: { ...(asp[id] || {}), [i]: clamp(val) } });
-  const akhir = id => { const pj = v.projek[id], pts = v.pts[id], pas = v.pas[id]; if ([pj, pts, pas].some(x => x === "" || x == null)) return null;
+  const rataProjek = id => { const xs = pl.map(p => (pn[p.id] || {})[id]).filter(x => x !== "" && x != null).map(Number); return xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null; };
+  const akhir = id => { const pj = rataProjek(id), pts = v.pts[id], pas = v.pas[id]; if (pj == null || [pts, pas].some(x => x === "" || x == null)) return null;
     const kh = L.kehadiranKelas(id, mapel).pct; return Math.round((kh == null ? 100 : kh) * 0.1 + pj * 0.3 + pts * 0.25 + pas * 0.35); };
-  const save = async () => { if (await put("nilaiMapel", key, { mapel, kelas, ...v, aspek: asp, guru: me().id, ts: Date.now() })) { toast("Nilai tersimpan"); nav.back(); } };
-  const inp = (f, s) => html`<input type="number" min="0" max="100" inputmode="numeric" value=${v[f][s.id] ?? ""} aria-label=${f + " " + s.nama} onInput=${e => set(f, s.id, e.target.value)} />`;
-  const inpA = (s, i) => html`<input type="number" min="0" max="100" inputmode="numeric" value=${(asp[s.id] || {})[i] ?? ""} aria-label=${m.aspek[i] + " " + s.nama} onInput=${e => setA(s.id, i, e.target.value)} />`;
-  return html`<${SubHeader} title=${`Nilai ${m.nama} · ${kelas}`} sub="Kehadiran dihitung otomatis dari absen kelas"><${Seg} items=${[["komponen", "Nilai akhir"], ["aspek", "Nilai per aspek"]]} value=${tab} onChange=${setTab} /></${SubHeader}>
-    <div class="wrap">${tab === "komponen" ? html`<${Hint}>Nilai akhir = 10% hadir + 30% projek + 25% PTS + 35% PAS · KKM 70</${Hint}>
+  const save = async () => { const projek = {}; list.forEach(s => { const r = rataProjek(s.id); if (r != null) projek[s.id] = r; });
+    if (await put("nilaiMapel", key, { mapel, kelas, projekList: pl, projekNilai: pn, projek, ...v, aspek: asp, guru: me().id, ts: Date.now() })) { toast("Nilai tersimpan"); nav.back(); } };
+  const tambah = () => { const id = "p" + (Math.max(0, ...pl.map(p => Number(p.id.slice(1)) || 0)) + 1); setEd({ id, nama: `Projek ${pl.length + 1}`, baru: true }); };
+  const simpanP = () => { if (!ed.nama.trim()) return; if (ed.baru) { setPl([...pl, { id: ed.id, nama: ed.nama.trim() }]); setPa(ed.id); } else setPl(pl.map(p => (p.id === ed.id ? { ...p, nama: ed.nama.trim() } : p))); setEd(null); };
+  const hapusP = () => { const np = pl.filter(p => p.id !== ed.id), nn = { ...pn }; delete nn[ed.id]; setPl(np); setPn(nn); setPa(np[0] ? np[0].id : null); setEd(null); };
+  const num = (val, lab, on) => html`<input type="number" min="0" max="100" inputmode="numeric" value=${val ?? ""} aria-label=${lab} onInput=${e => on(e.target.value)} />`;
+  const nm = s => html`<td style="min-width:120px;position:sticky;left:0;background:#fff;z-index:1"><b style="font-size:12.5px">${s.nama}</b></td>`;
+  const cur = pl.find(p => p.id === pa);
+  return html`<${SubHeader} title=${`Nilai ${m.nama} · ${kelas}`} sub="Kehadiran dihitung otomatis dari absen kelas"><${Seg} items=${[["projek", `Projek (${pl.length})`], ["komponen", "PTS & PAS"], ["aspek", "Aspek rapor"]]} value=${tab} onChange=${setTab} /></${SubHeader}>
+    <div class="wrap">${tab === "projek" ? html`<${Hint}>Tambahkan setiap projek yang diberikan semester ini. Nilai projek di rapor = rata-rata semua projek yang sudah dinilai.</${Hint}>
+      <div class="proj-chips">${pl.map(p => html`<button type="button" class=${"pchip " + (p.id === pa ? "on" : "")} aria-pressed=${p.id === pa} onClick=${() => (p.id === pa ? setEd({ ...p }) : setPa(p.id))}>${p.nama}${p.id === pa ? html` <${Icon} n="edit" s=${14} />` : null}</button>`)}
+        <button type="button" class="pchip add" onClick=${tambah}><${Icon} n="plus" s=${16} /> Projek</button></div>
+      ${cur ? html`<${Card} title=${cur.nama} right=${html`<small>${Object.values(pn[cur.id] || {}).filter(x => x !== "" && x != null).length}/${list.length} dinilai</small>`}><div class="scroll-x"><table class="tbl"><thead><tr><th>Santri</th><th class="c">Nilai</th><th class="c">Rata projek</th></tr></thead><tbody>
+        ${list.map(s => { const r = rataProjek(s.id); return html`<tr>${nm(s)}<td class="c">${num((pn[cur.id] || {})[s.id], cur.nama + " " + s.nama, x => setP(cur.id, s.id, x))}</td><td class="c"><b class=${r == null ? "" : r < 70 ? "t-red" : "t-green"}>${r ?? "—"}</b></td></tr>`; })}</tbody></table></div></${Card}>`
+        : html`<${Card}><${Empty} t="Belum ada projek. Ketuk + Projek." icon="layers" /></${Card}>`}`
+    : tab === "komponen" ? html`<${Hint}>Nilai akhir = 10% hadir + 30% rata-rata projek + 25% PTS + 35% PAS · KKM 70</${Hint}>
     <${Card}><div class="scroll-x"><table class="tbl"><thead><tr><th>Santri</th><th class="c">Hadir</th><th class="c">Projek</th><th class="c">PTS</th><th class="c">PAS</th><th class="c">Akhir</th></tr></thead><tbody>
-      ${list.map(s => { const a = akhir(s.id), kh = L.kehadiranKelas(s.id, mapel).pct;
-        return html`<tr><td style="min-width:120px"><b style="font-size:12.5px">${s.nama}</b></td><td class="c">${kh == null ? "—" : kh + "%"}</td><td class="c">${inp("projek", s)}</td><td class="c">${inp("pts", s)}</td><td class="c">${inp("pas", s)}</td>
-          <td class="c"><b style=${a != null && a < 70 ? "color:#B3261E" : "color:#0B5D3B"}>${a ?? "—"}</b></td></tr>`; })}</tbody></table></div></${Card}>`
+      ${list.map(s => { const a = akhir(s.id), kh = L.kehadiranKelas(s.id, mapel).pct, r = rataProjek(s.id);
+        return html`<tr>${nm(s)}<td class="c">${kh == null ? "—" : kh + "%"}</td><td class="c"><b>${r ?? "—"}</b></td><td class="c">${num(v.pts[s.id], "PTS " + s.nama, x => set("pts", s.id, x))}</td><td class="c">${num(v.pas[s.id], "PAS " + s.nama, x => set("pas", s.id, x))}</td>
+          <td class="c"><b class=${a == null ? "" : a < 70 ? "t-red" : "t-green"}>${a ?? "—"}</b></td></tr>`; })}</tbody></table></div></${Card}>`
     : html`<${Hint}>Nilai tiap aspek tampil di rapor bagian B beserta predikatnya. ${m.aspek.map((t, i) => `A${i + 1} = ${t}`).join(" · ")}</${Hint}>
     <${Card}><div class="scroll-x"><table class="tbl"><thead><tr><th>Santri</th>${m.aspek.map((t, i) => html`<th class="c" title=${t}>A${i + 1}</th>`)}</tr></thead><tbody>
-      ${list.map(s => html`<tr><td style="min-width:120px;position:sticky;left:0;background:#fff;z-index:1"><b style="font-size:12.5px">${s.nama}</b></td>${m.aspek.map((_, i) => html`<td class="c">${inpA(s, i)}</td>`)}</tr>`)}</tbody></table></div></${Card}>`}
-    <${Btn} onClick=${save} icon="check">Simpan nilai</${Btn}></div>`;
+      ${list.map(s => html`<tr>${nm(s)}${m.aspek.map((_, i) => html`<td class="c">${num((asp[s.id] || {})[i], m.aspek[i] + " " + s.nama, x => setA(s.id, i, x))}</td>`)}</tr>`)}</tbody></table></div></${Card}>`}
+    <div class="sticky-act"><${Btn} onClick=${save} icon="check">Simpan nilai</${Btn}></div></div>
+    <${Sheet} open=${!!ed} title=${ed && ed.baru ? "Tambah projek" : "Ubah projek"} onClose=${() => setEd(null)}>${ed ? html`
+      <${Field} label="Nama projek"><input class="in" value=${ed.nama} placeholder="Misal: Poster tata cara wudhu" onInput=${e => setEd({ ...ed, nama: e.target.value })} /></${Field}>
+      <div class="btn-row">${!ed.baru ? html`<${Btn} kind="outline" icon="trash" onClick=${hapusP}>Hapus projek</${Btn}>` : null}<${Btn} disabled=${!ed.nama.trim()} onClick=${simpanP}>${ed.baru ? "Tambah" : "Simpan"}</${Btn}></div>
+      ${!ed.baru ? html`<p class="small mt8">Menghapus projek juga menghapus nilainya. Perubahan tersimpan setelah menekan Simpan nilai.</p>` : null}` : null}</${Sheet}>`;
 }
 
 export function RekapKelasPilih({ mapel }) {

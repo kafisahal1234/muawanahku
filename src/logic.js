@@ -21,12 +21,16 @@ export const hariIni = () => HARI_ID[new Date().getDay()];
 // Data guru & asrama bisa diubah Admin (staffEdit, asramaEdit); array diperbarui di tempat setiap data berubah
 export const STAFF = [...DATA.staff];
 export const ASRAMA = DATA.asrama.map(a => ({ ...a }));
+export const HALAQAH = DATA.halaqah.map(h => ({ ...h }));
 function segarkanMaster() {
   const ed = S.data.staffEdit || {}, ae = S.data.asramaEdit || {};
   const base = DATA.staff.map(s => (ed[s.id] ? { ...s, ...ed[s.id] } : s));
   const extra = Object.entries(ed).filter(([id]) => !DATA.staff.find(s => s.id === id)).map(([id, v]) => ({ id, ajar: [], roles: [], ...v }));
   STAFF.splice(0, STAFF.length, ...base, ...extra);
   ASRAMA.splice(0, ASRAMA.length, ...DATA.asrama.map(a => (ae[a.id] ? { ...a, ...ae[a.id] } : { ...a })));
+  const he = S.data.halaqahEdit || {};
+  const hb = DATA.halaqah.map(h => (he[h.id] ? { ...h, ...he[h.id] } : { ...h })), hx = Object.entries(he).filter(([id]) => !DATA.halaqah.find(h => h.id === id)).map(([id, v]) => ({ id, ...v }));
+  HALAQAH.splice(0, HALAQAH.length, ...hb.concat(hx).filter(h => !h.hapus));
 }
 subscribe(segarkanMaster); segarkanMaster();
 export const staffById = id => STAFF.find(s => s.id === id);
@@ -37,17 +41,25 @@ export const mapelById = id => MAPEL.find(m => m.id === id);
 export const JAM = DATA.jam;
 export const jamById = id => JAM.find(j => j.id === id);
 export const asramaOf = staffId => ASRAMA.find(a => a.musyrif === staffId);
+// Halaqah (kelompok tahfidz) terpisah dari asrama: anggota bisa dari asrama mana pun
+export const halaqahById = id => HALAQAH.find(h => h.id === id);
+export const halaqahOf = staffId => HALAQAH.find(h => h.guru === staffId);
+export const halaqahSantri = s => halaqahById(s.halaqah) || null;
+export const namaHalaqah = s => { const h = halaqahSantri(s); return h ? h.nama : "Belum ada halaqah"; };
+export const guruHalaqah = s => { const h = halaqahSantri(s); return h ? staffById(h.guru) : null; };
 export const ROLE_LABEL = { mudir: "Mudir", wadir_tahfidz: "Wadir Tahfidz", wadir_kurikulum: "Wadir Kurikulum", wadir_kesantrian: "Wadir Kesantrian",
-  musyrif: "Guru Tahfidz / Wali Asrama", guru_mapel: "Guru Mapel", admin: "Admin", wali: "Wali Santri" };
+  guru_tahfidz: "Guru Tahfidz", musyrif: "Wali Asrama", guru_mapel: "Guru Mapel", admin: "Admin", wali: "Wali Santri" };
 
 export function santriList() {
   const ed = S.data.santriEdit || {};
   const base = DATA.santri.map(s => (ed[s.id] ? { ...s, ...ed[s.id] } : s));
   const extra = Object.entries(ed).filter(([id]) => !DATA.santri.find(s => s.id === id)).map(([id, v]) => ({ id, awal: { selesai: [], aktif: 30, baris: 0 }, ...v }));
-  return base.concat(extra).filter(s => !s.hapus).sort((a, b) => a.nama.localeCompare(b.nama));
+  return base.concat(extra).filter(s => !s.hapus).map(s => (s.halaqah && HALAQAH.some(h => h.id === s.halaqah) ? s : { ...s, halaqah: halaqahAsramaId(s.asrama) })).sort((a, b) => a.nama.localeCompare(b.nama));
 }
+function halaqahAsramaId(aid) { const a = ASRAMA.find(x => x.id === aid), h = a && HALAQAH.find(x => x.guru === a.musyrif); return h ? h.id : null; }
 export const santriById = id => santriList().find(s => s.id === id);
 export const santriAsrama = aid => santriList().filter(s => s.asrama === aid);
+export const santriHalaqah = hid => santriList().filter(s => s.halaqah === hid);
 export const santriKelas = k => santriList().filter(s => s.kelas === k);
 export const pondokOfSantri = s => (s.kelas === "7" || s.kelas === "8" ? "29" : "21");
 export const initials = n => n.replace(/^(M\.?|Muhammad|Muhamad)\s+/i, "").split(/\s+/).slice(0, 2).map(w => w[0]).join("").toUpperCase();
@@ -249,16 +261,16 @@ export function sesiHari(tgl = today()) { const d = parseYmd(tgl).getDay(); retu
 export const adaHalaqah = (tgl = today()) => sesiHari(tgl).length > 0;
 export const sesiHariNama = hari => (hari === "Sabtu" ? ["Shubuh"] : hari === "Minggu" || hari === "Ahad" ? [] : SESI);
 export const sesiNow = () => { const ss = sesiHari(); if (ss.length <= 1) return "Shubuh"; const h = new Date().getHours(); return h < 7 ? "Shubuh" : h < 15 ? "Dhuha" : "Malam"; };
-export const halaqahKey = (aid, tgl, sesi) => `${aid}_${tgl}_${sesi}`;
+export const halaqahKey = (hid, tgl, sesi) => `${hid}_${tgl}_${sesi}`;
 export function kehadiranHalaqah(sid, rg = rgSemester()) {
   const s = santriById(sid), c = { H: 0, S: 0, I: 0, A: 0 }, hari = hariAktifDalam(rg, "halaqah");
   let sesi = 0, terisi = 0;
-  hari.forEach(t => sesiHari(t).forEach(se => { sesi++; const d = s && get("absenHalaqah", halaqahKey(s.asrama, t, se)); const v = d && d.status && d.status[sid]; if (v && c[v] != null) { c[v]++; terisi++; } }));
+  hari.forEach(t => sesiHari(t).forEach(se => { sesi++; const d = s && get("absenHalaqah", halaqahKey(s.halaqah, t, se)); const v = d && d.status && d.status[sid]; if (v && c[v] != null) { c[v]++; terisi++; } }));
   return { ...c, tot: terisi, sesi, kosong: sesi - terisi, hari: hari.length, pct: pct(c.H, sesi) };
 }
 // kinerja input guru tahfidz: sesi halaqah yang diabsen / sesi aktif
-export function kinerjaHalaqah(aid, rg) {
-  let sesi = 0, isi = 0; hariAktifDalam(rg, "halaqah").forEach(t => sesiHari(t).forEach(se => { sesi++; if (get("absenHalaqah", halaqahKey(aid, t, se))) isi++; }));
+export function kinerjaHalaqah(hid, rg) {
+  let sesi = 0, isi = 0; hariAktifDalam(rg, "halaqah").forEach(t => sesiHari(t).forEach(se => { sesi++; if (get("absenHalaqah", halaqahKey(hid, t, se))) isi++; }));
   return { sesi, isi, pct: pct(isi, sesi) };
 }
 // ---------------- jadwal & mapel ----------------
@@ -319,7 +331,7 @@ export function mutAuto(s, tgl) {
   const res = {};
   Object.entries(DATA.auto).forEach(([idx, [src, key]]) => {
     if (src === "motd") { const d = get("motd", motdKey(s.asrama, tgl, key)); res[idx] = d ? (d.status[s.id] === "H" || d.status[s.id] === "M") : null; }
-    else { const d = get("absenHalaqah", halaqahKey(s.asrama, tgl, key)); res[idx] = d ? d.status[s.id] === "H" : null; }
+    else { const d = get("absenHalaqah", halaqahKey(s.halaqah, tgl, key)); res[idx] = d ? d.status[s.id] === "H" : null; }
   });
   return res;
 }
@@ -363,6 +375,7 @@ export function santriScope(user) {
   let out = [];
   if (r.includes("wadir_kesantrian")) out = out.concat(santriList().filter(s => pondokOfSantri(s) === st.pondok));
   if (r.includes("musyrif")) { const a = asramaOf(st.id); if (a) out = out.concat(santriAsrama(a.id)); }
+  if (r.includes("guru_tahfidz")) { const h = halaqahOf(st.id); if (h) out = out.concat(santriHalaqah(h.id)); }
   if (r.includes("guru_mapel")) st.ajar.forEach(([m, k]) => (out = out.concat(santriKelas(k))));
   const seen = new Set(); return out.filter(s => (seen.has(s.id) ? false : seen.add(s.id)));
 }

@@ -28,12 +28,15 @@ function lingkup() {
   const semuaAsr = r.some(x => ["mudir", "wadir_tahfidz", "wadir_kurikulum"].includes(x));
   const asr0 = semuaAsr ? L.ASRAMA : r.includes("wadir_kesantrian") ? L.ASRAMA.filter(x => x.pondok === m.pondok) : a ? [a] : [];
   const asr = a ? [a, ...asr0.filter(x => x.id !== a.id)] : asr0;
+  const hq = L.halaqahOf(m.id), semuaHq = r.some(x => ["mudir", "wadir_tahfidz", "wadir_kurikulum"].includes(x));
+  const hqs = semuaHq ? (hq ? [hq, ...L.HALAQAH.filter(x => x.id !== hq.id)] : L.HALAQAH) : hq ? [hq] : [];
   const semuaKls = r.some(x => ["mudir", "wadir_kurikulum"].includes(x));
   const kls = semuaKls ? ["7", "8", "9A", "9B"] : [...new Set(m.ajar.map(([, k]) => k))];
   const tabs = [];
-  if (asr.length) tabs.push(["halaqah", "Halaqah"], ["motd", "MOTD"], ["mut", "Mutaba'ah"]);
+  if (hqs.length) tabs.push(["halaqah", "Halaqah"]);
+  if (asr.length) tabs.push(["motd", "MOTD"], ["mut", "Mutaba'ah"]);
   if (kls.length) tabs.push(["kbm", "KBM"]);
-  return { m, asr, kls, tabs, semuaKls };
+  return { m, asr, hqs, kls, tabs, semuaKls };
 }
 
 export function RekapHub({ tab: t0 }) {
@@ -43,7 +46,7 @@ export function RekapHub({ tab: t0 }) {
   if (!lk.tabs.length) return html`<${SubHeader} title="Rekap" /><div class="wrap"><${Card}><${Empty} t="Tidak ada data rekap untuk peran ini." icon="chart" /></${Card}></div>`;
   return html`<${SubHeader} title="Rekap" sub="Berdasarkan hari aktif"><${Seg} items=${lk.tabs} value=${tab} onChange=${setTab} /></${SubHeader}>
     <div class="wrap">${p.bar}
-      ${tab === "halaqah" ? html`<${RekapHalaqahP} asr=${lk.asr} rg=${p.rg} />` : tab === "motd" ? html`<${RekapMotdP} asr=${lk.asr} rg=${p.rg} />` : tab === "mut" ? html`<${RekapMutP} asr=${lk.asr} rg=${p.rg} />` : html`<${RekapKbmP} lk=${lk} rg=${p.rg} />`}
+      ${tab === "halaqah" ? html`<${RekapHalaqahP} hqs=${lk.hqs} rg=${p.rg} />` : tab === "motd" ? html`<${RekapMotdP} asr=${lk.asr} rg=${p.rg} />` : tab === "mut" ? html`<${RekapMutP} asr=${lk.asr} rg=${p.rg} />` : html`<${RekapKbmP} lk=${lk} rg=${p.rg} />`}
       <${Hint}>Persentase = yang tercatat dibagi hari/sesi aktif pada periode. Hari yang tidak diinput dihitung 0. Ahad, libur nasional, dan libur pondok tidak dihitung (atur di menu Kalender).</${Hint}></div>`;
 }
 
@@ -52,10 +55,10 @@ function Kartu({ title, sub, onClick, stats }) {
     <div class="rk-g">${stats.map(([lab, v, s]) => html`<div><span>${lab}</span><b class=${"t-" + tone(v)}>${P(v)}</b><${Bar} v=${v || 0} tone=${tone(v) === "muted" ? "green" : tone(v)} />${s ? html`<small>${s}</small>` : null}</div>`)}</div></button>`;
 }
 
-function RekapHalaqahP({ asr, rg }) {
-  return html`${asr.map(a => { const k = L.kinerjaHalaqah(a.id, rg), list = L.santriAsrama(a.id), kh = list.map(s => L.kehadiranHalaqah(s.id, rg).pct).filter(x => x != null);
+function RekapHalaqahP({ hqs, rg }) {
+  return html`${hqs.map(a => { const k = L.kinerjaHalaqah(a.id, rg), list = L.santriHalaqah(a.id), kh = list.map(s => L.kehadiranHalaqah(s.id, rg).pct).filter(x => x != null);
     const avg = kh.length ? Math.round(kh.reduce((x, y) => x + y, 0) / kh.length) : null;
-    return html`<${Kartu} title=${a.nama} sub=${`${L.staffById(a.musyrif).pendek} · ${list.length} santri · ${k.sesi} sesi aktif`} onClick=${() => nav.go("rekapDetail", { jenis: "halaqah", aid: a.id, pj: rg })}
+    return html`<${Kartu} title=${a.nama} sub=${`${list.length} santri dari ${new Set(list.map(s => s.asrama)).size} asrama · ${k.sesi} sesi aktif`} onClick=${() => nav.go("rekapDetail", { jenis: "halaqah", hid: a.id, pj: rg })}
       stats=${[["Kehadiran santri", avg], ["Absen terisi (guru)", k.pct, `${k.isi}/${k.sesi} sesi`]]} />`; })}`;
 }
 function RekapMotdP({ asr, rg }) {
@@ -80,10 +83,10 @@ function RekapKbmP({ lk, rg }) {
         <span style="display:block;margin-top:6px"><${Bar} v=${k.pct || 0} tone=${tone(k.pct) === "muted" ? "green" : tone(k.pct)} /></span></span><${Pill} t=${P(k.pct)} tone=${tone(k.pct)} /></div>`; })}</div></${Card}>`;
 }
 
-export function RekapDetail({ jenis, aid, kelas, pj, guru }) {
+export function RekapDetail({ jenis, aid, hid, kelas, pj, guru }) {
   useApp();
   const rg = pj || L.periodeRange("pekanan");
-  const list = aid ? L.santriAsrama(aid) : L.santriKelas(kelas);
+  const list = hid ? L.santriHalaqah(hid) : aid ? L.santriAsrama(aid) : L.santriKelas(kelas);
   const judul = { halaqah: "Kehadiran Halaqah", motd: "Rekap MOTD", mut: "Rekap Mutaba'ah", kbm: "Kehadiran Kelas" }[jenis];
   const mapel = guru ? [...new Set(L.staffById(guru).ajar.filter(([, k]) => k === kelas).map(([m]) => m))] : null;
   const rows = list.map(s => {
@@ -95,7 +98,7 @@ export function RekapDetail({ jenis, aid, kelas, pj, guru }) {
     const ks = (mapel || [null]).map(m => L.kehadiranKelas(s.id, m, rg)), H = ks.reduce((x, k) => x + k.H, 0), ses = ks.reduce((x, k) => x + k.sesi, 0), kos = ks.reduce((x, k) => x + k.kosong, 0);
     return [s, ses ? Math.round((H / ses) * 100) : null, `Hadir ${H} dari ${ses} pertemuan · belum diabsen ${kos}`];
   }).sort((a, b) => (a[1] ?? -1) - (b[1] ?? -1));
-  return html`<${SubHeader} title=${judul} sub=${`${aid ? L.asramaById(aid).nama : "Kelas " + kelas} · ${rg.label}`} />
+  return html`<${SubHeader} title=${judul} sub=${`${hid ? L.halaqahById(hid).nama : aid ? L.asramaById(aid).nama : "Kelas " + kelas} · ${rg.label}`} />
     <div class="wrap"><${Hint}>Diurutkan dari yang paling rendah. Hari/sesi yang tidak diinput ikut dihitung sehingga persentase turun.</${Hint}>
     <${Card}><div class="list">${rows.map(([s, v, sub]) => html`<${Row} name=${s.nama} sub=${sub} right=${html`<${Pill} t=${P(v)} tone=${tone(v)} />`} onClick=${() => nav.go("santri", { sid: s.id })} />`)}</div></${Card}></div>`;
 }

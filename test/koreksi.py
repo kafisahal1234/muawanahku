@@ -4,7 +4,7 @@ URL = "file:///home/claude/webapp/dist/index.html"
 async def main():
     errs = []
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome"); pg = await b.new_page(viewport={"width": 390, "height": 844})
+        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome"); pg = await b.new_page(reduced_motion="reduce", viewport={"width": 390, "height": 844})
         pg.on("pageerror", lambda e: errs.append(str(e)))
         await pg.goto(URL); await pg.evaluate("localStorage.clear()"); await pg.goto(URL); await pg.wait_for_timeout(300)
         await pg.fill("input[autocomplete=username]", "kaafi"); await pg.fill("input[type=password]", "kaafi123"); await pg.click("button[type=submit]"); await pg.wait_for_timeout(400)

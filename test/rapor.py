@@ -17,7 +17,7 @@ def seed():
     for m, k, g in [("fiqih","9A","izzudin"),("karakter","9A","jazulis"),("bing","9A","ridho")]:
         d["nilaiMapel"][f"{m}_{k}"] = {"mapel": m, "kelas": k, "projek": {SID: 85}, "pts": {SID: 80}, "pas": {SID: 88}, "aspek": {SID: {"0": 86, "1": 90, "2": 92, "3": 84, "4": 80}}, "guru": g}
     for i, (ses, st) in enumerate([("Shubuh","H"),("Dhuha","H"),("Malam","S"),("Shubuh","H"),("Dhuha","I"),("Malam","H")]):
-        d["absenHalaqah"][f"a7_2026-11-{i+2:02d}_{ses}"] = {"asrama": "a7", "tanggal": f"2026-11-{i+2:02d}", "sesi": ses, "status": {SID: st}}
+        d["absenHalaqah"][f"h7_2026-11-{i+2:02d}_{ses}"] = {"halaqah": "h7", "tanggal": f"2026-11-{i+2:02d}", "sesi": ses, "status": {SID: st}}
     for i, b in enumerate([60, 95, 130, 172, 215]):
         d["setoran"][f"z{i}"] = {"santri": SID, "jenis": "ziyadah", "tanggal": f"2026-11-{i+3:02d}", "juz": 2, "sebelum": b - 35, "sesudah": b, "lulus": True, "ts": 1790000000000 + i}
     return d
@@ -25,7 +25,7 @@ async def main():
     errs = []
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path="/usr/bin/google-chrome")
-        ctx = await b.new_context(viewport={"width": 400, "height": 860}, accept_downloads=True)
+        ctx = await b.new_context(reduced_motion="reduce", viewport={"width": 400, "height": 860}, accept_downloads=True)
         pg = await ctx.new_page()
         pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
         await pg.goto(URL); key = await pg.evaluate("Object.keys(localStorage)")
@@ -36,8 +36,10 @@ async def main():
         await pg.locator(".tile:has(.tile-lb:text-is('Mapel IT'))").first.click(); await pg.wait_for_timeout(250)
         await pg.locator(".tile:has(.tile-lb:has-text('Nilai'))").first.click(); await pg.wait_for_timeout(250)
         await pg.locator(".row:has-text('Kelas 9A')").first.click(); await pg.wait_for_timeout(250)
-        await pg.locator("input[aria-label='projek Adiyatma Wiryateja']").fill("90"); await pg.locator("input[aria-label='pts Adiyatma Wiryateja']").fill("84"); await pg.locator("input[aria-label='pas Adiyatma Wiryateja']").fill("92")
-        await pg.click("text=Nilai per aspek"); await pg.wait_for_timeout(150)
+        await pg.locator(".tbl input").first.fill("90")
+        await pg.click("text=PTS & PAS"); await pg.wait_for_timeout(150)
+        await pg.locator("input[aria-label='PTS Adiyatma Wiryateja']").fill("84"); await pg.locator("input[aria-label='PAS Adiyatma Wiryateja']").fill("92")
+        await pg.click("text=Aspek rapor"); await pg.wait_for_timeout(150)
         for i, v in enumerate([88, 93, 95, 90]):
             await pg.locator(f"input[aria-label='{['Pengetahuan (Kognitif)','Keterampilan (Psikomotorik)','Sikap dan Karakter (Afektif)','Project IT'][i]} Adiyatma Wiryateja']").fill(str(v))
         await pg.screenshot(path="test/r1_aspek.png", full_page=False)

@@ -45,7 +45,7 @@ export function raporHTML(sid, periode) {
   const cat = (get("raporCatatan", `${sid}_${periode}`) || {}).teks || "";
   const head = `<img class="rp-head" src="${RP_HEAD}" alt="">`, foot = `<img class="rp-foot" src="${RP_FOOT}" alt="">`;
   // ---------- halaman 1: identitas & tahfidz ----------
-  const idr = [["Nama Santri", s.nama, "Halaqah", mus.pendek], ["NIS", s.nis || "—", "Asrama", a.nama], ["Kelas", s.kelas, "Semester", periode === "mid" ? "Ganjil (Tengah Semester)" : "Ganjil"], ["Wali Asrama", mus.nama, "Tahun Pelajaran", "2026/2027"]];
+  const idr = [["Nama Santri", s.nama, "Halaqah", (L.guruHalaqah(s) || mus).pendek], ["NIS", s.nis || "—", "Asrama", a.nama], ["Kelas", s.kelas, "Semester", periode === "mid" ? "Ganjil (Tengah Semester)" : "Ganjil"], ["Wali Asrama", mus.nama, "Tahun Pelajaran", "2026/2027"]];
   const ident = `<table class="qid"><colgroup><col style="width:97px"><col style="width:200px"><col style="width:120px"><col></colgroup>${idr.map(r => `<tr><td class="qk">${r[0]}</td><td>: ${esc(r[1])}</td><td class="qk">${r[2]}</td><td>: ${esc(r[3])}</td></tr>`).join("")}</table>`;
   const v30 = n => d(nt["30:" + n]), v29 = n => d(nt["29:" + n]);
   const left = J30.map((nm, i) => [114 - i, nm]), right = J29.map((nm, i) => [77 - i, nm]);
@@ -104,7 +104,7 @@ export function raporMidHTML(sid) {
   const rgM = L.periodeRange("mid"), nt = (get("nilaiTahfidz", sid) || {}).mid || {}, kh = L.kehadiranHalaqah(sid, rgM), mp = L.mutPersen(sid, rgM);
   const cat = (get("raporCatatan", `${sid}_mid`) || {}).teks || "";
   const head = `<img class="rp-head" src="${RP_HEAD}" alt="">`, foot = `<img class="rp-foot" src="${RP_FOOT}" alt="">`;
-  const idr = [["Nama Santri", s.nama, "Halaqah", mus.pendek], ["NIS", s.nis || "—", "Asrama", a.nama], ["Kelas", s.kelas, "Semester", "Ganjil (Tengah Semester)"], ["Wali Asrama", mus.nama, "Tahun Pelajaran", "2026/2027"]];
+  const idr = [["Nama Santri", s.nama, "Halaqah", (L.guruHalaqah(s) || mus).pendek], ["NIS", s.nis || "—", "Asrama", a.nama], ["Kelas", s.kelas, "Semester", "Ganjil (Tengah Semester)"], ["Wali Asrama", mus.nama, "Tahun Pelajaran", "2026/2027"]];
   const ident = `<table class="qid"><colgroup><col style="width:97px"><col style="width:200px"><col style="width:120px"><col></colgroup>${idr.map(r => `<tr><td class="qk">${r[0]}</td><td>: ${esc(r[1])}</td><td class="qk">${r[2]}</td><td>: ${esc(r[3])}</td></tr>`).join("")}</table>`;
   const uj = Object.values(nt).filter(x => x !== "" && x != null).map(Number), ujR = uj.length ? Math.round(uj.reduce((x, y) => x + y, 0) / uj.length) : null;
     const A = `<div class="qstats"><div class="qstat"><span>Capaian hafalan mid semester</span><b>${esc(L.fmtBaris(cp.baris))}</b><small>${L.capaianJuz(s).juz.toLocaleString("id-ID")} dari target ${L.targetSemester()} juz/semester · ${cp.setor}× setor</small></div>
@@ -148,7 +148,7 @@ export function RaporView({ sid }) {
   const key = `${sid}_${periode}`, ex = get("raporCatatan", key);
   const [teks, setTeks] = useState(ex ? ex.teks : ""); const [kk, setKk] = useState(key);
   if (kk !== key) { setKk(key); setTeks(ex ? ex.teks : ""); }
-  const bolehCatat = m && (a.musyrif === m.id);
+  const bolehCatat = m && (a.musyrif === m.id || (L.guruHalaqah(s) || {}).id === m.id);
   const hal = periode === "mid" ? 1 : 4, dlOk = useDownloads(), w = useWidth(), k = zoom ? 1 : (w - 32) / 794;
   const simpan = async () => { if (await put("raporCatatan", key, { santri: sid, periode, teks, oleh: m.id, ts: Date.now() })) toast("Catatan wali asrama tersimpan"); };
   return html`<${SubHeader} title="Rapor" sub=${s.nama}><${Seg} items=${[["mid", "Tengah semester"], ["smt", "Akhir semester"]]} value=${periode} onChange=${setPeriode} /></${SubHeader}>

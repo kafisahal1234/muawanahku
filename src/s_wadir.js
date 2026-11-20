@@ -7,7 +7,7 @@ import { me } from "./common.js";
 
 export const target = () => L.targetSemester();
 export function halaqahStat(a) {
-  const list = L.santriAsrama(a.id), hs = list.map(s => L.hafalan(s));
+  const list = L.santriHalaqah(a.id), hs = list.map(s => L.hafalan(s));
   const avg = hs.length ? hs.reduce((x, h) => x + h.jumlah, 0) / hs.length : 0;
   const cap = list.length ? list.reduce((x, s) => x + L.capaianJuz(s).pct, 0) / list.length : 0;
   const kh = list.map(s => L.kehadiranHalaqah(s.id).pct).filter(x => x != null);
@@ -17,22 +17,21 @@ export function halaqahStat(a) {
 export function Pengelolaan({ ro }) {
   useApp();
   const tgl = L.today(), sesi = L.sesiNow();
-  const sudah = L.ASRAMA.filter(a => get("absenHalaqah", L.halaqahKey(a.id, tgl, sesi))).length;
+  const sudah = L.HALAQAH.filter(h => get("absenHalaqah", L.halaqahKey(h.id, tgl, sesi))).length;
   const all2 = L.santriList().map(s => L.hafalan(s)); const avg = all2.reduce((x, h) => x + h.jumlah, 0) / all2.length;
   const siap = all2.filter(h => h.siapTasmi).length;
   const gagal = all("setoran").filter(r => r.tanggal === tgl && !r.lulus).length;
   return html`<${SubHeader} title="Pengelolaan Tahfidz" sub=${ro ? "Pemantauan Mudir" : `Wadir Tahfidz · ${me().pendek}`} />
-    <div class="wrap"><${Card}><div class="stats">${L.adaHalaqah(tgl) ? html`<${Stat} label=${"Absen " + sesi} value=${`${sudah}/${L.ASRAMA.length}`} sub="halaqah" tone=${sudah < L.ASRAMA.length ? "gold" : ""} />` : html`<${Stat} label="Halaqah" value="Libur" sub="Ahad" />`}<${Stat} label="Rata hafalan" value=${avg.toFixed(1)} sub="juz" /><${Stat} label="Siap tasmi'" value=${siap} tone="gold" /></div></${Card}>
+    <div class="wrap"><${Card}><div class="stats">${L.adaHalaqah(tgl) ? html`<${Stat} label=${"Absen " + sesi} value=${`${sudah}/${L.HALAQAH.length}`} sub="halaqah" tone=${sudah < L.HALAQAH.length ? "gold" : ""} />` : html`<${Stat} label="Halaqah" value="Libur" sub="Ahad" />`}<${Stat} label="Rata hafalan" value=${avg.toFixed(1)} sub="juz" /><${Stat} label="Siap tasmi'" value=${siap} tone="gold" /></div></${Card}>
     <${Card} title="Menu Pengelolaan"><div class="tiles">
       ${!ro ? html`<${Tile} icon="edit" label="Data Awal Hafalan" color="emerald" onClick=${() => nav.go("dataAwal")} />
-      <${Tile} icon="target" label="Target Hafalan" color="orange" onClick=${() => nav.go("targetHafalan")} />` : null}
-      <${Tile} icon="trend" label="Kinerja Guru" color="purple" onClick=${() => nav.go("kinerjaTahfidz")} />
-      <${Tile} icon="chart" label="Rekap Halaqah" color="blue" onClick=${() => nav.go("rekapHalaqah")} />
+      <${Tile} icon="target" label="Target Hafalan" color="orange" onClick=${() => nav.go("targetHafalan")} />
+      <${Tile} icon="users" label="Kelola Halaqah" color="teal" onClick=${() => nav.go("halaqahAdmin")} />` : null}
       <${Tile} icon="star" label="Peringkat Santri" color="gold" onClick=${() => nav.go("peringkat")} />
       <${Tile} icon="mic" label="Rekap Tasmi'" color="teal" onClick=${() => nav.go("rekapTasmi")} />
       <${Tile} icon="alert" label="Di bawah KKM" color="coral" badge=${gagal || null} onClick=${() => nav.go("bawahKkm")} /></div></${Card}>
-    <${Card} title="Capaian per halaqah" right=${html`<small>vs target semester</small>`}><div class="list">${L.ASRAMA.map(a => { const st = halaqahStat(a);
-      return html`<button class="row" onClick=${() => nav.go("progres", { aid: a.id })}><span class="av">${L.initials(L.staffById(a.musyrif).pendek.replace(/^Ust\.\s*/, ""))}</span><span class="row-t"><b>${L.staffById(a.musyrif).pendek} · ${a.nama}</b>
+    <${Card} title="Capaian per halaqah" right=${html`<small>vs target semester</small>`}><div class="list">${L.HALAQAH.map(a => { const st = halaqahStat(a), g = L.staffById(a.guru) || { pendek: "—" };
+      return html`<button class="row" onClick=${() => nav.go("progres", { hid: a.id })}><span class="av">${L.initials(g.pendek.replace(/^Ust\.\s*/, ""))}</span><span class="row-t"><b>${a.nama}</b>
         <small>${st.n} santri · capaian target semester ${st.cap}% · rata total ${st.avg.toFixed(1)} juz${st.hadir != null ? " · hadir " + st.hadir + "%" : ""}</small><span style="display:block;margin-top:6px"><${Bar} v=${st.cap} tone=${st.cap >= 75 ? "green" : st.cap >= 50 ? "gold" : "red"} /></span></span><b style="font-size:13px;color:#0B5D3B">${st.cap}%</b></button>`; })}</div></${Card}></div>`;
 }
 

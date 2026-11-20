@@ -15,13 +15,10 @@ export function DataMaster() {
     <${Card} title="Menu Data Master"><div class="tiles">
       <${Tile} icon="users" label="Santri" color="emerald" onClick=${() => nav.go("santriAdmin")} />
       <${Tile} icon="user" label="Guru & Akun" color="blue" onClick=${() => nav.go("akunAdmin")} />
-      <${Tile} icon="cal2" label="Kalender Akademik" color="pink" onClick=${() => nav.go("kalender")} />
-      <${Tile} icon="clipboard" label="Log Perubahan" color="slate" onClick=${() => nav.go("logUbah")} />
       <${Tile} icon="home2" label="Asrama" color="orange" onClick=${() => nav.go("asramaAdmin")} />
-      <${Tile} icon="bookopen" label="Halaqah" color="teal" onClick=${() => nav.go("asramaAdmin", { halaqah: true })} />
+      <${Tile} icon="bookopen" label="Halaqah" color="teal" onClick=${() => nav.go("halaqahAdmin")} />
       <${Tile} icon="grid" label="Kelas" color="indigo" onClick=${() => nav.go("kelasAdmin")} />
       <${Tile} icon="upload" label="Impor Data" color="purple" onClick=${() => nav.go("impor")} />
-      <${Tile} icon="megaphone" label="Pengumuman" color="pink" onClick=${() => nav.go("pengumuman")} />
 </div></${Card}>
     </div>`;
 }
@@ -41,7 +38,9 @@ function EditSantri({ e, onClose }) {
   const set = (k, v) => setF({ ...f, [k]: v });
   const save = async () => {
     const id = e.baru ? uid("s") : e.id;
-    const base = { nama: f.nama.trim(), kelas: f.kelas, asrama: f.asrama, nis: (f.nis || "").trim(), ...(f.lahir ? { lahir: f.lahir } : {}) };
+    const asalLama = e.baru ? null : L.HALAQAH.find(h => h.guru === (L.asramaById(e.asrama) || {}).musyrif), asalBaru = L.HALAQAH.find(h => h.guru === (L.asramaById(f.asrama) || {}).musyrif);
+    const hq = f.halaqah && !(asalLama && f.halaqah === asalLama.id && f.asrama !== e.asrama) ? f.halaqah : asalBaru ? asalBaru.id : null;
+    const base = { nama: f.nama.trim(), kelas: f.kelas, asrama: f.asrama, halaqah: hq, nis: (f.nis || "").trim(), ...(f.lahir ? { lahir: f.lahir } : {}) };
     if (e.baru) { const w = f.nama.trim().split(/\s+/).find(x => !/^(m\.?|muhammad|muhamad|ahmad)$/i.test(x)) || "santri"; base.wali = (w.toLowerCase().replace(/[^a-z]/g, "") || "santri") + Math.floor(10 + Math.random() * 89); base.panggilan = w; }
     if (await put("santriEdit", id, { ...((S.data.santriEdit || {})[id] || {}), ...base })) { toast(e.baru ? `Santri ditambahkan. Akun wali: ${base.wali}` : "Data santri disimpan"); onClose(); }
   };
@@ -52,7 +51,8 @@ function EditSantri({ e, onClose }) {
     <${Field} label="Tanggal lahir" hint=${f.lahir ? "Untuk kode akses wali" : "Belum diisi · demo pakai tanggal contoh"}><input class="in" type="date" value=${f.lahir || ""} onInput=${x => set("lahir", x.target.value)} /></${Field}></div>
     ${!e.baru ? html`<div class="pos" style="margin:0 0 12px"><span>Kode akses wali</span><b>${L.kodeAkses({ ...e, ...f, lahir: f.lahir || e.lahir })}</b></div>` : null}
     <div class="btn-row"><${Field} label="Kelas"><select class="in" value=${f.kelas} onChange=${x => set("kelas", x.target.value)}>${L.KELAS.map(k => html`<option value=${k.id}>${k.nama}</option>`)}</select></${Field}>
-    <${Field} label="Asrama / halaqah"><select class="in" value=${f.asrama} onChange=${x => set("asrama", x.target.value)}>${L.ASRAMA.map(a => html`<option value=${a.id}>${a.nama}</option>`)}</select></${Field}></div>
+    <${Field} label="Asrama"><select class="in" value=${f.asrama} onChange=${x => set("asrama", x.target.value)}>${L.ASRAMA.map(a => html`<option value=${a.id}>${a.nama}</option>`)}</select></${Field}></div>
+    <${Field} label="Halaqah tahfidz" hint="Bawaan ikut wali asrama; bisa dipindah ke halaqah guru lain"><select class="in" value=${f.halaqah || ""} onChange=${x => set("halaqah", x.target.value)}><option value="">Ikut halaqah asrama</option>${L.HALAQAH.map(h => html`<option value=${h.id}>${h.nama}</option>`)}</select></${Field}>
     <p class="small">Saat santri pindah asrama, halaqah, atau kelas, datanya ikut pindah dan riwayat tetap tersimpan.</p>
     <div class="btn-row mt8">${!e.baru ? html`<${Btn} kind="ghost" onClick=${() => setAsk(true)}>Hapus</${Btn}>` : null}<${Btn} disabled=${!f.nama.trim()} onClick=${save}>Simpan</${Btn}></div>
     <${Confirm} open=${ask} danger title="Hapus santri?" text=${`${e.nama} akan dihapus dari daftar santri. Akun wali santri ini otomatis ikut terhapus dan kode aksesnya tidak bisa dipakai lagi.`} yes="Hapus" onYes=${hapus} onNo=${() => setAsk(false)} /></${Sheet}>`;
@@ -77,7 +77,7 @@ export function AkunAdmin() {
     ${ed ? html`<${EditStaff} e=${ed} onClose=${() => setEd(null)} />` : null}
     <${Confirm} open=${!!ask} danger title="Hapus akun ini?" text=${ask ? `${ask.nama} (${ask.username}) tidak akan bisa masuk lagi. Data yang pernah dicatatnya tetap tersimpan. Admin bisa memulihkannya.` : ""} yes="Hapus akun" onYes=${() => hapusAkun(ask)} onNo=${() => setAsk(null)} /></div>`;
 }
-const PERAN = ["mudir", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian", "musyrif", "guru_mapel", "admin"];
+const PERAN = ["mudir", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian", "guru_tahfidz", "musyrif", "guru_mapel", "admin"];
 function EditStaff({ e, onClose }) {
   const [f, setF] = useState({ ...e, ajar: [...(e.ajar || [])], roles: [...(e.roles || [])], asrama: e.asrama || "" }); const [busy, setBusy] = useState(false);
   const set = (k, v) => setF({ ...f, [k]: v });
@@ -109,9 +109,10 @@ function EditStaff({ e, onClose }) {
     ${!e.baru && un !== e.username ? html`<p class="small" style="margin-top:-6px">Username berubah: kata sandi akan direset ke ${un}123.</p>` : null}
     <${Field} label="Peran"><div class="chips">${PERAN.map(r => html`<button type="button" class=${"pill " + (f.roles.includes(r) ? "green" : "muted")} style="min-height:36px;padding:0 12px" aria-pressed=${f.roles.includes(r)} onClick=${() => togR(r)}>${f.roles.includes(r) ? "✓ " : ""}${L.ROLE_LABEL[r]}</button>`)}</div></${Field}>
     ${f.roles.includes("wadir_kesantrian") ? html`<${Field} label="Wadir kesantrian untuk"><${Seg} small items=${[["29", "Pondok 29"], ["21", "Pondok 21"]]} value=${f.pondok || "29"} onChange=${v => set("pondok", v)} /></${Field}>` : null}
-    ${f.roles.includes("musyrif") ? html`<${Field} label="Asrama / halaqah binaan"><select class="in" value=${f.asrama} onChange=${x => set("asrama", x.target.value)}><option value="">— belum ada —</option>
+    ${f.roles.includes("musyrif") ? html`<${Field} label="Asrama binaan (wali asrama)"><select class="in" value=${f.asrama} onChange=${x => set("asrama", x.target.value)}><option value="">— belum ada —</option>
       ${L.ASRAMA.map(a => html`<option value=${a.id}>${a.nama} · ${a.musyrif === e.id ? "saat ini" : L.staffById(a.musyrif).pendek}</option>`)}</select></${Field}>
       ${pindah && ganti && ganti.id !== e.id ? html`<p class="small" style="margin-top:-6px">${oldA ? `Ditukar: ${ganti.pendek} pindah ke ${oldA.nama}.` : `${ganti.pendek} tidak lagi membina ${pindah.nama}.`}</p>` : null}` : null}
+    ${f.roles.includes("guru_tahfidz") && !e.baru ? html`<div class="pos" style="margin:0 0 12px"><span>Halaqah tahfidz</span><b>${(L.halaqahOf(e.id) || {}).nama || "Belum ada · buat di menu Halaqah"}</b></div>` : null}
     ${f.roles.includes("guru_mapel") ? html`<${Field} label="Mapel yang diajar"><div style="display:grid;gap:6px">${DATA.mapel.map(m => html`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><b style="font-size:13px;width:110px">${m.nama.replace("Pendidikan ", "P. ")}</b>
       ${L.KELAS.map(k => { const on = f.ajar.some(([a, b]) => a === m.id && b === k.id); return html`<button type="button" class=${"pill " + (on ? "green" : "muted")} style="min-height:36px;min-width:44px" aria-pressed=${on} onClick=${() => togA(m.id, k.id)}>${k.id}</button>`; })}</div>`)}</div></${Field}>
       <p class="small" style="margin-top:-6px">Jadwal mengajar disesuaikan di menu Kurikulum → Jadwal Mengajar.</p>` : null}

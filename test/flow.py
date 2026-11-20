@@ -12,7 +12,7 @@ async def main():
     errs = []
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path="/usr/bin/google-chrome")
-        pg = await b.new_page(viewport={"width": 400, "height": 860})
+        pg = await b.new_page(reduced_motion="reduce", viewport={"width": 400, "height": 860})
         pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
         await pg.goto(URL); await pg.evaluate("localStorage.clear()")
         await login(pg, "kaafi")
@@ -61,7 +61,7 @@ async def main():
         await pg.select_option("select.in", "p5"); await pg.fill("textarea >> nth=0", "Ditemukan HP di lemari"); await pg.click("text=Simpan BAP"); await pg.locator(".dialog .btn.primary").click(); await pg.wait_for_timeout(300)
         await pg.screenshot(path="test/f9_bap.png", full_page=True)
         # mudir announcement
-        await login(pg, "syamsul"); await pg.screenshot(path="test/f10_mudir.png", full_page=True); await tile(pg, "Pengumuman")
+        await login(pg, "syamsul"); await pg.screenshot(path="test/f10_mudir.png", full_page=True); await pg.click(".bell"); await pg.wait_for_timeout(250)
         await pg.fill("input[placeholder^='Misal: Jadwal']", "Jadwal perpulangan akhir semester"); await pg.fill("textarea", "Perpulangan 20 Desember 2026."); await pg.click("text=Kirim pengumuman"); await pg.wait_for_timeout(300)
         # wali
         await loginWali(pg, "sultan abdullah"); await pg.screenshot(path="test/f11_wali.png", full_page=True)

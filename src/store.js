@@ -1,6 +1,6 @@
 // Penyimpanan data demo: db bersama (artifact) bila tersedia, jika tidak localStorage browser ini.
 export const COLS = ["setoran", "absenHalaqah", "motd", "mutabaah", "izin", "bap", "absenKelas", "nilaiMapel", "nilaiTahfidz",
-  "jadwal", "izinGuru", "pengumuman", "dataAwal", "santriEdit", "target", "akun", "hapusAkun", "raporCatatan", "kalender", "log", "staffEdit", "asramaEdit"];
+  "jadwal", "izinGuru", "pengumuman", "dataAwal", "santriEdit", "target", "akun", "hapusAkun", "raporCatatan", "kalender", "log", "staffEdit", "asramaEdit", "halaqahEdit"];
 const LSKEY = "muawanahku_demo_v1";
 export const S = { ready: false, mode: "local", note: "", data: {}, ver: 0, readonly: false };
 COLS.forEach(c => (S.data[c] = {}));

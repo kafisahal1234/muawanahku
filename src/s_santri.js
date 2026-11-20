@@ -53,7 +53,7 @@ export function SantriDetail({ sid, tab: t0 }) {
   const s = L.santriById(sid); const [tab, setTab] = useState(t0 || "hafalan");
   if (!s) return html`<${SubHeader} title="Santri" /><div class="wrap"><${Empty} t="Santri tidak ditemukan." /></div>`;
   const m = me(), canNilai = m && !m.roles.every(r => r === "admin");
-  return html`<${SubHeader} title=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaById(s.asrama).nama} · Halaqah ${L.staffById(L.asramaById(s.asrama).musyrif).pendek}`}>
+  return html`<${SubHeader} title=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaById(s.asrama).nama} · ${L.namaHalaqah(s)}`}>
     <${Seg} small items=${[["hafalan", "Hafalan"], ["hadir", "Kehadiran"], ...(canNilai ? [["nilai", "Nilai"]] : []), ["catatan", "Catatan"]]} value=${tab} onChange=${setTab} /></${SubHeader}>
     <div class="wrap">${tab === "hafalan" ? html`<${HafalanCard} s=${s} /><${Section} t="Riwayat setoran" /><${Card}><${RiwayatSetoran} sid=${s.id} koreksi=${!!me()} /></${Card}>`
       : tab === "hadir" ? html`<${KehadiranCard} s=${s} />` : tab === "nilai" ? html`<${NilaiCard} s=${s} />` : html`<${CatatanCard} s=${s} />`}</div>`;

@@ -25,8 +25,6 @@ export function Kurikulum({ ro }) {
       ${!ro ? html`<${Tile} icon="clock" label="Jam Pelajaran" color="teal" onClick=${() => nav.go("jamPelajaran")} />` : null}
       <${Tile} icon="calendar" label="Jadwal Mengajar" color="orange" onClick=${() => nav.go("jadwal", { ro })} />
       <${Tile} icon="layers" label="Mapel & Pengampu" color="blue" onClick=${() => nav.go("pengampu")} />
-      <${Tile} icon="trend" label="Kinerja Guru" color="purple" onClick=${() => nav.go("kinerjaGuru")} />
-      <${Tile} icon="chart" label="Rekap Kehadiran" color="emerald" onClick=${() => nav.go("rekapKehadiran")} />
       <${Tile} icon="award" label="Rekap Nilai" color="gold" onClick=${() => nav.go("rekapNilai")} />
       <${Tile} icon="briefcase" label="Izin Guru" color="slate" onClick=${() => nav.go("rekapIzinGuru")} /></div></${Card}>
     <${Card} title="Keterlaksanaan hari ini" right=${html`<small>${hari}</small>`}>${slots.length ? html`<div class="list">${slots.map(j => { const [t, tone] = slotStatus(j, tgl), g = L.staffById(j.guru);

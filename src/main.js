@@ -14,8 +14,10 @@ import * as SA from "./s_santri.js";
 import * as HM from "./s_home.js";
 import * as SY from "./s_system.js";
 import * as RK from "./s_rekap.js";
+import * as HQ from "./s_halaqah.js";
 import * as KO from "./s_koreksi.js";
 import { me } from "./common.js";
+import { LOGO } from "./data.js";
 
 const SCREENS = {
   tahfidz: T.Tahfidz, absenHalaqah: T.AbsenHalaqah, setorList: T.SetorList, ziyadah: T.Ziyadah, murojaah: T.Murojaah, manzilList: T.ManzilList, manzil: T.Manzil,
@@ -28,6 +30,7 @@ const SCREENS = {
   dataMaster: AD.DataMaster, santriAdmin: AD.SantriAdmin, akunAdmin: AD.AkunAdmin, asramaAdmin: AD.AsramaAdmin, kelasAdmin: AD.KelasAdmin, impor: AD.Impor, pengumuman: AD.Pengumuman,
   ubahSandi: SY.UbahSandi, privasi: SY.Privasi, bantuan: SY.Bantuan, tentang: SY.Tentang,
   santri: SA.SantriDetail, raporList: SA.RaporList, raporView: SA.RaporView, motdAll: SA.MotdRekapAll, kinerjaAll: SA.KinerjaAll,
+  halaqahAdmin: HQ.HalaqahAdmin, halaqahEdit: HQ.HalaqahEdit,
   rekap: RK.RekapHub, rekapDetail: RK.RekapDetail, kalender: RK.Kalender, logUbah: KO.LogPerubahan,
 };
 // rekap lama diarahkan ke rekap berbasis hari aktif
@@ -60,6 +63,11 @@ class Boundary extends Component {
   }
 }
 
+function Splash({ nama }) {
+  useEffect(() => { const t = setTimeout(() => nav.endSplash(), 1700); return () => clearTimeout(t); }, []);
+  return html`<div class="splash" role="status" aria-live="polite"><div class="sp-ring"><span class="sp-orbit"></span><span class="sp-logo"><img src=${LOGO} alt="" /></span></div>
+    <b>Assalamu'alaikum</b><small>${nama}</small><i class="sp-bar"><em></em></i></div>`;
+}
 function App() {
   useApp(); const online = useOnline();
   useEffect(() => { initStore(); try { const u = JSON.parse(sessionStorage.getItem("mk_user") || "null"); if (u) nav.setUser(u); } catch (e) { } }, []);
@@ -71,7 +79,8 @@ function App() {
   const wali = u.kind === "wali", top = nav.top;
   const Screen = top ? SCREENS[top.screen] : (wali ? WALI_TABS : STAFF_TABS)[nav.tab];
   const key = top ? top.screen + JSON.stringify(top.params) + nav.depth : "tab-" + nav.tab;
-  return html`<div class="app"><${Boundary} key=${key}>${Screen ? html`<${Screen} ...${top ? top.params : {}} />` : null}</${Boundary}>
+  return html`<div class="app"><div class=${"scr dir-" + nav.dir} key=${key}><${Boundary}>${Screen ? html`<${Screen} ...${top ? top.params : {}} />` : null}</${Boundary}></div>
+    ${nav.splash ? html`<${Splash} nama=${wali ? "Wali " + L.santriById(u.id).nama : L.staffById(u.id).pendek} />` : null}
     ${!online ? html`<div class="loadpill" role="status" style="color:#A8261C">Tidak ada koneksi. Perubahan dikirim saat online lagi.</div>` : !S.ready ? html`<div class="loadpill" role="status">Menyambungkan data…</div>` : null}<${BottomNav} wali=${wali} /><${ToastHost} /></div>`;
 }
 render(html`<${App} />`, document.getElementById("root"));

@@ -24,7 +24,7 @@ export function Kesantrian({ pondok }) {
       <${Tile} icon="user" label="Histori Santri" color="blue" onClick=${() => nav.go("histori", { pondok: p })} />
       <${Tile} icon="calendar" label="Rekap Izin" color="teal" onClick=${() => nav.go("rekapIzin", { pondok: p })} />
       <${Tile} icon="alert" label="Rekap Pelanggaran" color="pink" onClick=${() => nav.go("rekapPelanggaran", { pondok: p })} />
-      <${Tile} icon="moon" label="Rekap MOTD" color="indigo" onClick=${() => nav.go("rekapMotd", { pondok: p })} /></div></${Card}>
+</div></${Card}>
     <${Card} title="Santri sedang izin" right=${html`<${Pill} t=${iz.length + " santri"} tone="gold" />`}>${iz.length ? html`<div class="list">${iz.map(i => { const s = L.santriById(i.santri);
       return html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${i.jenis} · kembali ${L.fmtDT(i.kembali)}`} right=${html`<${Pill} t=${L.terlambat(i) ? "Terlambat" : i.jenis === "Keluar" ? "Keluar" : "Di rumah"} tone=${L.terlambat(i) ? "red" : "gold"} />`} onClick=${() => nav.go("izinView", { id: i.id })} />`; })}</div>`
       : html`<${Empty} t="Tidak ada santri yang sedang izin." icon="check" />`}</${Card}></div>`;

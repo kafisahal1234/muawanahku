@@ -6,7 +6,7 @@ async def main():
     errs = []
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path="/usr/bin/google-chrome")
-        pg = await b.new_page(viewport={"width": 400, "height": 860}, device_scale_factor=1)
+        pg = await b.new_page(reduced_motion="reduce", viewport={"width": 400, "height": 860}, device_scale_factor=1)
         pg.on("console", lambda m: errs.append(("console", m.type, m.text)) if m.type in ("error",) else None)
         pg.on("pageerror", lambda e: errs.append(("pageerror", str(e))))
         await pg.goto(URL); await pg.wait_for_timeout(600)
