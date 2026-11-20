@@ -467,3 +467,44 @@ body:before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-
 .rk-kosong{margin:10px 0 0;font-size:12.5px;color:var(--mut);text-align:left}
 .t-gold{color:#9A6400!important}.t-orange{color:#C2560C!important}
 .sub-h .seg{background:#08502F!important}.sub-h .seg button{color:#D7EBDF}.sub-h .seg button.on{background:#fff!important;color:var(--g)!important}
+/* =================== v6: kontras tinggi & tajam di seluruh aplikasi =================== */
+:root{--ink:#0E1A13;--mut:#3E4C44;--line:#D6E1DA}
+body{-webkit-font-smoothing:auto;-moz-osx-font-smoothing:auto;text-rendering:optimizeLegibility;color:var(--ink)}
+/* teks kecil/keterangan lebih gelap & lebih tebal */
+.small,.hint,.row-t small,.field small,.card-h small,.stat span,.stat small,.rk-g span,.rk-g small,.kv span,.empty,.empty p,.menu-row span small,.imp-t small,.strip-t small,.ai-catat,.fab-note{color:var(--mut)!important;font-weight:600}
+.field>span{color:#14251B;font-weight:800}.row-t b,.kv b,.menu-row,.mr-t{color:var(--ink)}
+input.in,select.in,textarea.in{border:1.5px solid #AFC2B6;color:var(--ink);font-weight:600}input.in::placeholder,textarea.in::placeholder{color:#6A7A71;font-weight:500}
+input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--g);outline:none;box-shadow:0 0 0 3px rgba(11,107,67,.15)}
+/* kartu & garis lebih tegas */
+.card,.group,.menu-box,.strip,.up-cta,.imp-row,.asisten-cta{border:1px solid var(--line)!important;box-shadow:0 2px 6px rgba(14,40,26,.06)!important}
+.row{border-bottom-color:#E3EBE6}.menu-row:not(:last-child):after{background:#E1E9E4}
+.hint{background:#EAF4EE!important;border:1px solid #CFE3D6!important;color:#1E3528!important}
+.note{background:#FFF4DA!important;color:#5A3D00!important;font-weight:600}.note.green{background:#E4F3EA!important;color:#154A2E!important}.note.red{background:#FDE6E2!important;color:#7E1A12!important}
+/* angka & label */
+.stat{background:#F0F6F2!important;border:1px solid #D3E3D9!important}.stat b{font-size:21px}
+.pill{font-weight:800;border:1px solid transparent}.pill.green{background:#D9F0E3;color:#08532F;border-color:#BFE3CE}.pill.gold{background:#FCEBC4;color:#6A4300;border-color:#F2D79A}
+.pill.red{background:#FBDCD6;color:#8E1B12;border-color:#F3BDB4}.pill.blue{background:#DCE8FC;color:#173F8F;border-color:#BCD2F7}.pill.muted{background:#E7ECE9;color:#3E4C44;border-color:#D3DCD7}
+.t-green{color:#08532F!important}.t-red{color:#A11D14!important}.t-blue{color:#173F8F!important}.t-muted{color:#56665D!important}
+/* menu ikon */
+.tile-lb,.pin span{color:var(--ink);font-weight:800}
+.mr-ic{background:var(--g)!important}.mr-ic.blue{background:#1E59C6!important}.mr-ic.gold{background:#B98008!important}.mr-ic.teal{background:#0D7A70!important}.mr-ic.purple{background:#6C3CD8!important}.mr-ic.slate{background:#3D5468!important}.mr-ic.red{background:#C63A2D!important}
+/* segmen & tombol */
+.seg button{color:#253D30;font-weight:800}.btn.ghost{background:#DDEFE4!important;color:#08532F!important;border:1px solid #BEDDCA}
+.btn.outline{border:1.5px solid #7FA390;color:#08532F}
+/* header: tanpa ornamen yang menimpa teks, teks putih tegas */
+.ht:before{opacity:.45}.ht-hi small,.ht-sub{color:#EAF6EF!important}.ht-sub{font-weight:700}
+.sub-h:after{opacity:.25!important}.sub-t p{color:#E3F2E9!important;font-weight:600;opacity:1!important}
+.sum:before{display:none}.sum .stat{background:#165F3E!important;border:1px solid #237050!important}.sum .stat span,.sum .stat small{color:#E3F2E9!important}.sum .card-h small{color:#FFD36E!important}
+.sum-in small,.sum-row{color:#E3F2E9!important}
+/* navigasi bawah: solid, tanpa blur */
+.bnav{background:#fff!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-top:1px solid #D6E1DA!important}
+.bnav button{color:#4A5A51!important}.bnav button.on{color:var(--g)!important}
+.chip{backdrop-filter:none!important}
+/* transisi layar tanpa efek pudar */
+@keyframes inR{from{transform:translateX(28px)}to{transform:none}}@keyframes inL{from{transform:translateX(-28px)}to{transform:none}}
+.imp-row.off{opacity:.75}
+/* tabel & isian nilai */
+.tbl th{color:#14251B;font-weight:800;background:#EAF3EE}.tbl td{color:var(--ink)}.tbl input{border:1.5px solid #AFC2B6!important;color:var(--ink);font-weight:700}
+.grid-j .cell small{opacity:1;font-weight:700}
+.sticky-act{background:var(--bg)!important;border-top:1px solid #DCE6E0;padding-top:10px!important}
+.mr-ic,.mr-ic svg{color:#fff!important}
