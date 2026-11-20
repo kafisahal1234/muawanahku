@@ -28,44 +28,47 @@ export function usePeriode(def = "pekanan", izin = null) {
 }
 
 // Kewenangan rekap per peran
+const P2 = v => (v == null ? "—" : v + "%");
+const rata = xs => { const v = xs.filter(x => x != null); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
+const santriPondok = p => L.santriList().filter(s => L.pondokOfSantri(s) === p);
 function lingkup() {
   const m = me(), r = m.roles, a = L.asramaOf(m.id), hq = L.halaqahOf(m.id), mudir = r.includes("mudir");
   const urut = (arr, mine) => (mine ? [mine, ...arr.filter(x => x.id !== mine.id)] : arr);
   const hqs = mudir || r.includes("wadir_tahfidz") ? urut(L.HALAQAH, hq) : r.includes("guru_tahfidz") && hq ? [hq] : [];
   const asr = mudir ? urut(L.ASRAMA, a) : r.includes("wadir_kesantrian") ? urut(L.ASRAMA.filter(x => x.pondok === m.pondok), a) : r.includes("musyrif") && a ? [a] : [];
   const semuaKls = mudir || r.includes("wadir_kurikulum");
-  const kls = semuaKls ? ["7", "8", "9A", "9B"] : r.includes("guru_mapel") ? [...new Set(m.ajar.map(([, k]) => k))] : [];
+  const pairs = semuaKls ? [...new Map(L.jadwalAll().map(j => [`${j.mapel}|${j.kelas}`, [j.mapel, j.kelas]])).values()].sort((x, y) => (x[0] + x[1]).localeCompare(y[0] + y[1]))
+    : r.includes("guru_mapel") ? (m.ajar || []).map(x => [...x]) : [];
   const pondok = mudir ? ["29", "21"] : r.includes("wadir_kesantrian") ? [m.pondok] : [];
+  // kelompok pelanggaran: per pondok (kesantrian/mudir) atau per asrama binaan (wali asrama)
+  const kelPel = pondok.length ? pondok.map(p => ({ id: "p" + p, nama: "Pondok " + p, list: santriPondok(p), pondok: p })) : asr.map(x => ({ id: x.id, nama: "Asrama " + x.nama, list: L.santriAsrama(x.id), aid: x.id }));
   const tabs = [];
-  if (hqs.length) tabs.push(["halaqah", "Halaqah"], ["hafalan", "Hafalan"]);
-  if (asr.length) tabs.push(["motd", "MOTD"], ["mut", "Mutaba'ah"]);
-  if (kls.length) tabs.push(["kbm", "KBM"]);
-  if (pondok.length) tabs.push(["kes", "Kesantrian"]);
-  return { m, asr, hqs, kls, pondok, tabs, semuaKls };
+  if (hqs.length) tabs.push(["tahfidz", "Tahfidz"]);
+  if (pairs.length) tabs.push(["mapel", "Mapel"]);
+  if (kelPel.length) tabs.push(["pelanggaran", "Pelanggaran"]);
+  if (asr.length) tabs.push(["mut", "Mutaba'ah"]);
+  return { m, asr, hqs, pairs, pondok, kelPel, tabs, semuaKls };
 }
-const PER_HAFALAN = ["bulanan", "mid", "semester", "tahunan"];
-const santriPondok = p => L.santriList().filter(s => L.pondokOfSantri(s) === p);
+const ALIAS = { halaqah: "tahfidz", hafalan: "tahfidz", kbm: "mapel", motd: "pelanggaran", kes: "pelanggaran" };
+const pengampu = (mp, k) => (L.jadwalAll().find(j => j.mapel === mp && j.kelas === k) || {}).guru || ((L.pengampu(mp, k) || {}).id);
+const totalSemua = list => list.reduce((n, s) => n + L.barisTotal(L.hafalan(s)), 0);
 
-// Tabel rekap (dipakai untuk unduhan & detail): ringkas per kelompok + rinci per santri
+// Tabel rekap (untuk unduhan): ringkasan per kelompok + rincian per santri
 function tabel(tab, lk, rg) {
-  const rata = xs => { const v = xs.filter(x => x != null); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
-  const P2 = v => (v == null ? "—" : v + "%");
-  if (tab === "halaqah") return { judul: "Rekap Halaqah", ringkas: { kol: ["Halaqah", "Guru", "Santri", "Sesi aktif", "Absen terisi", "Kehadiran santri"], rows: lk.hqs.map(h => { const k = L.kinerjaHalaqah(h.id, rg), l = L.santriHalaqah(h.id);
-      return [h.nama, (L.staffById(h.guru) || {}).nama || "—", l.length, k.sesi, P2(k.pct), P2(rata(l.map(s => L.kehadiranHalaqah(s.id, rg).pct)))]; }) },
-    rinci: { kol: ["Santri", "Halaqah", "Asrama", "H", "S", "I", "A", "Belum diabsen", "Kehadiran"], rows: lk.hqs.flatMap(h => L.santriHalaqah(h.id).map(s => { const k = L.kehadiranHalaqah(s.id, rg); return [s.nama, h.nama, L.asramaById(s.asrama).nama, k.H, k.S, k.I, k.A, k.kosong, P2(k.pct)]; })) } };
-  if (tab === "hafalan") return { judul: "Perkembangan Hafalan", ringkas: { kol: ["Halaqah", "Santri", "Hafalan baru (total)", "Rata per santri", "Tasmi' lulus", "Santri setor"], rows: lk.hqs.map(h => { const l = L.santriHalaqah(h.id), xs = l.map(s => L.hafalanDalam(s.id, rg)), tot = xs.reduce((n, x) => n + x.baris, 0);
-      return [h.nama, l.length, L.fmtBaris(tot), L.fmtBaris(l.length ? Math.round(tot / l.length) : 0), xs.reduce((n, x) => n + x.tasmi.length, 0), `${xs.filter(x => x.setor).length}/${l.length}`]; }) },
-    rinci: { kol: ["Santri", "Halaqah", "Hafalan baru", "Baris", "Hari setor", "Tasmi' lulus", "Total hafalan", "Capaian semester"], rows: lk.hqs.flatMap(h => L.santriHalaqah(h.id).map(s => { const x = L.hafalanDalam(s.id, rg), c = L.capaianJuz(s);
-      return [s.nama, h.nama, L.fmtBaris(x.baris), x.baris, x.hari, x.tasmi.length ? "Juz " + x.tasmi.join(", ") : "—", L.fmtJumlah(L.hafalan(s)), `${c.juz.toLocaleString("id-ID")}/${c.target} juz`]; })) } };
-  if (tab === "motd") return { judul: "Rekap MOTD", ringkas: { kol: ["Asrama", "Wali asrama", "Waktu terabsen", "Alpa", "Masbuq"], rows: lk.asr.map(a => { const k = L.kinerjaMotd(a.id, rg); return [a.nama, (L.staffById(a.musyrif) || {}).nama, `${k.isi}/${k.slot} (${P2(k.pct)})`, k.al, k.mb]; }) },
-    rinci: { kol: ["Santri", "Asrama", "Alpa", "Masbuq", "Poin"], rows: lk.asr.flatMap(a => L.santriAsrama(a.id).map(s => { let al = 0, mb = 0, po = 0; L.hariAktifDalam(rg, "asrama").forEach(t => L.WAKTU.forEach(([w]) => { const d = get("motd", L.motdKey(a.id, t, w)), v = d && d.status[s.id]; if (v === "A") al++; if (v === "M") mb++; if (v) po += L.poinMotd(w, v); })); return [s.nama, a.nama, al, mb, po]; })) } };
-  if (tab === "mut") return { judul: "Rekap Mutaba'ah", ringkas: { kol: ["Asrama", "Wali asrama", "Input terisi", "Ibadah", "Adab"], rows: lk.asr.map(a => { const k = L.kinerjaMut(a.id, rg), ps = L.santriAsrama(a.id).map(s => L.mutPersen(s.id, rg)); return [a.nama, (L.staffById(a.musyrif) || {}).nama, `${k.isi}/${k.target} (${P2(k.pct)})`, P2(rata(ps.map(x => x.ibadah))), P2(rata(ps.map(x => x.adab)))]; }) },
+  if (tab === "tahfidz") return { judul: "Rekap Tahfidz", ringkas: { kol: ["Halaqah", "Guru", "Santri", "Absen terisi (guru)", "Kehadiran santri", "Hafalan baru periode ini", "Rata total hafalan"], rows: lk.hqs.map(h => { const k = L.kinerjaHalaqah(h.id, rg), l = L.santriHalaqah(h.id), baru = l.reduce((n, s) => n + L.hafalanDalam(s.id, rg).baris, 0);
+      return [h.nama, (L.staffById(h.guru) || {}).nama || "—", l.length, `${k.isi}/${k.sesi} (${P2(k.pct)})`, P2(rata(l.map(s => L.kehadiranHalaqah(s.id, rg).pct))), L.fmtBaris(baru), L.fmtBaris(l.length ? Math.round(totalSemua(l) / l.length) : 0)]; }) },
+    rinci: { kol: ["Santri", "Halaqah", "H", "S", "I", "A", "Belum diabsen", "Kehadiran", "Hafalan baru", "Hari setor", "Tasmi' lulus", "Total hafalan"], rows: lk.hqs.flatMap(h => L.santriHalaqah(h.id).map(s => { const k = L.kehadiranHalaqah(s.id, rg), x = L.hafalanDalam(s.id, rg);
+      return [s.nama, h.nama, k.H, k.S, k.I, k.A, k.kosong, P2(k.pct), L.fmtBaris(x.baris), x.hari, x.tasmi.length ? "Juz " + x.tasmi.join(", ") : "—", L.fmtJumlah(L.hafalan(s))]; })) } };
+  if (tab === "mapel") return { judul: "Rekap Mapel", ringkas: { kol: ["Mapel", "Kelas", "Guru", "Pertemuan terlaksana", "Kehadiran santri", "Projek periode ini"], rows: lk.pairs.map(([mp, k]) => { const g = pengampu(mp, k), kj = L.kinerjaMapel(g, rg, k), pj = L.projekDalam(mp, k, rg);
+      return [L.mapelById(mp).nama, k, (L.staffById(g) || {}).nama || "—", `${kj.absen}/${kj.sesi} (${P2(kj.pct)})`, P2(rata(L.santriKelas(k).map(s => L.kehadiranKelas(s.id, mp, rg).pct))), pj.length ? pj.map(p => `${p.nama} (${L.fmtShort(p.tgl)}, rata ${p.rata ?? "—"})`).join("; ") : "—"]; }) },
+    rinci: { kol: ["Santri", "Mapel", "Kelas", "Hadir", "Pertemuan", "Kehadiran", "Nilai projek periode ini"], rows: lk.pairs.flatMap(([mp, k]) => { const pj = L.projekDalam(mp, k, rg); return L.santriKelas(k).map(s => { const kh = L.kehadiranKelas(s.id, mp, rg);
+      return [s.nama, L.mapelById(mp).nama, k, kh.H || 0, kh.sesi || 0, P2(kh.pct), pj.length ? pj.map(p => `${p.nama}: ${p.nilai[s.id] ?? "—"}`).join("; ") : "—"]; }); }) } };
+  if (tab === "pelanggaran") return { judul: "Rekap Pelanggaran", ringkas: { kol: ["Kelompok", "Santri", "Ringan (MOTD)", "Poin ringan", "Sedang", "Berat", "Poin sedang–berat"], rows: lk.kelPel.map(g => { const xs = g.list.map(s => L.pelanggaranDalam(s.id, rg)), sum = f => xs.reduce((n, x) => n + x[f], 0);
+      return [g.nama, g.list.length, sum("ringan"), sum("poinRingan"), sum("sedang"), sum("berat"), sum("poinSB")]; }) },
+    rinci: { kol: ["Santri", "Kelompok", "Alpa", "Masbuq", "Ringan", "Sedang", "Berat", "Poin total", "Pelanggaran BAP"], rows: lk.kelPel.flatMap(g => g.list.map(s => { const x = L.pelanggaranDalam(s.id, rg);
+      return [s.nama, g.nama, x.alpa, x.masbuq, x.ringan, x.sedang, x.berat, x.poinRingan + x.poinSB, x.bap.map(b => b.pelanggaranNama).join("; ") || "—"]; }).filter(r => r[4] || r[5] || r[6])) } };
+  return { judul: "Rekap Mutaba'ah", ringkas: { kol: ["Asrama", "Wali asrama", "Input terisi", "Ibadah", "Adab"], rows: lk.asr.map(a => { const k = L.kinerjaMut(a.id, rg), ps = L.santriAsrama(a.id).map(s => L.mutPersen(s.id, rg)); return [a.nama, (L.staffById(a.musyrif) || {}).nama, `${k.isi}/${k.target} (${P2(k.pct)})`, P2(rata(ps.map(x => x.ibadah))), P2(rata(ps.map(x => x.adab)))]; }) },
     rinci: { kol: ["Santri", "Asrama", "Hari aktif", "Hari diinput", "Ibadah", "Adab"], rows: lk.asr.flatMap(a => L.santriAsrama(a.id).map(s => { const k = L.mutPersen(s.id, rg); return [s.nama, a.nama, k.hari, k.isi, P2(k.ibadah), P2(k.adab)]; })) } };
-  if (tab === "kbm") { const guru = lk.semuaKls ? L.STAFF.filter(x => x.roles.includes("guru_mapel")) : [lk.m];
-    return { judul: "Rekap KBM", ringkas: { kol: ["Guru", "Pertemuan terjadwal", "Terlaksana", "Jurnal", "Izin guru"], rows: guru.map(g => { const k = L.kinerjaMapel(g.id, rg), rh = L.rentangHitung(rg), iz = rh.kosong ? 0 : all("izinGuru").filter(i => i.guru === g.id && i.tanggal >= rh.dari && i.tanggal <= rh.sampai).length; return [g.nama, k.sesi, `${k.absen} (${P2(k.pct)})`, `${k.jurnal} (${P2(k.pctJ)})`, iz]; }) },
-      rinci: { kol: ["Santri", "Kelas", "Hadir", "Pertemuan", "Belum diabsen", "Kehadiran"], rows: lk.kls.flatMap(k => L.santriKelas(k).map(s => { const ks = lk.semuaKls ? [L.kehadiranKelas(s.id, null, rg)] : [...new Set(lk.m.ajar.filter(([, kk]) => kk === k).map(([mm]) => mm))].map(mm => L.kehadiranKelas(s.id, mm, rg)); const H = ks.reduce((n, x) => n + x.H, 0), se = ks.reduce((n, x) => n + x.sesi, 0), ko = ks.reduce((n, x) => n + x.kosong, 0); return [s.nama, k, H, se, ko, P2(se ? Math.round((H / se) * 100) : null)]; })) } }; }
-  return { judul: "Rekap Kesantrian", ringkas: { kol: ["Pondok", "Santri", "Izin", "Terlambat kembali", "BAP", "Poin BAP", "Poin MOTD"], rows: lk.pondok.map(p => { const xs = santriPondok(p).map(s => L.kesantrianDalam(s.id, rg)), sum = f => xs.reduce((n, x) => n + x[f], 0); return ["Pondok " + p, xs.length, sum("izin"), sum("telat"), sum("bap"), sum("poinBap"), sum("poinMotd")]; }) },
-    rinci: { kol: ["Santri", "Pondok", "Asrama", "Izin", "Terlambat", "BAP", "Poin total"], rows: lk.pondok.flatMap(p => santriPondok(p).map(s => { const x = L.kesantrianDalam(s.id, rg); return [s.nama, p, L.asramaById(s.asrama).nama, x.izin, x.telat, x.bap, x.poinBap + x.poinMotd]; }).filter(r => r[3] || r[4] || r[5] || r[6])) } };
 }
 
 function unduhRekap(tab, lk, rg, fmt) {
@@ -77,49 +80,59 @@ function unduhRekap(tab, lk, rg, fmt) {
   const tb = x => `<table><tr>${x.kol.map(k => `<th>${esc(k)}</th>`).join("")}</tr>${x.rows.map(r => `<tr>${r.map(v => `<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</table>`;
   const rh = L.rentangHitung(rg);
   const body = `<h1>${esc(t.judul.toUpperCase())}<br><span class="small">${esc(rg.label)}${rh.kosong ? "" : ` · dihitung ${L.fmtTgl(rh.dari, false)} – ${L.fmtTgl(rh.sampai, false)}`}</span></h1>
-    <p class="small">Persentase = yang tercatat dibagi hari/sesi aktif. Hari tanpa input dihitung 0. Ahad, libur nasional, dan libur pondok tidak dihitung. Dicetak oleh ${esc(me().nama)}, ${L.fmtTgl(L.today())}.</p>
+    <p class="small">Persentase = yang tercatat dibagi hari/sesi aktif. Hari tanpa input dihitung 0. Hafalan: 15 baris = 1 halaman, 20 halaman = 1 juz. Dicetak oleh ${esc(me().nama)}, ${L.fmtTgl(L.today())}.</p>
     <h2>Ringkasan</h2>${tb(t.ringkas)}<h2>Rincian per santri</h2>${t.rinci.rows.length ? tb(t.rinci) : "<p>Tidak ada data.</p>"}`;
   return unduh(nama + ".html", docHtml(t.judul, body));
 }
 
+const HINT = { tahfidz: "Hafalan baru = ziyadah lulus dalam periode: 15 baris = 1 halaman, 20 halaman = 1 juz. Kehadiran = sesi tercatat hadir dibagi sesi aktif; sesi yang tidak diabsen dihitung 0.",
+  mapel: "Kehadiran dibagi pertemuan terjadwal pada hari KBM aktif. Projek dihitung dari tanggal projek di menu Input Nilai.",
+  pelanggaran: "Ringan = dari MOTD (alpa/masbuq): sifatnya teguran dan hukuman ringan. Sedang dan berat = dari BAP Kesantrian.",
+  mut: "Persentase = yang tercatat dibagi hari aktif asrama. Hari yang tidak diinput dihitung 0." };
 export function RekapHub({ tab: t0 }) {
   useApp();
-  const lk = lingkup(); const [tab, setTab] = useState(lk.tabs.find(x => x[0] === t0) ? t0 : (lk.tabs[0] || [""])[0]); const [dl, setDl] = useState(false);
-  const p = usePeriode("pekanan", tab === "hafalan" ? PER_HAFALAN : null);
+  const lk = lingkup(), t1 = ALIAS[t0] || t0; const [tab, setTab] = useState(lk.tabs.find(x => x[0] === t1) ? t1 : (lk.tabs[0] || [""])[0]); const [dl, setDl] = useState(false);
+  const p = usePeriode("pekanan");
   if (!lk.tabs.length) return html`<${SubHeader} title="Rekap" /><div class="wrap"><${Card}><${Empty} t="Tidak ada data rekap untuk peran ini." icon="chart" /></${Card}></div>`;
   return html`<${SubHeader} title="Rekap" sub="Sesuai kewenangan · berdasarkan hari aktif"><div class="seg rk-tabs">${lk.tabs.map(([k, t]) => html`<button type="button" class=${k === tab ? "on" : ""} onClick=${() => setTab(k)}>${t}</button>`)}</div></${SubHeader}>
     <div class="wrap">${p.bar}
-      <div class="btn-row mb8"><${Btn} kind="ghost" icon="download" onClick=${() => setDl(true)}>Unduh rekap ini</${Btn}></div>
-      ${tab === "halaqah" ? html`<${RekapHalaqahP} hqs=${lk.hqs} rg=${p.rg} />` : tab === "hafalan" ? html`<${RekapHafalanP} hqs=${lk.hqs} rg=${p.rg} />` : tab === "motd" ? html`<${RekapMotdP} asr=${lk.asr} rg=${p.rg} />`
-        : tab === "mut" ? html`<${RekapMutP} asr=${lk.asr} rg=${p.rg} />` : tab === "kbm" ? html`<${RekapKbmP} lk=${lk} rg=${p.rg} />` : html`<${RekapKesP} lk=${lk} rg=${p.rg} />`}
-      <${Hint}>${tab === "hafalan" ? "Hafalan baru = ziyadah lulus dalam periode (1 halaman = 15 baris, 1 juz = 20 halaman). Tersedia per bulan, mid, semester, dan tahun." : "Persentase = yang tercatat dibagi hari/sesi aktif pada periode. Hari yang tidak diinput dihitung 0. Ahad, libur nasional, dan libur pondok tidak dihitung."}</${Hint}></div>
+      ${tab === "tahfidz" ? html`<${RekapTahfidzP} hqs=${lk.hqs} rg=${p.rg} />` : tab === "mapel" ? html`<${RekapMapelP} lk=${lk} rg=${p.rg} />` : tab === "pelanggaran" ? html`<${RekapPelP} lk=${lk} rg=${p.rg} />` : html`<${RekapMutP} asr=${lk.asr} rg=${p.rg} />`}
+      <${Hint}>${HINT[tab]}</${Hint}>
+      <${Btn} kind="ghost" icon="download" onClick=${() => setDl(true)}>Unduh rekap ini</${Btn}></div>
     <${Sheet} open=${dl} title="Unduh rekap" onClose=${() => setDl(false)}>
       <p class="small" style="margin-top:0">${(lk.tabs.find(x => x[0] === tab) || [])[1]} · ${p.rg.label}. Berisi ringkasan dan rincian per santri.</p>
-      <button class="menu-row" onClick=${() => { setDl(false); unduhRekap(tab, lk, p.rg, "html"); }}><${Icon} n="file" s=${22} c="#0B5D3B" /><span>Siap cetak / simpan PDF<br /><small class="small">Buka file lalu pilih Cetak</small></span><${Icon} n="right" s=${18} /></button>
+      <button class="menu-row" onClick=${() => { setDl(false); unduhRekap(tab, lk, p.rg, "html"); }}><${Icon} n="file" s=${22} c="#0B6B43" /><span>Siap cetak / simpan PDF<br /><small class="small">Buka file lalu pilih Cetak</small></span><${Icon} n="right" s=${18} /></button>
       <button class="menu-row" onClick=${() => { setDl(false); unduhRekap(tab, lk, p.rg, "csv"); }}><${Icon} n="grid" s=${22} c="#1F56B5" /><span>Tabel Excel (CSV)<br /><small class="small">Bisa dibuka di Excel / Google Sheets</small></span><${Icon} n="right" s=${18} /></button></${Sheet}>`;
 }
 
-function Kartu({ title, sub, onClick, stats }) {
+function Kartu({ title, sub, onClick, stats, children }) {
   return html`<button class="card rk" onClick=${onClick}><div class="card-h"><h3>${title}</h3><${Icon} n="right" s=${18} c="#9AB0A5" /></div>${sub ? html`<div class="small mb8">${sub}</div>` : null}
-    <div class="rk-g">${stats.map(([lab, v, s, teks]) => html`<div><span>${lab}</span>${teks != null ? html`<b class="t-green" style="font-size:17px">${teks}</b>` : html`<b class=${"t-" + tone(v)}>${P(v)}</b><${Bar} v=${v || 0} tone=${tone(v) === "muted" ? "green" : tone(v)} />`}${s ? html`<small>${s}</small>` : null}</div>`)}</div></button>`;
+    <div class="rk-g">${stats.map(([lab, v, s, teks, cls]) => html`<div><span>${lab}</span>${teks != null ? html`<b class=${cls || "t-green"} style="font-size:17px">${teks}</b>` : html`<b class=${"t-" + tone(v)}>${P(v)}</b><${Bar} v=${v || 0} tone=${tone(v) === "muted" ? "green" : tone(v)} />`}${s ? html`<small>${s}</small>` : null}</div>`)}</div>${children || null}</button>`;
 }
 
-function RekapHalaqahP({ hqs, rg }) {
-  return html`${hqs.map(a => { const k = L.kinerjaHalaqah(a.id, rg), list = L.santriHalaqah(a.id), kh = list.map(s => L.kehadiranHalaqah(s.id, rg).pct).filter(x => x != null);
-    const avg = kh.length ? Math.round(kh.reduce((x, y) => x + y, 0) / kh.length) : null;
-    return html`<${Kartu} title=${a.nama} sub=${`${list.length} santri dari ${new Set(list.map(s => s.asrama)).size} asrama · ${k.sesi} sesi aktif`} onClick=${() => nav.go("rekapDetail", { jenis: "halaqah", hid: a.id, pj: rg })}
-      stats=${[["Kehadiran santri", avg], ["Absen terisi (guru)", k.pct, `${k.isi}/${k.sesi} sesi`]]} />`; })}`;
+function RekapTahfidzP({ hqs, rg }) {
+  return html`${hqs.map(h => { const k = L.kinerjaHalaqah(h.id, rg), list = L.santriHalaqah(h.id), xs = list.map(s => L.hafalanDalam(s.id, rg)), baru = xs.reduce((n, x) => n + x.baris, 0);
+    const kh = rata(list.map(s => L.kehadiranHalaqah(s.id, rg).pct)), tot = list.length ? Math.round(totalSemua(list) / list.length) : 0;
+    return html`<${Kartu} title=${h.nama} sub=${`${list.length} santri · absen guru ${k.isi}/${k.sesi} sesi · ${xs.filter(x => x.setor).length} santri setor`} onClick=${() => nav.go("rekapDetail", { jenis: "tahfidz", hid: h.id, pj: rg })}
+      stats=${[["Absensi santri", kh], ["Hafalan baru periode ini", null, list.length ? `rata ${L.fmtBaris(Math.round(baru / list.length))}/santri` : null, L.fmtBaris(baru)], ["Total hafalan", null, "rata per santri", L.fmtBaris(tot)]]} />`; })}`;
 }
-function RekapHafalanP({ hqs, rg }) {
-  return html`${hqs.map(a => { const list = L.santriHalaqah(a.id), xs = list.map(s => L.hafalanDalam(s.id, rg)), tot = xs.reduce((n, x) => n + x.baris, 0), ts = xs.reduce((n, x) => n + x.tasmi.length, 0);
-    const cap = list.length ? Math.round(list.reduce((n, s) => n + L.capaianJuz(s).pct, 0) / list.length) : null;
-    return html`<${Kartu} title=${a.nama} sub=${`${list.length} santri · ${xs.filter(x => x.setor).length} santri setor ziyadah · ${ts} tasmi' lulus`} onClick=${() => nav.go("rekapDetail", { jenis: "hafalan", hid: a.id, pj: rg })}
-      stats=${[["Hafalan baru", null, tot >= 15 ? `${tot} baris` : null, L.fmtBaris(tot)], ["Rata per santri", null, null, L.fmtBaris(list.length ? Math.round(tot / list.length) : 0)], ["Capaian target semester", cap]]} />`; })}`;
+function RekapMapelP({ lk, rg }) {
+  const mps = [...new Set(lk.pairs.map(([mp]) => mp))], milik = (lk.m.ajar || []).map(([mp]) => mp).find(x => mps.includes(x));
+  const [f, setF] = useState(milik || mps[0]);
+  const pairs = mps.length > 1 ? lk.pairs.filter(([mp]) => mp === f) : lk.pairs;
+  return html`${mps.length > 1 ? html`<div class="seg small mb8">${mps.map(mp => html`<button type="button" class=${mp === f ? "on" : ""} onClick=${() => setF(mp)}>${L.mapelById(mp).nama.replace("Pendidikan ", "").replace("Bahasa ", "B. ")}</button>`)}</div>` : null}
+  ${pairs.map(([mp, k]) => { const g = pengampu(mp, k), kj = L.kinerjaMapel(g, rg, k), pj = L.projekDalam(mp, k, rg), n = L.santriKelas(k).length;
+    const kh = rata(L.santriKelas(k).map(s => L.kehadiranKelas(s.id, mp, rg).pct));
+    return html`<${Kartu} title=${`${L.mapelById(mp).nama} · Kelas ${k}`} sub=${`${(L.staffById(g) || {}).pendek || "—"} · ${n} santri`} onClick=${() => nav.go("rekapDetail", { jenis: "mapel", mapel: mp, kelas: k, pj: rg })}
+      stats=${[["Absensi santri", kh], ["Pertemuan terlaksana", kj.pct, `${kj.absen}/${kj.sesi}`], ["Projek", null, "periode ini", String(pj.length)]]}>
+      ${pj.length ? html`<div class="rk-pj">${pj.map(p => html`<div><span><b>${p.nama}</b><small>${L.fmtTgl(p.tgl)} · ${p.dinilai}/${n} dinilai</small></span><em class=${p.rata == null ? "" : p.rata < 70 ? "t-red" : "t-green"}>${p.rata ?? "—"}</em></div>`)}</div>` : html`<p class="rk-kosong">Belum ada projek pada periode ini.</p>`}</${Kartu}>`; })}`;
 }
-function RekapMotdP({ asr, rg }) {
-  return html`${asr.map(a => { const k = L.kinerjaMotd(a.id, rg);
-    return html`<${Kartu} title=${a.nama} sub=${`Pondok ${a.pondok} · alpa ${k.al} · masbuq ${k.mb}`} onClick=${() => nav.go("rekapDetail", { jenis: "motd", aid: a.id, pj: rg })}
-      stats=${[["Waktu terabsen", k.pct, `${k.isi}/${k.slot} waktu`], ["Kepatuhan santri", k.isi ? Math.max(0, Math.round(100 - ((k.al + k.mb) / Math.max(1, k.isi * L.santriAsrama(a.id).length)) * 100)) : null]]} />`; })}`;
+function RekapPelP({ lk, rg }) {
+  return html`${lk.kelPel.map(g => { const xs = g.list.map(s => ({ s, x: L.pelanggaranDalam(s.id, rg) })), sum = f => xs.reduce((n, o) => n + o.x[f], 0);
+    const top = xs.filter(o => o.x.poinRingan + o.x.poinSB).sort((a, b) => b.x.poinRingan + b.x.poinSB - (a.x.poinRingan + a.x.poinSB)).slice(0, 3);
+    return html`<${Kartu} title=${g.nama} sub=${`${g.list.length} santri`} onClick=${() => nav.go("rekapDetail", { jenis: "pelanggaran", aid: g.aid, pondok: g.pondok, pj: rg })}
+      stats=${[["Ringan (MOTD)", null, `poin ${sum("poinRingan")} · teguran`, String(sum("ringan")), "t-gold"], ["Sedang", null, "dari BAP", String(sum("sedang")), "t-orange"], ["Berat", null, `poin S–B ${sum("poinSB")}`, String(sum("berat")), "t-red"]]}>
+      ${top.length ? html`<div class="rk-pj">${top.map(({ s, x }) => html`<div><span><b>${s.nama}</b><small>Ringan ${x.ringan} · sedang ${x.sedang} · berat ${x.berat}</small></span><em class="t-red">${x.poinRingan + x.poinSB} poin</em></div>`)}</div>` : html`<p class="rk-kosong">Tidak ada pelanggaran pada periode ini.</p>`}</${Kartu}>`; })}`;
 }
 function RekapMutP({ asr, rg }) {
   return html`${asr.map(a => { const k = L.kinerjaMut(a.id, rg), ps = L.santriAsrama(a.id).map(s => L.mutPersen(s.id, rg)).filter(x => x.ibadah != null);
@@ -127,44 +140,31 @@ function RekapMutP({ asr, rg }) {
     return html`<${Kartu} title=${a.nama} sub=${`${(L.staffById(a.musyrif) || {}).pendek} · input ${k.isi}/${k.target}`} onClick=${() => nav.go("rekapDetail", { jenis: "mut", aid: a.id, pj: rg })}
       stats=${[["Ibadah", av("ibadah")], ["Adab", av("adab")], ["Input terisi", k.pct]]} />`; })}`;
 }
-function RekapKbmP({ lk, rg }) {
-  const guru = lk.semuaKls ? L.STAFF.filter(s => s.roles.includes("guru_mapel")) : [lk.m];
-  return html`<${Section} t="Kehadiran santri per kelas" />${lk.kls.map(k => { const ps = L.santriKelas(k).map(s => L.kehadiranKelas(s.id, null, rg).pct).filter(x => x != null);
-      const avg = ps.length ? Math.round(ps.reduce((x, y) => x + y, 0) / ps.length) : null, kj = L.kinerjaMapel(lk.semuaKls ? null : lk.m.id, rg, k);
-      return html`<${Kartu} title=${"Kelas " + k} sub=${`${L.santriKelas(k).length} santri · ${kj.sesi} pertemuan terjadwal`} onClick=${() => nav.go("rekapDetail", { jenis: "kbm", kelas: k, pj: rg, guru: lk.semuaKls ? null : lk.m.id })}
-        stats=${[["Kehadiran santri", avg], ["Pertemuan terlaksana", kj.pct, `${kj.absen}/${kj.sesi}`]]} />`; })}
-    <${Section} t="Kinerja guru mapel" /><${Card}><div class="list">${guru.map(g => { const k = L.kinerjaMapel(g.id, rg);
-      return html`<div class="row"><span class="av">${L.initials(g.pendek.replace(/^Ust(dzh)?\.\s*/, ""))}</span><span class="row-t"><b>${g.nama}</b><small>${k.absen}/${k.sesi} terlaksana · jurnal ${k.jurnal}/${k.sesi}</small>
-        <span style="display:block;margin-top:6px"><${Bar} v=${k.pct || 0} tone=${tone(k.pct) === "muted" ? "green" : tone(k.pct)} /></span></span><${Pill} t=${P(k.pct)} tone=${tone(k.pct)} /></div>`; })}</div></${Card}>`;
-}
-function RekapKesP({ lk, rg }) {
-  return html`${lk.pondok.map(p => { const l = santriPondok(p), xs = l.map(s => L.kesantrianDalam(s.id, rg)), sum = f => xs.reduce((n, x) => n + x[f], 0);
-    return html`<${Kartu} title=${"Pondok " + p} sub=${`${l.length} santri · ${sum("bap")} BAP · poin ${sum("poinBap") + sum("poinMotd")}`} onClick=${() => nav.go("rekapDetail", { jenis: "kes", pondok: p, pj: rg })}
-      stats=${[["Izin", null, `${sum("telat")} terlambat kembali`, String(sum("izin"))], ["Pelanggaran (BAP)", null, `poin ${sum("poinBap")}`, String(sum("bap"))], ["Poin MOTD", null, "alpa & masbuq", String(sum("poinMotd"))]]} />`; })}`;
-}
 
-export function RekapDetail({ jenis, aid, hid, kelas, pondok, pj, guru }) {
+export function RekapDetail({ jenis: j0, aid, hid, kelas, mapel, pondok, pj }) {
   useApp();
-  const rg = pj || L.periodeRange("pekanan");
-  const list = hid ? L.santriHalaqah(hid) : aid ? L.santriAsrama(aid) : pondok ? santriPondok(pondok) : L.santriKelas(kelas);
-  const judul = { halaqah: "Kehadiran Halaqah", hafalan: "Perkembangan Hafalan", motd: "Rekap MOTD", mut: "Rekap Mutaba'ah", kbm: "Kehadiran Kelas", kes: "Rekap Kesantrian" }[jenis];
-  const mapel = guru ? [...new Set(L.staffById(guru).ajar.filter(([, k]) => k === kelas).map(([m]) => m))] : null;
+  const jenis = ALIAS[j0] || j0, rg = pj || L.periodeRange("pekanan");
+  const list = hid ? L.santriHalaqah(hid) : pondok ? santriPondok(pondok) : aid ? L.santriAsrama(aid) : L.santriKelas(kelas);
+  const judul = { tahfidz: "Rekap Tahfidz", mapel: "Rekap Mapel", pelanggaran: "Rekap Pelanggaran", mut: "Rekap Mutaba'ah" }[jenis];
+  const nm = hid ? L.halaqahById(hid).nama : pondok ? "Pondok " + pondok : aid ? L.asramaById(aid).nama : `${L.mapelById(mapel).nama} · Kelas ${kelas}`;
+  const pjk = jenis === "mapel" ? L.projekDalam(mapel, kelas, rg) : [];
   const rows = list.map(s => {
-    if (jenis === "halaqah") { const k = L.kehadiranHalaqah(s.id, rg); return [s, k.pct, `H ${k.H} · S ${k.S} · I ${k.I} · A ${k.A} · belum diabsen ${k.kosong} dari ${k.sesi} sesi`]; }
-    if (jenis === "hafalan") { const x = L.hafalanDalam(s.id, rg), c = L.capaianJuz(s); return [s, null, `${x.hari} hari setor${x.tasmi.length ? " · tasmi' Juz " + x.tasmi.join(", ") : ""} · semester ${c.juz.toLocaleString("id-ID")}/${c.target} juz`, L.fmtBaris(x.baris), x.baris]; }
-    if (jenis === "mut") { const k = L.mutPersen(s.id, rg); return [s, k.ibadah == null ? null : Math.round((k.ibadah + k.adab) / 2), `Ibadah ${P(k.ibadah)} · Adab ${P(k.adab)} · diinput ${k.isi}/${k.hari} hari`]; }
-    if (jenis === "kes") { const x = L.kesantrianDalam(s.id, rg); return [s, null, `Izin ${x.izin}${x.telat ? ` (${x.telat} terlambat)` : ""} · BAP ${x.bap} · ${L.asramaById(s.asrama).nama}`, `${x.poinBap + x.poinMotd} poin`, -(x.poinBap + x.poinMotd)]; }
-    if (jenis === "motd") { let al = 0, mb = 0, n = 0, po = 0; L.hariAktifDalam(rg, "asrama").forEach(t => L.WAKTU.forEach(([w]) => { const d = get("motd", L.motdKey(s.asrama, t, w)); if (d) { n++; const v = d.status[s.id]; if (v === "A") al++; if (v === "M") mb++; po += L.poinMotd(w, v); } }));
-      return [s, n ? Math.round(((n - al - mb) / n) * 100) : null, `Alpa ${al} · masbuq ${mb} · ${po} poin · ${n} waktu terabsen`]; }
-    const ks = (mapel || [null]).map(m => L.kehadiranKelas(s.id, m, rg)), H = ks.reduce((x, k) => x + k.H, 0), ses = ks.reduce((x, k) => x + k.sesi, 0), kos = ks.reduce((x, k) => x + k.kosong, 0);
-    return [s, ses ? Math.round((H / ses) * 100) : null, `Hadir ${H} dari ${ses} pertemuan · belum diabsen ${kos}`];
-  }).sort((a, b) => (a[4] != null ? a[4] - b[4] : (a[1] ?? -1) - (b[1] ?? -1)));
-  const nm = hid ? L.halaqahById(hid).nama : aid ? L.asramaById(aid).nama : pondok ? "Pondok " + pondok : "Kelas " + kelas;
+    if (jenis === "tahfidz") { const k = L.kehadiranHalaqah(s.id, rg), x = L.hafalanDalam(s.id, rg);
+      return [s, k.pct, `Hadir ${P(k.pct)} (H ${k.H} · S ${k.S} · I ${k.I} · A ${k.A}${k.kosong ? ` · ${k.kosong} belum diabsen` : ""}) · total hafalan ${L.fmtJumlah(L.hafalan(s))}${x.tasmi.length ? " · tasmi' Juz " + x.tasmi.join(", ") : ""}`, L.fmtBaris(x.baris), x.baris]; }
+    if (jenis === "mapel") { const k = L.kehadiranKelas(s.id, mapel, rg), nil = pjk.map(p => p.nilai[s.id]).filter(v => v !== "" && v != null).map(Number);
+      return [s, k.pct, `Hadir ${P(k.pct)} (${k.H || 0}/${k.sesi || 0} pertemuan)${pjk.length ? " · " + pjk.map(p => `${p.nama}: ${p.nilai[s.id] ?? "—"}`).join(" · ") : ""}`, nil.length ? "Projek " + Math.round(nil.reduce((a, b) => a + b, 0) / nil.length) : P(k.pct), k.pct ?? -1]; }
+    if (jenis === "pelanggaran") { const x = L.pelanggaranDalam(s.id, rg), po = x.poinRingan + x.poinSB;
+      return [s, null, `Ringan ${x.ringan} (alpa ${x.alpa} · masbuq ${x.masbuq}) · sedang ${x.sedang} · berat ${x.berat}${x.bap.length ? " · " + x.bap.map(b => b.pelanggaranNama).join(", ") : ""}`, `${po} poin`, -po]; }
+    const k = L.mutPersen(s.id, rg); return [s, k.ibadah == null ? null : Math.round((k.ibadah + k.adab) / 2), `Ibadah ${P(k.ibadah)} · Adab ${P(k.adab)} · diinput ${k.isi}/${k.hari} hari`];
+  }).filter(r => jenis !== "pelanggaran" || r[4] < 0).sort((a, b) => (a[4] != null ? a[4] - b[4] : (a[1] ?? -1) - (b[1] ?? -1)));
+  const nada = (jenis, v, teks) => (jenis === "pelanggaran" ? "red" : jenis === "tahfidz" ? "green" : teks && teks.startsWith("Projek") ? "blue" : tone(v));
   return html`<${SubHeader} title=${judul} sub=${`${nm} · ${rg.label}`} />
-    <div class="wrap"><${Hint}>${jenis === "hafalan" ? "Diurutkan dari hafalan baru paling sedikit." : jenis === "kes" ? "Diurutkan dari poin terbanyak." : "Diurutkan dari yang paling rendah. Hari/sesi yang tidak diinput ikut dihitung sehingga persentase turun."}</${Hint}>
-    <${KartuAI} judul="Analisis AI" tombol="Analisis rekap ini" ket="AI merangkum temuan penting dan saran tindak lanjut dari tabel di bawah."
-      buat=${() => tanyaAI({ sistem: SISTEM_DASAR, teks: `Analisis rekap pondok berikut untuk pimpinan.\nJenis: ${judul}\nKelompok: ${nm}\nPeriode: ${rg.label}\nCatatan: hari/sesi tanpa input dihitung tidak terlaksana.\nData per santri (nama: nilai · rincian):\n${rows.map(([s, v, sub, teks]) => `${s.nama}: ${teks != null ? teks : v == null ? "belum ada data" : v + "%"} · ${sub}`).join("\n")}\n\nFormat jawaban: 1 kalimat kesimpulan umum (sebut rata-rata bila relevan), lalu butir "- " berisi: santri yang perlu perhatian (maks. 5 nama), pola yang terlihat (misal input sering kosong), dan 2–3 saran tindak lanjut yang konkret. Maksimal 150 kata.` })} />
-    <${Card}><div class="list">${rows.map(([s, v, sub, teks]) => html`<${Row} name=${s.nama} sub=${sub} right=${html`<${Pill} t=${teks != null ? teks : P(v)} tone=${teks != null ? "green" : tone(v)} />`} onClick=${() => nav.go("santri", { sid: s.id })} />`)}</div></${Card}></div>`;
+    <div class="wrap">${pjk.length ? html`<${Card} title="Projek periode ini"><div class="rk-pj">${pjk.map(p => html`<div><span><b>${p.nama}</b><small>${L.fmtTgl(p.tgl)} · ${p.dinilai}/${list.length} dinilai</small></span><em class=${p.rata == null ? "" : p.rata < 70 ? "t-red" : "t-green"}>${p.rata ?? "—"}</em></div>`)}</div></${Card}>` : null}
+    <${KartuAI} judul="Analisis AI" tombol="Analisis rekap ini" ket="AI merangkum temuan penting dan saran tindak lanjut dari data di bawah."
+      buat=${() => tanyaAI({ sistem: SISTEM_DASAR, teks: `Analisis rekap pondok berikut untuk pimpinan.\nJenis: ${judul}\nKelompok: ${nm}\nPeriode: ${rg.label}\nCatatan: hari/sesi tanpa input dihitung tidak terlaksana; 15 baris = 1 halaman, 20 halaman = 1 juz; pelanggaran ringan dari MOTD (teguran), sedang-berat dari BAP.\nData per santri (nama: nilai · rincian):\n${rows.map(([s, v, sub, teks]) => `${s.nama}: ${teks != null ? teks : v == null ? "belum ada data" : v + "%"} · ${sub}`).join("\n")}\n\nFormat jawaban: 1 kalimat kesimpulan umum, lalu butir "- " berisi: santri yang perlu perhatian (maks. 5 nama), pola yang terlihat, dan 2–3 saran tindak lanjut yang konkret. Maksimal 150 kata.` })} />
+    <${Card}>${rows.length ? html`<div class="list">${rows.map(([s, v, sub, teks]) => html`<${Row} name=${s.nama} sub=${sub} right=${html`<${Pill} t=${teks != null ? teks : P(v)} tone=${nada(jenis, v, teks)} />`} onClick=${() => nav.go("santri", { sid: s.id })} />`)}</div>`
+      : html`<${Empty} t=${jenis === "pelanggaran" ? "Tidak ada pelanggaran pada periode ini." : "Belum ada data."} icon="check" />`}</${Card}>
+    <${Hint}>${HINT[jenis]}</${Hint}></div>`;
 }
 
 // ---------------- Kalender akademik (admin) ----------------

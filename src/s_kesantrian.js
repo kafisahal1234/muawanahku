@@ -117,7 +117,7 @@ export function FormBap() {
   const rapikan = () => aiRun(async () => {
     const j = await tanyaAI({ sistem: SISTEM_DASAR, json: true, teks: `Rapikan kronologi berita acara pelanggaran santri berikut menjadi kalimat baku, objektif, orang ketiga, urut waktu, maksimal 4 kalimat. Pertahankan semua fakta persis dan jangan menambah fakta atau tuduhan baru. Sebut santri sebagai "santri" saja.
 Lalu pilih jenis pelanggaran yang paling sesuai dari daftar (id|nama|tingkat), atau null bila tidak ada yang cocok:
-${DATA.pelanggaran.map(x => `${x.id}|${x.nama}|${x.tingkat}`).join("\n")}
+${DATA.pelanggaran.filter(x => x.tingkat !== "Ringan").map(x => `${x.id}|${x.nama}|${x.tingkat}`).join("\n")}
 Tempat: ${f.tempat || "-"}
 Kronologi asli: ${f.kronologi}
 Jawab JSON: {"kronologi":"","pelanggaran_id":null}` });
@@ -136,8 +136,8 @@ Jawab JSON: {"kronologi":"","pelanggaran_id":null}` });
       ${s ? html`<p class="small mt8">${L.asramaById(s.asrama).nama} · total poin saat ini ${ps.total}</p>` : null}</${Card}>
     <${Card} title="Kejadian"><div class="btn-row"><${Field} label="Tanggal"><input type="date" class="in" value=${f.tanggal} onInput=${e => set("tanggal", e.target.value)} /></${Field}>
       <${Field} label="Tempat"><input class="in" value=${f.tempat} placeholder="Misal: kamar 3" onInput=${e => set("tempat", e.target.value)} /></${Field}></div>
-      <${Field} label="Jenis pelanggaran" hint="Daftar contoh sementara, menunggu daftar resmi pondok."><select class="in" value=${f.pel} onChange=${e => set("pel", e.target.value)}><option value="">Pilih pelanggaran</option>
-        ${DATA.pelanggaran.map(x => html`<option value=${x.id}>${x.nama} · ${x.tingkat} · ${x.poin} poin</option>`)}</select></${Field}>
+      <${Field} label="Jenis pelanggaran" hint="BAP untuk pelanggaran sedang sampai berat. Pelanggaran ringan (alpa/masbuq) dicatat lewat MOTD."><select class="in" value=${f.pel} onChange=${e => set("pel", e.target.value)}><option value="">Pilih pelanggaran</option>
+        ${DATA.pelanggaran.filter(x => x.tingkat !== "Ringan").map(x => html`<option value=${x.id}>${x.nama} · ${x.tingkat} · ${x.poin} poin</option>`)}</select></${Field}>
       <${Field} label="Kronologi"><textarea class="in" value=${f.kronologi} onInput=${e => set("kronologi", e.target.value)} placeholder="Ceritakan singkat kejadiannya"></textarea></${Field}>
       <${AiBtn} kecil label=${f.pel ? "Rapikan kronologi" : "Rapikan & sarankan jenis pelanggaran"} busy=${aiBusy} onClick=${() => (f.kronologi.trim().length > 10 ? rapikan() : toast("Tulis kronologinya dulu", "err"))} />
       <${Field} label="Saksi"><input class="in" value=${f.saksi} onInput=${e => set("saksi", e.target.value)} placeholder="Misal: Ust. Ugi (wali asrama)" /></${Field}></${Card}>

@@ -458,3 +458,12 @@ h1,h2,h3,b,strong{letter-spacing:0}
 .bubble.me{background:var(--g)}
 .sum:before{right:-46px;top:auto;bottom:-46px;width:140px;height:140px;opacity:.55}
 .ht-hi small{font-size:13px}
+/* v5.1: area status bar selalu hijau solid (tanpa efek blur saat digulir) */
+body:before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--g);z-index:200;pointer-events:none}
+.hc{padding:10px 10px 10px}.sum .card{padding-bottom:16px}
+.rk-pj{display:flex;flex-direction:column;gap:2px;margin-top:12px;border-top:1px solid var(--line);padding-top:8px;text-align:left}
+.rk-pj>div{display:flex;align-items:center;gap:10px;padding:6px 0}.rk-pj span{flex:1;min-width:0}.rk-pj b{display:block;font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk-pj small{color:var(--mut);font-size:12px}.rk-pj em{font-style:normal;font-weight:900;font-size:15px;flex:none}
+.rk-kosong{margin:10px 0 0;font-size:12.5px;color:var(--mut);text-align:left}
+.t-gold{color:#9A6400!important}.t-orange{color:#C2560C!important}
+.sub-h .seg{background:#08502F!important}.sub-h .seg button{color:#D7EBDF}.sub-h .seg button.on{background:#fff!important;color:var(--g)!important}

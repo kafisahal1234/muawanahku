@@ -34,7 +34,7 @@ async def main():
         await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile("Rekap"); await pg.wait_for_timeout(300)
         await pg.click(".sub-h .seg button:text-is(\"Mutaba'ah\")"); await pg.wait_for_timeout(200)
         print("pekanan:", (await pg.locator(".rk").first.inner_text()).replace("\n", " | "))
-        await pg.click(".periode .seg button:text-is('Harian')"); await pg.wait_for_timeout(200)
+        await pg.click(".periode .seg button:text-is('Hari ini')"); await pg.wait_for_timeout(200)
         print("harian:", (await pg.locator(".rk").first.inner_text()).replace("\n", " | "))
         await pg.screenshot(path="test/k2_rekap.png")
         await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile("Kalender"); await pg.wait_for_timeout(300); await pg.screenshot(path="test/k3_kal.png", full_page=True)

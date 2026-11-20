@@ -176,7 +176,7 @@ export function rentangHitung(rg) { const st = setelan(), t = today(); const dar
 export function hariAktifDalam(rg, jenis) { const r = rentangHitung(rg); return r.kosong ? [] : hariRentang(r.dari, r.sampai).filter(t => hariAktif(t, jenis)); }
 export function semesterKini(tgl = today()) { const s = setelan(); return tgl >= s.genapMulai ? { nama: "Genap", mulai: s.genapMulai, mid: s.genapMid, selesai: s.genapSelesai } : { nama: "Ganjil", mulai: s.ganjilMulai, mid: s.ganjilMid, selesai: s.ganjilSelesai }; }
 const BLN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-export const PERIODE = [["harian", "Harian"], ["pekanan", "Pekanan"], ["bulanan", "Bulanan"], ["mid", "Mid"], ["semester", "Semester"], ["tahunan", "Tahunan"]];
+export const PERIODE = [["harian", "Hari ini"], ["pekanan", "Pekanan"], ["bulanan", "Bulanan"], ["mid", "Mid"], ["semester", "Semester"], ["tahunan", "Tahunan"]];
 export function periodeRange(jenis, ref = today()) {
   const s = setelan(), sm = semesterKini(ref), d = parseYmd(ref);
   if (jenis === "harian") return { dari: ref, sampai: ref, label: fmtTgl(ref) };
@@ -409,4 +409,26 @@ export function santriScope(user) {
   if (r.includes("guru_tahfidz")) { const h = halaqahOf(st.id); if (h) out = out.concat(santriHalaqah(h.id)); }
   if (r.includes("guru_mapel")) st.ajar.forEach(([m, k]) => (out = out.concat(santriKelas(k))));
   const seen = new Set(); return out.filter(s => (seen.has(s.id) ? false : seen.add(s.id)));
+}
+
+// ---------- rekap pelanggaran per periode ----------
+// Ringan = dari MOTD (alpa/masbuq: teguran & hukuman ringan) + BAP bertingkat ringan; Sedang & Berat = dari BAP kesantrian.
+export function pelanggaranDalam(sid, rg) {
+  const r = rentangHitung(rg), out = { ringan: 0, sedang: 0, berat: 0, poinRingan: 0, poinSB: 0, alpa: 0, masbuq: 0, bap: [] };
+  if (r.kosong) return out;
+  motdCatatan(sid).filter(c => c.tanggal >= r.dari && c.tanggal <= r.sampai).forEach(c => { out.ringan++; out.poinRingan += c.poin; if (c.st === "A") out.alpa++; else out.masbuq++; });
+  all("bap").filter(b => b.santri === sid && b.tanggal >= r.dari && b.tanggal <= r.sampai).forEach(b => {
+    const t = String(b.tingkat || "Sedang").toLowerCase(); out.bap.push(b);
+    if (t === "ringan") { out.ringan++; out.poinRingan += b.poin || 0; } else { out[t === "berat" ? "berat" : "sedang"]++; out.poinSB += b.poin || 0; }
+  });
+  return out;
+}
+// ---------- projek mapel per periode ----------
+export function projekDalam(mapel, kelas, rg) {
+  const d = get("nilaiMapel", nilaiKey(mapel, kelas)); if (!d || !d.projekList) return [];
+  const r = rentangHitung(rg), tglDok = d.ts ? ymd(new Date(d.ts)) : null;
+  return d.projekList.map(p => {
+    const tgl = p.tgl || tglDok, nil = Object.values((d.projekNilai || {})[p.id] || {}).filter(x => x !== "" && x != null).map(Number);
+    return { ...p, tgl, nilai: (d.projekNilai || {})[p.id] || {}, dinilai: nil.length, rata: nil.length ? Math.round(nil.reduce((a, b) => a + b, 0) / nil.length) : null };
+  }).filter(p => !r.kosong && p.tgl && p.tgl >= r.dari && p.tgl <= r.sampai);
 }
