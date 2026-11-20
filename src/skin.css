@@ -177,3 +177,5 @@ button.pill{transition:transform .12s,background .15s}button.pill:active{transfo
 @keyframes spOut{to{opacity:0;visibility:hidden}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion: reduce){.scr,.tiles .tile,.ok-burst span,.splash,.sp-orbit,.sp-logo{animation:none!important}.splash{display:none}}
+.sub-h .seg.rk-tabs button{flex:none;min-width:84px}
+.menu-row span small{display:block;margin-top:2px}

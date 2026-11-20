@@ -213,6 +213,21 @@ export function capaianJuz(s) {
   const juz = DATA.urutanJuz.reduce((x, j) => x + Math.max(0, b(j) - a(j)), 0), t = targetSemester();
   return { juz: Math.round(juz * 100) / 100, target: t, pct: Math.min(100, Math.round((juz / t) * 100)), tercapai: juz >= t, kurang: Math.max(0, Math.round((t - juz) * 10) / 10) };
 }
+// Perkembangan hafalan dalam periode: dari setoran ziyadah lulus & tasmi' lulus bertanggal dalam rentang
+export function hafalanDalam(sid, rg) {
+  const r = rentangHitung(rg); if (r.kosong) return { baris: 0, setor: 0, tasmi: [], hari: 0 };
+  const l = setoranSantri(sid).filter(x => x.tanggal >= r.dari && x.tanggal <= r.sampai);
+  const z = l.filter(x => x.jenis === "ziyadah" && x.lulus), hariSetor = new Set(z.map(x => x.tanggal)).size;
+  return { baris: z.reduce((n, x) => n + Math.max(0, (x.sesudah || 0) - (x.sebelum || 0)), 0), setor: z.length, hari: hariSetor, tasmi: l.filter(x => x.jenis === "tasmi" && x.lulus).map(x => x.juz) };
+}
+// Kesantrian dalam periode: izin, terlambat kembali, BAP, poin MOTD
+export function kesantrianDalam(sid, rg) {
+  const r = rentangHitung(rg), inR = t => t && t.slice(0, 10) >= r.dari && t.slice(0, 10) <= r.sampai;
+  if (r.kosong) return { izin: 0, telat: 0, bap: 0, poinBap: 0, poinMotd: 0 };
+  const iz = all("izin").filter(i => i.santri === sid && inR(i.keluar)), bap = all("bap").filter(b => b.santri === sid && inR(b.tanggal));
+  const pm = motdCatatan(sid).filter(c => inR(c.tanggal)).reduce((n, c) => n + c.poin, 0);
+  return { izin: iz.length, telat: iz.filter(i => i.telat || terlambat(i)).length, bap: bap.length, poinBap: bap.reduce((n, b) => n + (b.poin || 0), 0), poinMotd: pm };
+}
 export function fmtBaris(n) {
   if (!n) return "0 baris";
   const hal = Math.floor(n / 15), sisa = n % 15, juz = Math.floor(hal / 20), h2 = hal % 20, out = [];

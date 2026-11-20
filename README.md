@@ -33,8 +33,15 @@ Setiap push ke `main` otomatis dibangun dan dipasang oleh `.github/workflows/dep
 Aktifkan sekali: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 Alamatnya: `https://kafisahal1234.github.io/muawanahku/`
 
-Catatan: di GitHub Pages data tersimpan di browser masing-masing (localStorage), belum bersama antarperangkat.
-Data bersama butuh backend (Base44 / Firebase / Supabase).
+### Sinkron data antarperangkat
+
+- Di tautan demo Claude: data otomatis bersama dan sinkron untuk semua akun.
+- Di GitHub Pages: tanpa konfigurasi, data hanya di browser masing-masing. Untuk sinkron, isi `FIREBASE_CONFIG` di `src/cloud.js`:
+  1. Buat proyek di console.firebase.google.com → tambah **Web app** → salin konfigurasinya.
+  2. **Build → Firestore Database → Create database** (lokasi asia-southeast2 / Jakarta).
+  3. **Build → Authentication → Sign-in method → Anonymous → Enable**.
+  4. Aturan Firestore minimal: `allow read, write: if request.auth != null;`
+  5. Tempel konfigurasi ke `src/cloud.js`, commit, tunggu deploy.
 
 ## Aturan penting
 

@@ -29,7 +29,7 @@ async def main():
         await pg.locator(".card .row:has-text('Ziyadah')").first.click(); await pg.wait_for_timeout(200)
         await pg.locator(".sheet .btn:has-text('Hapus')").click(); await pg.wait_for_timeout(150); await pg.locator(".dialog .btn.danger, .dialog .btn:has-text('Hapus')").last.click(); await pg.wait_for_timeout(300)
         print("after delete rows:", [r.split("\n")[0] for r in (await pg.locator(".card .row").all_inner_texts())[:3]])
-        await pg.click("text=Log perubahan data"); await pg.wait_for_timeout(300); print("log:", [r.split("\n")[0] for r in await pg.locator(".card .row").all_inner_texts()])
+        await pg.locator(".bnav button").nth(4).click(); await pg.wait_for_timeout(200); await pg.click("text=Log perubahan data"); await pg.wait_for_timeout(300); print("log:", [r.split("\n")[0] for r in await pg.locator(".card .row").all_inner_texts()])
         # rekap mutabaah pekanan & harian
         await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile("Rekap"); await pg.wait_for_timeout(300)
         await pg.click(".sub-h .seg button:text-is(\"Mutaba'ah\")"); await pg.wait_for_timeout(200)
@@ -37,7 +37,6 @@ async def main():
         await pg.click(".periode .seg button:text-is('Harian')"); await pg.wait_for_timeout(200)
         print("harian:", (await pg.locator(".rk").first.inner_text()).replace("\n", " | "))
         await pg.screenshot(path="test/k2_rekap.png")
-        await tile("Kalender") if False else None
-        await pg.locator(".sub-h .back").click(); await pg.wait_for_timeout(200); await tile("Kalender"); await pg.wait_for_timeout(300); await pg.screenshot(path="test/k3_kal.png", full_page=True)
+        await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile("Kalender"); await pg.wait_for_timeout(300); await pg.screenshot(path="test/k3_kal.png", full_page=True)
         print("errors:", errs); await b.close()
 asyncio.run(main())

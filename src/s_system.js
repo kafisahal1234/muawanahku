@@ -25,7 +25,7 @@ export function useDownloads() {
 export async function unduh(filename, data) {
   const d = await getDownloads();
   if (!d) { // di luar artifact (misal GitHub Pages): unduh langsung lewat browser
-    try { const url = URL.createObjectURL(new Blob([data], { type: "text/html;charset=utf-8" })), a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); toast("File diunduh. Buka file lalu pilih Cetak bila perlu."); }
+    try { const url = URL.createObjectURL(new Blob([data], { type: /\.csv$/i.test(filename) ? "text/csv;charset=utf-8" : "text/html;charset=utf-8" })), a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); toast("File diunduh. Buka file lalu pilih Cetak bila perlu."); }
     catch (e) { toast("File tidak bisa diunduh di perangkat ini.", "err"); }
     return; }
   try { await d.save({ filename, data }); toast("File diunduh. Buka file lalu pilih Cetak bila perlu."); }

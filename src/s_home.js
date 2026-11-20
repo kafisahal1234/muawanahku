@@ -82,7 +82,6 @@ function tilesFor(st) {
   }
   if (r.some(x => ["mudir", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian", "musyrif", "guru_mapel"].includes(x))) add("chart", "Rekap", "teal", () => nav.go("rekap"));
   if (r.some(x => ["mudir", "admin", "wadir_kurikulum"].includes(x))) add("cal2", "Kalender", "pink", () => nav.go("kalender"));
-  if (r.includes("guru_tahfidz") || r.includes("guru_mapel")) add("briefcase", "Izin Guru", "slate", () => nav.go("izinGuru"));
   if (r.includes("guru_mapel")) [...new Set(st.ajar.map(([m]) => m))].forEach(m => add("layers", "Mapel " + L.mapelById(m).nama.replace("Pendidikan ", "").replace("Bahasa ", "B. "), MAPEL_COLOR[m], () => nav.go("mapel", { mapel: m })));
   return t;
 }
@@ -180,16 +179,13 @@ export function CariSantri() {
 
 export function RiwayatSaya() {
   useApp();
-  const m = me(), pengawas = m.roles.some(r => ["mudir", "admin", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian"].includes(r));
-  const [mode, setMode] = useState("saya"); const [sel, setSel] = useState(null); const [n, setN] = useState(40);
-  const ev = kumpulRiwayat(m.id, mode === "semua");
-  return html`<div class="sub-h"><div class="sub-row"><div class="sub-t"><h1>Riwayat</h1><p>Ketuk data untuk mengubah atau menghapus</p></div></div>
-    ${pengawas ? html`<${Seg} small items=${[["saya", "Catatan saya"], ["semua", "Semua input"]]} value=${mode} onChange=${setMode} />` : null}</div>
+  const m = me(); const [sel, setSel] = useState(null); const [n, setN] = useState(40);
+  const ev = kumpulRiwayat(m.id, false);
+  return html`<div class="sub-h"><div class="sub-row"><div class="sub-t"><h1>Riwayat</h1><p>Hanya yang Anda catat · ketuk untuk ubah atau hapus</p></div></div></div>
     <div class="wrap"><${Card}>${ev.length ? html`<div class="list">${ev.slice(0, n).map(x => { const e = entriRiwayat(x.col, x.list), r = x.list[0];
-      return html`<${Row} name=${e.jud} sub=${`${e.det} · ${L.fmtShort(L.ymd(new Date(x.ts)))} ${L.fmtJam(x.ts)}${mode === "semua" ? " · " + ((L.staffById(r.guru || r.oleh) || {}).pendek || "") : ""}`} icon=${html`<${Icon} n=${e.ic} s=${18} />`}
+      return html`<${Row} name=${e.jud} sub=${`${e.det} · ${L.fmtShort(L.ymd(new Date(x.ts)))} ${L.fmtJam(x.ts)}`} icon=${html`<${Icon} n=${e.ic} s=${18} />`}
         right=${r.diubah ? html`<${Pill} t="Dikoreksi" tone="blue" />` : null} onClick=${() => setSel(x)} />`; })}</div>
-      ${ev.length > n ? html`<${Btn} kind="ghost" onClick=${() => setN(n + 40)}>Tampilkan lebih banyak</${Btn}>` : null}` : html`<${Empty} t="Belum ada catatan. Coba isi absen atau setoran." icon="clock" />`}</${Card}>
-    ${pengawas ? html`<${Btn} kind="outline" icon="clipboard" onClick=${() => nav.go("logUbah")}>Log perubahan data</${Btn}>` : null}</div>
+      ${ev.length > n ? html`<${Btn} kind="ghost" onClick=${() => setN(n + 40)}>Tampilkan lebih banyak</${Btn}>` : null}` : html`<${Empty} t="Belum ada catatan. Coba isi absen atau setoran." icon="clock" />`}</${Card}></div>
     ${sel ? html`<${KoreksiSheet} item=${sel} onClose=${() => setSel(null)} />` : null}`;
 }
 
@@ -203,6 +199,7 @@ export function Akun() {
     <div class="wrap"><${Card}><div style="display:flex;gap:12px;align-items:center"><span class="av" style="width:52px;height:52px;border-radius:26px;font-size:17px">${L.initials((st ? st.pendek : sa.nama).replace(/^(Ust\.|Ustdzh\.)\s*/, ""))}</span>
       <div style="min-width:0"><b style="font-size:16px">${st ? st.nama : "Wali " + sa.nama}</b><div class="small">${L.usernameOf(u)} · ${st ? st.roles.map(r => L.ROLE_LABEL[r]).join(", ") : "Wali Santri · Kelas " + sa.kelas}</div></div></div></${Card}>
     ${st ? html`<${Section} t="Keamanan" /><${Card}>${item("lock", "Ubah kata sandi", () => nav.go("ubahSandi"))}</${Card}>` : null}
+    ${st && st.roles.some(r => ["mudir", "admin", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian"].includes(r)) ? html`<${Section} t="Pengawasan" /><${Card}>${item("clipboard", "Log perubahan data", () => nav.go("logUbah"))}</${Card}>` : null}
     <${Section} t="Informasi" /><${Card}>${item("bookopen", "Bantuan", () => nav.go("bantuan"))}${item("shield", "Kebijakan Privasi", () => nav.go("privasi"))}${item("settings", "Tentang aplikasi · " + VERSI, () => nav.go("tentang"))}</${Card}>
     ${st ? html`<${Section} t="Data demo" /><${Card}>${item("x", busy ? "Menghapus…" : "Hapus semua data demo", () => setAsk("reset"))}</${Card}>` : null}
     <${Card}>${item("logout", "Keluar", () => setAsk("out"))}</${Card}>

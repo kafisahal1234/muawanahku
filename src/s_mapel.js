@@ -26,6 +26,7 @@ export function Mapel({ mapel }) {
       <${Card} title="Menu"><div class="tiles">
         <${Tile} icon="checksq" label="Absen & Jurnal" color="blue" onClick=${() => nav.go("absenKelasPilih", { mapel })} />
         <${Tile} icon="edit" label="Input Nilai" color="orange" onClick=${() => nav.go("nilaiPilih", { mapel })} />
+        <${Tile} icon="briefcase" label="Izin Guru" color="slate" onClick=${() => nav.go("izinGuru")} />
 </div></${Card}>
       </div>`;
 }

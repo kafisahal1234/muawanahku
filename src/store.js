@@ -1,4 +1,5 @@
-// Penyimpanan data demo: db bersama (artifact) bila tersedia, jika tidak localStorage browser ini.
+// Penyimpanan: db bersama Claude (artifact) → Firebase (bila dikonfigurasi) → localStorage browser.
+import { FIREBASE_CONFIG, connectFirestore } from "./cloud.js";
 export const COLS = ["setoran", "absenHalaqah", "motd", "mutabaah", "izin", "bap", "absenKelas", "nilaiMapel", "nilaiTahfidz",
   "jadwal", "izinGuru", "pengumuman", "dataAwal", "santriEdit", "target", "akun", "hapusAkun", "raporCatatan", "kalender", "log", "staffEdit", "asramaEdit", "halaqahEdit"];
 const LSKEY = "muawanahku_demo_v1";
@@ -25,8 +26,10 @@ export async function initStore() {
     for (let i = 0; i < 20 && !(window.claude && typeof window.claude.use === "function"); i++) await new Promise(r => setTimeout(r, 100));
     if (window.claude && typeof window.claude.use === "function") got = await window.claude.use("db");
   } catch (e) { got = null; }
+  let cloud = false;
+  if (!got && FIREBASE_CONFIG) { try { got = await connectFirestore(FIREBASE_CONFIG); cloud = true; } catch (e) { got = null; } }
   if (!got) { S.ready = true; emit(); return; }
-  db = got; S.mode = "db"; S.note = "Data tersimpan bersama (semua akun demo melihat data yang sama).";
+  db = got; S.mode = "db"; S.note = cloud ? "Data tersinkron antarperangkat (Firebase)." : "Data tersimpan bersama (semua akun demo melihat data yang sama).";
   COLS.forEach(c => (S.data[c] = {}));
   let pending = new Set(COLS);
   const timer = setTimeout(() => { if (!S.ready) { S.ready = true; S.note = "Data bersama belum terjangkau, mungkin belum terbaru."; emit(); } }, 10000);

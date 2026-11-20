@@ -34,6 +34,7 @@ export function Tahfidz() {
         <${Tile} icon="mic" label="Tasmi'" color="orange" badge=${siap || null} onClick=${() => nav.go("tasmiList")} />
         <${Tile} icon="award" label="Nilai Mid/Smt" color="gold" onClick=${() => nav.go("ujianList")} />
         <${Tile} icon="trend" label="Progres Santri" color="purple" onClick=${() => nav.go("progres", { hid: a.id })} />
+        <${Tile} icon="briefcase" label="Izin Guru" color="slate" onClick=${() => nav.go("izinGuru")} />
 </div></${Card}>
       <${Card} title=${`Belum setor ziyadah · ${belum.length}`} right=${belum.length > 4 ? html`<button class="link" onClick=${() => nav.go("setorList", { jenis: "ziyadah" })}>Lihat semua</button>` : null}>
         ${belum.length ? html`<div class="list">${belum.slice(0, 4).map(s => { const h = L.hafalan(s), k = L.kunci(s);
