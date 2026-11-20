@@ -9,16 +9,19 @@ import base64, io, json, re
 from PIL import Image
 logo = re.search(r'export const LOGO = "data:image/png;base64,([^"]+)"', open("src/data.js").read()).group(1)
 src_img = Image.open(io.BytesIO(base64.b64decode(logo))).convert("RGBA")
-for n in (180, 192, 512):
-    bg = Image.new("RGBA", (n, n), (255, 255, 255, 255)); m = int(n * 0.12); w = n - 2 * m
+def ikon(n, pad, nama):
+    bg = Image.new("RGBA", (n, n), (255, 255, 255, 255)); m = int(n * pad); w = n - 2 * m
     im = src_img.copy(); im.thumbnail((w, w), Image.LANCZOS); bg.alpha_composite(im, ((n - im.width) // 2, (n - im.height) // 2))
-    bg.convert("RGB").save(f"dist/icon-{n}.png")
+    bg.convert("RGB").save(f"dist/{nama}")
+for n in (180, 192, 512): ikon(n, 0.10, f"icon-{n}.png")
+ikon(512, 0.22, "icon-maskable-512.png")  # Android memotong ikon jadi lingkaran: logo diberi ruang aman
 json.dump({"name": "MuawanahKu", "short_name": "MuawanahKu", "description": "Aplikasi Pondok Tahfidz Modern Kampung Qur'an Al Muawanah", "lang": "id",
     "start_url": "./", "scope": "./", "display": "standalone", "orientation": "portrait", "background_color": "#0B5D3B", "theme_color": "#0B5D3B",
-    "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"}, {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}]},
+    "icons": [{"src": "icon-192.png?v=2", "sizes": "192x192", "type": "image/png", "purpose": "any"}, {"src": "icon-512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+              {"src": "icon-maskable-512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}], "id": "./"},
     open("dist/manifest.webmanifest", "w"))
 open("dist/sw.js", "w").write("""// Service worker: utamakan jaringan (selalu versi terbaru), cadangan cache saat offline
-const C = "mk-v1";
+const C = "mk-v2";
 self.addEventListener("install", e => { self.skipWaiting(); e.waitUntil(caches.open(C).then(c => c.addAll(["./", "./index.html", "./icon-192.png"]))); });
 self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
 self.addEventListener("fetch", e => {
@@ -32,7 +35,7 @@ html = f"""<!DOCTYPE html>
 <meta name="color-scheme" content="light"><meta name="theme-color" content="#0B5D3B">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="MuawanahKu">
 <meta name="format-detection" content="telephone=no"><meta name="description" content="Aplikasi Pondok Tahfidz Modern Kampung Qur'an Al Muawanah">
-<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest?v=2"><link rel="icon" type="image/png" href="icon-192.png?v=2"><link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=2"><link rel="apple-touch-icon-precomposed" href="icon-180.png?v=2"><link rel="shortcut icon" href="icon-192.png?v=2">
 <title>MuawanahKu</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
