@@ -1,0 +1,243 @@
+import { useState } from "preact/hooks";
+import { html, nav, useApp, Icon, Tile, Card, Stat, Row, Pill, Btn, Empty, Field, Seg, Section, Sheet, SearchBox, Logo, Confirm } from "./ui.js";
+import { S, all, get, resetAll, toast } from "./store.js";
+import { DATA } from "./data.js";
+import * as L from "./logic.js";
+import { kumpulRiwayat, entriRiwayat, KoreksiSheet } from "./s_koreksi.js";
+import { me } from "./common.js";
+import { HafalanCard, RiwayatSetoran, KehadiranCard, CatatanCard } from "./s_santri.js";
+import { slotStatus } from "./s_kurikulum.js";
+import { VERSI } from "./s_system.js";
+const PrivasiIsi = () => html`<div class="prose"><p>Data dipakai hanya untuk administrasi pendidikan pondok: hafalan, absensi, nilai, perizinan, dan pembinaan santri. Data tidak dijual, tidak untuk iklan, dan tidak dibagikan ke pihak luar. Setiap pengguna hanya melihat data sesuai perannya; wali hanya melihat anaknya sendiri. Kebijakan lengkap ada di menu Akun setelah masuk.</p></div>`;
+
+// ---------------- login ----------------
+const LOCK = { fails: 0, until: 0 };
+export function Login() {
+  useApp();
+  const [mode, setMode] = useState("staff"); const [u, setU] = useState(""); const [p, setP] = useState(""); const [err, setErr] = useState(""); const [demo, setDemo] = useState(false); const [q, setQ] = useState("");
+  const [busy, setBusy] = useState(false); const [show, setShow] = useState(false); const [priv, setPriv] = useState(false);
+  const kunciCek = () => { if (LOCK.until > Date.now()) { setErr(`Terlalu banyak percobaan. Coba lagi dalam ${Math.ceil((LOCK.until - Date.now()) / 1000)} detik.`); return true; } return false; };
+  const gagal = e => { LOCK.fails++; if (LOCK.fails >= 5) { LOCK.fails = 0; LOCK.until = Date.now() + 60000; setErr("5 kali salah. Demi keamanan, coba lagi 60 detik lagi."); } else setErr(e); };
+  const masuk = async (uu = u, pp = p) => {
+    if (!uu.trim() || !pp) { setErr("Isi username dan kata sandi."); return; }
+    if (kunciCek()) return;
+    setBusy(true); const r = await L.login(uu, pp); setBusy(false);
+    if (r.err) return gagal(r.err);
+    LOCK.fails = 0; setErr(""); nav.setUser(r);
+  };
+  const masukWali = (kk = u) => {
+    if (!kk.trim()) { setErr("Isi kode akses."); return; }
+    if (kunciCek()) return;
+    const r = L.loginWali(kk); if (r.err) return gagal(r.err);
+    LOCK.fails = 0; setErr(""); nav.setUser(r);
+  };
+  const walis = L.santriList().filter(s => s.nama.toLowerCase().includes(q.toLowerCase()) || s.wali.includes(q.toLowerCase())).slice(0, 40);
+  return html`<div class="login"><div class="lg"><${Logo} s=${92} /><h1>Muawanah<i>Ku</i></h1><p>Pondok Tahfidz Modern Kampung Qur'an Al Muawanah</p></div>
+    <form class="card" onSubmit=${e => { e.preventDefault(); mode === "wali" ? masukWali() : masuk(); }}>
+      <${Seg} items=${[["staff", "Ustadz / Staf"], ["wali", "Wali Santri"]]} value=${mode} onChange=${m => { setMode(m); setErr(""); setU(""); setP(""); }} />
+      ${mode === "wali" ? html`<div class="mt12"><${Field} label="Kode akses" hint="Nama panggilan santri + tanggal lahir (tanggal, bulan, tahun). Contoh: adiyatma15082011">
+        <input class="in" autocomplete="off" autocapitalize="none" spellcheck="false" value=${u} placeholder="namatanggallahir" onInput=${e => setU(e.target.value)} /></${Field}></div>` : html`
+      <div class="mt12"><${Field} label="Username">
+        <input class="in" autocomplete="username" autocapitalize="none" value=${u} placeholder="contoh: kaafi" onInput=${e => setU(e.target.value)} /></${Field}>
+      <${Field} label="Kata sandi"><div style="position:relative"><input class="in" type=${show ? "text" : "password"} autocomplete="current-password" style="padding-right:52px" value=${p} placeholder="contoh: kaafi123" onInput=${e => setP(e.target.value)} />
+        <button type="button" class="icon-btn" style="position:absolute;right:2px;top:2px" aria-label=${show ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"} onClick=${() => setShow(!show)}><${Icon} n=${show ? "eyeoff" : "eye"} s=${20} /></button></div></${Field}></div>`}
+      ${err ? html`<div class="note red"><${Icon} n="alert" s=${18} />${err}</div>` : null}
+      <${Btn} type="submit" disabled=${busy}>${busy ? "Memeriksa…" : "Masuk"}</${Btn}>
+      <div class="mt8"><${Btn} kind="ghost" icon="users" onClick=${() => setDemo(true)}>Lihat semua akun demo</${Btn}></div></form>
+    <p class="mode">Versi demo ${S.mode === "db" ? "· data tersimpan bersama" : "· data tersimpan di browser ini"}<br /><button class="link" style="min-height:44px" onClick=${() => setPriv(true)}>Kebijakan Privasi</button></p>
+    <${Sheet} open=${priv} title="Kebijakan Privasi" onClose=${() => setPriv(false)}><${PrivasiIsi} /></${Sheet}>
+    <${Sheet} open=${demo} title="Akun demo" onClose=${() => setDemo(false)}>
+      <p class="small" style="margin-top:0">Ketuk akun untuk langsung masuk. Guru: username + sandi (username + 123). Wali: satu kode akses (nama panggilan + tanggal lahir).</p>
+      <${Section} t="Ustadz dan pengurus" />
+      ${L.staffAktif().map(s => html`<button class="demo-acc" onClick=${() => { setDemo(false); masuk(s.username, s.password); }}><span class="av">${L.initials(s.pendek.replace(/^Ust(dzh)?\.\s*/, ""))}</span>
+        <span style="flex:1;min-width:0"><b style="font-size:14px">${s.nama}</b><div class="small">${s.roles.map(r => L.ROLE_LABEL[r] + (r === "wadir_kesantrian" ? " " + s.pondok : "")).join(" · ")}</div>
+        <div style="margin-top:4px"><code>${s.username}</code> <code>${s.password}</code></div></span></button>`)}
+      <${Section} t=${`Wali santri (${L.santriList().length} akun)`} /><${SearchBox} value=${q} onInput=${setQ} ph="Cari nama santri" />
+      ${walis.map(s => html`<button class="demo-acc" onClick=${() => { setDemo(false); masukWali(L.kodeAkses(s)); }}><span class="av gold">${L.initials(s.nama)}</span>
+        <span style="flex:1;min-width:0"><b style="font-size:14px">Wali ${s.nama}</b><div class="small">Kelas ${s.kelas} · ${L.asramaById(s.asrama).nama}</div><div style="margin-top:4px"><code>${L.kodeAkses(s)}</code>${L.lahirSantri(s).contoh ? html` <span class="small">· tgl lahir contoh</span>` : null}</div></span></button>`)}
+    </${Sheet}></div>`;
+}
+
+// ---------------- beranda guru ----------------
+const MAPEL_COLOR = { fiqih: "green", it: "blue", bing: "orange", karakter: "purple" };
+function tilesFor(st) {
+  const r = st.roles, t = [], add = (icon, label, color, go, badge) => { if (!t.find(x => x.label === label)) t.push({ icon, label, color, go, badge }); };
+  const a = L.asramaOf(st.id);
+  if (r.includes("mudir")) {
+    add("bookopen", "Tahfidz", "emerald", () => nav.go("pengelolaan", { ro: true })); add("calendar", "Kurikulum", "orange", () => nav.go("kurikulum", { ro: true }));
+    add("shield", "Kesantrian", "coral", () => nav.go("kesantrian", { pondok: "all" })); add("moon", "MOTD & Mutaba'ah", "indigo", () => nav.go("motdAll"));
+    add("trend", "Kinerja Guru", "purple", () => nav.go("kinerjaAll")); add("award", "Rapor", "gold", () => nav.go("raporList")); add("megaphone", "Pengumuman", "pink", () => nav.go("pengumuman"));
+  }
+  if (r.includes("wadir_tahfidz")) { add("sliders", "Pengelolaan Tahfidz", "emerald", () => nav.go("pengelolaan")); add("award", "Rapor", "gold", () => nav.go("raporList")); }
+  if (r.includes("wadir_kurikulum")) add("calendar", "Kurikulum", "orange", () => nav.go("kurikulum"));
+  if (r.includes("wadir_kesantrian")) add("shield", "Kesantrian", "coral", () => nav.go("kesantrian"), L.izinAktif().filter(i => L.pondokOfSantri(L.santriById(i.santri)) === st.pondok).length || null);
+  if (r.includes("admin")) { add("grid", "Data Master", "slate", () => nav.go("dataMaster")); add("upload", "Impor Data", "purple", () => nav.go("impor")); add("megaphone", "Pengumuman", "pink", () => nav.go("pengumuman")); }
+  if (r.includes("musyrif") && a) {
+    const belum = L.santriAsrama(a.id).filter(s => !L.kunci(s).sudah).length;
+    add("bookopen", r.includes("mudir") ? "Halaqah Saya" : "Tahfidz", "emerald", () => nav.go("tahfidz"), belum || null);
+    add("moon", "MOTD", "indigo", () => nav.go("motd")); add("checksq", "Mutaba'ah", "teal", () => nav.go("mutabaah"));
+    if (!r.includes("wadir_kesantrian")) add("door", "Izin & Catatan", "coral", () => nav.go("izinCatatan"));
+    add("award", "Rapor", "gold", () => nav.go("raporList"));
+  }
+  if (r.some(x => ["mudir", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian", "musyrif", "guru_mapel"].includes(x))) add("chart", "Rekap", "teal", () => nav.go("rekap"));
+  if (r.some(x => ["mudir", "admin", "wadir_kurikulum"].includes(x))) add("cal2", "Kalender", "pink", () => nav.go("kalender"));
+  if (r.includes("guru_mapel")) [...new Set(st.ajar.map(([m]) => m))].forEach(m => add("layers", "Mapel " + L.mapelById(m).nama.replace("Pendidikan ", "").replace("Bahasa ", "B. "), MAPEL_COLOR[m], () => nav.go("mapel", { mapel: m })));
+  return t;
+}
+
+function Summary({ st }) {
+  const r = st.roles, tgl = L.today(), sesi = L.sesiNow(), hari = L.hariIni();
+  if (r.includes("mudir")) {
+    const docs = all("absenHalaqah").filter(d => d.tanggal === tgl); let h = 0, n = 0; docs.forEach(d => Object.values(d.status).forEach(v => { n++; if (v === "H") h++; }));
+    const avg = L.santriList().reduce((x, s) => x + L.hafalan(s).jumlah, 0) / L.santriList().length;
+    const wk = L.weekStart(tgl), pel = all("bap").filter(b => b.tanggal >= wk).length + all("motd").filter(d => d.tanggal >= wk).reduce((x, d) => x + Object.values(d.status).filter(v => v === "A" || v === "M").length, 0);
+    return html`<${Card} title="Ringkasan pondok" right=${html`<small>${L.fmtShort(tgl)}</small>`}><div class="stats"><${Stat} label="Hadir halaqah" value=${n ? Math.round((h / n) * 100) + "%" : "—"} sub="hari ini" /><${Stat} label="Rata hafalan" value=${avg.toFixed(1)} sub="juz" /><${Stat} label="Pelanggaran" value=${pel} sub="pekan ini" tone=${pel ? "red" : ""} /></div></${Card}>`;
+  }
+  if (r.includes("wadir_tahfidz")) {
+    const sudah = L.ASRAMA.filter(a => get("absenHalaqah", L.halaqahKey(a.id, tgl, sesi))).length, siap = L.santriList().filter(s => L.hafalan(s).siapTasmi).length;
+    return html`<${Card} title="Tahfidz hari ini" right=${html`<small>Halaqah ${sesi}</small>`}><div class="stats"><${Stat} label="Guru sudah absen" value=${`${sudah}/${L.ASRAMA.length}`} tone=${sudah < L.ASRAMA.length ? "gold" : ""} /><${Stat} label="Siap tasmi'" value=${siap} /><${Stat} label="Setoran" value=${all("setoran").filter(x => x.tanggal === tgl).length} sub="hari ini" /></div></${Card}>`;
+  }
+  if (r.includes("wadir_kurikulum") || r.includes("wadir_kesantrian") || r.includes("admin") || r.includes("musyrif") || r.includes("guru_mapel")) {
+    if (r.includes("wadir_kurikulum")) {
+      const sl = L.jadwalAll().filter(j => j.hari === hari), ok = sl.filter(j => get("absenKelas", L.absenKelasKey(j.id, tgl))).length, ko = sl.filter(j => slotStatus(j, tgl)[0] !== "Lengkap").length;
+      return html`<${Card} title="Kurikulum hari ini" right=${html`<small>${hari}, ${L.fmtShort(tgl)}</small>`}><div class="stats"><${Stat} label="Terlaksana" value=${`${ok}/${sl.length}`} /><${Stat} label="Jurnal kosong" value=${ko} tone=${ko ? "red" : ""} /><${Stat} label="Guru izin" value=${all("izinGuru").filter(i => i.tanggal === tgl).length} /></div></${Card}>`;
+    }
+    if (r.includes("wadir_kesantrian")) {
+      const iz = L.izinAktif().filter(i => L.pondokOfSantri(L.santriById(i.santri)) === st.pondok);
+      return html`<${Card} title=${"Kesantrian Pondok " + st.pondok} right=${html`<small>${L.fmtShort(tgl)}</small>`}><div class="stats"><${Stat} label="Izin aktif" value=${iz.length} /><${Stat} label="Belum kembali" value=${iz.filter(L.terlambat).length} tone="red" /><${Stat} label="BAP bulan ini" value=${all("bap").filter(b => (b.tanggal || "").startsWith(tgl.slice(0, 7)) && L.pondokOfSantri(L.santriById(b.santri)) === st.pondok).length} tone="gold" /></div></${Card}>`;
+    }
+    if (r.includes("admin")) return html`<${Card} title="Data pondok" right=${html`<small>2026/2027 · Ganjil</small>`}><div class="stats"><${Stat} label="Santri" value=${L.santriList().length} /><${Stat} label="Asrama" value=${L.ASRAMA.length} /><${Stat} label="Akun guru" value=${L.STAFF.length} /></div></${Card}>`;
+    if (r.includes("musyrif")) {
+      const a = L.asramaOf(st.id), list = L.santriAsrama(a.id), ab = get("absenHalaqah", L.halaqahKey(a.id, tgl, sesi));
+      return html`<${Card} title="Halaqah hari ini" right=${html`<small>${a.nama}</small>`}><div class="stats"><${Stat} label=${"Absen " + sesi} value=${ab ? "✓" : "Belum"} tone=${ab ? "" : "gold"} /><${Stat} label="Ziyadah" value=${`${list.filter(s => L.ziyadahHari(s.id, tgl).some(x => x.lulus)).length}/${list.length}`} /><${Stat} label="Siap tasmi'" value=${list.filter(s => L.hafalan(s).siapTasmi).length} /></div></${Card}>`;
+    }
+    const sl = L.jadwalAll().filter(j => j.guru === st.id && j.hari === hari);
+    return html`<${Card} title="Hari ini" right=${html`<small>${hari}, ${L.fmtShort(tgl)}</small>`}><div class="stats"><${Stat} label="Jadwal" value=${sl.length} /><${Stat} label="Absen kelas" value=${`${sl.filter(j => get("absenKelas", L.absenKelasKey(j.id, tgl))).length}/${sl.length}`} /><${Stat} label="Jurnal" value=${`${sl.filter(j => (get("absenKelas", L.absenKelasKey(j.id, tgl)) || {}).materi).length}/${sl.length}`} /></div></${Card}>`;
+  }
+  return null;
+}
+
+function tasksFor(st) {
+  const r = st.roles, tgl = L.today(), out = [];
+  if (r.includes("musyrif")) { const a = L.asramaOf(st.id), l = L.santriAsrama(a.id); const b = l.filter(s => !L.kunci(s).sudah).length; const ts = l.filter(s => L.hafalan(s).siapTasmi).length;
+    if (b) out.push([`${b} santri belum setor ziyadah`, `Halaqah ${st.pendek} · hari ini`, "coral", () => nav.go("setorList", { jenis: "ziyadah" })]);
+    if (ts) out.push([`${ts} santri siap tasmi'`, "Selesai satu juz", "gold", () => nav.go("tasmiList")]); }
+  if (r.includes("guru_mapel")) { const sl = L.jadwalAll().filter(j => j.guru === st.id && j.hari === L.hariIni() && !(get("absenKelas", L.absenKelasKey(j.id, tgl)) || {}).materi);
+    if (sl.length) out.push([`${sl.length} jurnal belum diisi hari ini`, sl.map(j => `${L.mapelById(j.mapel).nama} ${j.kelas}`).join(" · "), "blue", () => nav.go("mapel", { mapel: sl[0].mapel })]); }
+  if (r.includes("wadir_kurikulum") || r.includes("mudir")) { const sl = L.jadwalAll().filter(j => j.hari === L.hariIni() && slotStatus(j, tgl)[0] !== "Lengkap");
+    if (sl.length) out.push([`${sl.length} jadwal belum lengkap`, "Absen atau jurnal kelas", "gold", () => nav.go("kurikulum", { ro: !r.includes("wadir_kurikulum") })]); }
+  if (r.includes("wadir_kesantrian") || r.includes("mudir")) { const l = L.izinAktif().filter(i => L.terlambat(i) && (r.includes("mudir") || L.pondokOfSantri(L.santriById(i.santri)) === st.pondok));
+    if (l.length) out.push([`${l.length} santri belum kembali`, "Izin melewati batas waktu", "coral", () => nav.go("kesantrian", { pondok: r.includes("wadir_kesantrian") ? st.pondok : "all" })]); }
+  if ((r.includes("wadir_tahfidz") || r.includes("mudir")) && L.adaHalaqah(tgl)) { const sesi = L.sesiNow(); const bl = L.ASRAMA.filter(a => !get("absenHalaqah", L.halaqahKey(a.id, tgl, sesi)));
+    if (bl.length) out.push([`${bl.length} guru tahfidz belum absen ${sesi}`, bl.slice(0, 3).map(a => L.staffById(a.musyrif).pendek).join(" · ") + (bl.length > 3 ? " …" : ""), "coral", () => nav.go("kinerjaTahfidz")]); }
+  return out.slice(0, 3);
+}
+
+function Hero({ name, sub, chips, bell }) {
+  return html`<div class="hero"><div class="topbar"><${Logo} s=${44} /><div class="brand"><b>Muawanah<i>Ku</i></b><small>Kampung Qur'an Al Muawanah</small></div>
+    <button class="bell" aria-label="Pengumuman" onClick=${() => nav.go("pengumuman")}><${Icon} n="bell" />${bell ? html`<b>${bell}</b>` : null}</button></div>
+    <div class="greet"><small>Assalamu'alaikum,</small><h2>${name}</h2><div class="chips">${chips.map((c, i) => html`<span class=${"chip " + (i === 0 ? "gold" : "")}>${c}</span>`)}</div>${sub ? html`<div class="small" style="color:#CFE6D9;margin-top:8px">${sub}</div>` : null}</div></div>`;
+}
+const newPeng = () => all("pengumuman").filter(p => Date.now() - p.ts < 7 * 864e5).length;
+
+function chipsFor(st) {
+  const a = L.asramaOf(st.id), c = [];
+  st.roles.forEach(r => { if (r === "musyrif") c.push("Wali Asrama " + a.nama, "Guru Tahfidz"); else if (r === "guru_mapel") c.push(st.ajar.length ? `Guru ${[...new Set(st.ajar.map(([m]) => L.mapelById(m).nama))].join(", ")} · ${[...new Set(st.ajar.map(([, k]) => k))].join(" ")}` : "Guru Mapel"); else c.push(L.ROLE_LABEL[r] + (r === "wadir_kesantrian" ? " · Pondok " + st.pondok : "")); });
+  return c;
+}
+
+export function Beranda() {
+  useApp();
+  const st = me(), tiles = tilesFor(st), tasks = tasksFor(st), peng = all("pengumuman").sort((a, b) => b.ts - a.ts).slice(0, 2);
+  return html`<${Hero} name=${st.nama} chips=${chipsFor(st)} bell=${newPeng()} />
+    <div class="lift"><${Summary} st=${st} /></div><div class="wrap" style="padding-top:0">
+    <${Card} title="Modul" right=${html`<small>Sesuai peran</small>`}><div class="tiles">${tiles.map(t => html`<${Tile} icon=${t.icon} label=${t.label} color=${t.color} badge=${t.badge} onClick=${t.go} />`)}</div></${Card}>
+    ${tasks.length ? html`<${Card} title="Perlu diperhatikan"><div class="list">${tasks.map(([t, s, c, go]) => html`<button class="row" onClick=${go}><span class="row-ic" style=${`background:${c === "coral" ? "#FDE7E3" : c === "gold" ? "#FDF0D3" : "#E6EEFC"};color:${c === "coral" ? "#B3261E" : c === "gold" ? "#8A5A00" : "#1F56B5"}`}><${Icon} n="alert" s=${18} /></span>
+      <span class="row-t"><b style="white-space:normal">${t}</b><small>${s}</small></span><${Icon} n="right" s=${18} c="#9AB0A5" /></button>`)}</div></${Card}>` : null}
+    ${peng.length ? html`<${Card} title="Pengumuman" right=${html`<button class="link" onClick=${() => nav.go("pengumuman")}>Semua</button>`}><div class="list">${peng.slice(0, 1).map(p => html`<${Row} name=${p.judul} sub=${`${p.oleh ? L.staffById(p.oleh).pendek : "Pondok"} · ${L.fmtShort(L.ymd(new Date(p.ts)))}${p.lampiran ? " · 1 lampiran" : ""}`} icon=${html`<${Icon} n="megaphone" s=${18} />`} onClick=${() => nav.go("pengumuman")} />`)}</div></${Card}>` : null}</div>`;
+}
+
+export function JadwalSaya() {
+  useApp();
+  const st = me(), a = L.asramaOf(st.id), days = a ? DATA.hariHalaqah : DATA.hari; const [hari, setHari] = useState(days.includes(L.hariIni()) ? L.hariIni() : "Senin");
+  const sl = L.jadwalAll().filter(j => j.guru === st.id && j.hari === hari).sort((x, y) => x.jam.localeCompare(y.jam));
+  return html`<div class="sub-h"><div class="sub-row"><div class="sub-t"><h1>Jadwal Saya</h1><p>${st.nama}</p></div></div><${Seg} small items=${days.map(h => [h, h.slice(0, 3)])} value=${hari} onChange=${setHari} /></div>
+    <div class="wrap">${a ? html`<${Card} title=${hari === "Sabtu" ? "Halaqah · Sabtu hanya Shubuh" : "Halaqah"}><div class="list">${L.sesiHariNama(hari).map(s => html`<${Row} name=${"Halaqah " + s} sub=${`${a.nama} · ${L.santriAsrama(a.id).length} santri`} icon=${html`<${Icon} n=${s === "Malam" ? "moon" : "sun"} s=${18} />`} onClick=${hari === L.hariIni() ? () => nav.go("absenHalaqah", { sesi: s }) : null} />`)}</div></${Card}>` : null}
+    ${st.roles.includes("guru_mapel") ? html`<${Card} title="Mengajar">${sl.length ? sl.map(j => { const jm = L.jamById(j.jam); return html`<button class="sched" onClick=${() => hari === L.hariIni() && nav.go("absenKelas", { jid: j.id, kelas: j.kelas, mapel: j.mapel })}><span class="tm">${jm.nama}<small>${jm.mulai}–${jm.selesai}</small></span><span style="flex:1"><b>${L.mapelById(j.mapel).nama} · ${j.kelas}</b><div class="small">${L.santriKelas(j.kelas).length} santri</div></span></button>`; })
+      : html`<${Empty} t=${hari === "Sabtu" ? "Tidak ada KBM mapel hari Sabtu. KBM berjalan Senin–Jumat." : `Tidak ada jadwal mengajar hari ${hari}.`} icon="calendar" />`}</${Card}>` : null}
+    ${!a && !st.roles.includes("guru_mapel") ? html`<${Card}><${Empty} t="Akun ini tidak punya jadwal mengajar atau halaqah." icon="calendar" /></${Card}>` : null}</div>`;
+}
+
+export function CariSantri() {
+  useApp();
+  const [q, setQ] = useState(""); const list = L.santriScope(nav.user).filter(s => s.nama.toLowerCase().includes(q.toLowerCase()));
+  return html`<div class="sub-h"><div class="sub-row"><div class="sub-t"><h1>Cari Santri</h1><p>${list.length} santri sesuai akses Anda</p></div></div></div>
+    <div class="wrap"><${SearchBox} value=${q} onInput=${setQ} /><${Card}><div class="list">${list.slice(0, 80).map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaById(s.asrama).nama}`} onClick=${() => nav.go("santri", { sid: s.id })} />`)}</div></${Card}></div>`;
+}
+
+export function RiwayatSaya() {
+  useApp();
+  const m = me(), pengawas = m.roles.some(r => ["mudir", "admin", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian"].includes(r));
+  const [mode, setMode] = useState("saya"); const [sel, setSel] = useState(null); const [n, setN] = useState(40);
+  const ev = kumpulRiwayat(m.id, mode === "semua");
+  return html`<div class="sub-h"><div class="sub-row"><div class="sub-t"><h1>Riwayat</h1><p>Ketuk data untuk mengubah atau menghapus</p></div></div>
+    ${pengawas ? html`<${Seg} small items=${[["saya", "Catatan saya"], ["semua", "Semua input"]]} value=${mode} onChange=${setMode} />` : null}</div>
+    <div class="wrap"><${Card}>${ev.length ? html`<div class="list">${ev.slice(0, n).map(x => { const e = entriRiwayat(x.col, x.list), r = x.list[0];
+      return html`<${Row} name=${e.jud} sub=${`${e.det} · ${L.fmtShort(L.ymd(new Date(x.ts)))} ${L.fmtJam(x.ts)}${mode === "semua" ? " · " + ((L.staffById(r.guru || r.oleh) || {}).pendek || "") : ""}`} icon=${html`<${Icon} n=${e.ic} s=${18} />`}
+        right=${r.diubah ? html`<${Pill} t="Dikoreksi" tone="blue" />` : null} onClick=${() => setSel(x)} />`; })}</div>
+      ${ev.length > n ? html`<${Btn} kind="ghost" onClick=${() => setN(n + 40)}>Tampilkan lebih banyak</${Btn}>` : null}` : html`<${Empty} t="Belum ada catatan. Coba isi absen atau setoran." icon="clock" />`}</${Card}>
+    ${pengawas ? html`<${Btn} kind="outline" icon="clipboard" onClick=${() => nav.go("logUbah")}>Log perubahan data</${Btn}>` : null}</div>
+    ${sel ? html`<${KoreksiSheet} item=${sel} onClose=${() => setSel(null)} />` : null}`;
+}
+
+export function Akun() {
+  useApp();
+  const u = nav.user, st = u.kind === "staff" ? me() : null, sa = u.kind === "wali" ? L.santriById(u.id) : null;
+  const [ask, setAsk] = useState(null); const [busy, setBusy] = useState(false);
+  const reset = async () => { setAsk(null); setBusy(true); await resetAll(); setBusy(false); toast("Semua data demo dihapus"); };
+  const item = (ic, t, go, danger) => html`<button class="menu-row" onClick=${go} style=${danger ? "color:#B3261E" : ""}><${Icon} n=${ic} s=${22} c=${danger ? "#B3261E" : "#5E7266"} /><span>${t}</span><${Icon} n="right" s=${18} /></button>`;
+  return html`<div class="sub-h"><div class="sub-row"><div class="sub-t"><h1>Akun</h1></div></div></div>
+    <div class="wrap"><${Card}><div style="display:flex;gap:12px;align-items:center"><span class="av" style="width:52px;height:52px;border-radius:26px;font-size:17px">${L.initials((st ? st.pendek : sa.nama).replace(/^(Ust\.|Ustdzh\.)\s*/, ""))}</span>
+      <div style="min-width:0"><b style="font-size:16px">${st ? st.nama : "Wali " + sa.nama}</b><div class="small">${L.usernameOf(u)} · ${st ? st.roles.map(r => L.ROLE_LABEL[r]).join(", ") : "Wali Santri · Kelas " + sa.kelas}</div></div></div></${Card}>
+    ${st ? html`<${Section} t="Keamanan" /><${Card}>${item("lock", "Ubah kata sandi", () => nav.go("ubahSandi"))}</${Card}>` : null}
+    <${Section} t="Informasi" /><${Card}>${item("bookopen", "Bantuan", () => nav.go("bantuan"))}${item("shield", "Kebijakan Privasi", () => nav.go("privasi"))}${item("settings", "Tentang aplikasi · " + VERSI, () => nav.go("tentang"))}</${Card}>
+    ${st ? html`<${Section} t="Data demo" /><${Card}>${item("x", busy ? "Menghapus…" : "Hapus semua data demo", () => setAsk("reset"))}</${Card}>` : null}
+    <${Card}>${item("logout", "Keluar", () => setAsk("out"))}</${Card}>
+    <${Confirm} open=${ask === "reset"} danger title="Hapus semua data demo?" text="Semua absen, setoran, izin, BAP, nilai, dan pengumuman yang sudah diisi akan dihapus untuk semua akun. Data santri dan akun tetap." yes="Hapus" onYes=${reset} onNo=${() => setAsk(null)} />
+    <${Confirm} open=${ask === "out"} title="Keluar dari akun?" text="Anda perlu memasukkan username dan kata sandi lagi untuk masuk." yes="Keluar" onYes=${() => { setAsk(null); nav.setUser(null); }} onNo=${() => setAsk(null)} /></div>`;
+}
+
+// ---------------- wali ----------------
+export function WaliBeranda() {
+  useApp();
+  const s = L.santriById(nav.user.id), a = L.asramaById(s.asrama);
+  const kab = [];
+  L.setoranSantri(s.id).forEach(r => kab.push([r.ts, r.jenis === "tasmi" ? `Tasmi' Juz ${r.juz} ${r.lulus ? "lulus" : "diulang"} · nilai ${r.nilai}` : r.jenis === "ziyadah" ? `Ziyadah ${r.baris} baris · nilai ${r.nilai}` : `${r.jenis === "manzil" ? "Manzil" : "Murojaah"} · nilai ${r.nilai}`, "bookopen"]));
+  all("izin").filter(i => i.santri === s.id).forEach(i => kab.push([i.ts, `Izin ${i.jenis.toLowerCase()} sampai ${L.fmtDT(i.kembali)}`, "door"]));
+  all("bap").filter(b => b.santri === s.id).forEach(b => kab.push([b.ts, `Catatan: ${b.pelanggaranNama}`, "clipboard"]));
+  L.motdCatatan(s.id).forEach(c => kab.push([c.ts || 0, `${c.st === "A" ? "Alpa" : "Masbuq"} ${L.WAKTU.find(x => x[0] === c.waktu)[1]} · pelanggaran ringan`, "moon"]));
+  kab.sort((x, y) => y[0] - x[0]);
+  const peng = all("pengumuman").sort((x, y) => y.ts - x.ts).slice(0, 2);
+  return html`<${Hero} name=${s.nama} chips=${["Kelas " + s.kelas, "Asrama " + a.nama, "Halaqah " + L.staffById(a.musyrif).pendek]} bell=${newPeng()} />
+    <div class="lift"><${HafalanCard} s=${s} /></div><div class="wrap" style="padding-top:0">
+    <${Card} title="Pantau Ananda"><div class="tiles"><${Tile} icon="bookopen" label="Hafalan" color="emerald" onClick=${() => nav.setTab("hafalan")} /><${Tile} icon="checksq" label="Kehadiran" color="blue" onClick=${() => nav.setTab("ananda")} />
+      <${Tile} icon="award" label="Nilai Projek" color="orange" onClick=${() => nav.setTab("ananda")} /><${Tile} icon="door" label="Izin & Catatan" color="coral" onClick=${() => nav.setTab("izin")} /></div></${Card}>
+    <${Card} title="Kabar terbaru">${kab.length ? html`<div class="list">${kab.slice(0, 6).map(([ts, t, ic]) => html`<${Row} name=${t} sub=${ts ? `${L.fmtTgl(L.ymd(new Date(ts)))}` : ""} icon=${html`<${Icon} n=${ic} s=${18} />`} />`)}</div>` : html`<${Empty} t="Belum ada kabar baru tentang ananda." icon="heart" />`}</${Card}>
+    ${peng.length ? html`<${Card} title="Pengumuman"><div class="list">${peng.map(p => html`<${Row} name=${p.judul} sub=${`Dari pondok · ${L.fmtShort(L.ymd(new Date(p.ts)))}`} icon=${html`<${Icon} n="megaphone" s=${18} />`} onClick=${() => nav.go("pengumuman")} />`)}</div></${Card}>` : null}</div>`;
+}
+export function WaliHafalan() {
+  useApp(); const s = L.santriById(nav.user.id);
+  return html`<div class="sub-h"><div class="sub-row"><div class="sub-t"><h1>Hafalan Ananda</h1><p>${s.nama}</p></div></div></div><div class="wrap"><${HafalanCard} s=${s} /><${Section} t="Riwayat setoran dan tasmi'" /><${Card}><${RiwayatSetoran} sid=${s.id} n=${20} /></${Card}></div>`;
+}
+export function WaliAnanda() {
+  useApp(); const s = L.santriById(nav.user.id);
+  return html`<div class="sub-h"><div class="sub-row"><div class="sub-t"><h1>Ananda</h1><p>${s.nama} · Kelas ${s.kelas}</p></div></div></div><div class="wrap"><${KehadiranCard} s=${s} />
+    <${Card} title="Nilai projek"><div class="list">${DATA.mapel.map(m => { const d = get("nilaiMapel", L.nilaiKey(m.id, s.kelas)), v = d && d.projek ? d.projek[s.id] : null, kk = L.kehadiranKelas(s.id, m.id);
+      return html`<${Row} name=${m.nama} sub=${`Kehadiran kelas ${kk.pct == null ? "—" : kk.pct + "%"}`} icon=${html`<${Icon} n="award" s=${18} />`} right=${v == null || v === "" ? html`<${Pill} t="Belum" tone="muted" />` : html`<${Pill} t=${"Projek " + v} tone=${v >= 70 ? "green" : "red"} />`} />`; })}</div></${Card}>
+    <p class="fab-note">Nilai PTS, PAS, dan rapor dibagikan saat pembagian rapor, tidak tampil di aplikasi.</p></div>`;
+}
+export function WaliIzin() {
+  useApp(); const s = L.santriById(nav.user.id);
+  return html`<div class="sub-h"><div class="sub-row"><div class="sub-t"><h1>Izin & Catatan</h1><p>${s.nama}</p></div></div></div><div class="wrap">
+    <p class="hint">Untuk izin pulang atau keluar, hubungi Wadir Kesantrian Pondok ${L.pondokOfSantri(s)}. Setelah disetujui, izin tampil di sini.</p><${CatatanCard} s=${s} /></div>`;
+}
