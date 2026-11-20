@@ -35,3 +35,39 @@ export async function connectFirestore(cfg) {
     }),
   };
 }
+
+// ---- Email pemulihan (Firebase Authentication email/sandi) ----
+// Dipakai di instans terpisah agar sesi anonim database tidak terganggu.
+let AUTH2 = null;
+async function authSandi() {
+  if (!APP) throw Object.assign(new Error("Butuh koneksi internet dan database tersambung."), { code: "offline" });
+  if (!AUTH2) AUTH2 = (async () => {
+    const [{ initializeApp }, au] = await Promise.all([imp(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`), imp(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`)]);
+    const a = au.initializeAuth(initializeApp(APP.options, "sandi"), { persistence: au.inMemoryPersistence }); a.languageCode = "id";
+    return { au, a };
+  })().catch(e => { AUTH2 = null; throw e; });
+  return AUTH2;
+}
+export const fbSiap = () => !!APP;
+export async function fbMasuk(email, pw) { const { au, a } = await authSandi(); const c = await au.signInWithEmailAndPassword(a, email, pw); return c.user; }
+export async function fbDaftar(email, pw) { const { au, a } = await authSandi(); const c = await au.createUserWithEmailAndPassword(a, email, pw); try { await au.sendEmailVerification(c.user); } catch (e) { } return c.user; }
+export async function fbUbahSandi(email, lama, baru) { const { au } = await authSandi(); const u = await fbMasuk(email, lama); await au.updatePassword(u, baru); }
+export async function fbLupa(email) {
+  const { au, a } = await authSandi();
+  try { await au.sendPasswordResetEmail(a, email, { url: location.origin + location.pathname }); }
+  catch (e) { if (/continue-uri|unauthorized-domain/.test(e.code || "")) await au.sendPasswordResetEmail(a, email); else throw e; }
+}
+export function pesanAuth(e) {
+  const c = (e && (e.code || e.message)) || "";
+  if (/invalid-credential|wrong-password|invalid-login|user-not-found/.test(c)) return "Kata sandi salah.";
+  if (/email-already-in-use/.test(c)) return "Email ini sudah dipakai.";
+  if (/invalid-email/.test(c)) return "Format email tidak benar.";
+  if (/weak-password/.test(c)) return "Kata sandi terlalu lemah (minimal 8 karakter, huruf dan angka).";
+  if (/operation-not-allowed|configuration-not-found/.test(c)) return "Login Email/Password belum diaktifkan di Firebase (Authentication → Sign-in method).";
+  if (/too-many-requests/.test(c)) return "Terlalu banyak percobaan. Tunggu beberapa menit.";
+  if (/network|offline/.test(c)) return "Butuh koneksi internet.";
+  if (/requires-recent-login/.test(c)) return "Silakan keluar lalu masuk lagi, kemudian ulangi.";
+  return "Gagal: " + String(c).replace(/^auth\//, "");
+}
+const salahSandi = e => /invalid-credential|wrong-password|invalid-login|user-not-found|user-disabled/.test((e && e.code) || "");
+export { salahSandi };

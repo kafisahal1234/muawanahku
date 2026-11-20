@@ -356,3 +356,9 @@ input.in:focus,select.in:focus,textarea.in:focus{background:#fff}
 .chat-bar textarea{flex:1;min-height:46px;max-height:120px;resize:none;border-radius:22px;padding:11px 16px;line-height:1.4}
 .chat-send{width:46px;height:46px;flex:none;border-radius:23px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#0E8F52,#3B5BB5)}.chat-send:disabled{opacity:.45}
 @media (prefers-reduced-motion: reduce){.bubble.typing i{animation:none}}
+.pass-in{position:relative}.pass-in .in{padding-right:54px}
+.pass-eye{position:absolute;right:3px;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:12px;display:grid;place-items:center;color:var(--mut)}
+.pass-eye[aria-pressed=true]{color:var(--g)}.pass-eye:active{background:#EEF6F1}
+.lupa-row{display:flex;justify-content:flex-end;margin:-4px 0 6px}.lupa-row .link{min-height:40px;font-size:13.5px}
+.lupa-ok{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}.lupa-ok p{margin:0 0 6px;color:var(--mut);font-size:14px;line-height:1.5}
+.lupa-ic{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#0E8F52,#0B5D3B)}

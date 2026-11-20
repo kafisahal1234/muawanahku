@@ -1,6 +1,7 @@
 import { DATA } from "./data.js";
 import { LIBUR_NASIONAL, SETELAN_DEFAULT } from "./libur.js";
-import { S, all, get, subscribe } from "./store.js";
+import { S, all, get, put, subscribe } from "./store.js";
+import { fbSiap, fbMasuk, salahSandi } from "./cloud.js";
 
 // ---------------- tanggal ----------------
 export const pad = n => String(n).padStart(2, "0");
@@ -74,10 +75,25 @@ export async function cekSandi(u, p, def) { const ov = akunOv(u); return ov && o
 // hasil: {kind,id} | {err}
 // Akun guru/pengurus: username + kata sandi. Akun yang dihapus Admin tidak bisa masuk.
 export const staffAktif = () => STAFF.filter(s => !(akunOv(s.username) || {}).hapus);
+// Bisa masuk dengan username atau email pemulihan. Bila akun memasang email, sandi diperiksa ke Firebase (agar reset lewat email berlaku);
+// saat tidak tersambung internet, dipakai salinan sandi di perangkat.
+export const staffDariEmail = e => { const x = String(e || "").trim().toLowerCase(); return x.includes("@") ? STAFF.find(s => ((akunOv(s.username) || {}).email || "") === x) : null; };
 export async function login(username, password) {
-  const u = (username || "").trim().toLowerCase(), p = password || "";
-  const st = STAFF.find(s => s.username === u);
-  if (!st || (akunOv(u) || {}).hapus || (akunOv(u) || {}).nonaktif) return { err: "Username atau kata sandi salah." };
+  const masuk = (username || "").trim().toLowerCase(), p = password || "";
+  const st = STAFF.find(s => s.username === masuk) || staffDariEmail(masuk);
+  const u = st ? st.username : masuk, ov = akunOv(u) || {};
+  if (!st || ov.hapus || ov.nonaktif) return { err: "Username atau kata sandi salah." };
+  if (ov.email && fbSiap()) {
+    try {
+      await fbMasuk(ov.email, p);
+      const h = await sha(u + ":" + p);
+      if (ov.hash !== h || ov.menungguReset) { const o = { ...ov, hash: h }; delete o.menungguReset; await put("akun", u, o); }
+      return { kind: "staff", id: st.id };
+    } catch (e) {
+      if (salahSandi(e) && !(ov.menungguReset && (await cekSandi(u, p, st.password)))) return { err: "Username atau kata sandi salah." };
+      if (salahSandi(e)) return { kind: "staff", id: st.id };
+    }
+  }
   if (!(await cekSandi(u, p, st.password))) return { err: "Username atau kata sandi salah." };
   return { kind: "staff", id: st.id };
 }

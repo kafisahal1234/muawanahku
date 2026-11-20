@@ -1,6 +1,7 @@
 // Fitur sistem standar Google Play & App Store: kata sandi, hapus akun, privasi, bantuan, tentang, unduhan
 import { useState, useEffect } from "preact/hooks";
-import { html, nav, useApp, Icon, Card, SubHeader, Row, Pill, Btn, Empty, Field, Confirm, Hint, Section } from "./ui.js";
+import { html, nav, useApp, Icon, Card, SubHeader, Row, Pill, Btn, Empty, Field, Confirm, Hint, Section, PassInput } from "./ui.js";
+import { fbSiap, fbUbahSandi, pesanAuth, salahSandi } from "./cloud.js";
 import { S, all, get, put, toast, uid } from "./store.js";
 import { LOGO } from "./data.js";
 import * as L from "./logic.js";
@@ -56,11 +57,18 @@ export function UbahSandi() {
     if (f.baru.length < 8) return setErr("Kata sandi baru minimal 8 karakter.");
     if (!/[A-Za-z]/.test(f.baru) || !/\d/.test(f.baru)) return setErr("Gunakan gabungan huruf dan angka.");
     if (f.baru !== f.ulang) return setErr("Ulangi kata sandi baru dengan benar.");
+    const ov = L.akunOv(u) || {};
     setBusy(true);
-    const ok = await put("akun", u, { ...(L.akunOv(u) || {}), hash: await L.sha(u + ":" + f.baru), diubah: Date.now() });
+    if (ov.email) {
+      if (!fbSiap()) { setBusy(false); return setErr("Akun ini memakai email pemulihan, jadi ubah sandi butuh koneksi internet."); }
+      try { await fbUbahSandi(ov.email, f.lama, f.baru); }
+      catch (e) { setBusy(false); return setErr(salahSandi(e) && ov.menungguReset ? "Sandi di email pemulihan belum diatur. Buka email dari Firebase dan atur sandi lewat tautannya, atau pakai Lupa kata sandi." : pesanAuth(e)); }
+    }
+    const o = { ...ov, hash: await L.sha(u + ":" + f.baru), diubah: Date.now() }; delete o.menungguReset;
+    const ok = await put("akun", u, o);
     setBusy(false); if (ok) { toast("Kata sandi berhasil diubah"); nav.back(); }
   };
-  const inp = (k, lab, ac) => html`<${Field} label=${lab}><input class="in" type="password" autocomplete=${ac} value=${f[k]} onInput=${e => setF({ ...f, [k]: e.target.value })} /></${Field}>`;
+  const inp = (k, lab, ac) => html`<${Field} label=${lab}><${PassInput} autocomplete=${ac} label=${lab.toLowerCase()} value=${f[k]} onInput=${e => setF({ ...f, [k]: e.target.value })} /></${Field}>`;
   return html`<${SubHeader} title="Ubah kata sandi" sub=${"Username: " + u} />
     <div class="wrap"><${Card}>${inp("lama", "Kata sandi lama", "current-password")}${inp("baru", "Kata sandi baru", "new-password")}${inp("ulang", "Ulangi kata sandi baru", "new-password")}
       <${Hint}>Minimal 8 karakter, gabungan huruf dan angka.</${Hint}>

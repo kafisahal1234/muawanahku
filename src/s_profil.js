@@ -1,6 +1,7 @@
 // Profil (biodata) & Keamanan untuk akun guru/pengurus. Nama tersinkron ke data guru di seluruh aplikasi.
 import { useState } from "preact/hooks";
-import { html, nav, useApp, Icon, Card, SubHeader, Btn, Field, Section, Hint, Seg, Confirm } from "./ui.js";
+import { html, nav, useApp, Icon, Card, SubHeader, Btn, Field, Section, Hint, Seg, Confirm, Sheet, PassInput, Pill } from "./ui.js";
+import { fbSiap, fbDaftar, fbMasuk, fbLupa, pesanAuth, salahSandi } from "./cloud.js";
 import { S, get, put, toast } from "./store.js";
 import * as L from "./logic.js";
 import { me, FotoAv, fotoPersegi, kunciFoto } from "./common.js";
@@ -47,14 +48,51 @@ export function Profil() {
 
 export function Keamanan() {
   useApp();
-  const st = me(), ov = L.akunOv(st.username) || {};
-  return html`<${SubHeader} title="Keamanan" sub="Username dan kata sandi" />
+  const st = me(), ov = L.akunOv(st.username) || {}; const [ed, setEd] = useState(false); const [ask, setAsk] = useState(false);
+  const lepas = async () => { setAsk(false); const o = { ...ov }; delete o.email; delete o.menungguReset; if (await put("akun", st.username, o)) { logUbah("ubah", "akun", st.username, "Email pemulihan dilepas"); toast("Email pemulihan dilepas"); } };
+  return html`<${SubHeader} title="Keamanan" sub="Username, kata sandi, email pemulihan" />
     <div class="wrap"><${Section} t="Akun masuk" /><${Card} cls="kv-card">
       <div class="kv"><span>Username</span><b>${st.username}</b></div>
       <div class="kv"><span>Kata sandi</span><b>••••••••</b></div>
       <div class="kv"><span>Terakhir diubah</span><b>${ov.hash && ov.diubah ? L.fmtDT(new Date(ov.diubah).toISOString()) : "Belum pernah (sandi awal)"}</b></div></${Card}>
       <${Btn} icon="lock" onClick=${() => nav.go("ubahSandi")}>Ubah kata sandi</${Btn}>
-      <div class="mt12"><${Hint}>Username dibuat dan diubah oleh Admin pondok. Jika lupa kata sandi, minta Admin melakukan reset sandi.</${Hint}></div></div>`;
+      <${Section} t="Email pemulihan" /><${Card} cls="kv-card">
+        <div class="kv"><span>Email</span><b>${ov.email || "Belum dipasang"}</b></div>
+        ${ov.email ? html`<div class="kv"><span>Status</span><b>${ov.menungguReset ? html`<${Pill} t="Menunggu atur sandi" tone="gold" />` : html`<${Pill} t="Aktif" />`}</b></div>` : null}</${Card}>
+      <${Btn} kind=${ov.email ? "ghost" : "primary"} icon="mail" onClick=${() => setEd(true)}>${ov.email ? "Ganti email" : "Pasang email pemulihan"}</${Btn}>
+      ${ov.email ? html`<div class="mt8"><${Btn} kind="ghost" onClick=${() => setAsk(true)}>Lepas email</${Btn}></div>` : null}
+      <div class="mt12"><${Hint}>${ov.email ? "Jika lupa kata sandi, ketuk “Lupa kata sandi?” di halaman masuk. Tautan untuk membuat sandi baru dikirim ke email ini. Anda juga bisa masuk memakai email ini sebagai pengganti username." : "Pasang email agar bisa mengatur ulang kata sandi sendiri saat lupa. Tanpa email, reset sandi hanya bisa lewat Admin."}</${Hint}></div>
+      ${ed ? html`<${PasangEmail} st=${st} ov=${ov} onClose=${() => setEd(false)} />` : null}
+      <${Confirm} open=${ask} danger title="Lepas email pemulihan?" text="Setelah dilepas, lupa kata sandi hanya bisa direset oleh Admin." yes="Lepas" onYes=${lepas} onNo=${() => setAsk(false)} /></div>`;
+}
+function PasangEmail({ st, ov, onClose }) {
+  const [email, setEmail] = useState(ov.email || ""); const [pw, setPw] = useState(""); const [err, setErr] = useState(""); const [busy, setBusy] = useState(false); const [info, setInfo] = useState("");
+  const simpan = async () => {
+    setErr(""); const e = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)) return setErr("Format email tidak benar.");
+    const lain = L.staffDariEmail(e); if (lain && lain.username !== st.username) return setErr("Email ini sudah dipakai akun lain.");
+    if (!(await L.cekSandi(st.username, pw, st.password))) return setErr("Kata sandi saat ini salah.");
+    if (pw.length < 6) return setErr("Kata sandi Anda terlalu pendek untuk email pemulihan. Ubah dulu kata sandi (minimal 8 karakter, huruf dan angka).");
+    if (!fbSiap()) return setErr("Butuh koneksi internet.");
+    setBusy(true);
+    let tunggu = false;
+    try { await fbDaftar(e, pw); }
+    catch (x) {
+      if (!/email-already-in-use/.test(x.code || "")) { setBusy(false); return setErr(pesanAuth(x)); }
+      try { await fbMasuk(e, pw); } catch (y) { if (!salahSandi(y)) { setBusy(false); return setErr(pesanAuth(y)); } try { await fbLupa(e); tunggu = true; } catch (z) { setBusy(false); return setErr(pesanAuth(z)); } }
+    }
+    const o = { ...ov, email: e, emailTs: Date.now() }; if (tunggu) o.menungguReset = true; else delete o.menungguReset;
+    await put("akun", st.username, o); logUbah("ubah", "akun", st.username, "Email pemulihan dipasang");
+    setBusy(false);
+    if (tunggu) setInfo(`Email ${e} sudah pernah terdaftar. Kami kirim tautan ke email itu: buat kata sandi baru lewat tautannya, lalu masuk memakai sandi baru.`);
+    else { toast("Email pemulihan terpasang. Cek email untuk verifikasi."); onClose(); }
+  };
+  return html`<${Sheet} open=${true} title=${ov.email ? "Ganti email pemulihan" : "Pasang email pemulihan"} onClose=${onClose}>${info ? html`<p>${info}</p><${Btn} onClick=${onClose}>Mengerti</${Btn}>` : html`
+    <${Field} label="Email aktif (Gmail, dsb.)"><input class="in" type="email" inputmode="email" autocomplete="email" autocapitalize="none" value=${email} placeholder="nama@gmail.com" onInput=${x => setEmail(x.target.value)} /></${Field}>
+    <${Field} label="Kata sandi saat ini" hint="Untuk memastikan ini memang Anda"><${PassInput} value=${pw} onInput=${x => setPw(x.target.value)} /></${Field}>
+    ${err ? html`<div class="note red"><${Icon} n="alert" s=${18} />${err}</div>` : null}
+    <${Btn} disabled=${busy || !email || !pw} onClick=${simpan}>${busy ? "Menyimpan…" : "Simpan email"}</${Btn}>
+    <p class="small mt8">Firebase akan mengirim email verifikasi. Email dipakai hanya untuk mengatur ulang kata sandi.</p>`}</${Sheet}>`;
 }
 
 // Foto profil: bisa ditambah/diganti oleh pemilik akun (guru maupun wali)

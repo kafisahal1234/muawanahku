@@ -1,5 +1,6 @@
 import { useState } from "preact/hooks";
-import { html, nav, useApp, Icon, Tile, Card, Stat, Row, Pill, Btn, Empty, Field, Seg, Section, Sheet, SearchBox, Logo, Confirm } from "./ui.js";
+import { html, nav, useApp, Icon, Tile, Card, Stat, Row, Pill, Btn, Empty, Field, Seg, Section, Sheet, SearchBox, Logo, Confirm, PassInput } from "./ui.js";
+import { fbSiap, fbLupa, pesanAuth } from "./cloud.js";
 import { S, all, get, resetAll, toast } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
@@ -13,12 +14,34 @@ import { KartuAsisten } from "./s_asisten.js";
 import { aiAda } from "./ai.js";
 const PrivasiIsi = () => html`<div class="prose"><p>Data dipakai hanya untuk administrasi pendidikan pondok: hafalan, absensi, nilai, perizinan, dan pembinaan santri. Data tidak dijual, tidak untuk iklan, dan tidak dibagikan ke pihak luar. Setiap pengguna hanya melihat data sesuai perannya; wali hanya melihat anaknya sendiri. Kebijakan lengkap ada di menu Akun setelah masuk.</p></div>`;
 
+// ---------------- lupa kata sandi (lewat email pemulihan) ----------------
+const samarkan = e => e.replace(/^(.{2})[^@]*(@.*)$/, (m, a, b) => a + "•••" + b);
+function LupaSandi({ awal, onClose }) {
+  const [v, setV] = useState(awal || ""); const [busy, setBusy] = useState(false); const [hasil, setHasil] = useState(null); const [err, setErr] = useState("");
+  const kirim = async () => {
+    setErr(""); const x = v.trim().toLowerCase(); if (!x) return setErr("Isi username atau email.");
+    const st = L.STAFF.find(s => s.username === x) || L.staffDariEmail(x), ov = st ? L.akunOv(st.username) || {} : {};
+    if (!st || ov.hapus) return setErr("Akun tidak ditemukan. Periksa username atau email.");
+    if (!ov.email) return setErr("Akun ini belum memasang email pemulihan. Minta Admin pondok melakukan reset sandi, lalu pasang email di Akun → Keamanan.");
+    if (!fbSiap()) return setErr("Butuh koneksi internet. Coba lagi saat online.");
+    setBusy(true); try { await fbLupa(ov.email); setHasil(samarkan(ov.email)); } catch (e) { setErr(pesanAuth(e)); } setBusy(false);
+  };
+  return html`<${Sheet} open=${true} title="Lupa kata sandi" onClose=${onClose}>${hasil ? html`<div class="lupa-ok"><span class="lupa-ic"><${Icon} n="check" s=${28} w=${2.6} /></span>
+      <b>Tautan terkirim ke ${hasil}</b><p>Buka email tersebut (cek juga folder Spam), ketuk tautannya, lalu buat kata sandi baru. Setelah itu masuk di aplikasi dengan kata sandi baru.</p>
+      <${Btn} onClick=${onClose}>Mengerti</${Btn}></div>`
+    : html`<p class="small" style="margin-top:0">Masukkan username atau email pemulihan. Kami kirim tautan untuk membuat kata sandi baru ke email yang terpasang di akun.</p>
+      <${Field} label="Username atau email"><input class="in" autocapitalize="none" value=${v} placeholder="contoh: kaafi" onInput=${e => setV(e.target.value)} /></${Field}>
+      ${err ? html`<div class="note red"><${Icon} n="alert" s=${18} />${err}</div>` : null}
+      <${Btn} disabled=${busy} onClick=${kirim}>${busy ? "Mengirim…" : "Kirim tautan atur ulang"}</${Btn}>
+      <p class="small mt8">Wali santri tidak memakai kata sandi: kode akses = nama panggilan + tanggal lahir santri.</p>`}</${Sheet}>`;
+}
+
 // ---------------- login ----------------
 const LOCK = { fails: 0, until: 0 };
 export function Login() {
   useApp();
   const [mode, setMode] = useState("staff"); const [u, setU] = useState(""); const [p, setP] = useState(""); const [err, setErr] = useState(""); const [demo, setDemo] = useState(false); const [q, setQ] = useState("");
-  const [busy, setBusy] = useState(false); const [show, setShow] = useState(false); const [priv, setPriv] = useState(false);
+  const [busy, setBusy] = useState(false); const [lupa, setLupa] = useState(false); const [priv, setPriv] = useState(false);
   const kunciCek = () => { if (LOCK.until > Date.now()) { setErr(`Terlalu banyak percobaan. Coba lagi dalam ${Math.ceil((LOCK.until - Date.now()) / 1000)} detik.`); return true; } return false; };
   const gagal = e => { LOCK.fails++; if (LOCK.fails >= 5) { LOCK.fails = 0; LOCK.until = Date.now() + 60000; setErr("5 kali salah. Demi keamanan, coba lagi 60 detik lagi."); } else setErr(e); };
   const masuk = async (uu = u, pp = p) => {
@@ -40,14 +63,15 @@ export function Login() {
       <${Seg} items=${[["staff", "Ustadz / Staf"], ["wali", "Wali Santri"]]} value=${mode} onChange=${m => { setMode(m); setErr(""); setU(""); setP(""); }} />
       ${mode === "wali" ? html`<div class="mt12"><${Field} label="Kode akses" hint="Nama panggilan santri + tanggal lahir (tanggal, bulan, tahun). Contoh: adiyatma15082011">
         <input class="in" autocomplete="off" autocapitalize="none" spellcheck="false" value=${u} placeholder="namatanggallahir" onInput=${e => setU(e.target.value)} /></${Field}></div>` : html`
-      <div class="mt12"><${Field} label="Username">
+      <div class="mt12"><${Field} label="Username atau email">
         <input class="in" autocomplete="username" autocapitalize="none" value=${u} placeholder="contoh: kaafi" onInput=${e => setU(e.target.value)} /></${Field}>
-      <${Field} label="Kata sandi"><div style="position:relative"><input class="in" type=${show ? "text" : "password"} autocomplete="current-password" style="padding-right:52px" value=${p} placeholder="contoh: kaafi123" onInput=${e => setP(e.target.value)} />
-        <button type="button" class="icon-btn" style="position:absolute;right:2px;top:2px" aria-label=${show ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"} onClick=${() => setShow(!show)}><${Icon} n=${show ? "eyeoff" : "eye"} s=${20} /></button></div></${Field}></div>`}
+      <${Field} label="Kata sandi"><${PassInput} value=${p} placeholder="contoh: kaafi123" onInput=${e => setP(e.target.value)} /></${Field}>
+      <div class="lupa-row"><button type="button" class="link" onClick=${() => setLupa(true)}>Lupa kata sandi?</button></div></div>`}
       ${err ? html`<div class="note red"><${Icon} n="alert" s=${18} />${err}</div>` : null}
       <${Btn} type="submit" disabled=${busy}>${busy ? "Memeriksa…" : "Masuk"}</${Btn}>
       <div class="mt8"><${Btn} kind="ghost" icon="users" onClick=${() => setDemo(true)}>Lihat semua akun demo</${Btn}></div></form>
     <p class="mode">MuawanahKu ${VERSI} ${S.mode === "db" ? (S.ready ? "· data tersinkron" : "· menyambungkan database…") : "· data tersimpan di perangkat ini"}${S.cloudErr ? html`<br /><small style="color:#B3261E">Database: ${S.cloudErr}</small>` : null}<br /><button class="link" style="min-height:44px" onClick=${() => setPriv(true)}>Kebijakan Privasi</button></p>
+    ${lupa ? html`<${LupaSandi} awal=${u} onClose=${() => setLupa(false)} />` : null}
     <${Sheet} open=${priv} title="Kebijakan Privasi" onClose=${() => setPriv(false)}><${PrivasiIsi} /></${Sheet}>
     <${Sheet} open=${demo} title="Akun demo" onClose=${() => setDemo(false)}>
       <p class="small" style="margin-top:0">Ketuk akun untuk langsung masuk. Guru: username + sandi (username + 123). Wali: satu kode akses (nama panggilan + tanggal lahir).</p>

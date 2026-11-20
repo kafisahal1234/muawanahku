@@ -83,6 +83,7 @@ const P = {
   briefcase: "M4 8h16v12H4zM9 8V5h6v3M4 13h16",
   target: "M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zM12 11a1 1 0 1 1 0 2 1 1 0 0 1 0-2z",
   printer: "M6 9V3h12v6M6 18H4v-7h16v7h-2M7 14h10v7H7z",
+  mail: "M4 6h16v12H4zM4 7l8 6 8-6",
   send: "M4 12l16-8-6 16-2.5-6.5zM11.5 13.5L20 4",
   chev: "M9 6l6 6-6 6",
   sparkle: "M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8zM5 2l.6 1.4L7 4l-1.4.6L5 6l-.6-1.4L3 4l1.4-.6z",
@@ -129,6 +130,12 @@ export const Hint = ({ children }) => html`<p class="hint">${children}</p>`;
 export function Empty({ t, icon = "clipboard" }) { return html`<div class="empty"><${Icon} n=${icon} s=${30} c="#9AB0A5" /><p>${t}</p></div>`; }
 export function Bar({ v, tone = "green" }) { return html`<span class="bar"><i class=${tone} style=${`width:${Math.max(0, Math.min(100, v || 0))}%`}></i></span>`; }
 export function Field({ label, hint, children }) { return html`<label class="field"><span>${label}</span>${children}${hint ? html`<small>${hint}</small>` : null}</label>`; }
+// Kotak kata sandi dengan tombol mata (tampilkan/sembunyikan)
+export function PassInput({ value, onInput, autocomplete = "current-password", placeholder, label = "kata sandi" }) {
+  const [show, setShow] = useState(false);
+  return html`<div class="pass-in"><input class="in" type=${show ? "text" : "password"} autocomplete=${autocomplete} autocapitalize="none" spellcheck="false" value=${value} placeholder=${placeholder || ""} aria-label=${label} onInput=${onInput} />
+    <button type="button" class="pass-eye" aria-label=${show ? "Sembunyikan " + label : "Tampilkan " + label} aria-pressed=${show} onClick=${() => setShow(!show)}><${Icon} n=${show ? "eyeoff" : "eye"} s=${20} /></button></div>`;
+}
 export function Seg({ items, value, onChange, small }) {
   return html`<div class=${"seg " + (small ? "small" : "")}>${items.map(([k, lab]) => html`<button type="button" aria-pressed=${k === value} class=${k === value ? "on" : ""} onClick=${() => onChange(k)}>${lab}</button>`)}</div>`;
 }

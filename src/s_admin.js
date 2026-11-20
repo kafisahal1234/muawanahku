@@ -107,7 +107,7 @@ function EditStaff({ e, onClose }) {
     if (ok) { logUbah(e.baru ? "tambah" : "ubah", "staffEdit", id, `${e.baru ? "Akun baru" : "Ubah akun"} ${d.nama}${rename ? ` (username ${e.username} → ${un})` : ""}${pindah ? ` · asrama ${pindah.nama}` : ""}`);
       toast(e.baru ? `Akun dibuat. Username ${un}, sandi awal ${un}123` : rename ? `Disimpan. Username baru ${un}, sandi direset ke ${un}123` : "Data akun disimpan"); onClose(); }
   };
-  const reset = async () => { const ov = { ...(L.akunOv(e.username) || {}) }; delete ov.hash; await put("akun", e.username, ov); await put("staffEdit", e.id, { ...((S.data.staffEdit || {})[e.id] || {}), password: e.username + "123" }); logUbah("ubah", "akun", e.username, `Reset sandi ${e.nama}`); toast(`Sandi direset ke ${e.username}123`); };
+  const reset = async () => { const ov = { ...(L.akunOv(e.username) || {}) }; delete ov.hash; delete ov.email; delete ov.menungguReset; await put("akun", e.username, ov); await put("staffEdit", e.id, { ...((S.data.staffEdit || {})[e.id] || {}), password: e.username + "123" }); logUbah("ubah", "akun", e.username, `Reset sandi ${e.nama}`); toast(`Sandi direset ke ${e.username}123`); };
   return html`<${Sheet} open=${true} title=${e.baru ? "Tambah akun guru" : "Ubah akun guru"} onClose=${onClose}>
     <${Field} label="Nama lengkap dengan gelar"><input class="in" value=${f.nama} placeholder="Ust. Nama Lengkap, S.Pd" onInput=${x => set("nama", x.target.value)} /></${Field}>
     <div class="btn-row"><${Field} label="Nama panggilan"><input class="in" value=${f.pendek} placeholder="Ust. Nama" onInput=${x => set("pendek", x.target.value)} /></${Field}>
