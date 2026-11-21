@@ -711,3 +711,11 @@ html.pad-on,html.pad-on body{overscroll-behavior:none}
 .pad-chip{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 13px;border-radius:20px;background:#fff;border:1px solid #CFDDD5;font-weight:700;font-size:13.5px;color:#22352B}
 .pad-chip.on{background:var(--g);border-color:var(--g);color:#fff}.pad-chip:disabled{opacity:.4}.pad-chip i{width:14px;height:14px;border-radius:7px;display:inline-block;box-shadow:0 0 0 2px #fff}
 .pad-slide{display:flex;align-items:center;gap:10px;width:100%;max-width:520px;font-size:13.5px;font-weight:700;color:#22352B}.pad-slide input{flex:1;accent-color:var(--g);min-height:40px}.pad-slide small{min-width:110px;color:var(--mut);font-weight:600}
+
+/* v12b: kartu WhatsApp bisa diketuk */
+.wa-card .wa-h{width:100%;text-align:left;color:inherit;text-decoration:none;border-radius:14px;padding:4px 2px;min-height:56px;background:none}
+.wa-card .wa-h:active{background:#E3F4EA}.wa-card .wa-h>svg:last-child{margin-left:auto;color:#7B8F86;flex:none}
+.wa-t{display:flex;flex-direction:column;min-width:0}
+.wa-ic.resmi{background:none;box-shadow:none;overflow:hidden}.wa-ic.resmi img{width:100%;height:100%;object-fit:contain}
+.wa-btn img{width:28px;height:28px;object-fit:contain;background:#fff;border-radius:50%;padding:2px}
+.wa-ik-up{display:flex;align-items:center;gap:12px}.wa-ik-up>img{width:46px;height:46px;object-fit:contain;flex:none}

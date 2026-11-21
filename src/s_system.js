@@ -133,25 +133,58 @@ const FAQ = [
 ];
 // Kontak resmi pondok: nomor WhatsApp diatur Admin/Mudir (Setelan → waPondok), tombol membuka aplikasi WhatsApp
 const nomorTampil = n => { const d = L.waNomor(n); return d ? "+" + d.slice(0, 2) + " " + d.slice(2, 5) + "-" + d.slice(5, 9) + "-" + d.slice(9) : ""; };
+// Ikon tombol WhatsApp: berkas resmi diunggah sendiri oleh pimpinan dari halaman aset merek WhatsApp (Meta)
+async function ikonDariBerkas(f) {
+  if (f.size > 1.5e6) throw new Error("Berkas ikon terlalu besar (maks. 1,5 MB).");
+  if (f.type === "image/svg+xml" || /\.svg$/i.test(f.name)) { const t = await f.text(); if (!/<svg[\s>]/i.test(t) || /<script/i.test(t)) throw new Error("Berkas SVG tidak valid."); return "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(t))); }
+  const url = URL.createObjectURL(f);
+  try {
+    const im = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error("Gambar ikon tidak bisa dibuka.")); i.src = url; });
+    const k = Math.min(1, 192 / Math.max(im.width, im.height)), c = document.createElement("canvas"); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+    c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); return c.toDataURL("image/png");
+  } finally { URL.revokeObjectURL(url); }
+}
+// Buka chat: di HP langsung ke aplikasi WhatsApp (whatsapp://), cadangannya wa.me bila aplikasi tidak terbuka
+function bukaWa(e, no, teks) {
+  const d = L.waNomor(no); if (!d) return;
+  if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) return; // komputer: biarkan tautan wa.me terbuka di tab baru
+  e.preventDefault();
+  let pergi = false; const f = () => { if (document.visibilityState === "hidden") pergi = true; };
+  document.addEventListener("visibilitychange", f);
+  location.href = `whatsapp://send?phone=${d}&text=${encodeURIComponent(teks)}`;
+  setTimeout(() => { document.removeEventListener("visibilitychange", f); if (!pergi) window.open(L.waLink(no, teks), "_blank", "noopener"); }, 1600);
+}
+const PIMPINAN = ["admin", "mudir", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian"];
 function KontakAdmin() {
   useApp();
-  const m = me(), bisaAtur = !!m && m.roles.some(r => r === "admin" || r === "mudir"), no = L.setelan().waPondok, [ed, setEd] = useState(false), [v, setV] = useState("");
+  const m = me(), bisaAtur = !!m && m.roles.some(r => PIMPINAN.includes(r)), st = L.setelan(), no = st.waPondok, ikon = st.waIkon, [ed, setEd] = useState(false), [v, setV] = useState(""), [ik, setIk] = useState(null);
   const siapa = m ? `${m.nama} (${m.roles.map(r => L.ROLE_LABEL[r]).join(", ")})` : nav.user && nav.user.kind === "wali" ? `wali dari ${L.santriAman(nav.user.id).nama}` : "";
-  const link = L.waLink(no, `Assalamu'alaikum, Admin Kampung Qur'an Al Muawanah. Saya ${siapa} ingin bertanya tentang aplikasi MuawanahKu: `);
+  const teks = `Assalamu'alaikum, Admin Kampung Qur'an Al Muawanah. Saya ${siapa} ingin bertanya tentang aplikasi MuawanahKu: `, link = L.waLink(no, teks);
+  const buka = () => { setV(no ? "0" + L.waNomor(no).slice(2) : ""); setIk(ikon || null); setEd(true); };
+  const belum = () => (bisaAtur ? buka() : toast("Nomor WhatsApp resmi pondok belum diatur. Hubungi kantor pondok.", "err"));
+  const pilihIkon = async e => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return; try { setIk(await ikonDariBerkas(f)); } catch (x) { toast(x.message, "err"); } };
   const simpan = async () => {
     if (v.trim() && !L.waNomor(v)) return toast("Nomor belum benar. Contoh: 0812 3456 7890", "err");
     const lama = (S.data.kalender || {}).setelan || {};
-    if (await put("kalender", "setelan", { ...lama, waPondok: L.waNomor(v) })) { toast(v.trim() ? "Nomor WhatsApp pondok tersimpan" : "Nomor WhatsApp pondok dikosongkan"); setEd(false); }
+    if (await put("kalender", "setelan", { ...lama, waPondok: L.waNomor(v), waIkon: ik || "" })) { toast(v.trim() ? "Kontak WhatsApp pondok tersimpan" : "Nomor WhatsApp pondok dikosongkan"); setEd(false); }
   };
-  return html`<div class="card wa-card"><div class="wa-h"><span class="wa-ic" aria-hidden="true"><${Icon} n="chat" s=${24} c="#fff" w=${2.2} /></span>
-      <span><b>Admin Resmi Pondok</b><small>${no ? nomorTampil(no) : "Kampung Qur'an Al Muawanah"}</small></span></div>
-    ${no ? html`<a class="wa-btn" href=${link} target="_blank" rel="noopener">Chat WhatsApp Admin</a><p class="small" style="margin:8px 0 0">Membuka aplikasi WhatsApp dengan pesan pembuka. Jam layanan mengikuti jam kerja kantor pondok.</p>`
-      : html`<p class="small" style="margin:10px 0 0">Nomor WhatsApp resmi pondok belum diatur.${bisaAtur ? "" : " Silakan datang ke kantor pondok pada jam kerja."}</p>`}
-    ${bisaAtur ? html`<button type="button" class="link" style="min-height:40px;margin-top:4px" onClick=${() => { setV(no ? "0" + L.waNomor(no).slice(2) : ""); setEd(true); }}>${no ? "Ubah nomor WhatsApp pondok" : "Atur nomor WhatsApp pondok"}</button>` : null}
-    <${Sheet} open=${ed} title="Nomor WhatsApp resmi pondok" onClose=${() => setEd(false)}>
+  const ic = html`<span class=${"wa-ic" + (ikon ? " resmi" : "")} aria-hidden="true">${ikon ? html`<img src=${ikon} alt="" />` : html`<${Icon} n="chat" s=${24} c="#fff" w=${2.2} />`}</span>`;
+  const kepala = html`${ic}<span class="wa-t"><b>Admin Resmi Pondok</b><small>${no ? nomorTampil(no) : "Nomor WhatsApp belum diatur"}</small></span><${Icon} n="right" s=${20} />`;
+  return html`<div class="card wa-card">
+    ${no ? html`<a class="wa-h" href=${link} target="_blank" rel="noopener" aria-label="Chat WhatsApp Admin resmi pondok" onClick=${e => bukaWa(e, no, teks)}>${kepala}</a>`
+      : html`<button type="button" class="wa-h" onClick=${belum}>${kepala}</button>`}
+    ${no ? html`<a class="wa-btn" href=${link} target="_blank" rel="noopener" onClick=${e => bukaWa(e, no, teks)}>${ikon ? html`<img src=${ikon} alt="" />` : null}Chat WhatsApp Admin</a>
+        <p class="small" style="margin:8px 0 0">Membuka aplikasi WhatsApp dengan pesan pembuka. Jam layanan mengikuti jam kerja kantor pondok.</p>`
+      : html`<p class="small" style="margin:10px 0 0">${bisaAtur ? "Ketuk untuk mengisi nomor WhatsApp resmi pondok. Setelah diisi, tombol chat langsung aktif di semua akun." : "Nomor WhatsApp resmi pondok belum diatur Admin. Silakan datang ke kantor pondok pada jam kerja."}</p>`}
+    ${bisaAtur && no ? html`<button type="button" class="link" style="min-height:40px;margin-top:4px" onClick=${buka}>Ubah kontak WhatsApp pondok</button>` : null}
+    <${Sheet} open=${ed} title="Kontak WhatsApp resmi pondok" onClose=${() => setEd(false)}>
       <${Field} label="Nomor WhatsApp admin pondok"><input class="in" type="tel" inputmode="tel" placeholder="0812 3456 7890" value=${v} onInput=${e => setV(e.target.value)} /></${Field}>
-      <p class="small" style="margin:0 0 12px">Tampil di menu Bantuan semua akun (ustadz dan wali). Pakai nomor resmi pondok, bukan nomor pribadi.</p>
-      <${Btn} icon="check" onClick=${simpan}>Simpan nomor</${Btn}></${Sheet}></div>`;
+      <p class="small" style="margin:0 0 14px">Tampil di menu Bantuan semua akun (ustadz dan wali). Pakai nomor resmi pondok, bukan nomor pribadi.</p>
+      <${Field} label="Ikon tombol (logo resmi WhatsApp)"><div class="wa-ik-up">${ik ? html`<img src=${ik} alt="Ikon terpilih" />` : html`<span class="wa-ic"><${Icon} n="chat" s=${22} c="#fff" /></span>`}
+        <label class="btn ghost" style="flex:1;margin:0">${ik ? "Ganti ikon" : "Unggah ikon"}<input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" hidden onChange=${pilihIkon} /></label>
+        ${ik ? html`<button type="button" class="link" style="min-height:40px;color:#A8261C" onClick=${() => setIk(null)}>Hapus</button>` : null}</div></${Field}>
+      <p class="small" style="margin:0 0 14px">Unduh logo resmi dari halaman aset merek WhatsApp milik Meta (meta.com/id-id/brand/resources/whatsapp), lalu unggah berkas PNG atau SVG-nya di sini. Tanpa ikon, tombol memakai ikon chat hijau.</p>
+      <${Btn} icon="check" onClick=${simpan}>Simpan kontak</${Btn}></${Sheet}></div>`;
 }
 export function Bantuan() {
   const [o, setO] = useState(-1);
