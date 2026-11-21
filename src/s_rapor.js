@@ -28,12 +28,15 @@ export const RP_CSS = `.rp{font-family:Montserrat,"Plus Jakarta Sans",Arial,sans
 .rp .qz{background:#F4F7F9}.rp .qv{font-weight:700;color:#0B5D3B}.rp .qred{color:#E2564E}
 .rp .qid td{border:none;font-size:12px;padding:1px 3px;height:auto}.rp .qid td.qk{font-weight:700}
 .rp .qbox{border:1px solid #BFC8D0;min-height:93px;padding:6px 8px;font-size:12px;white-space:pre-wrap}
-.rp .qttd{display:flex;justify-content:space-around;text-align:center;font-size:12px;margin-top:6px}.rp .qttd div{width:45%}.rp .qttd .qg{height:84px}
+.rp .qg{display:flex;align-items:center;justify-content:center}.rp .qttd-img{max-height:92%;max-width:88%;object-fit:contain}.rp .qttd{display:flex;justify-content:space-around;text-align:center;font-size:12px;margin-top:6px}.rp .qttd div{width:45%}.rp .qttd .qg{height:84px}
 .rp .qstats{display:flex;gap:8px;margin:2px 0 8px}.rp .qstat{flex:1;border:1px solid #BFC8D0;border-top:3px solid #0C9954;border-radius:6px;padding:7px 10px;background:#F4F7F9}
 .rp .qstat:nth-child(2){border-top-color:#3D5F78}.rp .qstat:nth-child(3){border-top-color:#E5AC4C}
 .rp .qstat span{display:block;font-size:10.5px;color:#3D5F78;font-weight:700}.rp .qstat b{display:block;font-size:17px;color:#2E2F30;margin:2px 0 1px}.rp .qstat small{font-size:10px;color:#5B6B75}
 .rp .qttd3{display:flex;justify-content:space-between;text-align:center;font-size:12px;margin-top:6px}.rp .qttd3>div{width:32%}.rp .qttd3 .qg{height:54px}.rp .qttd3 b{font-size:11px;white-space:nowrap}.rp .rp-mid .qsec{margin-top:9px}`;
 
+// tanda tangan tersimpan (Akun → Tanda Tangan) ditempel otomatis di atas nama
+const mdr = () => L.mudirStaff() || L.staffAman("syamsul");
+const ttdImg = id => { const t = L.ttdOf(id); return t ? `<img class="qttd-img" src="${t}" alt="">` : ""; };
 function nilaiJuz(d, j) {
   if (!d) return null;
   const v = Object.entries(d).filter(([k]) => (j >= 29 ? k.startsWith(j + ":") : k === "j" + j)).map(([, x]) => x).filter(x => x !== "" && x != null);
@@ -94,8 +97,8 @@ export function raporHTML(sid, periode) {
     <div class="qlbl" style="margin-top:16px">Keterangan predikat</div><table class="qket"><colgroup><col style="width:73px"><col style="width:166px"><col style="width:187px"><col></colgroup><tr><th>Predikat</th><th>Arti</th><th>Nilai (Tahfidz dan Mapel)</th><th>Capaian Mutaba'ah dan Adab</th></tr>
     ${ket.map((r, i) => `<tr>${r.map((v, j) => `<td class="qc ${j === 0 ? "qb" : ""} ${i === 3 && j === 0 ? "qred" : ""}">${v}</td>`).join("")}</tr>`).join("")}</table>
     <div class="qttd" style="margin-top:32px"><div></div><div>Metro, ${tg}</div></div>
-    <div class="qttd"><div>Orang Tua / Wali<div class="qg"></div><b>(…………………………………)</b></div><div>Wali Asrama / Wali Halaqah<div class="qg"></div><b>(${esc(mus.nama)})</b></div></div>
-    <div class="qttd" style="margin-top:14px"><div>Mengetahui,<br>Mudir<div class="qg"></div><b style="text-decoration:underline">${esc(L.staffAman("syamsul").nama.replace(/^Ust\.\s*/, ""))}</b></div></div>${foot}</div>`;
+    <div class="qttd"><div>Orang Tua / Wali<div class="qg"></div><b>(…………………………………)</b></div><div>Wali Asrama / Wali Halaqah<div class="qg">${ttdImg(mus && mus.id)}</div><b>(${esc(mus.nama)})</b></div></div>
+    <div class="qttd" style="margin-top:14px"><div>Mengetahui,<br>Mudir<div class="qg">${ttdImg(mdr().id)}</div><b style="text-decoration:underline">${esc(mdr().nama.replace(/^Ust\.\s*/, ""))}</b></div></div>${foot}</div>`;
   return p1 + p2 + p3 + p4;
 }
 
@@ -126,7 +129,7 @@ export function raporMidHTML(sid) {
     <div class="qsec">C. MUTABA'AH IBADAH DAN ADAB</div><p class="qnote">Persentase dari ${mp.hari} hari aktif, ${mp.isi || 0} hari diinput (hari tanpa input dihitung 0): A 90–100% · B 75–89% · C 60–74% · D di bawah 60%.</p>${C}
     <div class="qsec">D. CATATAN WALI ASRAMA</div><div class="qbox" style="min-height:50px">${esc(cat)}</div>
     <div class="qttd3" style="margin-top:12px"><div></div><div></div><div>Metro, ${tg}</div></div>
-    <div class="qttd3" style="margin-top:2px"><div>Orang Tua / Wali<div class="qg"></div><b>(…………………………)</b></div><div>Wali Asrama<div class="qg"></div><b>(${esc(mus.nama)})</b></div><div>Mengetahui, Mudir<div class="qg"></div><b style="text-decoration:underline">${esc(L.staffAman("syamsul").nama.replace(/^Ust\.\s*/, ""))}</b></div></div>${foot}</div>`;
+    <div class="qttd3" style="margin-top:2px"><div>Orang Tua / Wali<div class="qg"></div><b>(…………………………)</b></div><div>Wali Asrama<div class="qg">${ttdImg(mus && mus.id)}</div><b>(${esc(mus.nama)})</b></div><div>Mengetahui, Mudir<div class="qg">${ttdImg(mdr().id)}</div><b style="text-decoration:underline">${esc(mdr().nama.replace(/^Ust\.\s*/, ""))}</b></div></div>${foot}</div>`;
 }
 
 export function raporDoc(sid, periode) {

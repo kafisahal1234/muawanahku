@@ -1,6 +1,6 @@
 // Fitur sistem standar Google Play & App Store: kata sandi, hapus akun, privasi, bantuan, tentang, unduhan
 import { useState, useEffect } from "preact/hooks";
-import { html, nav, useApp, Icon, Card, SubHeader, Row, Pill, Btn, Empty, Field, Confirm, Hint, Section, PassInput } from "./ui.js";
+import { html, nav, useApp, Icon, Card, SubHeader, Row, Pill, Btn, Empty, Field, Confirm, Hint, Section, PassInput, Sheet } from "./ui.js";
 import { fbSiap, fbUbahSandi, pesanAuth, salahSandi } from "./cloud.js";
 import { S, all, get, put, toast, uid } from "./store.js";
 import { LOGO } from "./data.js";
@@ -110,31 +110,54 @@ export function Privasi() {
     <div class="wrap"><${Card}><div class="prose">
       <p>MuawanahKu adalah aplikasi internal Pondok Tahfidz Modern Kampung Qur'an Al Muawanah untuk mencatat kegiatan belajar santri. Aplikasi ini hanya dipakai pengurus, guru, dan wali santri yang diberi akun oleh pondok.</p>
       <h4>Data yang dikumpulkan</h4><ul><li>Data akun: nama, username, dan peran.</li><li>Data santri: nama, kelas, asrama, dan halaqah.</li>
-      <li>Catatan pendidikan: hafalan, absensi, nilai, mutaba'ah, perizinan, dan pelanggaran, termasuk foto bukti dan tanda tangan pada BAP.</li></ul>
+      <li>Catatan pendidikan: hafalan, absensi, nilai, mutaba'ah, perizinan, dan pelanggaran, termasuk foto bukti dan tanda tangan pada BAP.</li><li>Tanda tangan Mudir, Wadir, dan wali asrama yang mereka simpan sendiri, khusus untuk dicetak pada surat, rapor, dan rekap resmi pondok.</li></ul>
       <h4>Tujuan</h4><p>Data dipakai hanya untuk administrasi pendidikan dan pembinaan santri: rekap, rapor, dan informasi kepada wali. Data tidak dipakai untuk iklan, tidak dijual, dan tidak dibagikan kepada pihak luar.</p>
       <h4>Data anak</h4><p>Sebagian besar santri berusia di bawah 18 tahun. Datanya dikelola pondok sebagai lembaga pendidikan, dengan sepengetahuan wali. Santri tidak memiliki akun sendiri.</p>
       <h4>Siapa yang bisa melihat</h4><ul><li>Wali santri hanya melihat data anaknya sendiri.</li><li>Guru tahfidz dan wali asrama hanya melihat santri halaqah dan asramanya. Guru mapel hanya melihat kelas yang diajar.</li>
       <li>Wadir melihat bidangnya, Wadir Kesantrian hanya pondoknya. Mudir melihat semua.</li><li>Admin mengelola data master tanpa melihat rekap dan nilai.</li></ul>
-      <h4>Izin perangkat</h4><p>Aplikasi hanya meminta akses kamera atau galeri saat Anda mengunggah foto bukti. Tidak ada akses lokasi, kontak, atau mikrofon.</p>
+      <h4>Izin perangkat</h4><p>Aplikasi hanya meminta akses kamera atau galeri saat Anda mengunggah foto (bukti, profil, tanda tangan, atau lampiran Asisten AI), dan mikrofon hanya saat Anda menekan tombol bicara di Asisten AI. Tidak ada akses lokasi atau kontak.</p>
       <h4>Keamanan dan penyimpanan</h4><p>Setiap akun dilindungi kata sandi dan dibatasi sesuai perannya. Kata sandi yang diubah disimpan dalam bentuk acak (hash), bukan teks asli. Data disimpan selama santri belajar di pondok dan sesuai ketentuan arsip pondok.</p>
       <h4>Hak Anda</h4><ul><li>Melihat data sesuai peran Anda.</li><li>Meminta perbaikan data melalui Admin pondok.</li><li>Akun dibuat dan dihapus oleh Admin pondok. Akun wali otomatis terhapus saat data santri dihapus. Untuk penghapusan akun atau data, hubungi Admin pondok.</li></ul>
-      <h4>Kontak</h4><p>Pertanyaan tentang privasi dapat disampaikan kepada Admin pondok, Ustdzh. Khanza Nur Izzati, atau langsung ke kantor pondok.</p>
+      <h4>Kontak</h4><p>Pertanyaan tentang privasi dapat disampaikan kepada Admin resmi pondok melalui WhatsApp di menu Akun → Bantuan, atau langsung ke kantor pondok.</p>
       <p class="small">Draf kebijakan ini perlu ditinjau pondok sebelum aplikasi diterbitkan.</p></div></${Card}></div>`;
 }
 
 const FAQ = [
-  ["Lupa kata sandi?", "Hubungi Admin pondok. Admin akan mengatur ulang kata sandi akun Anda."],
+  ["Lupa kata sandi?", "Hubungi Admin resmi pondok lewat tombol WhatsApp di atas. Admin akan mengatur ulang kata sandi akun Anda."],
+  ["Bagaimana menyimpan tanda tangan?", "Mudir, Wadir, dan wali asrama: buka Akun → Tanda Tangan. Tulis langsung di layar (layar penuh, bisa dimiringkan) atau foto tanda tangan di kertas putih; latar kertas dihapus otomatis. Tanda tangan langsung terpasang di surat, rapor, dan rekap PDF."],
   ["Kenapa ziyadah santri terkunci?", "Ziyadah terkunci bila santri belum lulus tasmi' juz yang selesai, belum lulus manzil pekan lalu, atau sudah setor ziyadah hari ini."],
   ["Bagaimana menghitung nilai setoran?", "Nilai dimulai dari 100 dan berkurang 3 untuk setiap kesalahan. KKM 70. Di bawah 70, setoran diulang hari itu juga."],
   ["Siapa yang mengisi surat izin dan BAP?", "Wadir Kesantrian di masing-masing pondok. Izin langsung tampil di akun wali asrama dan wali santri."],
   ["Kenapa wali tidak bisa melihat rapor?", "Rapor dibagikan langsung oleh pondok saat pembagian rapor. Di aplikasi, wali melihat hafalan, kehadiran, nilai projek, izin, dan catatan."],
   ["Data saya salah, bagaimana memperbaikinya?", "Sampaikan ke Admin pondok. Data master santri dan akun hanya bisa diubah Admin."],
 ];
+// Kontak resmi pondok: nomor WhatsApp diatur Admin/Mudir (Setelan → waPondok), tombol membuka aplikasi WhatsApp
+const nomorTampil = n => { const d = L.waNomor(n); return d ? "+" + d.slice(0, 2) + " " + d.slice(2, 5) + "-" + d.slice(5, 9) + "-" + d.slice(9) : ""; };
+function KontakAdmin() {
+  useApp();
+  const m = me(), bisaAtur = !!m && m.roles.some(r => r === "admin" || r === "mudir"), no = L.setelan().waPondok, [ed, setEd] = useState(false), [v, setV] = useState("");
+  const siapa = m ? `${m.nama} (${m.roles.map(r => L.ROLE_LABEL[r]).join(", ")})` : nav.user && nav.user.kind === "wali" ? `wali dari ${L.santriAman(nav.user.id).nama}` : "";
+  const link = L.waLink(no, `Assalamu'alaikum, Admin Kampung Qur'an Al Muawanah. Saya ${siapa} ingin bertanya tentang aplikasi MuawanahKu: `);
+  const simpan = async () => {
+    if (v.trim() && !L.waNomor(v)) return toast("Nomor belum benar. Contoh: 0812 3456 7890", "err");
+    const lama = (S.data.kalender || {}).setelan || {};
+    if (await put("kalender", "setelan", { ...lama, waPondok: L.waNomor(v) })) { toast(v.trim() ? "Nomor WhatsApp pondok tersimpan" : "Nomor WhatsApp pondok dikosongkan"); setEd(false); }
+  };
+  return html`<div class="card wa-card"><div class="wa-h"><span class="wa-ic" aria-hidden="true"><${Icon} n="chat" s=${24} c="#fff" w=${2.2} /></span>
+      <span><b>Admin Resmi Pondok</b><small>${no ? nomorTampil(no) : "Kampung Qur'an Al Muawanah"}</small></span></div>
+    ${no ? html`<a class="wa-btn" href=${link} target="_blank" rel="noopener">Chat WhatsApp Admin</a><p class="small" style="margin:8px 0 0">Membuka aplikasi WhatsApp dengan pesan pembuka. Jam layanan mengikuti jam kerja kantor pondok.</p>`
+      : html`<p class="small" style="margin:10px 0 0">Nomor WhatsApp resmi pondok belum diatur.${bisaAtur ? "" : " Silakan datang ke kantor pondok pada jam kerja."}</p>`}
+    ${bisaAtur ? html`<button type="button" class="link" style="min-height:40px;margin-top:4px" onClick=${() => { setV(no ? "0" + L.waNomor(no).slice(2) : ""); setEd(true); }}>${no ? "Ubah nomor WhatsApp pondok" : "Atur nomor WhatsApp pondok"}</button>` : null}
+    <${Sheet} open=${ed} title="Nomor WhatsApp resmi pondok" onClose=${() => setEd(false)}>
+      <${Field} label="Nomor WhatsApp admin pondok"><input class="in" type="tel" inputmode="tel" placeholder="0812 3456 7890" value=${v} onInput=${e => setV(e.target.value)} /></${Field}>
+      <p class="small" style="margin:0 0 12px">Tampil di menu Bantuan semua akun (ustadz dan wali). Pakai nomor resmi pondok, bukan nomor pribadi.</p>
+      <${Btn} icon="check" onClick=${simpan}>Simpan nomor</${Btn}></${Sheet}></div>`;
+}
 export function Bantuan() {
   const [o, setO] = useState(-1);
-  return html`<${SubHeader} title="Bantuan" sub="Pertanyaan yang sering diajukan" />
-    <div class="wrap"><${Card}>${FAQ.map(([q, a], i) => html`<button class="menu-row" aria-expanded=${o === i} onClick=${() => setO(o === i ? -1 : i)}><span><b style="font-weight:600">${q}</b>${o === i ? html`<p class="small" style="margin:6px 0 4px;line-height:1.5">${a}</p>` : null}</span><${Icon} n=${o === i ? "down" : "right"} s=${18} /></button>`)}</${Card}>
-    <${Card} title="Butuh bantuan lain?"><p class="small" style="margin:0">Hubungi Admin pondok, Ustdzh. Khanza Nur Izzati, atau datang ke kantor pondok pada jam kerja.</p></${Card}></div>`;
+  return html`<${SubHeader} title="Bantuan" sub="Kontak admin & pertanyaan yang sering diajukan" />
+    <div class="wrap"><${KontakAdmin} /><${Section} t="Pertanyaan yang sering diajukan" /><${Card}>${FAQ.map(([q, a], i) => html`<button class="menu-row" aria-expanded=${o === i} onClick=${() => setO(o === i ? -1 : i)}><span><b style="font-weight:600">${q}</b>${o === i ? html`<p class="small" style="margin:6px 0 4px;line-height:1.5">${a}</p>` : null}</span><${Icon} n=${o === i ? "down" : "right"} s=${18} /></button>`)}</${Card}>
+    <${Card} title="Butuh bantuan lain?"><p class="small" style="margin:0">Hubungi Admin resmi pondok lewat tombol WhatsApp di atas, atau datang ke kantor pondok pada jam kerja.</p></${Card}></div>`;
 }
 
 export function Tentang() {

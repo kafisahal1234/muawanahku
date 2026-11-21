@@ -20,5 +20,5 @@ export const LIBUR_NASIONAL = [
   ["2027-12-25", "Hari Raya Natal", "nasional"], ["2027-12-26", "Isra Mikraj Nabi Muhammad SAW 1449 H", "nasional"],
 ].map(([tgl, nama, jenis]) => ({ tgl, nama, jenis }));
 // Default tahun pelajaran (bisa diubah admin di menu Kalender)
-export const SETELAN_DEFAULT = { tp: "2026/2027", ganjilMulai: "2026-07-13", ganjilMid: "2026-09-26", ganjilSelesai: "2026-12-19",
+export const SETELAN_DEFAULT = { waPondok: "", tp: "2026/2027", ganjilMulai: "2026-07-13", ganjilMid: "2026-09-26", ganjilSelesai: "2026-12-19",
   genapMulai: "2027-01-04", genapMid: "2027-03-27", genapSelesai: "2027-06-19", mulaiPakai: "2026-11-16", abaikan: [] };

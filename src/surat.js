@@ -134,8 +134,8 @@ ${row(keluar ? "Keluar" : "Pulang", waktu(i.keluar))}${row("Batas kembali", `<b>
       : ["Santri kembali ke pondok paling lambat pada batas waktu yang tertulis, diantar wali.", "Bila sakit atau ada halangan, wali mengabari wali asrama sebelum batas kembali.", "Santri menjaga sholat berjamaah dan murojaah minimal 1 halaman setiap hari di rumah."])}
 ${TELAT(keluar ? "pendamping" : "wali yang mengantar")}${keluar ? "" : `<div class="stmt"><b>Pernyataan wali:</b> saya bertanggung jawab atas ananda selama izin dan mengantarnya kembali tepat waktu.</div>`}
 <div class="tgl">${KOTA}, ${tglPanjang(i.ts || Date.now(), false)}</div>
-${ttd(keluar ? [{ r: "Santri", n: s.nama }, { r: "Pendamping", n: i.penjemput }, { r: "Wadir Kesantrian,<br>pemberi izin", n: wadir }]
-      : [{ r: "Wali santri / penjemput", n: i.penjemput }, { r: "Mengetahui,<br>Wali Asrama", n: nm(a.musyrif) }, { r: "Wadir Kesantrian,<br>pemberi izin", n: wadir }])}
+${ttd(keluar ? [{ r: "Santri", n: s.nama }, { r: "Pendamping", n: i.penjemput }, { r: "Wadir Kesantrian,<br>pemberi izin", n: wadir, img: L.ttdOf(i.oleh) }]
+      : [{ r: "Wali santri / penjemput", n: i.penjemput }, { r: "Mengetahui,<br>Wali Asrama", n: nm(a.musyrif), img: L.ttdOf(a.musyrif) }, { r: "Wadir Kesantrian,<br>pemberi izin", n: wadir, img: L.ttdOf(i.oleh) }])}
 ${slip(`${keluar ? "Izin Keluar" : "Izin Pulang"} · ${no}`, s.nama)}`;
   return { judul: `${keluar ? "Surat Izin Keluar" : "Surat Izin Pulang"} ${s.nama}`, html: suratDoc(`Surat Izin ${s.nama}`, [body]) };
 }
@@ -153,7 +153,7 @@ ${grp("Pelanggaran")}${row("Jenis pelanggaran", `<b>${esc(b.pelanggaranNama)}</b
 <div class="tnd"><div class="bt">TINDAKAN</div><b>${esc(namaTindakan(t))}</b>${t.jenis === "skorsing" ? ` · ${tglPanjang(t.mulai || b.tanggal, false)} s.d. ${tglPanjang(new Date(kembaliSkorsing(b).getTime() - 864e5), false)}` : ""}${b.sanksi ? `<div>${esc(b.sanksi)}</div>` : ""}</div>
 <div class="stmt"><b>Pernyataan santri:</b> saya mengakui pelanggaran di atas dan berjanji tidak akan mengulanginya.</div>
 <div class="tgl">${KOTA}, ${tglPanjang(b.tanggal, false)}</div>
-${ttd([{ r: "Santri pelanggar", n: s.nama, img: b.ttdSantri }, { r: "Saksi", n: b.saksi ? b.saksi.replace(/\s*\(.*\)\s*$/, "") : "" }, { r: "Wadir Kesantrian,<br>pembuat berita acara", n: nm(b.oleh), img: b.ttdPetugas }])}`;
+${ttd([{ r: "Santri pelanggar", n: s.nama, img: b.ttdSantri }, { r: "Saksi", n: b.saksi ? b.saksi.replace(/\s*\(.*\)\s*$/, "") : "" }, { r: "Wadir Kesantrian,<br>pembuat berita acara", n: nm(b.oleh), img: b.ttdPetugas || L.ttdOf(b.oleh) }])}`;
   return { judul: `BAP ${s.nama}`, html: suratDoc(`Berita Acara Pelanggaran ${s.nama}`, [body]) };
 }
 
@@ -173,7 +173,7 @@ ${row("Pelanggaran", `<b>${esc(b.pelanggaranNama)}</b> · ${esc(b.tingkat)} · $
 <p>Demikian pemberitahuan ini kami sampaikan. Atas perhatian dan kerja sama Bapak/Ibu, kami ucapkan jazakumullahu khairan.</p>
 <p class="salam">Wassalamu'alaikum warahmatullahi wabarakatuh</p>
 <div class="tgl">${KOTA}, ${tglPanjang(b.tanggal, false)}</div>
-${ttd([{ r: "Mengetahui,<br>Mudir", n: md ? md.nama : "" }, { r: "<br>Wadir Kesantrian", n: nm(b.oleh) }])}`;
+${ttd([{ r: "Mengetahui,<br>Mudir", n: md ? md.nama : "", img: md ? L.ttdOf(md.id) : null }, { r: "<br>Wadir Kesantrian", n: nm(b.oleh), img: L.ttdOf(b.oleh) }])}`;
   return { judul: `Pemberitahuan Pelanggaran ${s.nama}`, html: suratDoc(`Pemberitahuan Pelanggaran ${s.nama}`, [body]) };
 }
 
@@ -192,7 +192,7 @@ ${row("Total poin", `${L.poinSantri(b.santri).total} poin`)}${row("Masa berlaku"
       `Apabila dalam masa berlaku peringatan santri kembali melakukan pelanggaran sedang atau berat, pondok akan memberikan <b>${lanjut}</b>.`,
       "Surat ini disampaikan kepada wali santri sebagai pemberitahuan dan bahan pembinaan di rumah."])}
 <div class="tgl">${KOTA}, ${tglPanjang(b.tanggal, false)}</div>
-${ttd([{ r: "Santri", n: s.nama }, { r: "Wali santri", n: s.ayah || "" }, { r: "Wadir Kesantrian", n: nm(b.oleh) }, { r: "Mengetahui,<br>Mudir", n: md ? md.nama : "" }])}`;
+${ttd([{ r: "Santri", n: s.nama }, { r: "Wali santri", n: s.ayah || "" }, { r: "Wadir Kesantrian", n: nm(b.oleh), img: L.ttdOf(b.oleh) }, { r: "Mengetahui,<br>Mudir", n: md ? md.nama : "", img: md ? L.ttdOf(md.id) : null }])}`;
   return { judul: `SP-${k} ${s.nama}`, html: suratDoc(`Surat Peringatan ${k} ${s.nama}`, [body]) };
 }
 
@@ -210,7 +210,7 @@ ${row("Masa skorsing", `${tglPanjang(mulai)} s.d. ${tglPanjang(akhir)}`)}${row("
       `Wali mengantar santri kembali pada waktu yang ditentukan dan melapor kepada Kesantrian. Pelanggaran berat berikutnya dapat berujung pada pengembalian santri kepada orang tua.${b.sanksi ? " " + esc(b.sanksi) : ""}`])}
 ${TELAT("wali")}
 <div class="tgl">${KOTA}, ${tglPanjang(b.tanggal, false)}</div>
-${ttd([{ r: "Wali santri,<br>yang menerima", n: s.ayah || "" }, { r: "<br>Wadir Kesantrian", n: nm(b.oleh) }, { r: "Memutuskan,<br>Mudir", n: md ? md.nama : "" }])}
+${ttd([{ r: "Wali santri,<br>yang menerima", n: s.ayah || "" }, { r: "<br>Wadir Kesantrian", n: nm(b.oleh), img: L.ttdOf(b.oleh) }, { r: "Memutuskan,<br>Mudir", n: md ? md.nama : "", img: md ? L.ttdOf(md.id) : null }])}
 ${slip(`Skorsing · ${no}`, s.nama)}`;
   return { judul: `Skorsing ${s.nama}`, html: suratDoc(`Surat Skorsing ${s.nama}`, [body]) };
 }
@@ -227,7 +227,7 @@ ${row("Berlaku sejak", `<b>${tglPanjang((b.tindakan && b.tindakan.mulai) || b.ta
       "Barang pribadi santri diambil bersama wali asrama dan dicatat serah terimanya.", "Urusan administrasi diselesaikan bersama bagian administrasi pondok.",
       "Pondok tetap mendoakan kebaikan ananda dan terbuka untuk silaturahim."])}
 <div class="tgl">${KOTA}, ${tglPanjang(b.tanggal, false)}</div>
-${ttd([{ r: "Orang tua / wali,<br>yang menerima", n: s.ayah || "" }, { r: "<br>Wadir Kesantrian", n: nm(b.oleh) }, { r: "Memutuskan,<br>Mudir", n: md ? md.nama : "" }])}`;
+${ttd([{ r: "Orang tua / wali,<br>yang menerima", n: s.ayah || "" }, { r: "<br>Wadir Kesantrian", n: nm(b.oleh), img: L.ttdOf(b.oleh) }, { r: "Memutuskan,<br>Mudir", n: md ? md.nama : "", img: md ? L.ttdOf(md.id) : null }])}`;
   return { judul: `Pengembalian ${s.nama}`, html: suratDoc(`Surat Pengembalian Santri ${s.nama}`, [body]) };
 }
 

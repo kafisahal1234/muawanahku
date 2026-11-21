@@ -59,7 +59,7 @@ function kopJpeg() {
   return kopP;
 }
 // Rekap / tabel → PDF asli. bagian: [{ judul, kol: [...], rows: [[...]] }]
-export async function tabelKePdf({ judul, sub, catatan, bagian, oleh }) {
+export async function tabelKePdf({ judul, sub, catatan, bagian, oleh, ttd }) {
   const { jsPDF, autoTable } = await muatPdf();
   const kop = await kopJpeg();
   const lebar = Math.max(...bagian.map(b => b.kol.length)) > 8;
@@ -101,6 +101,18 @@ export async function tabelKePdf({ judul, sub, catatan, bagian, oleh }) {
     });
     y = pdf.lastAutoTable.finalY + 8;
     if (y > H - 30) { pdf.addPage(); kepala(); y = kopH + 8; }
+  }
+  if (ttd && ttd.img) {
+    // Metro, tanggal · jabatan · tanda tangan · nama (rata kanan)
+    if (y > H - 54) { pdf.addPage(); kepala(); y = kopH + 10; } else y -= 2;
+    const bw = 70, cx = W - M - bw / 2, d = new Date(), BLN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor(...NAVY);
+    pdf.text(`Metro, ${d.getDate()} ${BLN[d.getMonth()]} ${d.getFullYear()}`, cx, y + 2, { align: "center" });
+    pdf.text(ttd.jabatan || "", cx, y + 6.5, { align: "center" });
+    const r = (ttd.h || 1) / (ttd.w || 1), iw = Math.min(46, 20 / r), ih = iw * r;
+    try { pdf.addImage(ttd.img, "PNG", cx - iw / 2, y + 8 + (20 - ih) / 2, iw, ih, "ttd", "FAST"); } catch (e) { }
+    pdf.setFont("helvetica", "bold"); pdf.text(String(ttd.nama || "").replace(/^Ust(dzh)?\.\s*/, ""), cx, y + 33, { align: "center" });
+    const tw = pdf.getTextWidth(String(ttd.nama || "").replace(/^Ust(dzh)?\.\s*/, "")); pdf.setDrawColor(...NAVY); pdf.setLineWidth(0.25); pdf.line(cx - tw / 2, y + 34, cx + tw / 2, y + 34);
   }
   kaki();
   return pdf.output("blob");
