@@ -561,3 +561,10 @@ input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--g);outline:n
   .app.nonav{background:var(--g) var(--orn) repeat!important;background-size:72px!important}
 }
 .sum-row{flex-wrap:wrap;row-gap:2px}
+
+/* v8 surat resmi otomatis */
+.surat-prev{margin:0 auto;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 6px 22px rgba(10,40,25,.18);border:1px solid #CFD8D3}
+.surat-prev iframe{border:0;display:block;background:#fff}
+.saran-t{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:#FFF6E3;border:1.5px solid #E8C36F;border-radius:14px;padding:10px 12px;margin:0 0 10px;color:#5C3D05;font:inherit;cursor:pointer}
+.saran-t svg{flex:none;color:#C3860D;margin-top:1px}.saran-t b{display:block;font-size:14px}.saran-t small{font-size:12.5px;color:#7A5A1C}
+.saran-t.on{background:#FCE9BF;border-color:#C3860D;box-shadow:inset 0 0 0 1px #C3860D}

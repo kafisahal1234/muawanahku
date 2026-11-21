@@ -251,7 +251,7 @@ export function WaliBeranda() {
   const s = L.santriById(nav.user.id), a = L.asramaById(s.asrama);
   const kab = [];
   L.setoranSantri(s.id).forEach(r => kab.push([r.ts, r.jenis === "tasmi" ? `Tasmi' Juz ${r.juz} ${r.lulus ? "lulus" : "diulang"} · nilai ${r.nilai}` : r.jenis === "ziyadah" ? `Ziyadah ${r.baris} baris · nilai ${r.nilai}` : `${r.jenis === "manzil" ? "Manzil" : "Murojaah"} · nilai ${r.nilai}`, "bookopen"]));
-  all("izin").filter(i => i.santri === s.id).forEach(i => kab.push([i.ts, `Izin ${i.jenis.toLowerCase()} sampai ${L.fmtDT(i.kembali)}`, "door", () => nav.go("izinView", { id: i.id })]));
+  all("izin").filter(i => i.santri === s.id).forEach(i => kab.push([i.ts, `${i.jenis === "Skorsing" ? "Skorsing" : "Izin " + i.jenis.toLowerCase()} sampai ${L.fmtDT(i.kembali)}`, "door", () => nav.go("izinView", { id: i.id })]));
   all("bap").filter(b => b.santri === s.id).forEach(b => kab.push([b.ts, `Catatan pelanggaran: ${b.pelanggaranNama}`, "clipboard", () => nav.go("bapView", { id: b.id })]));
   L.motdCatatan(s.id).forEach(c => kab.push([c.ts || 0, `${c.st === "A" ? "Alpa" : "Masbuq"} ${L.WAKTU.find(x => x[0] === c.waktu)[1]} · pelanggaran ringan`, "moon"]));
   kab.sort((x, y) => y[0] - x[0]);

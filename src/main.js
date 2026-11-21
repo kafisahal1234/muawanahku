@@ -32,7 +32,7 @@ const SCREENS = {
   motd: A.Motd, mutabaah: A.Mutabaah, izinCatatan: A.IzinCatatan,
   mapel: M.Mapel, absenKelasPilih: M.AbsenKelasPilih, absenKelas: M.AbsenKelas, nilaiPilih: M.NilaiPilih, nilaiMapel: M.NilaiMapel, rekapKelasPilih: M.RekapKelasPilih, rekapKelas: M.RekapKelas,
   kurikulum: K.Kurikulum, jamPelajaran: K.JamPelajaran, jadwal: K.Jadwal, pengampu: K.Pengampu, kinerjaGuru: K.KinerjaGuru, rekapKehadiran: K.RekapKehadiran, rekapNilai: K.RekapNilai, rekapIzinGuru: K.RekapIzinGuru,
-  kesantrian: KS.Kesantrian, suratIzin: KS.SuratIzin, izinView: KS.IzinView, catatKembali: KS.CatatKembali, formBap: KS.FormBap, bapView: KS.BapView, histori: KS.Histori, rekapIzin: KS.RekapIzin, rekapPelanggaran: KS.RekapPelanggaran, rekapMotd: KS.RekapMotd,
+  kesantrian: KS.Kesantrian, suratIzin: KS.SuratIzin, izinView: KS.IzinView, catatKembali: KS.CatatKembali, formBap: KS.FormBap, bapView: KS.BapView, surat: KS.SuratView, histori: KS.Histori, rekapIzin: KS.RekapIzin, rekapPelanggaran: KS.RekapPelanggaran, rekapMotd: KS.RekapMotd,
   pengelolaan: W.Pengelolaan, dataAwal: W.DataAwal, targetHafalan: W.TargetHafalan, kinerjaTahfidz: W.KinerjaTahfidz, rekapHalaqah: W.RekapHalaqah, peringkat: W.Peringkat, rekapTasmi: W.RekapTasmi, bawahKkm: W.BawahKkm,
   dataMaster: AD.DataMaster, santriAdmin: AD.SantriAdmin, akunAdmin: AD.AkunAdmin, asramaAdmin: AD.AsramaAdmin, kelasAdmin: AD.KelasAdmin, impor: AI.ImporSantri, imporAwal: AI.ImporAwal, asisten: AS.Asisten, imporJadwal: AI.ImporJadwal, pengumuman: AD.Pengumuman,
   ubahSandi: SY.UbahSandi, privasi: SY.Privasi, bantuan: SY.Bantuan, tentang: SY.Tentang,

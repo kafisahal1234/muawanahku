@@ -4,9 +4,10 @@ import { all, get, put, toast, uid } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
 import { me, SantriPicker, compressImage } from "./common.js";
-import { useDownloads, unduh, docHtml, esc } from "./s_system.js";
+import { useDownloads, unduh } from "./s_system.js";
 import { AiBtn, useAIRun } from "./s_ai.js";
 import { tanyaAI, SISTEM_DASAR } from "./ai.js";
+import { TINDAKAN, tindakanById, namaTindakan, saranTindakan, suratUntukBap, buatSurat, nomorIzin, nomorBap, selesaiSkorsing } from "./surat.js";
 
 const inPondok = (p, sid) => { const s = L.santriById(sid); return s && (!p || L.pondokOfSantri(s) === p); };
 
@@ -28,7 +29,7 @@ export function Kesantrian({ pondok }) {
       <${Tile} icon="alert" label="Rekap Pelanggaran" color="pink" onClick=${() => nav.go("rekapPelanggaran", { pondok: p })} />
 </div></${Card}>
     <${Card} title="Santri sedang izin" right=${html`<${Pill} t=${iz.length + " santri"} tone="gold" />`}>${iz.length ? html`<div class="list">${iz.map(i => { const s = L.santriById(i.santri);
-      return html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${i.jenis} · kembali ${L.fmtDT(i.kembali)}`} right=${html`<${Pill} t=${L.terlambat(i) ? "Terlambat" : i.jenis === "Keluar" ? "Keluar" : "Di rumah"} tone=${L.terlambat(i) ? "red" : "gold"} />`} onClick=${() => nav.go("izinView", { id: i.id })} />`; })}</div>`
+      return html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${i.jenis} · kembali ${L.fmtDT(i.kembali)}`} right=${html`<${Pill} t=${L.terlambat(i) ? "Terlambat" : i.jenis === "Keluar" ? "Keluar" : i.jenis === "Skorsing" ? "Skorsing" : "Di rumah"} tone=${L.terlambat(i) || i.jenis === "Skorsing" ? "red" : "gold"} />`} onClick=${() => nav.go("izinView", { id: i.id })} />`; })}</div>`
       : html`<${Empty} t="Tidak ada santri yang sedang izin." icon="check" />`}</${Card}></div>`;
 }
 
@@ -37,8 +38,13 @@ export function SuratIzin() {
   useApp();
   const p = me().pondok, list = L.santriList().filter(s => L.pondokOfSantri(s) === p);
   const now = new Date(), back = new Date(now.getTime() + 2 * 864e5); back.setHours(17, 0, 0, 0);
-  const [f, setF] = useState({ santri: "", jenis: "Perpulangan", alasan: "", keluar: local(now), kembali: local(back), penjemput: "", hp: "" });
-  const set = (k, v) => setF({ ...f, [k]: v });
+  const [f, setF] = useState({ santri: "", jenis: "Perpulangan", alasan: "", keluar: local(now), kembali: local(back), penjemput: "" });
+  const set = (k, v) => setF(x => {
+    const n = { ...x, [k]: v };
+    if (k === "santri" && !x.penjemput && v) { const s = L.santriById(v); if (s && s.ayah && n.jenis !== "Keluar") n.penjemput = `Bapak ${s.ayah} (ayah)`; }
+    if (k === "jenis" && v === "Keluar") { const t = new Date(); t.setHours(t.getHours() + 3, 0, 0, 0); n.kembali = local(t); if (/\((ayah|ibu)\)$/.test(x.penjemput)) n.penjemput = ""; }
+    return n; });
+  const sw = f.santri ? L.santriById(f.santri) : null;
   const [ask, setAsk] = useState(false);
   const save = async () => {
     setAsk(false); const id = uid("i");
@@ -52,8 +58,7 @@ export function SuratIzin() {
       <${Field} label="Alasan"><textarea class="in" value=${f.alasan} placeholder="Misal: acara keluarga" onInput=${e => set("alasan", e.target.value)}></textarea></${Field}></${Card}>
     <${Card} title="Waktu dan penjemput"><div class="btn-row"><${Field} label="Keluar"><input type="datetime-local" class="in" value=${f.keluar} onInput=${e => set("keluar", e.target.value)} /></${Field}>
       <${Field} label="Kembali"><input type="datetime-local" class="in" value=${f.kembali} onInput=${e => set("kembali", e.target.value)} /></${Field}></div>
-      <${Field} label="Penjemput"><input class="in" value=${f.penjemput} placeholder="Nama dan hubungan" onInput=${e => set("penjemput", e.target.value)} /></${Field}>
-      <${Field} label="No. HP penjemput"><input class="in" inputmode="tel" value=${f.hp} onInput=${e => set("hp", e.target.value)} /></${Field}></${Card}>
+      <${Field} label=${f.jenis === "Keluar" ? "Pendamping" : "Penjemput"} hint=${sw ? (sw.hpWali ? `No. HP mengikuti data wali: ${sw.hpWali}` : "No. HP mengikuti data wali (diisi Admin di biodata santri).") : ""}><input class="in" value=${f.penjemput} placeholder=${f.jenis === "Keluar" ? "Misal: Ust. pembina asrama" : "Nama dan hubungan, misal Bapak Hasan (ayah)"} onInput=${e => set("penjemput", e.target.value)} /></${Field}></${Card}>
     <div class="sticky-act"><${Btn} disabled=${!ok} onClick=${() => setAsk(true)} icon="check">Simpan surat izin</${Btn}></div>
     <${Confirm} open=${ask} title="Simpan surat izin?" text=${ok ? `${L.santriById(f.santri).nama} · ${f.jenis} sampai ${L.fmtDT(new Date(f.kembali).toISOString())}.` : ""} yes="Simpan" onYes=${save} onNo=${() => setAsk(false)} /></div>`;
 }
@@ -61,19 +66,14 @@ export function SuratIzin() {
 export function IzinView({ id }) {
   useApp();
   const i0 = get("izin", id), i = i0 && (!nav.user || nav.user.kind !== "wali" || i0.santri === nav.user.id) ? i0 : null; if (!i) return html`<${SubHeader} title="Surat Izin" /><div class="wrap"><${Empty} t="Data tidak ditemukan." /></div>`;
-  const s = L.santriById(i.santri), a = L.asramaById(s.asrama), dlOk = useDownloads();
-  const doc = () => docHtml("Surat Izin " + s.nama, `<h1>SURAT IZIN ${esc(i.jenis.toUpperCase())}</h1><table class="id">
-<tr><td>Nama santri</td><td>: <b>${esc(s.nama)}</b></td></tr><tr><td>Kelas / asrama</td><td>: ${esc(s.kelas)} · ${esc(a.nama)} · Pondok ${L.pondokOfSantri(s)}</td></tr>
-<tr><td>Alasan</td><td>: ${esc(i.alasan)}</td></tr><tr><td>Keluar</td><td>: ${esc(L.fmtDT(i.keluar))}</td></tr><tr><td>Kembali</td><td>: ${esc(L.fmtDT(i.kembali))}</td></tr>
-<tr><td>Penjemput</td><td>: ${esc(i.penjemput || "—")} ${i.hp ? "· " + esc(i.hp) : ""}</td></tr></table>
-<div class="ttd"><div>Penjemput<div class="g"></div><b>${esc(i.penjemput || "")}</b></div><div>Wadir Kesantrian<div class="g"></div><b>${esc(L.staffById(i.oleh).nama)}</b></div></div>`);
-  return html`<${SubHeader} title="Surat Izin" sub=${i.status === "aktif" ? "Sedang berlaku" : "Sudah kembali"} />
-    <div class="wrap"><div class="surat"><h4>SURAT IZIN ${i.jenis.toUpperCase()}</h4><p class="c">Kampung Qur'an Al Muawanah · Pondok ${L.pondokOfSantri(s)}</p>
+  const s = L.santriById(i.santri), a = L.asramaById(s.asrama), sk = i.jenis === "Skorsing";
+  return html`<${SubHeader} title=${sk ? "Skorsing" : "Surat Izin"} sub=${i.status === "aktif" ? "Sedang berlaku" : "Sudah kembali"} />
+    <div class="wrap"><div class="surat"><h4>${sk ? "SKORSING" : "SURAT IZIN " + i.jenis.toUpperCase()}</h4><p class="c">No. ${nomorIzin(i)} · Pondok ${L.pondokOfSantri(s)}</p>
       <div class="kv"><span>Nama santri</span><b>${s.nama}</b></div><div class="kv"><span>Kelas / asrama</span><b>${s.kelas} · ${a.nama}</b></div>
       <div class="kv"><span>Alasan</span><b>${i.alasan}</b></div><div class="kv"><span>Keluar</span><b>${L.fmtDT(i.keluar)}</b></div><div class="kv"><span>Kembali</span><b>${L.fmtDT(i.kembali)}</b></div>
-      <div class="kv"><span>Penjemput</span><b>${i.penjemput || "—"} ${i.hp ? "· " + i.hp : ""}</b></div><div class="kv"><span>Dicatat oleh</span><b>${L.staffById(i.oleh).nama}</b></div>
+      <div class="kv"><span>${i.jenis === "Keluar" ? "Pendamping" : "Penjemput"}</span><b>${i.penjemput || "—"}</b></div>${s.hpWali ? html`<div class="kv"><span>No. HP wali</span><b>${s.hpWali}</b></div>` : null}<div class="kv"><span>Dicatat oleh</span><b>${L.staffById(i.oleh).nama}</b></div>
       ${i.status !== "aktif" ? html`<div class="kv"><span>Kembali pada</span><b>${L.fmtDT(i.kembaliAktual)} ${i.telat ? "· terlambat" : ""}</b></div>` : null}</div>
-    ${dlOk ? html`<div class="mt12"><${Btn} kind="outline" icon="download" onClick=${() => unduh(`Surat Izin ${s.nama}.html`, doc())}>Unduh surat untuk dicetak</${Btn}></div>` : null}</div>`;
+    <div class="mt12"><${Btn} kind="outline" icon="file" onClick=${() => sk && i.bap ? nav.go("surat", { jenis: "skorsing", id: i.bap }) : nav.go("surat", { jenis: "izin", id: i.id })}>${sk ? "Lihat surat skorsing" : "Lihat & cetak surat izin"}</${Btn}></div></div>`;
 }
 
 export function CatatKembali() {
@@ -107,7 +107,7 @@ function SigPad({ value, onChange, label }) {
 export function FormBap() {
   useApp();
   const p = me().pondok, list = L.santriList().filter(s => L.pondokOfSantri(s) === p);
-  const [f, setF] = useState({ santri: "", tanggal: L.today(), tempat: "", pel: "", kronologi: "", saksi: "", sanksi: "", foto: "", ttdSantri: "", ttdPetugas: "" });
+  const [f, setF] = useState({ santri: "", tanggal: L.today(), tempat: "", pel: "", kronologi: "", saksi: "", sanksi: "", foto: "", ttdSantri: "", ttdPetugas: "", tindakan: "", hari: 7, mulai: L.today() });
   const set = (k, v) => setF(x => ({ ...x, [k]: v }));
   const pel = DATA.pelanggaran.find(x => x.id === f.pel);
   const [ask, setAsk] = useState(false);
@@ -124,10 +124,19 @@ Jawab JSON: {"kronologi":"","pelanggaran_id":null}` });
     setF(x => ({ ...x, kronologi: j.kronologi || x.kronologi, pel: x.pel || (DATA.pelanggaran.some(p => p.id === j.pelanggaran_id) ? j.pelanggaran_id : "") }));
     toast(f.pel || !j.pelanggaran_id ? "Kronologi dirapikan. Periksa kembali." : "Kronologi dirapikan dan jenis pelanggaran disarankan. Periksa kembali.");
   });
+  const saran = f.santri && pel ? saranTindakan(f.santri, pel) : null;
+  const jt = f.tindakan || (saran ? saran.jenis : "teguran"), hari = Math.max(1, Math.min(30, Number(f.hari) || 7));
+  const tindakan = { jenis: jt, ...(jt === "skorsing" ? { hari, mulai: f.mulai || f.tanggal } : jt === "kembali" ? { mulai: f.mulai || f.tanggal } : {}) };
   const save = async () => {
-    setAsk(false); const id = uid("b");
-    if (await put("bap", id, { santri: f.santri, tanggal: f.tanggal, tempat: f.tempat, pelanggaran: pel.id, pelanggaranNama: pel.nama, tingkat: pel.tingkat, poin: pel.poin, kronologi: f.kronologi, saksi: f.saksi, sanksi: f.sanksi, foto: f.foto, ttdSantri: f.ttdSantri, ttdPetugas: f.ttdPetugas, oleh: me().id, ts: Date.now() })) {
-      toast(`BAP tersimpan, ${pel.poin} poin masuk histori santri`); nav.replace("bapView", { id });
+    setAsk(false); const id = uid("b"), now = Date.now();
+    const rec = { santri: f.santri, tanggal: f.tanggal, tempat: f.tempat, pelanggaran: pel.id, pelanggaranNama: pel.nama, tingkat: pel.tingkat, poin: pel.poin, kronologi: f.kronologi, saksi: f.saksi, sanksi: f.sanksi, foto: f.foto, ttdSantri: f.ttdSantri, ttdPetugas: f.ttdPetugas, tindakan, oleh: me().id, ts: now };
+    if (await put("bap", id, rec)) {
+      if (jt === "skorsing") { // sistem otomatis mencatat santri sedang skorsing (muncul di daftar izin, Catat Kembali, dan akun wali)
+        const s0 = L.santriById(f.santri), mulai = L.parseYmd(tindakan.mulai); const jamNow = new Date(); mulai.setHours(jamNow.getHours(), jamNow.getMinutes(), 0, 0);
+        await put("izin", uid("i"), { santri: f.santri, jenis: "Skorsing", alasan: `Skorsing ${hari} hari · ${pel.nama}`, keluar: mulai.toISOString(), kembali: selesaiSkorsing({ ...rec, id }).toISOString(), penjemput: s0.ayah ? `Bapak ${s0.ayah} (ayah)` : "Wali santri", status: "aktif", bap: id, oleh: me().id, ts: now + 1 });
+      }
+      const n = suratUntukBap({ ...rec, id }).length;
+      toast(`BAP tersimpan · ${pel.poin} poin · ${n} surat dibuat otomatis`); nav.replace("bapView", { id });
     }
   };
   const s = f.santri ? L.santriById(f.santri) : null, ps = s ? L.poinSantri(s.id) : null;
@@ -141,22 +150,30 @@ Jawab JSON: {"kronologi":"","pelanggaran_id":null}` });
       <${Field} label="Kronologi"><textarea class="in" value=${f.kronologi} onInput=${e => set("kronologi", e.target.value)} placeholder="Ceritakan singkat kejadiannya"></textarea></${Field}>
       <${AiBtn} kecil label=${f.pel ? "Rapikan kronologi" : "Rapikan & sarankan jenis pelanggaran"} busy=${aiBusy} onClick=${() => (f.kronologi.trim().length > 10 ? rapikan() : toast("Tulis kronologinya dulu", "err"))} />
       <${Field} label="Saksi"><input class="in" value=${f.saksi} onInput=${e => set("saksi", e.target.value)} placeholder="Misal: Ust. Ugi (wali asrama)" /></${Field}></${Card}>
+    <${Card} title="Tindakan" right=${saran ? html`<${Pill} t=${"Total " + saran.total + " poin"} tone="red" />` : null}>
+      ${saran ? html`<button type="button" class=${"saran-t" + (jt === saran.jenis ? " on" : "")} onClick=${() => setF(x => ({ ...x, tindakan: saran.jenis, hari: saran.hari || x.hari }))}><${Icon} n="sparkle" /><span><b>Saran sistem: ${namaTindakan(saran)}</b><small>${saran.alasan}</small></span></button>` : html`<p class="small">Pilih santri dan jenis pelanggaran, sistem akan menyarankan tindakan sesuai poin dan riwayat SP.</p>`}
+      <${Field} label="Jenis tindakan"><select class="in" value=${jt} onChange=${e => set("tindakan", e.target.value)}>${TINDAKAN.map(t => html`<option value=${t.id}>${t.nama}</option>`)}</select></${Field}>
+      ${jt === "skorsing" ? html`<div class="btn-row"><${Field} label="Lama skorsing (hari)"><input type="number" min="1" max="30" class="in" value=${f.hari} onInput=${e => set("hari", e.target.value)} /></${Field}>
+        <${Field} label="Mulai"><input type="date" class="in" value=${f.mulai} onInput=${e => set("mulai", e.target.value)} /></${Field}></div>` : null}
+      ${jt === "kembali" ? html`<${Field} label="Berlaku sejak"><input type="date" class="in" value=${f.mulai} onInput=${e => set("mulai", e.target.value)} /></${Field}>` : null}
+      <${Field} label="Keterangan tindakan"><textarea class="in" value=${f.sanksi} onInput=${e => set("sanksi", e.target.value)} placeholder="Misal: HP disita sampai perpulangan, membersihkan masjid 3 hari"></textarea></${Field}>
+      ${pel ? html`<p class="small">Surat otomatis: Berita Acara, Pemberitahuan ke wali${tindakanById(jt).surat === "sp" ? ", Surat Peringatan" : jt === "skorsing" ? ", Surat Keputusan Skorsing" : jt === "kembali" ? ", Surat Pengembalian Santri" : ""}.</p>` : null}</${Card}>
     <${Card} title="Bukti dan tanda tangan"><${Field} label="Foto bukti"><input type="file" accept="image/*" class="in" onChange=${foto} />${f.foto ? html`<img class="photo" src=${f.foto} alt="Foto bukti" />` : null}</${Field}>
-      <div class="btn-row"><${SigPad} label="Santri" value=${f.ttdSantri} onChange=${v => set("ttdSantri", v)} /><${SigPad} label="Petugas" value=${f.ttdPetugas} onChange=${v => set("ttdPetugas", v)} /></div>
-      <${Field} label="Sanksi"><textarea class="in" value=${f.sanksi} onInput=${e => set("sanksi", e.target.value)} placeholder="Misal: HP disita sampai perpulangan"></textarea></${Field}></${Card}>
+      <div class="btn-row"><${SigPad} label="Santri" value=${f.ttdSantri} onChange=${v => set("ttdSantri", v)} /><${SigPad} label="Petugas" value=${f.ttdPetugas} onChange=${v => set("ttdPetugas", v)} /></div></${Card}>
     <div class="sticky-act"><${Btn} disabled=${!ok} onClick=${() => setAsk(true)} icon="check">Simpan BAP</${Btn}></div>
-    <${Confirm} open=${ask} title="Simpan BAP?" text=${ok ? `${L.santriById(f.santri).nama}: ${pel.nama} (${pel.poin} poin).` : ""} yes="Simpan" onYes=${save} onNo=${() => setAsk(false)} /></div>`;
+    <${Confirm} open=${ask} title="Simpan BAP?" text=${ok ? `${L.santriById(f.santri).nama}: ${pel.nama} (${pel.poin} poin). Tindakan: ${namaTindakan(tindakan)}.` : ""} yes="Simpan" onYes=${save} onNo=${() => setAsk(false)} /></div>`;
 }
 
 export function BapView({ id }) {
   useApp();
   const b0 = get("bap", id), b = b0 && (!nav.user || nav.user.kind !== "wali" || b0.santri === nav.user.id) ? b0 : null; if (!b) return html`<${SubHeader} title="BAP" /><div class="wrap"><${Empty} t="Data tidak ditemukan." /></div>`;
-  const s = L.santriById(b.santri);
+  const s = L.santriById(b.santri), wali = nav.user && nav.user.kind === "wali", daftar = suratUntukBap(b, wali);
   return html`<${SubHeader} title="Berita Acara Pelanggaran" sub=${L.fmtTgl(b.tanggal)} />
-    <div class="wrap"><div class="surat"><h4>BERITA ACARA PELANGGARAN</h4><p class="c">Kampung Qur'an Al Muawanah · Pondok ${L.pondokOfSantri(s)}</p>
+    <div class="wrap"><${Card} title="Surat otomatis" right=${html`<${Pill} t=${daftar.length + " surat"} tone="gold" />`}><div class="list">${daftar.map(d => html`<${Row} name=${d.nama} sub=${d.ket} icon=${html`<${Icon} n="file" s=${18} />`} onClick=${() => nav.go("surat", { jenis: d.jenis, id: b.id })} />`)}</div></${Card}>
+    <div class="surat"><h4>BERITA ACARA PELANGGARAN</h4><p class="c">No. ${nomorBap(b)} · Pondok ${L.pondokOfSantri(s)}</p>
       <div class="kv"><span>Santri</span><b>${s.nama} · ${s.kelas}</b></div><div class="kv"><span>Asrama</span><b>${L.asramaById(s.asrama).nama}</b></div>
       <div class="kv"><span>Tanggal / tempat</span><b>${L.fmtTgl(b.tanggal)} · ${b.tempat || "—"}</b></div><div class="kv"><span>Pelanggaran</span><b>${b.pelanggaranNama} · ${b.tingkat} · ${b.poin} poin</b></div>
-      <div class="kv"><span>Kronologi</span><b>${b.kronologi}</b></div><div class="kv"><span>Saksi</span><b>${b.saksi || "—"}</b></div><div class="kv"><span>Sanksi</span><b>${b.sanksi || "—"}</b></div>
+      <div class="kv"><span>Kronologi</span><b>${b.kronologi}</b></div><div class="kv"><span>Saksi</span><b>${b.saksi || "—"}</b></div><div class="kv"><span>Tindakan</span><b>${b.tindakan ? namaTindakan(b.tindakan) : "—"}${b.sanksi ? " · " + b.sanksi : ""}</b></div>
       ${b.foto ? html`<img class="photo" src=${b.foto} alt="Foto bukti" />` : null}
       <div class="btn-row mt12">${[["Santri", b.ttdSantri], ["Petugas", b.ttdPetugas]].map(([l, v]) => html`<div class="center"><div style="height:70px;border-bottom:1px solid #9AB0A5">${v ? html`<img src=${v} alt=${"Tanda tangan " + l} style="height:70px" />` : null}</div><small class="small">${l}</small></div>`)}</div>
       <p class="small mt8">Dicatat oleh ${L.staffById(b.oleh).nama}</p></div></div>`;
@@ -196,4 +213,23 @@ export function RekapMotd({ pondok }) {
       const today = L.WAKTU.filter(([w]) => get("motd", L.motdKey(a.id, tgl, w))).length;
       let al = 0, mb = 0; all("motd").filter(d => d.asrama === a.id && d.tanggal >= wk).forEach(d => Object.entries(d.status).forEach(([id, v]) => { if (ids.has(id)) { if (v === "A") al++; if (v === "M") mb++; } }));
       return html`<${Card} title=${a.nama} right=${html`<small>${L.staffById(a.musyrif).pendek}</small>`}><div class="stats"><${Stat} label="Diabsen hari ini" value=${`${today}/8`} tone=${today < 8 ? "gold" : ""} /><${Stat} label="Alpa pekan ini" value=${al} tone=${al ? "red" : ""} /><${Stat} label="Masbuq" value=${mb} tone=${mb ? "blue" : ""} /></div></${Card}>`; })}</div>`;
+}
+
+// Pratinjau surat A4 + cetak/simpan PDF + unduh
+function useLebar() {
+  const [w, setW] = useState(() => Math.min(window.innerWidth || 390, 840));
+  useEffect(() => { const f = () => setW(Math.min(window.innerWidth || 390, 840)); window.addEventListener("resize", f); return () => window.removeEventListener("resize", f); }, []);
+  return w;
+}
+export function SuratView({ jenis, id }) {
+  useApp();
+  const rec = jenis === "izin" ? get("izin", id) : get("bap", id), wali = nav.user && nav.user.kind === "wali";
+  const w = useLebar(), ref = useRef(null), dlOk = useDownloads();
+  if (!rec || (wali && (rec.santri !== nav.user.id || jenis === "bap"))) return html`<${SubHeader} title="Surat" /><div class="wrap"><${Empty} t="Surat tidak ditemukan." /></div>`;
+  const sr = buatSurat(jenis, id), k = Math.min(1, (Math.min(w, 840) - 32) / 794);
+  const cetak = () => { try { const fw = ref.current.contentWindow; fw.focus(); fw.print(); } catch (e) { toast("Cetak tidak tersedia di tampilan ini. Pakai tombol Unduh.", "err"); } };
+  return html`<${SubHeader} title=${sr.judul} sub="Dibuat otomatis oleh sistem · siap cetak A4" />
+    <div class="wrap"><div class="surat-prev" style=${`width:${794 * k}px;height:${1123 * k}px`}><iframe ref=${ref} title="Pratinjau surat" srcdoc=${sr.html} style=${`width:794px;height:1123px;transform:scale(${k});transform-origin:0 0`}></iframe></div>
+      <p class="small center mt8">Tombol Cetak juga bisa dipakai untuk menyimpan sebagai PDF.</p>
+      <div class="sticky-act"><div class="btn-row"><${Btn} icon="printer" onClick=${cetak}>Cetak / PDF</${Btn}>${dlOk ? html`<${Btn} kind="outline" icon="download" onClick=${() => unduh(sr.judul + ".html", sr.html)}>Unduh</${Btn}>` : null}</div></div></div>`;
 }
