@@ -164,14 +164,14 @@ function tasksFor(st) {
 }
 
 // ---------- kepala beranda (gaya aplikasi: header solid, kartu ringkasan menimpa header) ----------
-function HomeTop({ nama, sub, bell, foto, children }) {
+function HomeTop({ nama, sub, bell, foto, children, cls }) {
   return html`<header class="ht"><div class="ht-row"><span class="ht-logo"><img src=${LOGO} alt="Logo Kampung Qur'an Al Muawanah" /></span>
       <div class="ht-hi"><small>Assalamu'alaikum,</small><b>${nama}</b></div>
       <button class="ht-btn ab-btn" aria-label=${bell ? `Pengumuman, ${bell} baru` : "Pengumuman"} onClick=${() => nav.go("pengumuman")}><${Icon} n="bell" s=${23} w=${2.2} />${bell ? html`<b>${bell}</b>` : null}</button>
       ${aiAda() ? html`<button class="ht-btn ab-btn ab-ai" aria-label="Asisten AI" onClick=${() => nav.go("asisten")}><${Icon} n="chat" s=${23} w=${2.2} /></button>` : null}
       <button class="ht-foto" aria-label="Akun saya" onClick=${() => nav.setTab("akun")}><${FotoAv} src=${foto} nama=${nama} size=${42} /></button></div>
       ${sub ? html`<div class="ht-sub">${sub}</div>` : null}</header>
-    <section class="hc">${children}</section>`;
+    <section class=${"hc" + (cls ? " " + cls : "")}>${children}</section>`;
 }
 const newPeng = () => all("pengumuman").filter(p => Date.now() - p.ts < 7 * 864e5).length;
 
@@ -246,6 +246,30 @@ export function Akun() {
 }
 
 // ---------------- wali ----------------
+// Kartu hafalan ananda (beranda wali): total hafalan, yang sedang dihafal, juz selesai, target semester
+const angka = (v, d = 1) => (Math.round(v * 10 ** d) / 10 ** d).toLocaleString("id-ID");
+function KartuHafalan({ h, c }) {
+  const R = 50, K = 2 * Math.PI * R, persen = Math.min(1, h.jumlah / 30), hal = Math.floor(h.baris / 15), sisaBaris = h.baris % 15;
+  const halTotal = Math.max(1, Math.round(h.total / 15)), pAktif = h.khatam ? 100 : Math.min(100, Math.round((h.baris / h.total) * 100));
+  return html`<div class="hf">
+    <div class="hf-top">
+      <div class="hf-ring" role="img" aria-label=${`${angka(h.jumlah)} dari 30 juz`}>
+        <svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="hfg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE08A" /><stop offset="1" stop-color="#E0A52A" /></linearGradient></defs>
+          <circle cx="60" cy="60" r=${R} class="hf-trk" /><circle cx="60" cy="60" r=${R} class="hf-val" stroke-dasharray=${`${K * persen} ${K}`} transform="rotate(-90 60 60)" /></svg>
+        <span><b>${angka(h.jumlah)}</b><small>dari 30 juz</small></span></div>
+      <div class="hf-main"><small class="hf-lbl">Total hafalan ananda</small>
+        <div class="hf-big">${h.khatam ? html`30 <em>juz · khatam</em>` : html`${h.selesai.length} <em>juz</em>${hal ? html` ${hal} <em>hal.</em>` : null}`}</div>
+        ${h.khatam ? html`<span class="hf-pill">Khatam 30 juz</span>` : html`<small class="hf-lbl hf-now"><i></i>Sedang menghafal</small>
+          <div class="hf-pos"><b>Juz ${h.aktif}</b>${h.baris ? html`<span>hal. ${Math.ceil(h.baris / 15)} · baris ${((h.baris - 1) % 15) + 1}</span>` : html`<span>belum mulai</span>`}</div>`}</div></div>
+    ${h.khatam ? null : html`<div class="hf-juz"><div class="hf-row"><span>Progres Juz ${h.aktif} · ${hal} dari ${halTotal} hal.</span><b>${pAktif}%</b></div>
+      <div class="hf-bar"><i style=${`width:${pAktif}%`}></i></div></div>`}
+    <div class="hf-sec"><div class="hf-row"><span>Juz selesai</span><b>${h.selesai.length} juz</b></div>
+      ${h.selesai.length ? html`<div class="hf-chips">${h.selesai.map(j => html`<span>${j}</span>`)}</div>` : html`<p class="hf-kosong">Belum ada juz yang selesai ditasmi'.</p>`}</div>
+    <div class="hf-target"><div class="hf-row"><span>Target hafalan baru semester ini</span><b>${angka(c.juz, 2)} / ${c.target} juz</b></div>
+      <div class="hf-bar emas"><i style=${`width:${Math.max(c.pct, c.juz > 0 ? 3 : 0)}%`}></i></div>
+      <small class=${"hf-ket" + (c.tercapai ? " ok" : "")}>${c.tercapai ? "Alhamdulillah, target semester tercapai" : `Kurang ${angka(c.kurang)} juz lagi untuk mencapai target`}</small></div>
+  </div>`;
+}
 export function WaliBeranda() {
   useApp();
   const s = L.santriById(nav.user.id), a = L.asramaById(s.asrama);
@@ -257,11 +281,8 @@ export function WaliBeranda() {
   kab.sort((x, y) => y[0] - x[0]);
   const peng = all("pengumuman").sort((x, y) => y.ts - x.ts).slice(0, 2);
   const h = L.hafalan(s), c = L.capaianJuz(s);
-  return html`<${HomeTop} nama=${"Wali " + (s.panggilan || s.nama.split(" ")[0])} sub=${`${s.nama} · Kelas ${s.kelas} · ${a.nama}`} bell=${newPeng()} foto=${fotoUser(nav.user)}>
-      <div class="sum"><div class="sum-in"><small>Total hafalan ananda</small><div class="sum-big">${L.fmtJumlah(h)}</div>
-        <div class="sum-row"><span>Juz selesai <b>${h.selesai.length ? h.selesai.join(" · ") : "—"}</b></span><span>${h.khatam ? "Khatam 30 juz" : html`Sedang <b>${L.posLabel(h.aktif, h.baris).replace(" · baris", ", baris")}</b>`}</span></div>
-        <div class="sum-row" style="margin-top:6px"><span>Hafalan baru semester ini <b>${c.juz.toLocaleString("id-ID")}/${c.target} juz</b></span><span>${c.tercapai ? "Target tercapai" : `Kurang ${c.kurang.toLocaleString("id-ID")} juz`}</span></div>
-        <span class="sum-bar"><i style=${`width:${c.pct}%`}></i></span></div></div></${HomeTop}>
+  return html`<${HomeTop} cls="hc-hf" nama=${"Wali " + (s.panggilan || s.nama.split(" ")[0])} sub=${`${s.nama} · Kelas ${s.kelas} · ${a.nama}`} bell=${newPeng()} foto=${fotoUser(nav.user)}>
+      <${KartuHafalan} h=${h} c=${c} /></${HomeTop}>
     <div class="wrap"><button class="strip" onClick=${() => nav.go("waliRekap")}><span class="strip-ic" style=${`background:${WARNA.teal[2]}`}><${Ikon} n="grafik" warna="teal" s=${28} /></span><span class="strip-t"><b>Rekap Ananda</b><small>Hafalan, kehadiran, izin, pelanggaran per periode</small></span><span class="strip-go">Buka <${Icon} n="right" s=${16} w=${2.4} /></span></button>
     ${(() => { const rg = L.periodeRange("bulanan"), kh = L.kehadiranHalaqah(s.id, rg), mp = L.mutPersen(s.id, rg), po = L.poinSantri(s.id);
       return html`<${Card} title="Bulan ini" right=${html`<small>${rg.label}</small>`}><div class="stats"><${Stat} label="Hadir halaqah" value=${kh.pct == null ? "—" : kh.pct + "%"} /><${Stat} label="Mutaba'ah" value=${mp.ibadah == null ? "—" : Math.round((mp.ibadah + mp.adab) / 2) + "%"} /><${Stat} label="Poin catatan" value=${po.total} tone=${po.total ? "gold" : ""} /></div></${Card}>`; })()}
