@@ -33,11 +33,37 @@ export function AiBtn({ label = "Bantu dengan AI", busy, onClick, kecil }) {
     <${Icon} n="sparkle" s=${kecil ? 15 : 17} /><span>${busy ? "AI sedang bekerja…" : label}</span></button>`;
 }
 // teks AI sederhana: baris "- " jadi butir, **tebal** jadi tebal
+// Penampil jawaban AI (Markdown ringan: tebal, miring, kode, judul, butir, daftar bernomor, tabel, garis)
+const inlineAI = s => {
+  const out = [], re = /(\*\*[^*]+\*\*|`[^`]+`|\*[^*\s](?:[^*]*[^*\s])?\*)/g; let last = 0, m;
+  while ((m = re.exec(s))) { if (m.index > last) out.push(s.slice(last, m.index)); const x = m[0]; out.push(x.startsWith("**") ? html`<b>${x.slice(2, -2)}</b>` : x.startsWith("`") ? html`<code>${x.slice(1, -1)}</code>` : html`<i>${x.slice(1, -1)}</i>`); last = re.lastIndex; }
+  if (last < s.length) out.push(s.slice(last)); return out;
+};
 export function TeksAI({ t }) {
-  const blok = String(t || "").split(/\n+/).map(x => x.trim()).filter(Boolean);
-  const tebal = s => s.split(/\*\*(.+?)\*\*/g).map((p, i) => (i % 2 ? html`<b>${p}</b>` : p));
-  return html`<div class="ai-teks">${blok.map(b => /^[-•*]\s+/.test(b) ? html`<p class="li">${tebal(b.replace(/^[-•*]\s+/, ""))}</p>` : /^#+\s/.test(b) ? html`<h5>${tebal(b.replace(/^#+\s/, ""))}</h5>` : html`<p>${tebal(b)}</p>`)}</div>`;
+  const lines = String(t || "").replace(/\r/g, "").split("\n"), out = []; let i = 0;
+  const sel = r => r.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim());
+  while (i < lines.length) {
+    const raw = lines[i], l = raw.trim();
+    if (!l) { i++; continue; }
+    if (/^```/.test(l)) { const buf = []; i++; while (i < lines.length && !/^```/.test(lines[i].trim())) buf.push(lines[i++]); i++; out.push(html`<pre class="ai-pre">${buf.join("\n")}</pre>`); continue; }
+    if (/^\|.*\|$/.test(l)) {
+      const rows = []; while (i < lines.length && /^\|.*\|$/.test(lines[i].trim())) rows.push(lines[i++].trim());
+      const body = rows.filter(r => !/^\|[\s:|-]+\|$/.test(r)).map(sel);
+      if (body.length) out.push(html`<div class="ai-tbl"><table><thead><tr>${body[0].map(c => html`<th>${inlineAI(c)}</th>`)}</tr></thead><tbody>${body.slice(1).map(r => html`<tr>${r.map(c => html`<td>${inlineAI(c)}</td>`)}</tr>`)}</tbody></table></div>`);
+      continue;
+    }
+    const sub = /^\s{2,}/.test(raw) ? " li2" : "";
+    if (/^#{1,6}\s/.test(l)) out.push(html`<h5>${inlineAI(l.replace(/^#+\s/, "").replace(/^\*\*(.*)\*\*$/, "$1"))}</h5>`);
+    else if (/^(-{3,}|\*{3,})$/.test(l)) out.push(html`<hr />`);
+    else if (/^[-•*]\s+/.test(l)) out.push(html`<p class=${"li" + sub}>${inlineAI(l.replace(/^[-•*]\s+/, ""))}</p>`);
+    else if (/^\d+[.)]\s+/.test(l)) out.push(html`<p class=${"li num" + sub} data-n=${l.match(/^\d+/)[0] + "."}>${inlineAI(l.replace(/^\d+[.)]\s+/, ""))}</p>`);
+    else out.push(html`<p>${inlineAI(l)}</p>`);
+    i++;
+  }
+  return html`<div class="ai-teks">${out}</div>`;
 }
+// Teks polos untuk disalin (tanpa tanda Markdown)
+export const teksPolos = t => String(t || "").replace(/\*\*(.+?)\*\*/g, "$1").replace(/`([^`]+)`/g, "$1").replace(/^#+\s*/gm, "").replace(/^\s*[-*]\s+/gm, "• ").replace(/^\|[\s:|-]+\|$/gm, "").replace(/^\|(.*)\|$/gm, (_, x) => x.split("|").map(c => c.trim()).join(" · ")).replace(/\n{3,}/g, "\n\n").trim();
 export function KartuAI({ judul = "Analisis AI", tombol = "Buat analisis", buat, ket }) {
   const [busy, run] = useAIRun(); const [t, setT] = useState("");
   if (!aiAda()) return null;

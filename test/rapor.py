@@ -21,6 +21,15 @@ def seed():
     for i, b in enumerate([60, 95, 130, 172, 215]):
         d["setoran"][f"z{i}"] = {"santri": SID, "jenis": "ziyadah", "tanggal": f"2026-11-{i+3:02d}", "juz": 2, "sebelum": b - 35, "sesudah": b, "lulus": True, "ts": 1790000000000 + i}
     return d
+
+async def keUtama(pg):
+    # navigasi bawah hanya tampil di layar utama; kembali dulu bila sedang di layar lanjutan
+    for _ in range(10):
+        if await pg.locator(".bnav").count(): return
+        b = pg.locator(".sub-h .back")
+        if not await b.count(): return
+        await b.first.click(); await pg.wait_for_timeout(220)
+
 async def main():
     errs = []
     async with async_playwright() as p:
@@ -44,7 +53,7 @@ async def main():
             await pg.locator(f"input[aria-label='{['Pengetahuan (Kognitif)','Keterampilan (Psikomotorik)','Sikap dan Karakter (Afektif)','Project IT'][i]} Adiyatma Wiryateja']").fill(str(v))
         await pg.screenshot(path="test/r1_aspek.png", full_page=False)
         await pg.click("text=Simpan nilai"); await pg.wait_for_timeout(300)
-        await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200)
+        await keUtama(pg); await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200)
         await pg.locator(".tile:has(.tile-lb:text-is('Rapor'))").first.click(); await pg.wait_for_timeout(250)
         await pg.locator(".row:has-text('Adiyatma')").first.click(); await pg.wait_for_timeout(400)
         await pg.locator("textarea").fill("Alhamdulillah Ananda Adiyatma rajin murojaah dan disiplin sholat berjamaah. Perlu meningkatkan kelancaran hafalan Juz 2 dan menjaga adab di asrama.")

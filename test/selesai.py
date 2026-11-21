@@ -4,6 +4,15 @@ srv = subprocess.Popen(["python3", "-m", "http.server", "8795", "-d", "/home/cla
 U = "http://localhost:8795/index.html"; O = "/tmp/ui"
 PNG = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEklEQVR4nGNgYGD4z0AEYBxVSFUAAJ6/AQGG0UPDAAAAAElFTkSuQmCC")
 DB = "JSON.parse(localStorage.getItem('muawanahku_demo_v1')||'{}')"
+
+async def keUtama(pg):
+    # navigasi bawah hanya tampil di layar utama; kembali dulu bila sedang di layar lanjutan
+    for _ in range(10):
+        if await pg.locator(".bnav").count(): return
+        b = pg.locator(".sub-h .back")
+        if not await b.count(): return
+        await b.first.click(); await pg.wait_for_timeout(220)
+
 async def main():
     errs, notes = [], []
     async with async_playwright() as p:
@@ -18,7 +27,7 @@ async def main():
             await pg.fill("input[autocomplete=username]", u); await pg.fill(".pass-in input", u + "123"); await pg.click("button[type=submit]"); await pg.wait_for_timeout(1000)
         async def tile(pg, t): await pg.locator(f".tile:has-text(\"{t}\")").first.click(); await pg.wait_for_timeout(600)
         async def h1(pg): return await pg.locator(".sub-h h1, .sub-t h1").first.inner_text()
-        async def tab(pg, t): await pg.locator(f".bnav button:has-text('{t}')").first.click(); await pg.wait_for_timeout(500)
+        async def tab(pg, t): await keUtama(pg); await pg.locator(f".bnav button:has-text('{t}')").first.click(); await pg.wait_for_timeout(500)
         pg = await baru(); await login(pg, "ugi")
         home = await pg.locator(".tile").all_inner_texts(); notes.append(("home tiles", [x.split("\n")[0] for x in home]))
         notes.append(("rekap tile on home", any(x.split("\n")[0].strip() == "Rekap" for x in home)))

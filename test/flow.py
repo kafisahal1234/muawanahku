@@ -8,6 +8,15 @@ async def loginWali(pg, nama):
     await pg.evaluate("sessionStorage.clear()"); await pg.goto(URL); await pg.wait_for_timeout(300)
     await pg.click("text=Lihat semua akun demo"); await pg.fill(".sheet .search input", nama); await pg.wait_for_timeout(100); await pg.locator(".demo-acc:has(.av.gold)").first.click(); await pg.wait_for_timeout(300)
 async def tile(pg, label): await pg.locator(f".tile:has(.tile-lb:text-is(\"{label}\"))").first.click(); await pg.wait_for_timeout(250)
+
+async def keUtama(pg):
+    # navigasi bawah hanya tampil di layar utama; kembali dulu bila sedang di layar lanjutan
+    for _ in range(10):
+        if await pg.locator(".bnav").count(): return
+        b = pg.locator(".sub-h .back")
+        if not await b.count(): return
+        await b.first.click(); await pg.wait_for_timeout(220)
+
 async def main():
     errs = []
     async with async_playwright() as p:
@@ -41,16 +50,16 @@ async def main():
         print("absen selesai view:", await pg.locator(".selesai-card").count()); await pg.locator(".sub-h .back").click(); await pg.wait_for_timeout(300)
         await tile(pg, "Manzil"); await pg.screenshot(path="test/f4_manzil.png", full_page=True); await pg.locator(".sub-h .back").click()
         # mutabaah + motd
-        await pg.locator(".bnav button").first.click(); await tile(pg, "MOTD"); await pg.locator(".absen-row").first.locator("button:text-is('A')").click(); await pg.click("text=Simpan absen"); await pg.wait_for_timeout(200)
-        await pg.locator(".bnav button").first.click(); await tile(pg, "Mutaba'ah"); await pg.screenshot(path="test/f5_mut.png", full_page=True)
+        await keUtama(pg); await pg.locator(".bnav button").first.click(); await tile(pg, "MOTD"); await pg.locator(".absen-row").first.locator("button:text-is('A')").click(); await pg.click("text=Simpan absen"); await pg.wait_for_timeout(200)
+        await keUtama(pg); await pg.locator(".bnav button").first.click(); await tile(pg, "Mutaba'ah"); await pg.screenshot(path="test/f5_mut.png", full_page=True)
         await pg.click("text=Simpan · santri berikutnya"); await pg.wait_for_timeout(200)
         # kurikulum jadwal bentrok
-        await pg.locator(".bnav button").first.click(); await tile(pg, "Kurikulum"); await tile(pg, "Jadwal Mengajar"); await pg.screenshot(path="test/f6_jadwal.png", full_page=True)
+        await keUtama(pg); await pg.locator(".bnav button").first.click(); await tile(pg, "Kurikulum"); await tile(pg, "Jadwal Mengajar"); await pg.screenshot(path="test/f6_jadwal.png", full_page=True)
         await pg.locator(".grid-j .cell.empty").first.click(); await pg.wait_for_timeout(200)
         await pg.select_option(".sheet select >> nth=0", "it"); await pg.wait_for_timeout(100); await pg.screenshot(path="test/f6b_slot.png")
         await pg.locator(".sheet .icon-btn").click()
         # mapel IT absen
-        await pg.locator(".bnav button").first.click(); await tile(pg, "Mapel IT"); await pg.screenshot(path="test/f7_mapel.png", full_page=True)
+        await keUtama(pg); await pg.locator(".bnav button").first.click(); await tile(pg, "Mapel IT"); await pg.screenshot(path="test/f7_mapel.png", full_page=True)
         await pg.click("text=Absen di luar jadwal"); await pg.locator(".row").first.click(); await pg.wait_for_timeout(200)
         await pg.fill("input[placeholder='Misal: Descriptive text']", "Algoritma dan flowchart"); await pg.click("text=Simpan absen & jurnal"); await pg.wait_for_timeout(300)
         # kesantrian izin by izzudin
@@ -58,7 +67,7 @@ async def main():
         await pg.locator("button.pick").click(); await pg.fill(".sheet .search input", "sultan abdullah"); await pg.locator(".sheet .row").first.click()
         await pg.fill("textarea", "Walimah kakak"); await pg.click("text=Simpan surat izin"); await pg.locator(".dialog .btn.primary").click(); await pg.wait_for_timeout(300)
         await pg.screenshot(path="test/f8_surat.png", full_page=True)
-        await pg.locator(".bnav button").first.click(); await tile(pg, "Kesantrian"); await tile(pg, "Form BAP")
+        await keUtama(pg); await pg.locator(".bnav button").first.click(); await tile(pg, "Kesantrian"); await tile(pg, "Form BAP")
         await pg.locator("button.pick").click(); await pg.fill(".sheet .search input", "davin"); await pg.locator(".sheet .row").first.click()
         await pg.select_option("select.in", "p5"); await pg.fill("textarea >> nth=0", "Ditemukan HP di lemari"); await pg.click("text=Simpan BAP"); await pg.locator(".dialog .btn.primary").click(); await pg.wait_for_timeout(300)
         await pg.screenshot(path="test/f9_bap.png", full_page=True)
@@ -67,8 +76,8 @@ async def main():
         await pg.fill("input[placeholder^='Misal: Jadwal']", "Jadwal perpulangan akhir semester"); await pg.fill("textarea", "Perpulangan 20 Desember 2026."); await pg.click("text=Kirim pengumuman"); await pg.wait_for_timeout(300)
         # wali
         await loginWali(pg, "sultan abdullah"); await pg.screenshot(path="test/f11_wali.png", full_page=True)
-        await pg.locator(".bnav button").nth(3).click(); await pg.wait_for_timeout(200); await pg.screenshot(path="test/f12_wali_izin.png", full_page=True)
-        await loginWali(pg, "davin"); await pg.locator(".bnav button").nth(3).click(); await pg.wait_for_timeout(200); await pg.screenshot(path="test/f13_wali_davin.png", full_page=True)
+        await keUtama(pg); await pg.locator(".bnav button").nth(3).click(); await pg.wait_for_timeout(200); await pg.screenshot(path="test/f12_wali_izin.png", full_page=True)
+        await loginWali(pg, "davin"); await keUtama(pg); await pg.locator(".bnav button").nth(3).click(); await pg.wait_for_timeout(200); await pg.screenshot(path="test/f13_wali_davin.png", full_page=True)
         # rapor
         await login(pg, "kaafi"); await tile(pg, "Rapor"); await pg.locator(".card .row").first.click(); await pg.wait_for_timeout(200); await pg.screenshot(path="test/f14_rapor.png", full_page=True)
         await b.close()

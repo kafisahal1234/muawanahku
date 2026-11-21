@@ -107,9 +107,9 @@ function App() {
   const wali = u.kind === "wali", top = nav.top;
   const Screen = top ? SCREENS[top.screen] : (wali ? WALI_TABS : STAFF_TABS)[nav.tab];
   const key = top ? top.screen + JSON.stringify(top.params) + nav.depth : "tab-" + nav.tab;
-  return html`<div class="app"><${SideNav} wali=${wali} /><div class=${"scr dir-" + nav.dir} key=${key}><${Boundary}>${Screen ? html`<${Screen} ...${top ? top.params : {}} />` : null}</${Boundary}></div>
+  return html`<div class=${"app" + (top ? " sub" : "")}><${SideNav} wali=${wali} /><div class=${"scr dir-" + nav.dir} key=${key}><${Boundary}>${Screen ? html`<${Screen} ...${top ? top.params : {}} />` : null}</${Boundary}></div>
     ${nav.splash ? html`<${Splash} nama=${wali ? "Wali " + L.santriAman(u.id).nama : L.staffAman(u.id).pendek} />` : null}
-    ${!online ? html`<div class="loadpill" role="status" style="color:#A8261C">Tidak ada koneksi. Perubahan dikirim saat online lagi.</div>` : !S.ready ? html`<div class="loadpill" role="status">Menyambungkan data…</div>` : null}<${BottomNav} wali=${wali} /><${ToastHost} /></div>`;
+    ${!online ? html`<div class="loadpill" role="status" style="color:#A8261C">Tidak ada koneksi. Perubahan dikirim saat online lagi.</div>` : !S.ready ? html`<div class="loadpill" role="status">Menyambungkan data…</div>` : null}${top ? null : html`<${BottomNav} wali=${wali} />`}<${ToastHost} /></div>`;
 }
 // Rasa aplikasi asli: tanpa zoom cubit/ketuk-ganda, efek sentuh (ripple), service worker di hosting sendiri
 try {

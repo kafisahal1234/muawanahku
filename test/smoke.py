@@ -2,6 +2,15 @@ import asyncio, json, sys
 from playwright.async_api import async_playwright
 URL = "file:///home/claude/webapp/dist/index.html"
 ACC = sys.argv[1].split(",") if len(sys.argv) > 1 else ["kaafi"]
+
+async def keUtama(pg):
+    # navigasi bawah hanya tampil di layar utama; kembali dulu bila sedang di layar lanjutan
+    for _ in range(10):
+        if await pg.locator(".bnav").count(): return
+        b = pg.locator(".sub-h .back")
+        if not await b.count(): return
+        await b.first.click(); await pg.wait_for_timeout(220)
+
 async def main():
     errs = []
     async with async_playwright() as p:
@@ -32,9 +41,9 @@ async def main():
                 if bad: errs.append(("boundary", acc, lab, await pg.locator(".note.red").inner_text()))
                 if await pg.locator(".sub-h .back").count(): await pg.locator(".sub-h .back").first.click(); await pg.wait_for_timeout(150)
                 # ensure home
-                await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(150)
+                await keUtama(pg); await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(150)
             for k in range(1, 5):
-                await pg.locator(".bnav button").nth(k).click(); await pg.wait_for_timeout(250)
+                await keUtama(pg); await pg.locator(".bnav button").nth(k).click(); await pg.wait_for_timeout(250)
                 if await pg.locator("text=mengalami kesalahan").count(): errs.append(("boundary-tab", acc, k))
             print(acc, "tiles:", labels)
         await b.close()

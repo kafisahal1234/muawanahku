@@ -21,6 +21,15 @@ window.__AI_MOCK = async ({ teks, sistem, berkas, json }) => {
   return "Alhamdulillah **hafalan lancar**.\n- Perlu menambah murojaah\n- Jaga kehadiran";
 };
 """
+
+async def keUtama(pg):
+    # navigasi bawah hanya tampil di layar utama; kembali dulu bila sedang di layar lanjutan
+    for _ in range(10):
+        if await pg.locator(".bnav").count(): return
+        b = pg.locator(".sub-h .back")
+        if not await b.count(): return
+        await b.first.click(); await pg.wait_for_timeout(220)
+
 async def main():
     errs = []
     async with async_playwright() as p:
@@ -81,7 +90,7 @@ async def main():
         await tile(pg, "Rapor"); await pg.wait_for_timeout(300); await pg.locator(".row").first.click(); await pg.wait_for_timeout(500)
         await pg.click(".ai-btn"); await pg.wait_for_timeout(600); print("catatan rapor AI:", (await pg.locator("textarea").first.input_value())[:60])
         log = await pg.evaluate("window.__AI_LOG"); print("data dikirim:", log[-1]["teks"].split("Data:\n")[1].replace("\n", " / ")[:300])
-        await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile(pg, "Tahfidz"); await tile(pg, "Rekap Halaqah"); await pg.wait_for_timeout(300)
+        await keUtama(pg); await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile(pg, "Tahfidz"); await tile(pg, "Rekap Halaqah"); await pg.wait_for_timeout(300)
         await pg.locator(".rk").first.click(); await pg.wait_for_timeout(300)
         await pg.click(".ai-btn"); await pg.wait_for_timeout(600); print("analisis rekap:", (await pg.locator(".ai-teks").inner_text()).replace("\n", " / "))
         await pg.screenshot(path="test/ai3_rekap.png", full_page=True)
@@ -96,9 +105,9 @@ async def main():
         # 5) Asisten AI (staf & wali), impor nilai, impor jadwal
         pg = await page(); await login(pg, "kaafi")
         await pg.click(".ab-ai"); await pg.wait_for_timeout(300)
-        await pg.locator(".chat-saran button").first.click(); await pg.wait_for_selector(".bubble.ai:not(.typing)", timeout=10000)
+        await pg.locator(".chat-saran button").first.click(); await pg.wait_for_selector(".cm-a .cm-act", timeout=10000)
         await pg.fill(".chat-bar textarea", "Siapa yang perlu dibina?"); await pg.keyboard.press("Enter"); await pg.wait_for_timeout(700)
-        print("chat:", [t.replace("\n", " / ") for t in await pg.locator(".bubble").all_inner_texts()])
+        print("chat:", [t.replace("\n", " / ") for t in await pg.locator(".bubble.me, .ai-jawab").all_inner_texts()])
         log = await pg.evaluate("window.__AI_LOG"); sis = log[-1]["sistem"]; print("konteks staf: santri baris =", sis.count(" | kls "), "| riwayat terkirim:", "Percakapan sebelumnya" in log[-1]["teks"])
         await pg.screenshot(path="test/ai4_chat.png")
         await pg.locator(".back").click(); await pg.wait_for_timeout(200)

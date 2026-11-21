@@ -1,6 +1,15 @@
 import asyncio
 from playwright.async_api import async_playwright
 URL = "file:///home/claude/webapp/dist/index.html"
+
+async def keUtama(pg):
+    # navigasi bawah hanya tampil di layar utama; kembali dulu bila sedang di layar lanjutan
+    for _ in range(10):
+        if await pg.locator(".bnav").count(): return
+        b = pg.locator(".sub-h .back")
+        if not await b.count(): return
+        await b.first.click(); await pg.wait_for_timeout(220)
+
 async def main():
     errs = []
     async with async_playwright() as p:
@@ -14,11 +23,11 @@ async def main():
         before = await pg.locator(".kv b").first.inner_text()
         await pg.locator(".stepper input").first.fill("30"); await pg.click("text=Simpan setoran"); await pg.locator(".dialog .btn.primary").click(); await pg.wait_for_timeout(300)
         # mutabaah 1 hari
-        await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile("Mutaba'ah"); await pg.wait_for_timeout(200)
+        await keUtama(pg); await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile("Mutaba'ah"); await pg.wait_for_timeout(200)
         for i in range(6): await pg.locator(".check").nth(i).click()
         await pg.click("text=Simpan"); await pg.wait_for_timeout(300)
         # riwayat -> koreksi ziyadah
-        await pg.locator(".bnav button").nth(3).click(); await pg.wait_for_timeout(300)
+        await keUtama(pg); await pg.locator(".bnav button").nth(3).click(); await pg.wait_for_timeout(300)
         rows = await pg.locator(".card .row").all_inner_texts(); print("riwayat:", [r.split("\n")[0] for r in rows[:3]])
         await pg.locator(".card .row:has-text('Ziyadah')").first.click(); await pg.wait_for_timeout(200)
         await pg.screenshot(path="test/k1_sheet.png")
@@ -29,14 +38,14 @@ async def main():
         await pg.locator(".card .row:has-text('Ziyadah')").first.click(); await pg.wait_for_timeout(200)
         await pg.locator(".sheet .btn:has-text('Hapus')").click(); await pg.wait_for_timeout(150); await pg.locator(".dialog .btn.danger, .dialog .btn:has-text('Hapus')").last.click(); await pg.wait_for_timeout(300)
         print("after delete rows:", [r.split("\n")[0] for r in (await pg.locator(".card .row").all_inner_texts())[:3]])
-        await pg.locator(".bnav button").nth(4).click(); await pg.wait_for_timeout(200); await pg.click("text=Log perubahan data"); await pg.wait_for_timeout(300); print("log:", [r.split("\n")[0] for r in await pg.locator(".card .row").all_inner_texts()])
+        await keUtama(pg); await pg.locator(".bnav button").nth(4).click(); await pg.wait_for_timeout(200); await pg.click("text=Log perubahan data"); await pg.wait_for_timeout(300); print("log:", [r.split("\n")[0] for r in await pg.locator(".card .row").all_inner_texts()])
         # rekap mutabaah pekanan & harian
-        await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile("Asrama Saya"); await tile("Rekap Asrama"); await pg.wait_for_timeout(300)
+        await keUtama(pg); await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile("Asrama Saya"); await tile("Rekap Asrama"); await pg.wait_for_timeout(300)
         await pg.click(".sub-h .seg button:text-is(\"Mutaba'ah\")"); await pg.wait_for_timeout(200)
         print("pekanan:", (await pg.locator(".rk").first.inner_text()).replace("\n", " | "))
         await pg.click(".periode .seg button:text-is('Hari ini')"); await pg.wait_for_timeout(200)
         print("harian:", (await pg.locator(".rk").first.inner_text()).replace("\n", " | "))
         await pg.screenshot(path="test/k2_rekap.png")
-        await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile("Kalender"); await pg.wait_for_timeout(300); await pg.screenshot(path="test/k3_kal.png", full_page=True)
+        await keUtama(pg); await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile("Kalender"); await pg.wait_for_timeout(300); await pg.screenshot(path="test/k3_kal.png", full_page=True)
         print("errors:", errs); await b.close()
 asyncio.run(main())

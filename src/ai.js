@@ -86,4 +86,47 @@ export async function tanyaAI({ teks, sistem = "", berkas = [], json = false }) 
   } catch (e) { console.warn("AI gagal", e); const err = new Error(pesanGalat(e)); err.asli = e; throw err; }
 }
 
+// ---------- Percakapan bergaya Gemini: multi-giliran, jawaban mengalir (streaming), bisa dihentikan ----------
+// riwayat: [{ r: "u" | "a", t }] (tanpa pesan galat); berkas: lampiran giliran ini; onTeks(teksSejauhIni); berhenti() → true untuk menghentikan
+async function chatGemini({ sistem, riwayat, teks, berkas, onTeks, berhenti }) {
+  const app = firebaseApp(); if (!app) throw new Error("Database belum tersambung, AI belum bisa dipakai.");
+  if (!aiMod) aiMod = imp(`https://www.gstatic.com/firebasejs/${V}/firebase-ai.js`);
+  const ai = await aiMod, inst = ai.getAI(app, { backend: new ai.GoogleAIBackend() });
+  const contents = [];
+  riwayat.forEach(x => { const role = x.r === "u" ? "user" : "model", last = contents[contents.length - 1]; if (last && last.role === role) last.parts[0].text += "\n\n" + x.t; else contents.push({ role, parts: [{ text: x.t }] }); });
+  while (contents.length && contents[0].role !== "user") contents.shift();
+  const parts = [{ text: teks }, ...(berkas || []).map(b => ({ inlineData: { mimeType: b.mime, data: b.b64 } }))], last = contents[contents.length - 1];
+  if (last && last.role === "user") last.parts.push(...parts); else contents.push({ role: "user", parts });
+  const suka = localStorage.getItem(LS), urut = suka ? [suka, ...MODELS.filter(m => m !== suka)] : MODELS;
+  let akhir = null;
+  for (const m of urut) {
+    let out = "";
+    try {
+      const model = ai.getGenerativeModel(inst, { model: m, ...(sistem ? { systemInstruction: sistem } : {}), generationConfig: { temperature: 0.6 } });
+      const r = await model.generateContentStream({ contents });
+      for await (const ch of r.stream) { if (berhenti && berhenti()) break; let d = ""; try { d = ch.text(); } catch (e) { } if (d) { out += d; onTeks && onTeks(out); } }
+      try { localStorage.setItem(LS, m); } catch (e) { }
+      return out.trim();
+    } catch (e) {
+      akhir = e;
+      if (!out && /\b404\b|not found|is not supported|NOT_FOUND|unknown model|deprecated|retired/i.test(String(e && e.message))) continue;
+      if (out) return out.trim();
+      throw e;
+    }
+  }
+  throw akhir || new Error("Model AI tidak ditemukan.");
+}
+export async function ngobrolAI({ sistem = "", riwayat = [], teks, berkas = [], onTeks, berhenti }) {
+  const mesin = aiMesin();
+  try {
+    if (mesin === "gemini") return await chatGemini({ sistem, riwayat, teks, berkas, onTeks, berhenti });
+    const datar = riwayat.length ? `Percakapan sebelumnya:\n${riwayat.map(x => `${x.r === "u" ? "Pengguna" : "Asisten"}: ${x.t}`).join("\n")}\n\n` : "";
+    let t;
+    if (mesin === "mock") t = await window.__AI_MOCK({ teks: datar + "Pertanyaan: " + teks, sistem, berkas, json: false });
+    else if (mesin === "claude") t = await viaClaude({ teks: datar + "Pertanyaan: " + teks, sistem, gambar: berkas.filter(b => /^image\//.test(b.mime)) });
+    else throw new Error("AI hanya tersedia saat aplikasi tersambung ke database (versi online).");
+    onTeks && onTeks(t); return t;
+  } catch (e) { console.warn("AI gagal", e); const err = new Error(pesanGalat(e)); err.asli = e; throw err; }
+}
+
 export const SISTEM_DASAR = "Kamu asisten aplikasi MuawanahKu milik Pondok Tahfidz Modern Kampung Qur'an Al Muawanah (Lampung). Jawab dalam Bahasa Indonesia yang baik, santun, dan ringkas. Jangan mengarang data yang tidak diberikan.";
