@@ -263,8 +263,6 @@ function KartuHafalan({ h, c }) {
           <div class="hf-pos"><b>Juz ${h.aktif}</b>${h.baris ? html`<span>hal. ${Math.ceil(h.baris / 15)} · baris ${((h.baris - 1) % 15) + 1}</span>` : html`<span>belum mulai</span>`}</div>`}</div></div>
     ${h.khatam ? null : html`<div class="hf-juz"><div class="hf-row"><span>Progres Juz ${h.aktif} · ${hal} dari ${halTotal} hal.</span><b>${pAktif}%</b></div>
       <div class="hf-bar"><i style=${`width:${pAktif}%`}></i></div></div>`}
-    <div class="hf-sec"><div class="hf-row"><span>Juz selesai</span><b>${h.selesai.length} juz</b></div>
-      ${h.selesai.length ? html`<div class="hf-chips">${h.selesai.map(j => html`<span>${j}</span>`)}</div>` : html`<p class="hf-kosong">Belum ada juz yang selesai ditasmi'.</p>`}</div>
     <div class="hf-target"><div class="hf-row"><span>Target hafalan baru semester ini</span><b>${angka(c.juz, 2)} / ${c.target} juz</b></div>
       <div class="hf-bar emas"><i style=${`width:${Math.max(c.pct, c.juz > 0 ? 3 : 0)}%`}></i></div>
       <small class=${"hf-ket" + (c.tercapai ? " ok" : "")}>${c.tercapai ? "Alhamdulillah, target semester tercapai" : `Kurang ${angka(c.kurang)} juz lagi untuk mencapai target`}</small></div>
