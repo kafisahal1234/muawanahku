@@ -6,8 +6,8 @@ import * as L from "./logic.js";
 import { me } from "./common.js";
 
 export function logUbah(aksi, col, id, ket, data) {
-  const m = me();
-  return put("log", uid("l"), { aksi, col, id, ket, data: data ? JSON.parse(JSON.stringify(data)) : null, oleh: m ? m.id : "?", ts: Date.now() });
+  const m = me(), u = nav.user;
+  return put("log", uid("l"), { aksi, col, id, ket, data: data ? JSON.parse(JSON.stringify(data)) : null, oleh: m ? m.id : u && u.kind === "wali" ? "w:" + u.id : "?", ts: Date.now() });
 }
 export async function hapusData(col, ids, ket) {
   let ok = true;
@@ -58,10 +58,10 @@ export function KoreksiSheet({ item, onClose, onHapus }) {
     if (r.jenis === "murojaah") ubah = () => nav.go("murojaah", { sid: r.santri, edit: r.id });
     if (r.jenis === "tasmi") ubah = () => nav.go("tasmi", { sid: r.santri, edit: r.id });
   }
-  if (col === "absenHalaqah") ubah = () => nav.go("absenHalaqah", { sesi: r.sesi, tgl: r.tanggal });
-  if (col === "motd") ubah = () => nav.go("motd", { tgl: r.tanggal, waktu: r.waktu });
-  if (col === "mutabaah") ubah = () => nav.go("mutabaah", { tgl: r.tanggal, sid: r.santri });
-  if (col === "absenKelas") ubah = () => nav.go("absenKelas", { jid: r.jadwal, kelas: r.kelas, mapel: r.mapel, tgl: r.tanggal });
+  if (col === "absenHalaqah") ubah = () => nav.go("absenHalaqah", { sesi: r.sesi, tgl: r.tanggal, ubah: true });
+  if (col === "motd") ubah = () => nav.go("motd", { tgl: r.tanggal, waktu: r.waktu, ubah: true });
+  if (col === "mutabaah") ubah = () => nav.go("mutabaah", { tgl: r.tanggal, sid: r.santri, ubah: true });
+  if (col === "absenKelas") ubah = () => nav.go("absenKelas", { jid: r.jadwal, kelas: r.kelas, mapel: r.mapel, tgl: r.tanggal, ubah: true });
   if (col === "nilaiMapel") ubah = () => nav.go("nilaiMapel", { mapel: r.mapel, kelas: r.kelas });
   if (col === "izin") ubah = r.jenis === "Skorsing" && r.bap && get("bap", r.bap) ? () => nav.go("formBap", { edit: r.bap }) : () => nav.go("suratIzin", { edit: r.id });
   if (col === "bap") ubah = () => nav.go("formBap", { edit: r.id });
@@ -97,13 +97,19 @@ export function kumpulRiwayat(id, semua, cols, cocok = () => true) {
   return ev.sort((a, b) => b.ts - a.ts);
 }
 
+// Log perubahan di menu Akun: hanya jejak milik akun ini (yang ia ubah/hapus, dan input miliknya yang dikoreksi orang lain)
+const namaPelaku = o => (String(o).startsWith("w:") ? "Wali " + (L.santriById(o.slice(2)) || { nama: "santri" }).nama : (L.staffById(o) || {}).pendek || "akun lain");
 export function LogPerubahan() {
   useApp();
-  const l = all("log").sort((a, b) => b.ts - a.ts).slice(0, 100);
-  return html`<${SubHeader} title="Log Perubahan" sub="Jejak koreksi & penghapusan data" /><div class="wrap"><${Card}>
-    ${l.length ? html`<div class="list">${l.map(x => html`<${Row} name=${x.ket || x.col} sub=${`${x.aksi === "hapus" ? "Dihapus" : "Diubah"} oleh ${(L.staffById(x.oleh) || {}).pendek || x.oleh} · ${L.fmtDT(new Date(x.ts).toISOString())}`}
+  const u = nav.user, aku = u.kind === "wali" ? "w:" + u.id : u.id, [f, setF] = useState("saya");
+  const milikku = x => (x.data && (x.data.guru === u.id || x.data.oleh === u.id || x.data.pencatat === u.id)) || (u.kind === "wali" && x.col === "santriEdit" && x.id === u.id);
+  const semua = all("log").filter(x => x.oleh === aku || milikku(x)).sort((a, b) => b.ts - a.ts);
+  const l = (u.kind === "staff" && f === "lain" ? semua.filter(x => x.oleh !== aku) : u.kind === "staff" ? semua.filter(x => x.oleh === aku) : semua).slice(0, 100);
+  const nLain = semua.filter(x => x.oleh !== aku).length;
+  return html`<${SubHeader} title="Log Perubahan" sub="Hanya perubahan yang menyangkut akun ini">${u.kind === "staff" ? html`<${Seg} small items=${[["saya", "Oleh saya"], ["lain", `Input saya dikoreksi${nLain ? " (" + nLain + ")" : ""}`]]} value=${f} onChange=${setF} />` : null}</${SubHeader}><div class="wrap"><${Card}>
+    ${l.length ? html`<div class="list">${l.map(x => html`<${Row} name=${x.ket || x.col} sub=${`${x.aksi === "hapus" ? "Dihapus" : "Diubah"} oleh ${x.oleh === aku ? "Anda" : namaPelaku(x.oleh)} · ${L.fmtDT(new Date(x.ts).toISOString())}`}
       icon=${html`<${Icon} n=${x.aksi === "hapus" ? "trash" : "edit"} s=${18} />`} right=${html`<${Pill} t=${x.aksi === "hapus" ? "Hapus" : "Ubah"} tone=${x.aksi === "hapus" ? "red" : "blue"} />`} />`)}</div>`
-      : html`<${Empty} t="Belum ada koreksi data." icon="clipboard" />`}</${Card}></div>`;
+      : html`<${Empty} t=${f === "lain" ? "Belum ada input Anda yang dikoreksi akun lain." : "Belum ada perubahan data dari akun ini."} icon="clipboard" />`}</${Card}></div>`;
 }
 
 // ---------------- koreksi langsung dari tiap menu ----------------

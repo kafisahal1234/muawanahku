@@ -3,7 +3,8 @@ import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, E
 import { S, all, get, put, toast, uid } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
-import { logUbah, SudahAda, KoreksiSheet } from "./s_koreksi.js";
+import { logUbah, KoreksiSheet } from "./s_koreksi.js";
+import { AbsenSelesai } from "./common.js";
 import { me, StatusPill } from "./common.js";
 
 const myHalaqah = () => L.halaqahOf(me().id);
@@ -34,6 +35,8 @@ export function Tahfidz() {
         <${Tile} icon="mic" label="Tasmi'" color="orange" badge=${siap || null} onClick=${() => nav.go("tasmiList")} />
         <${Tile} icon="award" label="Nilai Mid/Smt" color="gold" onClick=${() => nav.go("ujianList")} />
         <${Tile} icon="trend" label="Progres Santri" color="purple" onClick=${() => nav.go("progres", { hid: a.id })} />
+        <${Tile} icon="chart" label="Rekap Halaqah" color="teal" onClick=${() => nav.go("rekap", { modul: "tahfidz" })} />
+        <${Tile} icon="calendar" label="Perolehan Bulanan" color="pink" onClick=${() => nav.go("hafalanBulan")} />
         <${Tile} icon="briefcase" label="Izin Guru" color="slate" onClick=${() => nav.go("izinGuru")} />
         <${Tile} icon="edit" label="Riwayat & Koreksi" color="coral" onClick=${() => nav.go("riwayatModul", { modul: "tahfidz" })} />
 </div></${Card}>
@@ -44,26 +47,30 @@ export function Tahfidz() {
       </${Card}></div>`;
 }
 
-export function AbsenHalaqah({ sesi: s0, tgl: t0 }) {
+export function AbsenHalaqah({ sesi: s0, tgl: t0, ubah }) {
   useApp();
   const tgl = t0 || L.today(), ss = L.sesiHari(tgl);
   const [sesi, setSesi] = useState(ss.includes(s0) ? s0 : ss.includes(L.sesiNow()) ? L.sesiNow() : ss[0]);
   const a = myHalaqah();
   if (!ss.length) return html`<${SubHeader} title="Absen Halaqah" sub=${`${me().pendek} · ${L.fmtTgl(tgl)}`} />
     <div class="wrap"><${Card}><${Empty} t="Hari Ahad tidak ada halaqah. Halaqah berjalan Senin–Sabtu (Sabtu hanya Shubuh)." icon="calendar" /></${Card}></div>`;
-  return html`<${SubHeader} title=${t0 && t0 !== L.today() ? "Koreksi Absen Halaqah" : "Absen Halaqah"} sub=${`${me().pendek} · ${L.fmtTgl(tgl)}${ss.length === 1 ? " · Sabtu hanya Shubuh" : ""}`}>
-    ${ss.length > 1 ? html`<${Seg} items=${ss.map(x => [x, x])} value=${sesi} onChange=${setSesi} />` : null}</${SubHeader}>
-    <${AbsenList} key=${sesi + tgl} sesi=${sesi} a=${a} tgl=${tgl} />`;
+  const isi = x => !!get("absenHalaqah", L.halaqahKey(a.id, tgl, x));
+  return html`<${SubHeader} title=${ubah ? "Koreksi Absen Halaqah" : "Absen Halaqah"} sub=${`${me().pendek} · ${L.fmtTgl(tgl)}${ss.length === 1 ? " · Sabtu hanya Shubuh" : ""}`}>
+    ${ss.length > 1 ? html`<${Seg} items=${ss.map(x => [x, (isi(x) ? "✓ " : "") + x])} value=${sesi} onChange=${setSesi} />` : null}</${SubHeader}>
+    <${AbsenList} key=${sesi + tgl} sesi=${sesi} a=${a} tgl=${tgl} ubah=${ubah} />`;
 }
-function AbsenList({ sesi, a, tgl }) {
+function AbsenList({ sesi, a, tgl, ubah }) {
   useApp();
   const key = L.halaqahKey(a.id, tgl, sesi), list = L.santriHalaqah(a.id);
   const ex = get("absenHalaqah", key);
   const [st, setSt] = useState(() => { const o = {}; list.forEach(s => (o[s.id] = (ex && ex.status[s.id]) || (L.sedangIzin(s.id) ? "I" : "H"))); return o; });
   const cnt = k => Object.values(st).filter(v => v === k).length;
-  const save = async () => { if (await put("absenHalaqah", key, { halaqah: a.id, tanggal: tgl, sesi, status: st, guru: me().id, ts: Date.now() })) { toast(`Absen ${sesi} tersimpan`); nav.back(); } };
+  const save = async () => {
+    const rec = { halaqah: a.id, tanggal: tgl, sesi, status: st, guru: (ex && ex.guru) || me().id, ts: ex ? ex.ts : Date.now(), ...(ex ? { diubah: { oleh: me().id, ts: Date.now() } } : {}) };
+    if (await put("absenHalaqah", key, rec)) { if (ex) { await logUbah("ubah", "absenHalaqah", key, `Absen halaqah ${sesi} ${L.fmtTgl(tgl)}`, ex); toast(`Absen ${sesi} diperbarui`); nav.back(); } else toast(`Absen ${sesi} tersimpan`); }
+  };
+  if (ex && !ubah) return html`<${AbsenSelesai} judul=${`Absen ${sesi} sudah diisi`} oleh=${ex.guru} ts=${ex.ts} st=${ex.status} grup=${[{ nama: a.nama, list }]} modul="tahfidz" />`;
   return html`<div class="wrap">
-    <${SudahAda} col="absenHalaqah" recs=${[ex]} teks=${ex ? `Sudah diabsen pukul ${L.fmtJam(ex.ts)}.` : ""} ket=${`Absen halaqah ${sesi} ${L.fmtTgl(tgl)}`} />
     <${Card} title=${`${list.length} santri`} right=${html`<button class="link" onClick=${() => { const o = {}; list.forEach(s => (o[s.id] = L.sedangIzin(s.id) ? "I" : "H")); setSt(o); }}>Semua hadir</button>`}>
       <${Counts} st=${st} />
       ${list.map(s => html`<${AbsenItem} s=${s} sub=${L.sedangIzin(s.id) ? "Sedang izin · otomatis" : null} value=${st[s.id]} onChange=${v => setSt({ ...st, [s.id]: v })} />`)}
@@ -75,15 +82,20 @@ export function SetorList({ jenis }) {
   useApp();
   const a = myHalaqah(), list = L.santriHalaqah(a.id), tgl = L.today();
   const title = jenis === "ziyadah" ? "Ziyadah" : "Murojaah";
-  return html`<${SubHeader} title=${title} sub=${`${a.nama} · ${L.fmtTgl(tgl)}`} />
+  // santri yang sudah setor (lulus) hari ini pindah ke bagian "Sudah setor" dan tidak bisa diinput ulang; koreksi lewat Riwayat
+  const data = list.map(s => { const recs = all("setoran").filter(r => r.santri === s.id && r.jenis === jenis && r.tanggal === tgl).sort((x, y) => x.ts - y.ts); return { s, last: recs[recs.length - 1] }; });
+  const selesai = d => d.last && (jenis === "murojaah" || d.last.lulus !== false);
+  const belum = data.filter(d => !selesai(d)), sudah = data.filter(selesai);
+  return html`<${SubHeader} title=${title} sub=${`${a.nama} · ${L.fmtTgl(tgl)} · ${sudah.length}/${list.length} sudah setor`} />
     <div class="wrap">
-      <${Card}><div class="list">${list.map(s => {
+      <${Card} title=${`Belum setor (${belum.length})`}>${belum.length ? html`<div class="list">${belum.map(({ s, last }) => {
         const h = L.hafalan(s), k = L.kunci(s);
-        const recs = all("setoran").filter(r => r.santri === s.id && r.jenis === jenis && r.tanggal === tgl).sort((x, y) => x.ts - y.ts);
-        const last = recs[recs.length - 1];
         const right = last ? html`<${StatusPill} r=${last} />` : (jenis === "ziyadah" && k.kunci && !k.sudah ? html`<${Pill} t="Terkunci" tone="gold" />` : html`<${Pill} t="Belum" tone="muted" />`);
         return html`<${Row} name=${s.nama} sub=${jenis === "ziyadah" ? L.posLabel(h.aktif, h.baris) : `Hafal ${L.fmtJumlah(h)}`} right=${right} onClick=${() => nav.go(jenis, { sid: s.id })} />`;
-      })}</div></${Card}></div>`;
+      })}</div>` : html`<div class="selesai-card" style="margin:4px 0"><span class="sc-ic"><${Icon} n="check" s=${24} c="#fff" w=${3} /></span><div><b>Semua santri sudah setor ${title.toLowerCase()} hari ini</b><small>Alhamdulillah</small></div></div>`}</${Card}>
+      ${sudah.length ? html`<${Card} title=${`Sudah setor hari ini (${sudah.length})`}><div class="list">${sudah.map(({ s, last }) => html`<${Row} name=${s.nama}
+        sub=${jenis === "ziyadah" ? `${last.baris} baris · ${L.posLabel(last.juz, last.sesudah)} · ${L.fmtJam(last.ts)}` : `Juz ${last.juz} · ${L.fmtJam(last.ts)}`} right=${html`<${StatusPill} r=${last} />`} />`)}</div>
+        <p class="riwayat-hint">Salah input? <button type="button" class="link" onClick=${() => nav.go("riwayatModul", { modul: "tahfidz" })}>Koreksi lewat Riwayat & Koreksi</button></p></${Card}>` : null}</div>`;
 }
 
 function SantriHead({ s, h }) {

@@ -598,3 +598,17 @@ html[data-nav=tab]::view-transition-new(root){animation:vtNaik .24s cubic-bezier
   @keyframes vtMasukKiri{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:none}}
   html[data-nav=fwd]::view-transition-new(root),html[data-nav=back]::view-transition-old(root){box-shadow:none}}
 @media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
+/* v10 tampilan setelah diisi */
+.selesai-card{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#0B6B43,#0E8A57);color:#fff;border-radius:18px;padding:16px 18px;margin:0 0 12px;box-shadow:0 6px 18px rgba(11,107,67,.22)}
+.selesai-card .sc-ic{flex:none;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center}
+.selesai-card b{display:block;font-size:16.5px;line-height:1.3}.selesai-card small{display:block;color:#D8F1E4;font-size:13px;margin-top:2px}
+.riwayat-hint{text-align:center;font-size:13px;color:#56695F;margin:14px 0 4px}.riwayat-hint .link{font-size:13px;font-weight:700}
+
+/* v10 pratinjau foto */
+.foto-btn{display:inline-block;border:0;padding:0;background:none;border-radius:50%;cursor:zoom-in;position:relative}.foto-btn input{display:none}
+label.foto-btn{cursor:pointer}.foto-edit label.fe-btn{cursor:pointer}.foto-edit label.fe-btn input{display:none}
+.foto-lb{position:fixed;inset:0;z-index:300;background:rgba(6,14,10,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;animation:lbIn .2s ease-out}
+.foto-lb img{max-width:min(92vw,560px);max-height:76vh;border-radius:18px;box-shadow:0 12px 40px rgba(0,0,0,.5);animation:lbZoom .24s cubic-bezier(.2,.8,.2,1);cursor:default;object-fit:contain;background:#fff}
+.foto-lb p{color:#fff;font-weight:700;margin:14px 0 0;font-size:16px;text-align:center}
+.lb-x{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;width:46px;height:46px;border-radius:50%;border:0;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;cursor:pointer}
+@keyframes lbIn{from{opacity:0}}@keyframes lbZoom{from{transform:scale(.86);opacity:.4}}

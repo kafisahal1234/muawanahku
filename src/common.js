@@ -1,6 +1,8 @@
-import { useState } from "preact/hooks";
-import { html, nav, Icon, Sheet, SearchBox, Row, Pill } from "./ui.js";
+import { useState, useEffect } from "preact/hooks";
+import { createPortal } from "preact/compat";
+import { html, nav, Icon, Sheet, SearchBox, Row, Pill, Card, Counts, STATUS } from "./ui.js";
 import { staffById, santriById, initials } from "./logic.js";
+import * as L from "./logic.js";
 import { get } from "./store.js";
 
 export const me = () => (nav.user && nav.user.kind === "staff" ? staffById(nav.user.id) : null);
@@ -56,4 +58,36 @@ export async function fotoPersegi(file, n = 320) {
     c.getContext("2d").drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, n, n);
     return c.toDataURL("image/jpeg", 0.78);
   } finally { URL.revokeObjectURL(url); }
+}
+
+// Tampilan setelah absen diisi: ringkasan hanya-baca. Ubah/hapus lewat Riwayat & Koreksi.
+const TONE_ST = { H: "green", S: "blue", I: "gold", A: "red", M: "purple" };
+export function AbsenSelesai({ judul, oleh, ts, st, grup, opts = ["H", "S", "I", "A"], modul, extra, lanjut }) {
+  const [semua, setSemua] = useState(false);
+  const tdk = grup.flatMap(g => g.list.filter(s => st[s.id] && st[s.id] !== "H").map(s => ({ s, g })));
+  const pill = k => html`<${Pill} t=${(STATUS[k] || ["—"])[0]} tone=${TONE_ST[k] || "muted"} />`;
+  return html`<div class="wrap">
+    <div class="selesai-card"><span class="sc-ic"><${Icon} n="check" s=${26} c="#fff" w=${3} /></span>
+      <div><b>${judul}</b><small>Diisi ${L.staffAman(oleh).pendek} pukul ${L.fmtJam(ts)}</small></div></div>
+    <${Card}><${Counts} st=${st} opts=${opts} />
+      ${tdk.length ? html`<div class="grp">Tidak hadir / catatan (${tdk.length})</div><div class="list">${tdk.map(({ s, g }) => html`<${Row} name=${s.nama} sub=${grup.length > 1 ? g.nama : null} right=${pill(st[s.id])} />`)}</div>`
+        : html`<p class="small center" style="margin:12px 0 4px">Semua santri hadir.</p>`}
+      <button type="button" class="link mt8" onClick=${() => setSemua(!semua)}>${semua ? "Sembunyikan daftar lengkap" : "Lihat semua santri"}</button>
+      ${semua ? grup.map(g => html`${grup.length > 1 ? html`<div class="grp">${g.nama}</div>` : null}<div class="list">${g.list.map(s => html`<${Row} name=${s.nama} right=${pill(st[s.id])} />`)}</div>`) : null}</${Card}>
+    ${extra || null}${lanjut || null}
+    <p class="riwayat-hint">Perlu mengubah atau menghapus? <button type="button" class="link" onClick=${() => nav.go("riwayatModul", { modul })}>Buka Riwayat & Koreksi</button></p></div>`;
+}
+
+// Pratinjau foto ukuran besar (ketuk foto profil untuk memperbesar)
+export function FotoBesar({ src, nama, onClose }) {
+  useEffect(() => { const k = e => e.key === "Escape" && onClose(); addEventListener("keydown", k); const o = document.body.style.overflow; document.body.style.overflow = "hidden"; return () => { removeEventListener("keydown", k); document.body.style.overflow = o; }; }, []);
+  return createPortal(html`<div class="foto-lb" role="dialog" aria-label=${"Foto " + (nama || "")} onClick=${onClose}>
+    <button type="button" class="lb-x" aria-label="Tutup" onClick=${onClose}><${Icon} n="x" s=${24} c="#fff" /></button>
+    <img src=${src} alt=${"Foto " + (nama || "")} onClick=${e => e.stopPropagation()} />${nama ? html`<p>${nama}</p>` : null}</div>`, document.body);
+}
+export function FotoLihat({ src, nama, size = 48, cls = "" }) {
+  const [buka, setBuka] = useState(false);
+  if (!src) return html`<${FotoAv} src=${src} nama=${nama} size=${size} cls=${cls} />`;
+  return html`<button type="button" class="foto-btn" aria-label=${"Lihat foto " + (nama || "")} onClick=${e => { e.stopPropagation(); setBuka(true); }}><${FotoAv} src=${src} nama=${nama} size=${size} cls=${cls} /></button>
+    ${buka ? html`<${FotoBesar} src=${src} nama=${nama} onClose=${() => setBuka(false)} />` : null}`;
 }

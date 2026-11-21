@@ -7,7 +7,7 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(args=["--host-resolver-rules=MAP *.googleapis.com 127.0.0.1, MAP www.gstatic.com 127.0.0.1, MAP *.firebaseio.com 127.0.0.1, MAP *.firebaseapp.com 127.0.0.1, MAP firebase.googleapis.com 127.0.0.1"], executable_path="/usr/bin/google-chrome")
         ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
-        pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
+        pg = await ctx.new_page(); await pg.clock.set_fixed_time("2026-11-23T08:10:00+07:00"); pg.on("pageerror", lambda e: errs.append(str(e)))
         cloudhits = []; pg.on("requestfinished", lambda r: ("googleapis" in r.url or "gstatic.com/firebasejs" in r.url) and cloudhits.append(r.url))
         async def bad(w):
             if await pg.locator(".note.red").count(): errs.append((w, await pg.locator(".note.red").first.inner_text()))
@@ -48,15 +48,13 @@ async def main():
         nb = await pg.evaluate("Object.keys(JSON.parse(localStorage.getItem('muawanahku_demo_v1')||'{}').bap||{}).length"); notes.append(("bap count after delete", nb))
         await tile("Riwayat & Koreksi"); await pg.screenshot(path=f"{O}/k2_riwayat_kes.png"); await bad("riwayat kes")
         # ---- Tahfidz (kaafi): absen -> sudah ada banner -> hapus ; riwayat & koreksi
-        ctx2 = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2); pg = await ctx2.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
+        ctx2 = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2); pg = await ctx2.new_page(); await pg.clock.set_fixed_time("2026-11-23T08:10:00+07:00"); pg.on("pageerror", lambda e: errs.append(str(e)))
         await pg.goto(U); await pg.evaluate("localStorage.clear()"); await login("kaafi")
         await tile("Tahfidz"); await tile("Absen Halaqah")
         if await pg.locator("text=Simpan absen").count():
             await pg.locator("text=Simpan absen").click(); await pg.wait_for_timeout(700)
-            await tile("Absen Halaqah"); await pg.screenshot(path=f"{O}/k3_sudahada.png")
-            notes.append(("banner", await pg.locator(".sudah-ada").count()))
-            await pg.locator(".sa-del").click(); await pg.wait_for_timeout(300); await yes()
-            notes.append(("absen after delete", await pg.evaluate("Object.keys(JSON.parse(localStorage.getItem('muawanahku_demo_v1')||'{}').absenHalaqah||{}).length")))
+            notes.append(("selesai view", await pg.locator(".selesai-card").count(), await pg.locator("text=Simpan absen").count()))
+            await pg.go_back(); await pg.wait_for_timeout(500)
         await tile("Riwayat & Koreksi"); await bad("riwayat tahfidz")
         await pg.go_back(); await pg.wait_for_timeout(500)
         await tile("Izin Guru"); await pg.fill("textarea", "demam"); await pg.click("text=Simpan izin"); await pg.wait_for_timeout(500)

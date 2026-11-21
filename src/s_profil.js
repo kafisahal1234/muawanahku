@@ -4,7 +4,7 @@ import { html, nav, useApp, Icon, Card, SubHeader, Btn, Field, Section, Hint, Se
 import { fbSiap, fbDaftar, fbMasuk, fbLupa, pesanAuth, salahSandi } from "./cloud.js";
 import { S, get, put, toast } from "./store.js";
 import * as L from "./logic.js";
-import { me, FotoAv, fotoPersegi, kunciFoto } from "./common.js";
+import { me, FotoAv, FotoBesar, fotoPersegi, kunciFoto } from "./common.js";
 import { logUbah } from "./s_koreksi.js";
 
 const BIO = [["tempatLahir", "Tempat lahir", "text", "Metro"], ["tglLahir", "Tanggal lahir", "date", ""], ["jk", "Jenis kelamin", "jk", ""], ["hp", "No. HP / WhatsApp", "tel", "08xx"],
@@ -21,7 +21,9 @@ export function Profil() {
   const simpan = async () => {
     if (!f.nama.trim()) return toast("Nama lengkap wajib diisi.", "err");
     const bio = Object.fromEntries(BIO.map(([k]) => [k, (f[k] || "").trim()]));
-    let ok = await put("profil", st.id, { ...bio, ts: Date.now() });
+    // gabung dengan data profil lama agar foto profil (dan isian lain) tidak hilang
+    const lama = get("profil", st.id) || {}; delete lama.id;
+    let ok = await put("profil", st.id, { ...lama, ...bio, ts: Date.now() });
     if (ok && (f.nama.trim() !== st.nama || f.pendek.trim() !== st.pendek)) ok = await put("staffEdit", st.id, { ...((S.data.staffEdit || {})[st.id] || {}), nama: f.nama.trim(), pendek: f.pendek.trim() || st.pendek });
     if (ok) { logUbah("ubah", "profil", st.id, `Profil ${f.nama.trim()} diperbarui`); toast("Profil tersimpan"); setEd(false); }
   };
@@ -103,22 +105,42 @@ export function FotoEdit({ nama, size = 96 }) {
     if (!/^image\//.test(f.type)) return toast("Pilih file gambar (JPG/PNG).", "err");
     setBusy(true); try { const foto = await fotoPersegi(f, 320); if (await put("profil", k, { ...pr, foto, fotoTs: Date.now() })) toast(pr.foto ? "Foto profil diganti" : "Foto profil ditambahkan"); } catch (x) { toast("Foto tidak bisa dibaca. Coba foto lain.", "err"); } setBusy(false); };
   const hapus = async () => { setAsk(false); const o = { ...pr }; delete o.foto; if (await put("profil", k, o)) toast("Foto profil dihapus"); };
-  return html`<div class="foto-blk"><label class="foto-edit" aria-label=${pr.foto ? "Ganti foto profil" : "Tambah foto profil"}><${FotoAv} src=${pr.foto} nama=${nama} size=${size} />
-      <span class="fe-btn">${busy ? "…" : html`<${Icon} n="camera" s=${16} w=${2.4} />`}</span><input type="file" accept="image/*" onChange=${pilih} /></label>
-    <small class="small">${pr.foto ? html`Ketuk foto untuk mengganti · <button class="link" style="min-height:32px" onClick=${() => setAsk(true)}>Hapus foto</button>` : "Ketuk untuk menambahkan foto profil"}</small>
+  const [lihat, setLihat] = useState(false);
+  return html`<div class="foto-blk"><div class="foto-edit">
+      ${pr.foto ? html`<button type="button" class="foto-btn" aria-label="Lihat foto profil" onClick=${() => setLihat(true)}><${FotoAv} src=${pr.foto} nama=${nama} size=${size} /></button>`
+        : html`<label class="foto-btn" aria-label="Tambah foto profil"><${FotoAv} nama=${nama} size=${size} /><input type="file" accept="image/*" onChange=${pilih} /></label>`}
+      <label class="fe-btn" aria-label=${pr.foto ? "Ganti foto profil" : "Tambah foto profil"}>${busy ? "…" : html`<${Icon} n="camera" s=${16} w=${2.4} />`}<input type="file" accept="image/*" onChange=${pilih} /></label></div>
+    <small class="small">${pr.foto ? html`Ketuk foto untuk memperbesar · <button class="link" style="min-height:32px" onClick=${() => setAsk(true)}>Hapus foto</button>` : "Ketuk untuk menambahkan foto profil"}</small>
+    ${lihat && pr.foto ? html`<${FotoBesar} src=${pr.foto} nama=${nama} onClose=${() => setLihat(false)} />` : null}
     <${Confirm} open=${ask} danger title="Hapus foto profil?" text="Foto diganti inisial nama." yes="Hapus" onYes=${hapus} onNo=${() => setAsk(false)} /></div>`;
 }
 
-// Profil wali: biodata ananda hanya-baca (diisi Admin); yang bisa diubah wali hanya foto profil
-const BIO_S = [["panggilan", "Nama panggilan"], ["nis", "NIS"], ["tempatLahir", "Tempat lahir"], ["lahir", "Tanggal lahir"], ["hobi", "Hobi"], ["cita", "Cita-cita"],
-  ["alamat", "Alamat"], ["ayah", "Nama ayah"], ["ibu", "Nama ibu"], ["hpWali", "No. HP wali"]];
+// Profil wali: biodata ananda diisi dan diperbarui oleh wali sendiri; yang terkunci hanya kode akses (dan penempatan kelas/asrama/halaqah oleh pondok)
+const BIO_S = [["panggilan", "Nama panggilan", "text"], ["nis", "NIS", "text"], ["tempatLahir", "Tempat lahir", "text"], ["lahir", "Tanggal lahir", "date"], ["hobi", "Hobi", "text"], ["cita", "Cita-cita", "text"],
+  ["alamat", "Alamat", "area"], ["ayah", "Nama ayah", "text"], ["ibu", "Nama ibu", "text"], ["hpWali", "No. HP wali", "tel"]];
 export function WaliProfil() {
   useApp();
-  const s = L.santriById(nav.user.id), a = L.asramaById(s.asrama), lh = L.lahirSantri(s);
+  const s = L.santriById(nav.user.id), a = L.asramaAman(s.asrama), [ed, setEd] = useState(false), [f, setF] = useState(null);
   const val = k => (k === "lahir" ? (s.lahir ? L.fmtTgl(s.lahir, false) : null) : s[k]);
-  return html`<${SubHeader} title="Profil Ananda" sub="Biodata dari pondok" />
-    <div class="wrap"><div class="prof-head"><${FotoEdit} nama=${s.nama} /><b>${s.nama}</b><small>Kelas ${s.kelas} · Asrama ${a.nama} · ${L.namaHalaqah(s)}</small></div>
+  const mulai = () => { setF({ nama: s.nama, ...Object.fromEntries(BIO_S.map(([k]) => [k, s[k] || ""])) }); setEd(true); };
+  const simpan = async () => {
+    if (!f.nama.trim()) return toast("Nama lengkap ananda wajib diisi.", "err");
+    const lama = (S.data.santriEdit || {})[s.id] || {}, baru = { ...lama, nama: f.nama.trim(), ...Object.fromEntries(BIO_S.map(([k]) => [k, String(f[k] || "").trim()])), kode: L.kodeAkses(s), diubahWali: Date.now() };
+    if (await put("santriEdit", s.id, baru)) { logUbah("ubah", "santriEdit", s.id, `Biodata ${baru.nama} diperbarui oleh wali`, lama); toast("Biodata ananda tersimpan"); setEd(false); }
+  };
+  if (ed) return html`<${SubHeader} title="Ubah Biodata Ananda" sub=${s.nama} />
+    <div class="wrap form-page"><${Card}><${Field} label="Nama lengkap"><input class="in" value=${f.nama} onInput=${e => setF({ ...f, nama: e.target.value })} /></${Field}>
+      ${BIO_S.map(([k, lab, t]) => html`<${Field} label=${lab}>${t === "area" ? html`<textarea class="in" rows="2" value=${f[k]} onInput=${e => setF({ ...f, [k]: e.target.value })}></textarea>`
+        : html`<input class="in" type=${t === "tel" ? "tel" : t} inputmode=${t === "tel" ? "tel" : null} value=${f[k]} onInput=${e => setF({ ...f, [k]: e.target.value })} />`}</${Field}>`)}</${Card}>
+      <${Hint}>Kode akses masuk tetap <b>${L.kodeAkses(s)}</b> walaupun nama atau tanggal lahir diubah.</${Hint}>
+      <div class="sticky-act btn-stack"><${Btn} icon="check" onClick=${simpan}>Simpan biodata</${Btn}><${Btn} kind="text" onClick=${() => setEd(false)}>Batal</${Btn}></div></div>`;
+  const isi = BIO_S.filter(([k]) => s[k]).length;
+  return html`<${SubHeader} title="Profil Ananda" sub="Biodata diisi oleh wali" />
+    <div class="wrap"><div class="prof-head"><${FotoEdit} nama=${s.nama} /><b>${s.nama}</b><small>Kelas ${s.kelas} · Asrama ${a.nama} · ${L.namaHalaqah(s)}</small>
+      <div class="prof-bar"><i style=${`width:${Math.round((isi / BIO_S.length) * 100)}%`}></i></div><small>Biodata terisi ${isi} dari ${BIO_S.length}</small></div>
+      <${Section} t="Kode akses" /><${Card} cls="kv-card"><div class="kv"><span>Kode akses wali</span><b>${L.kodeAkses(s)}</b></div><p class="small" style="margin:6px 0 0">Terkunci, tidak bisa diubah. Simpan baik-baik untuk masuk ke aplikasi.</p></${Card}>
       <${Section} t="Biodata" /><${Card} cls="kv-card"><div class="kv"><span>Nama lengkap</span><b>${s.nama}</b></div>
         ${BIO_S.map(([k, lab]) => html`<div class="kv"><span>${lab}</span><b class=${val(k) ? "" : "kosong"}>${val(k) || "Belum diisi"}</b></div>`)}</${Card}>
-      <${Hint}>Biodata diisi oleh Admin pondok dan tidak bisa diubah dari akun wali. Jika ada yang keliru, hubungi Admin. Foto profil bisa Bapak/Ibu tambahkan atau ganti sendiri.</${Hint}></div>`;
+      <${Btn} icon="edit" onClick=${mulai}>Ubah biodata ananda</${Btn}>
+      <p class="small center mt8">Kelas, asrama, dan halaqah ditentukan pondok.</p></div>`;
 }

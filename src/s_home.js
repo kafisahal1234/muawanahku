@@ -5,7 +5,7 @@ import { S, all, get, resetAll, toast } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
 import { kumpulRiwayat, entriRiwayat, KoreksiSheet } from "./s_koreksi.js";
-import { me, FotoAv, fotoUser } from "./common.js";
+import { me, FotoAv, FotoLihat, fotoUser } from "./common.js";
 import { HafalanCard, RiwayatSetoran, KehadiranCard, CatatanCard } from "./s_santri.js";
 import { slotStatus } from "./s_kurikulum.js";
 import { VERSI } from "./s_system.js";
@@ -106,10 +106,10 @@ function tilesFor(st) {
   }
   if (r.includes("musyrif") && a) {
     add("moon", "MOTD", "indigo", () => nav.go("motd")); add("checksq", "Mutaba'ah", "teal", () => nav.go("mutabaah"));
-    if (!r.includes("wadir_kesantrian")) add("door", "Izin & Catatan", "coral", () => nav.go("izinCatatan"));
+    const ids = new Set(L.santriAsrama(a.id).map(s => s.id));
+    add("home", "Asrama Saya", "coral", () => nav.go("asramaSaya"), (!r.includes("wadir_kesantrian") && L.izinAktif().filter(i => ids.has(i.santri)).length) || null);
     add("award", "Rapor", "gold", () => nav.go("raporList"));
   }
-  if (r.some(x => ["mudir", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian", "musyrif", "guru_mapel"].includes(x))) add("chart", "Rekap", "teal", () => nav.go("rekap"));
   if (r.some(x => ["mudir", "admin", "wadir_kurikulum"].includes(x))) add("cal2", "Kalender", "pink", () => nav.go("kalender"));
   if (r.includes("guru_mapel")) [...new Set(st.ajar.map(([m]) => m))].forEach(m => add("layers", "Mapel " + L.mapelById(m).nama.replace("Pendidikan ", "").replace("Bahasa ", "B. "), MAPEL_COLOR[m], () => nav.go("mapel", { mapel: m })));
   return t;
@@ -234,11 +234,11 @@ export function Akun() {
   const pengawas = st && st.roles.some(r => ["mudir", "admin", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian"].includes(r)), pr = st ? get("profil", st.id) : null;
   return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Akun</h1></div></div></div>
     <div class="wrap">
-      <div class="acc-head"><${FotoAv} src=${fotoUser(u)} nama=${st ? st.pendek : sa.nama} size=${58} />
+      <div class="acc-head"><${FotoLihat} src=${fotoUser(u)} nama=${st ? st.pendek : sa.nama} size=${58} />
         <span class="acc-t"><b>${st ? st.nama : "Wali " + sa.nama}</b><small>${st ? st.roles.map(r => L.ROLE_LABEL[r]).join(" · ") : `Kelas ${sa.kelas} · ${L.asramaAman(sa.asrama).nama}`}</small></span></div>
       ${st ? html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil", pr ? "Biodata & foto profil" : "Lengkapi biodata & foto profil", () => nav.go("profil"), "green")}${item("lock", "Keamanan", "Username & kata sandi", () => nav.go("keamanan"), "blue")}</div>`
         : html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil Ananda", fotoUser(u) ? "Biodata & foto profil" : "Biodata · tambahkan foto profil", () => nav.go("waliProfil"), "green")}</div>`}
-      ${pengawas ? html`<${Section} t="Pengawasan" /><div class="group">${item("clipboard", "Log perubahan data", "Jejak koreksi & penghapusan", () => nav.go("logUbah"), "gold")}</div>` : null}
+      <div class="group mt8">${item("clipboard", "Log perubahan data", st ? "Koreksi & penghapusan oleh akun ini" : "Perubahan biodata ananda", () => nav.go("logUbah"), "gold")}</div>
       <${Section} t="Informasi" /><div class="group">${item("bookopen", "Bantuan", null, () => nav.go("bantuan"), "teal")}${item("shield", "Kebijakan Privasi", null, () => nav.go("privasi"), "purple")}${item("settings", "Tentang aplikasi", VERSI, () => nav.go("tentang"), "slate")}</div>
       <div class="group mt12"><button class="menu-row out" onClick=${() => setAsk(true)}><span class="mr-ic red"><${Icon} n="logout" s=${20} /></span><span class="mr-t">Keluar</span></button></div>
       <p class="fab-note">Muawanah<b style="color:#E2A93B">Ku</b> ${VERSI} · Pondok Tahfidz Modern Kampung Qur'an Al Muawanah</p>

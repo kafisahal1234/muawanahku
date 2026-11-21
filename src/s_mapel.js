@@ -3,7 +3,8 @@ import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, E
 import { S, all, get, put, toast } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
-import { SudahAda } from "./s_koreksi.js";
+import { AbsenSelesai } from "./common.js";
+import { logUbah } from "./s_koreksi.js";
 import { me } from "./common.js";
 import { ImporNilai } from "./s_ai.js";
 
@@ -28,6 +29,7 @@ export function Mapel({ mapel }) {
       <${Card} title="Menu"><div class="tiles">
         <${Tile} icon="checksq" label="Absen & Jurnal" color="blue" onClick=${() => nav.go("absenKelasPilih", { mapel })} />
         <${Tile} icon="edit" label="Input Nilai" color="orange" onClick=${() => nav.go("nilaiPilih", { mapel })} />
+        <${Tile} icon="chart" label="Rekap Kelas" color="teal" onClick=${() => nav.go("rekap", { modul: "mapel" })} />
         <${Tile} icon="briefcase" label="Izin Guru" color="slate" onClick=${() => nav.go("izinGuru")} />
         <${Tile} icon="clock" label="Riwayat & Koreksi" color="coral" onClick=${() => nav.go("riwayatModul", { modul: "mapel" })} />
 </div></${Card}>
@@ -40,21 +42,28 @@ export function AbsenKelasPilih({ mapel }) {
     ${kelasAjar(st, mapel).map(k => html`<${Row} name=${"Kelas " + k} sub=${L.santriKelas(k).length + " santri"} icon=${html`<${Icon} n="users" s=${18} />`} onClick=${() => nav.go("absenKelas", { jid: `luar-${mapel}-${k}`, kelas: k, mapel })} />`)}</div></${Card}></div>`;
 }
 
-export function AbsenKelas({ jid, kelas, mapel, tgl: t0 }) {
+export function AbsenKelas({ jid, kelas, mapel, tgl: t0, ubah }) {
   useApp();
   const tgl = t0 || L.today(), key = L.absenKelasKey(jid, tgl), ex = get("absenKelas", key), list = L.santriKelas(kelas), m = L.mapelById(mapel);
   const [st, setSt] = useState(() => { const o = {}; list.forEach(s => (o[s.id] = (ex && ex.status[s.id]) || (L.sedangIzin(s.id) ? "I" : "H"))); return o; });
   const [materi, setMateri] = useState(ex ? ex.materi || "" : ""); const [target, setTarget] = useState(ex ? ex.target || "" : "");
   const c = k => Object.values(st).filter(v => v === k).length;
   const save = async () => {
-    if (await put("absenKelas", key, { jadwal: jid, kelas, mapel, guru: me().id, tanggal: tgl, status: st, materi, target, ts: Date.now() })) { toast(materi ? "Absen dan jurnal tersimpan" : "Absen tersimpan, jurnal belum diisi", materi ? "ok" : "err"); nav.back(); }
+    const rec = { jadwal: jid, kelas, mapel, guru: (ex && ex.guru) || me().id, tanggal: tgl, status: st, materi, target, ts: ex ? ex.ts : Date.now(), ...(ex ? { diubah: { oleh: me().id, ts: Date.now() } } : {}) };
+    if (await put("absenKelas", key, rec)) {
+      if (ex) { await logUbah("ubah", "absenKelas", key, `Absen kelas ${kelas} ${m.nama} ${L.fmtTgl(tgl)}`, ex); toast("Absen kelas diperbarui"); nav.back(); return; }
+      toast(materi ? "Absen dan jurnal tersimpan" : "Absen tersimpan, jurnal belum diisi", materi ? "ok" : "err");
+    }
   };
-  return html`<${SubHeader} title=${"Absen Kelas " + kelas} sub=${`${m.nama} · ${L.fmtTgl(tgl)}`} />
-    <div class="wrap"><${SudahAda} col="absenKelas" recs=${[ex]} teks=${ex ? `Absen kelas ini sudah diisi pukul ${L.fmtJam(ex.ts)}.` : ""} ket=${`Absen kelas ${kelas} ${m.nama} ${L.fmtTgl(tgl)}`} /><div class="mb8"><${Counts} st=${st} /></div>
+  if (ex && !ubah) return html`<${SubHeader} title=${"Absen Kelas " + kelas} sub=${`${m.nama} · ${L.fmtTgl(tgl)}`} />
+    <${AbsenSelesai} judul=${`Absen kelas ${kelas} sudah diisi`} oleh=${ex.guru} ts=${ex.ts} st=${ex.status} grup=${[{ nama: "Kelas " + kelas, list }]} modul="mapel"
+      extra=${html`<${Card} title="Jurnal mengajar" cls="kv-card"><div class="kv"><span>Materi</span><b class=${ex.materi ? "" : "kosong"}>${ex.materi || "Belum diisi"}</b></div><div class="kv"><span>Target</span><b class=${ex.target ? "" : "kosong"}>${ex.target || "Belum diisi"}</b></div></${Card}>`} />`;
+  return html`<${SubHeader} title=${(ex ? "Koreksi Absen Kelas " : "Absen Kelas ") + kelas} sub=${`${m.nama} · ${L.fmtTgl(tgl)}`} />
+    <div class="wrap"><div class="mb8"><${Counts} st=${st} /></div>
     <${Card} title=${`${list.length} santri`}>${list.map(s => html`<${AbsenItem} s=${s} sub=${L.sedangIzin(s.id) ? "Sedang izin · otomatis" : null} value=${st[s.id]} onChange=${v => setSt({ ...st, [s.id]: v })} />`)}</${Card}>
     <${Card} title="Jurnal mengajar"><${Field} label="Materi hari ini"><input class="in" value=${materi} placeholder="Misal: Descriptive text" onInput=${e => setMateri(e.target.value)} /></${Field}>
       <${Field} label="Target untuk siswa"><textarea class="in" value=${target} placeholder="Misal: siswa mampu menyusun 1 paragraf" onInput=${e => setTarget(e.target.value)}></textarea></${Field}></${Card}>
-    <div class="sticky-act"><${Btn} onClick=${save} icon="check">Simpan absen & jurnal</${Btn}></div></div>`;
+    <div class="sticky-act"><${Btn} onClick=${save} icon="check">${ex ? "Simpan perubahan" : "Simpan absen & jurnal"}</${Btn}></div></div>`;
 }
 
 export function NilaiPilih({ mapel }) {

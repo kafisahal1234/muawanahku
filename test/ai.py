@@ -81,7 +81,7 @@ async def main():
         await tile(pg, "Rapor"); await pg.wait_for_timeout(300); await pg.locator(".row").first.click(); await pg.wait_for_timeout(500)
         await pg.click(".ai-btn"); await pg.wait_for_timeout(600); print("catatan rapor AI:", (await pg.locator("textarea").first.input_value())[:60])
         log = await pg.evaluate("window.__AI_LOG"); print("data dikirim:", log[-1]["teks"].split("Data:\n")[1].replace("\n", " / ")[:300])
-        await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile(pg, "Rekap"); await pg.wait_for_timeout(300)
+        await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile(pg, "Tahfidz"); await tile(pg, "Rekap Halaqah"); await pg.wait_for_timeout(300)
         await pg.locator(".rk").first.click(); await pg.wait_for_timeout(300)
         await pg.click(".ai-btn"); await pg.wait_for_timeout(600); print("analisis rekap:", (await pg.locator(".ai-teks").inner_text()).replace("\n", " / "))
         await pg.screenshot(path="test/ai3_rekap.png", full_page=True)

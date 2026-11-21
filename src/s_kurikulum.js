@@ -25,6 +25,7 @@ export function Kurikulum({ ro }) {
       ${!ro ? html`<${Tile} icon="clock" label="Jam Pelajaran" color="teal" onClick=${() => nav.go("jamPelajaran")} />` : null}
       <${Tile} icon="calendar" label="Jadwal Mengajar" color="orange" onClick=${() => nav.go("jadwal", { ro })} />
       <${Tile} icon="layers" label="Mapel & Pengampu" color="blue" onClick=${() => nav.go("pengampu")} />
+      <${Tile} icon="chart" label="Rekap KBM" color="teal" onClick=${() => nav.go("rekap", { modul: "kurikulum" })} />
       <${Tile} icon="award" label="Rekap Nilai" color="gold" onClick=${() => nav.go("rekapNilai")} />
       <${Tile} icon="briefcase" label="Izin Guru" color="slate" onClick=${() => nav.go("rekapIzinGuru")} />
       ${!ro ? html`<${Tile} icon="clock" label="Koreksi Input Mapel" color="coral" onClick=${() => nav.go("riwayatModul", { modul: "mapel" })} />` : null}</div></${Card}>

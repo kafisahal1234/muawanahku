@@ -102,7 +102,7 @@ function EditStaff({ e, onClose }) {
       ...(e.baru || rename ? { password: un + "123" } : {}) };
     let ok = await put("staffEdit", id, { ...((S.data.staffEdit || {})[id] || {}), ...d });
     if (ok && rename) { const ov = { ...(L.akunOv(e.username) || {}) }; delete ov.hash; await put("akun", un, ov); await del("akun", e.username); }
-    if (ok && pindah) { await put("asramaEdit", pindah.id, { musyrif: id }); if (oldA && ganti) await put("asramaEdit", oldA.id, { musyrif: ganti.id }); }
+    if (ok && pindah) { const AE = S.data.asramaEdit || {}; await put("asramaEdit", pindah.id, { ...(AE[pindah.id] || {}), musyrif: id }); if (oldA && ganti) await put("asramaEdit", oldA.id, { ...(AE[oldA.id] || {}), musyrif: ganti.id }); }
     setBusy(false);
     if (ok) { logUbah(e.baru ? "tambah" : "ubah", "staffEdit", id, `${e.baru ? "Akun baru" : "Ubah akun"} ${d.nama}${rename ? ` (username ${e.username} → ${un})` : ""}${pindah ? ` · asrama ${pindah.nama}` : ""}`);
       toast(e.baru ? `Akun dibuat. Username ${un}, sandi awal ${un}123` : rename ? `Disimpan. Username baru ${un}, sandi direset ke ${un}123` : "Data akun disimpan"); onClose(); }

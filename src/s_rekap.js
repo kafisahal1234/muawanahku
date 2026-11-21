@@ -93,12 +93,16 @@ const HINT = { tahfidz: "Hafalan baru = ziyadah lulus dalam periode: 15 baris = 
   mapel: "Kehadiran dibagi pertemuan terjadwal pada hari KBM aktif. Projek dihitung dari tanggal projek di menu Input Nilai.",
   pelanggaran: "Ringan = dari MOTD (alpa/masbuq): sifatnya teguran dan hukuman ringan. Sedang dan berat = dari BAP Kesantrian.",
   mut: "Persentase = yang tercatat dibagi hari aktif asrama. Hari yang tidak diinput dihitung 0." };
-export function RekapHub({ tab: t0 }) {
+// Rekap dibuka dari menu masing-masing modul; tab dikunci sesuai modul (Tahfidz, Kurikulum/Mapel, Kesantrian, Asrama)
+const MODUL_TAB = { tahfidz: ["tahfidz"], mapel: ["mapel"], kurikulum: ["mapel"], kesantrian: ["pelanggaran", "mut"], asrama: ["pelanggaran", "mut"] };
+const MODUL_JUDUL = { tahfidz: "Rekap Tahfidz", mapel: "Rekap Kelas", kurikulum: "Rekap Kurikulum", kesantrian: "Rekap Kesantrian", asrama: "Rekap Asrama" };
+export function RekapHub({ tab: t0, modul }) {
   useApp();
-  const lk = lingkup(), t1 = ALIAS[t0] || t0; const [tab, setTab] = useState(lk.tabs.find(x => x[0] === t1) ? t1 : (lk.tabs[0] || [""])[0]); const [dl, setDl] = useState(false);
+  const lk0 = lingkup(), lk = modul && MODUL_TAB[modul] ? { ...lk0, tabs: lk0.tabs.filter(([k]) => MODUL_TAB[modul].includes(k)) } : lk0, t1 = ALIAS[t0] || t0; const [tab, setTab] = useState(lk.tabs.find(x => x[0] === t1) ? t1 : (lk.tabs[0] || [""])[0]); const [dl, setDl] = useState(false);
   const p = usePeriode("pekanan");
-  if (!lk.tabs.length) return html`<${SubHeader} title="Rekap" /><div class="wrap"><${Card}><${Empty} t="Tidak ada data rekap untuk peran ini." icon="chart" /></${Card}></div>`;
-  return html`<${SubHeader} title="Rekap" sub="Sesuai kewenangan · berdasarkan hari aktif"><div class="seg rk-tabs">${lk.tabs.map(([k, t]) => html`<button type="button" class=${k === tab ? "on" : ""} onClick=${() => setTab(k)}>${t}</button>`)}</div></${SubHeader}>
+  const judul = MODUL_JUDUL[modul] || "Rekap";
+  if (!lk.tabs.length) return html`<${SubHeader} title=${judul} /><div class="wrap"><${Card}><${Empty} t="Tidak ada data rekap untuk peran ini." icon="chart" /></${Card}></div>`;
+  return html`<${SubHeader} title=${judul} sub="Sesuai kewenangan · berdasarkan hari aktif">${lk.tabs.length > 1 ? html`<div class="seg rk-tabs">${lk.tabs.map(([k, t]) => html`<button type="button" class=${k === tab ? "on" : ""} onClick=${() => setTab(k)}>${t}</button>`)}</div>` : null}</${SubHeader}>
     <div class="wrap">${p.bar}
       ${tab === "tahfidz" ? html`<${RekapTahfidzP} hqs=${lk.hqs} rg=${p.rg} />` : tab === "mapel" ? html`<${RekapMapelP} lk=${lk} rg=${p.rg} />` : tab === "pelanggaran" ? html`<${RekapPelP} lk=${lk} rg=${p.rg} />` : html`<${RekapMutP} asr=${lk.asr} rg=${p.rg} />`}
       <${Hint}>${HINT[tab]}</${Hint}>

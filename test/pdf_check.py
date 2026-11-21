@@ -7,7 +7,7 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path="/usr/bin/google-chrome")
         async def sesi(u):
-            ctx = await b.new_context(viewport={"width": 390, "height": 844}, accept_downloads=True); pg = await ctx.new_page()
+            ctx = await b.new_context(viewport={"width": 390, "height": 844}, accept_downloads=True); pg = await ctx.new_page(); await pg.clock.set_fixed_time("2026-11-23T08:10:00+07:00")
             pg.on("pageerror", lambda e: errs.append((u, str(e))))
             await pg.goto(U); await pg.evaluate("localStorage.clear()"); await pg.goto(U); await pg.wait_for_timeout(500)
             await pg.fill("input[autocomplete=username]", u); await pg.fill(".pass-in input", u + "123"); await pg.click("button[type=submit]"); await pg.wait_for_timeout(900)
@@ -45,16 +45,17 @@ async def main():
             await pg.locator(".card .row").first.click(); await pg.wait_for_timeout(1000)
             await dl(pg, lambda: pg.click("text=Unduh rapor (PDF)"), nm)
         # rekap
-        await pg.goto(U); await pg.wait_for_timeout(700); await tile(pg, "Rekap")
-        for tab in ["tahfidz", "pelanggaran"]:
-            t = pg.locator(f".seg button:has-text('{tab.capitalize()}')")
-            if await t.count(): await t.first.click(); await pg.wait_for_timeout(500)
+        for tab, jalur in [("tahfidz", ["Tahfidz", "Rekap Halaqah"]), ("pelanggaran", ["Asrama Saya", "Rekap Asrama"]), ("kbm", ["Kurikulum", "Rekap KBM"])]:
+            await pg.goto(U); await pg.wait_for_timeout(700)
+            for j in jalur: await tile(pg, j)
             await pg.click("text=Unduh rekap ini"); await pg.wait_for_timeout(400)
             await dl(pg, lambda: pg.click("text=Dokumen PDF"), "rekap_" + tab)
         await ctx.close()
-        ctx, pg = await sesi("syamsul"); await tile(pg, "Rekap")
+        ctx, pg = await sesi("syamsul"); await tile(pg, "Kesantrian"); await tile(pg, "Rekap Kesantrian")
         await pg.click("text=Unduh rekap ini"); await pg.wait_for_timeout(400)
         await dl(pg, lambda: pg.click("text=Dokumen PDF"), "rekap_mudir")
+        await pg.goto(U); await pg.wait_for_timeout(700); await tile(pg, "Tahfidz"); await tile(pg, "Perolehan Bulanan")
+        await dl(pg, lambda: pg.click("text=Unduh PDF"), "perolehan_mudir")
         await ctx.close(); await b.close()
     print(json.dumps(got, ensure_ascii=False)); print("ERRORS:", errs)
 asyncio.run(main()); srv.terminate()

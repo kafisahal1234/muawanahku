@@ -108,7 +108,9 @@ export function lahirSantri(s) {
   const n = parseInt(String(s.id).replace(/\D/g, ""), 10) || 1, th = s.kelas === "7" ? 2013 : s.kelas === "8" ? 2012 : 2011;
   return { tgl: `${th}-${pad(((n * 5) % 12) + 1)}-${pad(((n * 7) % 28) + 1)}`, contoh: true };
 }
-export const kodeAkses = s => { const [y, m, d] = lahirSantri(s).tgl.split("-"); return `${s.wali}${d}${m}${y}`; };
+// Kode akses dikunci (s.kode) begitu biodata diubah wali, agar kode tidak ikut berubah saat nama/tanggal lahir diperbaiki
+export const kodeHitung = s => { const [y, m, d] = lahirSantri(s).tgl.split("-"); return `${s.wali}${d}${m}${y}`; };
+export const kodeAkses = s => s.kode || kodeHitung(s);
 const normKode = k => (k || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 export function loginWali(kode) {
   const k = normKode(kode); if (!k) return { err: "Isi kode akses." };

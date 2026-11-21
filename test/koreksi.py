@@ -31,7 +31,7 @@ async def main():
         print("after delete rows:", [r.split("\n")[0] for r in (await pg.locator(".card .row").all_inner_texts())[:3]])
         await pg.locator(".bnav button").nth(4).click(); await pg.wait_for_timeout(200); await pg.click("text=Log perubahan data"); await pg.wait_for_timeout(300); print("log:", [r.split("\n")[0] for r in await pg.locator(".card .row").all_inner_texts()])
         # rekap mutabaah pekanan & harian
-        await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile("Rekap"); await pg.wait_for_timeout(300)
+        await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile("Asrama Saya"); await tile("Rekap Asrama"); await pg.wait_for_timeout(300)
         await pg.click(".sub-h .seg button:text-is(\"Mutaba'ah\")"); await pg.wait_for_timeout(200)
         print("pekanan:", (await pg.locator(".rk").first.inner_text()).replace("\n", " | "))
         await pg.click(".periode .seg button:text-is('Hari ini')"); await pg.wait_for_timeout(200)

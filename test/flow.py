@@ -13,6 +13,7 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(args=["--host-resolver-rules=MAP *.googleapis.com 127.0.0.1, MAP www.gstatic.com 127.0.0.1, MAP *.firebaseio.com 127.0.0.1, MAP *.firebaseapp.com 127.0.0.1, MAP firebase.googleapis.com 127.0.0.1"], executable_path="/usr/bin/google-chrome")
         pg = await b.new_page(reduced_motion="reduce", viewport={"width": 400, "height": 860})
+        await pg.clock.set_fixed_time("2026-11-23T08:10:00+07:00")
         pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
         await pg.goto(URL); await pg.evaluate("localStorage.clear()")
         await login(pg, "kaafi")
@@ -37,6 +38,7 @@ async def main():
             print("tasmi toast:", await pg.locator(".toast").inner_text() if await pg.locator(".toast").count() else None)
         await pg.locator(".sub-h .back").click(); await pg.wait_for_timeout(200)
         await tile(pg, "Absen Halaqah"); await pg.locator(".stpick").nth(2).locator("button:text-is('S')").click(); await pg.click("text=Simpan absen"); await pg.wait_for_timeout(300)
+        print("absen selesai view:", await pg.locator(".selesai-card").count()); await pg.locator(".sub-h .back").click(); await pg.wait_for_timeout(300)
         await tile(pg, "Manzil"); await pg.screenshot(path="test/f4_manzil.png", full_page=True); await pg.locator(".sub-h .back").click()
         # mutabaah + motd
         await pg.locator(".bnav button").first.click(); await tile(pg, "MOTD"); await pg.locator(".absen-row").first.locator("button:text-is('A')").click(); await pg.click("text=Simpan absen"); await pg.wait_for_timeout(200)
