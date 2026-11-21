@@ -166,7 +166,7 @@ export const mudirStaff = () => STAFF.find(s => (s.roles || []).includes("mudir"
 // Nomor WhatsApp resmi pondok → tautan wa.me (0812… / +62 812… → 62812…)
 export const waNomor = n => { let d = String(n || "").replace(/\D/g, ""); if (d.startsWith("0")) d = "62" + d.slice(1); else if (d.startsWith("8")) d = "62" + d; return d.length >= 10 ? d : ""; };
 export const waLink = (n, teks) => { const d = waNomor(n); return d ? `https://wa.me/${d}${teks ? "?text=" + encodeURIComponent(teks) : ""}` : ""; };
-export const setelan = () => ({ ...SETELAN_DEFAULT, ...((S.data.kalender || {}).setelan || {}) });
+export const setelan = () => { const st = (S.data.kalender || {}).setelan || {}; return { ...SETELAN_DEFAULT, ...st, waPondok: st.waPondok || SETELAN_DEFAULT.waPondok }; };
 export const liburPondok = () => Object.entries(S.data.kalender || {}).filter(([id]) => id !== "setelan").map(([id, v]) => ({ id, ...v })).sort((a, b) => a.mulai.localeCompare(b.mulai));
 export function liburPada(tgl) {
   const st = setelan(), out = [];

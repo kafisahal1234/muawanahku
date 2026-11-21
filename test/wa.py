@@ -14,7 +14,7 @@ async def main():
             await pg.fill("input[autocomplete=username]", "kaafi"); await pg.fill(".pass-in input", "kaafi123"); await pg.click("button[type=submit]"); await pg.wait_for_timeout(1200)
             await pg.locator(".bnav button").nth(4).click(); await pg.wait_for_timeout(300); await pg.locator(".menu-row:has-text('Bantuan')").click(); await pg.wait_for_timeout(400)
             if not ua: await pg.screenshot(path="/tmp/ui/w0_belum.png")
-            await pg.locator("button.wa-h").click(); await pg.wait_for_timeout(400)
+            await (pg.locator(".wa-card .link") if await pg.locator(".wa-card .link").count() else pg.locator("button.wa-h")).click(); await pg.wait_for_timeout(400)
             notes.append(("sheet terbuka (wadir)", await pg.locator(".sheet").count()))
             await pg.fill(".sheet input[type=tel]", "0812-3456-7890")
             await pg.locator(".sheet input[type=file]").set_input_files("/tmp/ttdtest/ikon_uji.png"); await pg.wait_for_timeout(500)

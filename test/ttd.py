@@ -71,7 +71,7 @@ async def main():
         await login("khanza"); await keUtama(pg); await pg.locator(".bnav button").nth(4).click(); await pg.wait_for_timeout(300)
         notes.append(("admin punya menu ttd", await pg.locator(".menu-row:has-text('Tanda Tangan')").count()))
         await pg.locator(".menu-row:has-text('Bantuan')").click(); await pg.wait_for_timeout(400)
-        await pg.locator("button.wa-h").click(); await pg.wait_for_timeout(300)
+        await (pg.locator(".wa-card .link") if await pg.locator(".wa-card .link").count() else pg.locator("button.wa-h")).click(); await pg.wait_for_timeout(300)
         await pg.fill(".sheet input[type=tel]", "0812-3456-7890"); await pg.click("text=Simpan kontak"); await pg.wait_for_timeout(600)
         notes.append(("wa link", await pg.locator("a.wa-btn").get_attribute("href")))
         await pg.screenshot(path=f"{O}/t6_bantuan.png")
