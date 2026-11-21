@@ -17,7 +17,7 @@ D["bap"]["b9"] = dict(D["bap"]["b1"], kronologi=("Pada pukul 21.30 santri kedapa
 LIST = [["bap", "b9"], ["izin", "i1"], ["izin", "i2"], ["izin", "i3"], ["bap", "b1"], ["pemberitahuan", "b1"], ["sp", "b1"], ["skorsing", "b2"], ["kembali", "b3"]]
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome"); pg = await b.new_page()
+        b = await p.chromium.launch(args=["--host-resolver-rules=MAP *.googleapis.com 127.0.0.1, MAP www.gstatic.com 127.0.0.1, MAP *.firebaseio.com 127.0.0.1, MAP *.firebaseapp.com 127.0.0.1, MAP firebase.googleapis.com 127.0.0.1"], executable_path="/usr/bin/google-chrome"); pg = await b.new_page()
         await pg.goto("file:///tmp/sg/index.html")
         out = await pg.evaluate("([d,l]) => window.__run(d,l)", [D, LIST])
         sar = {k: await pg.evaluate("([d,s,p]) => window.__saran(d,s,p)", [D, s, pid]) for k, (s, pid) in {"s001_p5(2 BAP 20poin)": ("s001", "p4"), "s050_p5": ("s050", "p5"), "s050_p8": ("s050", "p8"), "s001_p3": ("s001", "p3")}.items()}

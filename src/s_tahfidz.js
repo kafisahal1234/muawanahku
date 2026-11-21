@@ -3,7 +3,7 @@ import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, E
 import { S, all, get, put, toast, uid } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
-import { logUbah } from "./s_koreksi.js";
+import { logUbah, SudahAda, KoreksiSheet } from "./s_koreksi.js";
 import { me, StatusPill } from "./common.js";
 
 const myHalaqah = () => L.halaqahOf(me().id);
@@ -35,6 +35,7 @@ export function Tahfidz() {
         <${Tile} icon="award" label="Nilai Mid/Smt" color="gold" onClick=${() => nav.go("ujianList")} />
         <${Tile} icon="trend" label="Progres Santri" color="purple" onClick=${() => nav.go("progres", { hid: a.id })} />
         <${Tile} icon="briefcase" label="Izin Guru" color="slate" onClick=${() => nav.go("izinGuru")} />
+        <${Tile} icon="edit" label="Riwayat & Koreksi" color="coral" onClick=${() => nav.go("riwayatModul", { modul: "tahfidz" })} />
 </div></${Card}>
       <${Card} title=${`Belum setor ziyadah · ${belum.length}`} right=${belum.length > 4 ? html`<button class="link" onClick=${() => nav.go("setorList", { jenis: "ziyadah" })}>Lihat semua</button>` : null}>
         ${belum.length ? html`<div class="list">${belum.slice(0, 4).map(s => { const h = L.hafalan(s), k = L.kunci(s);
@@ -62,7 +63,7 @@ function AbsenList({ sesi, a, tgl }) {
   const cnt = k => Object.values(st).filter(v => v === k).length;
   const save = async () => { if (await put("absenHalaqah", key, { halaqah: a.id, tanggal: tgl, sesi, status: st, guru: me().id, ts: Date.now() })) { toast(`Absen ${sesi} tersimpan`); nav.back(); } };
   return html`<div class="wrap">
-    ${ex ? html`<${Hint}>Sudah diabsen pukul ${L.fmtJam(ex.ts)}. Menyimpan lagi akan memperbarui absen ini.</${Hint}>` : null}
+    <${SudahAda} col="absenHalaqah" recs=${[ex]} teks=${ex ? `Sudah diabsen pukul ${L.fmtJam(ex.ts)}.` : ""} ket=${`Absen halaqah ${sesi} ${L.fmtTgl(tgl)}`} />
     <${Card} title=${`${list.length} santri`} right=${html`<button class="link" onClick=${() => { const o = {}; list.forEach(s => (o[s.id] = L.sedangIzin(s.id) ? "I" : "H")); setSt(o); }}>Semua hadir</button>`}>
       <${Counts} st=${st} />
       ${list.map(s => html`<${AbsenItem} s=${s} sub=${L.sedangIzin(s.id) ? "Sedang izin · otomatis" : null} value=${st[s.id]} onChange=${v => setSt({ ...st, [s.id]: v })} />`)}
@@ -92,6 +93,7 @@ function SantriHead({ s, h }) {
 
 export function Ziyadah({ sid, edit }) {
   useApp();
+  const [kor, setKor] = useState(null);
   const ed = edit ? get("setoran", edit) : null;
   const s = L.santriById(sid), h = L.hafalan(s, ed && ed.id), k = ed ? { kunci: false } : L.kunci(s);
   const sisa = h.total - h.baris;
@@ -128,14 +130,15 @@ export function Ziyadah({ sid, edit }) {
       <div class=${"nilai-box " + (lulus ? "" : "red")}><span>Nilai · KKM ${L.KKM}<br />${lulus ? "Lulus, posisi maju" : "Di bawah KKM, ulang hari ini"}</span><b>${nilai}</b></div>
     </${Card}>
     <div class="sticky-act"><${Btn} disabled=${!n} onClick=${() => setAsk(true)} icon="check">Simpan setoran</${Btn}></div>`}
-    <${Section} t="Riwayat ziyadah" />
-    <${Card}>${hist.length ? html`<div class="list">${hist.map(r => html`<${Row} name=${`${r.baris} baris · ${L.fmtShort(r.tanggal)}`} sub=${L.posLabel(r.juz, r.sesudah)} icon=${html`<${Icon} n="bookopen" s=${18} />`} right=${html`<${StatusPill} r=${r} />`} />`)}</div>` : html`<${Empty} t="Belum ada setoran ziyadah." />`}</${Card}>
+    ${kor ? html`<${KoreksiSheet} item=${kor} onClose=${() => setKor(null)} />` : null}<${Section} t="Riwayat ziyadah · ketuk untuk koreksi" />
+    <${Card}>${hist.length ? html`<div class="list">${hist.map(r => html`<${Row} onClick=${() => setKor({ col: "setoran", list: [r] })} name=${`${r.baris} baris · ${L.fmtShort(r.tanggal)}`} sub=${L.posLabel(r.juz, r.sesudah)} icon=${html`<${Icon} n="bookopen" s=${18} />`} right=${html`<${StatusPill} r=${r} />`} />`)}</div>` : html`<${Empty} t="Belum ada setoran ziyadah." />`}</${Card}>
     <${Confirm} open=${ask} title="Simpan setoran?" text=${`${s.nama}: ${n} baris, ${salah || 0} kesalahan, nilai ${nilai}.`} yes="Simpan" onYes=${save} onNo=${() => setAsk(false)} />
     </div>`;
 }
 
 export function Murojaah({ sid, edit }) {
   useApp();
+  const [kor, setKor] = useState(null);
   const ed = edit ? get("setoran", edit) : null;
   const s = L.santriById(sid), h = L.hafalan(s);
   const opsi = [...h.selesai, ...(h.baris > 0 ? [h.aktif] : [])];
@@ -159,7 +162,7 @@ export function Murojaah({ sid, edit }) {
     <${Card} title="Penilaian"><${Field} label="Jumlah kesalahan"><${Stepper} value=${salah} onChange=${setSalah} max=${34} label="jumlah kesalahan" /></${Field}>
       <div class=${"nilai-box " + (lulus ? "" : "red")}><span>Nilai · KKM ${L.KKM}</span><b>${nilai}</b></div></${Card}>
     <${Btn} onClick=${save} icon="check">Simpan murojaah</${Btn}>` : html`<${Card}><${Empty} t="Santri belum punya hafalan lama untuk dimurojaah." /></${Card}>`}
-    <${Section} t="Riwayat murojaah" /><${Card}>${hist.length ? html`<div class="list">${hist.map(r => html`<${Row} name=${`Juz ${r.juz} · hal. ${r.halDari}–${r.halSampai}`} sub=${L.fmtTgl(r.tanggal)} icon=${html`<${Icon} n="repeat" s=${18} />`} right=${html`<${StatusPill} r=${r} />`} />`)}</div>` : html`<${Empty} t="Belum ada murojaah." />`}</${Card}></div>`;
+    ${kor ? html`<${KoreksiSheet} item=${kor} onClose=${() => setKor(null)} />` : null}<${Section} t="Riwayat murojaah · ketuk untuk koreksi" /><${Card}>${hist.length ? html`<div class="list">${hist.map(r => html`<${Row} onClick=${() => setKor({ col: "setoran", list: [r] })} name=${`Juz ${r.juz} · hal. ${r.halDari}–${r.halSampai}`} sub=${L.fmtTgl(r.tanggal)} icon=${html`<${Icon} n="repeat" s=${18} />`} right=${html`<${StatusPill} r=${r} />`} />`)}</div>` : html`<${Empty} t="Belum ada murojaah." />`}</${Card}></div>`;
 }
 
 export function ManzilList() {
@@ -199,6 +202,7 @@ export function Manzil({ sid, wk }) {
 
 export function TasmiList() {
   useApp();
+  const [kor, setKor] = useState(null);
   const a = myHalaqah(), list = L.santriHalaqah(a.id);
   const siap = list.filter(s => L.hafalan(s).siapTasmi);
   const hist = all("setoran").filter(r => r.jenis === "tasmi" && list.some(s => s.id === r.santri)).sort((x, y) => y.ts - x.ts).slice(0, 15);
@@ -206,7 +210,7 @@ export function TasmiList() {
     <div class="wrap">
     <${Card} title="Siap tasmi'">${siap.length ? html`<div class="list">${siap.map(s => { const h = L.hafalan(s); return html`<${Row} name=${s.nama} sub=${`Selesai Juz ${h.aktif} · ${h.total} dari ${h.total} baris`} right=${html`<${Pill} t="Siap" tone="gold" />`} onClick=${() => nav.go("tasmi", { sid: s.id })} />`; })}</div>`
       : html`<${Empty} t="Belum ada santri yang menyelesaikan juz. Coba input ziyadah sampai akhir juz." icon="mic" />`}</${Card}>
-    <${Section} t="Riwayat tasmi' halaqah" /><${Card}>${hist.length ? html`<div class="list">${hist.map(r => html`<${Row} name=${L.santriAman(r.santri).nama} sub=${`Juz ${r.juz} · ${L.fmtTgl(r.tanggal)}`} right=${html`<${StatusPill} r=${r} />`} />`)}</div>` : html`<${Empty} t="Belum ada tasmi'." />`}</${Card}></div>`;
+    ${kor ? html`<${KoreksiSheet} item=${kor} onClose=${() => setKor(null)} />` : null}<${Section} t="Riwayat tasmi' halaqah · ketuk untuk koreksi" /><${Card}>${hist.length ? html`<div class="list">${hist.map(r => html`<${Row} onClick=${() => setKor({ col: "setoran", list: [r] })} name=${L.santriAman(r.santri).nama} sub=${`Juz ${r.juz} · ${L.fmtTgl(r.tanggal)}`} right=${html`<${StatusPill} r=${r} />`} />`)}</div>` : html`<${Empty} t="Belum ada tasmi'." />`}</${Card}></div>`;
 }
 
 export function Tasmi({ sid, edit }) {
@@ -267,16 +271,19 @@ export function Progres({ hid, aid }) {
       <span style="display:block;margin-top:6px"><${Bar} v=${c.pct} tone=${c.tercapai ? "green" : "gold"} /></span></span></button>`)}</div></${Card}></div>`;
 }
 
-export function IzinGuru() {
+export function IzinGuru({ edit }) {
   useApp();
-  const [tgl, setTgl] = useState(L.today()); const [jenis, setJenis] = useState("Sakit"); const [alasan, setAlasan] = useState("");
+  const ed = edit ? get("izinGuru", edit) : null;
+  const [tgl, setTgl] = useState(ed ? ed.tanggal : L.today()); const [jenis, setJenis] = useState(ed ? ed.jenis : "Sakit"); const [alasan, setAlasan] = useState(ed ? ed.alasan || "" : ""); const [sel, setSel] = useState(null);
   const mine = all("izinGuru").filter(i => i.guru === me().id).sort((a, b) => b.ts - a.ts);
-  const save = async () => { if (await put("izinGuru", uid("g"), { guru: me().id, tanggal: tgl, jenis, alasan, ts: Date.now() })) { toast("Izin tercatat, tanpa perlu persetujuan"); setAlasan(""); } };
-  return html`<${SubHeader} title="Izin Guru" sub="Langsung tercatat, tanpa persetujuan" />
-    <div class="wrap"><${Card} title="Ajukan izin">
+  const save = async () => {
+    if (ed) { if (await put("izinGuru", edit, { ...ed, tanggal: tgl, jenis, alasan, diubah: { oleh: me().id, ts: Date.now() } })) { await logUbah("ubah", "izinGuru", edit, `Izin guru ${jenis} ${L.fmtTgl(tgl)}`, ed); toast("Izin guru diperbarui"); nav.back(); } return; }
+    if (await put("izinGuru", uid("g"), { guru: me().id, tanggal: tgl, jenis, alasan, ts: Date.now() })) { toast("Izin tercatat, tanpa perlu persetujuan"); setAlasan(""); } };
+  return html`${sel ? html`<${KoreksiSheet} item=${sel} onClose=${() => setSel(null)} />` : null}<${SubHeader} title=${ed ? "Ubah Izin Guru" : "Izin Guru"} sub="Langsung tercatat, tanpa persetujuan" />
+    <div class="wrap"><${Card} title=${ed ? "Ubah izin" : "Ajukan izin"}>
       <${Field} label="Tanggal"><input type="date" class="in" value=${tgl} onInput=${e => setTgl(e.target.value)} /></${Field}>
       <${Field} label="Jenis"><${Seg} items=${[["Sakit", "Sakit"], ["Izin", "Izin"], ["Dinas", "Dinas luar"]]} value=${jenis} onChange=${setJenis} /></${Field}>
       <${Field} label="Keterangan"><textarea class="in" value=${alasan} onInput=${e => setAlasan(e.target.value)} placeholder="Misal: demam, ada acara keluarga"></textarea></${Field}>
-      <${Btn} onClick=${save} icon="check">Simpan izin</${Btn}></${Card}>
-    <${Section} t="Riwayat izin saya" /><${Card}>${mine.length ? html`<div class="list">${mine.map(i => html`<${Row} name=${i.jenis + " · " + L.fmtTgl(i.tanggal)} sub=${i.alasan || "—"} icon=${html`<${Icon} n="briefcase" s=${18} />`} />`)}</div>` : html`<${Empty} t="Belum ada izin." />`}</${Card}></div>`;
+      <${Btn} onClick=${save} icon="check">${ed ? "Simpan perubahan" : "Simpan izin"}</${Btn}></${Card}>
+    <${Section} t="Riwayat izin saya" /><${Card}>${mine.length ? html`<div class="list">${mine.map(i => html`<${Row} name=${i.jenis + " · " + L.fmtTgl(i.tanggal)} sub=${(i.alasan || "—") + " · ketuk untuk ubah/hapus"} icon=${html`<${Icon} n="briefcase" s=${18} />`} onClick=${() => setSel({ col: "izinGuru", list: [i] })} />`)}</div>` : html`<${Empty} t="Belum ada izin." />`}</${Card}></div>`;
 }

@@ -39,7 +39,7 @@ const SCREENS = {
   santri: SA.SantriDetail, raporList: SA.RaporList, raporView: SA.RaporView, motdAll: SA.MotdRekapAll, kinerjaAll: SA.KinerjaAll,
   profil: PF.Profil, keamanan: PF.Keamanan, waliProfil: PF.WaliProfil,
   halaqahAdmin: HQ.HalaqahAdmin, halaqahEdit: HQ.HalaqahEdit,
-  rekap: RK.RekapHub, waliRekap: RK.WaliRekap, rekapDetail: RK.RekapDetail, kalender: RK.Kalender, logUbah: KO.LogPerubahan,
+  rekap: RK.RekapHub, waliRekap: RK.WaliRekap, rekapDetail: RK.RekapDetail, kalender: RK.Kalender, logUbah: KO.LogPerubahan, riwayatModul: KO.RiwayatModul,
 };
 // rekap lama diarahkan ke rekap berbasis hari aktif
 Object.assign(SCREENS, {

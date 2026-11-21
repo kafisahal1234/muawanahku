@@ -3,6 +3,7 @@ import { html, nav, useApp, Icon, Card, SubHeader, Stat, Row, Pill, Btn, Empty, 
 import { all, get, put, toast } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
+import { SudahAda } from "./s_koreksi.js";
 import { me } from "./common.js";
 
 const waktuNow = () => { const h = new Date().getHours(); return h < 5 ? "tahajud" : h < 7 ? "subuh" : h < 8 ? "apel" : h < 11 ? "dhuha" : h < 15 ? "dzuhur" : h < 17 ? "ashar" : h < 19 ? "maghrib" : "isya"; };
@@ -30,7 +31,7 @@ function MotdList({ w, pondok, mine, tgl }) {
   const shown = asr.filter(a => f === "all" || a.id === f);
   const match = s => !q || s.nama.toLowerCase().includes(q.toLowerCase());
   return html`<div class="wrap">
-    ${last ? html`<${Hint}>Terakhir diisi ${L.staffAman(last.guru).pendek} pukul ${L.fmtJam(last.ts)}. Alpa & masbuq otomatis jadi pelanggaran ringan.</${Hint}>` : html`<${Hint}>Satu ustadz bertugas mengisi untuk semua santri Pondok ${pondok}. Alpa & masbuq otomatis jadi pelanggaran ringan.</${Hint}>`}
+    ${last ? html`<${SudahAda} col="motd" recs=${docs} teks=${`Terakhir diisi ${L.staffAman(last.guru).pendek} pukul ${L.fmtJam(last.ts)}. Alpa & masbuq otomatis jadi pelanggaran ringan.`} ket=${`Absen MOTD ${label} Pondok ${pondok} ${L.fmtTgl(tgl)}`} />` : html`<${Hint}>Satu ustadz bertugas mengisi untuk semua santri Pondok ${pondok}. Alpa & masbuq otomatis jadi pelanggaran ringan.</${Hint}>`}
     <div class="seg small mb8">${[["all", "Semua"], ...asr.map(a => [a.id, a.nama.replace("bin Abi ", "b. ").replace("bin ", "b. ")])].map(([k, lab]) => html`<button class=${k === f ? "on" : ""} onClick=${() => setF(k)}>${lab}${k === mine ? " ★" : ""}</button>`)}</div>
     <${SearchBox} value=${q} onInput=${setQ} />
     <${Card}><${Counts} st=${(() => { const ids = new Set(shown.flatMap(a => L.santriAsrama(a.id).map(x => x.id))); return Object.fromEntries(Object.entries(st).filter(([id]) => ids.has(id))); })()} opts=${["H", "M", "S", "I", "A"]} />
@@ -63,6 +64,7 @@ function MutForm({ sid, list, onNext, tgl }) {
     }
   };
   return html`<div class="wrap">
+    <${SudahAda} col="mutabaah" recs=${[ex]} teks=${ex ? `Mutaba'ah ${s.nama} sudah diisi pukul ${L.fmtJam(ex.ts)}.` : ""} ket=${`Mutaba'ah ${s.nama} ${L.fmtTgl(tgl)}`} />
     <${Card}><div style="display:flex;justify-content:space-between;align-items:center"><div><b>${s.nama}</b><div class="small">Kelas ${s.kelas}</div></div><${Pill} t=${`${ibFinal.size + ad.size} dari ${DATA.ibadah.length + DATA.adab.length}`} tone="gold" /></div></${Card}>
     <${Card} title="Ibadah" right=${html`<small>${ibFinal.size}/${DATA.ibadah.length}</small>`}>${DATA.ibadah.map((t, i) => {
       const au = auto[i], isAuto = au === true || au === false, on = ibFinal.has(i);

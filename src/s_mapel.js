@@ -3,6 +3,7 @@ import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, E
 import { S, all, get, put, toast } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
+import { SudahAda } from "./s_koreksi.js";
 import { me } from "./common.js";
 import { ImporNilai } from "./s_ai.js";
 
@@ -28,6 +29,7 @@ export function Mapel({ mapel }) {
         <${Tile} icon="checksq" label="Absen & Jurnal" color="blue" onClick=${() => nav.go("absenKelasPilih", { mapel })} />
         <${Tile} icon="edit" label="Input Nilai" color="orange" onClick=${() => nav.go("nilaiPilih", { mapel })} />
         <${Tile} icon="briefcase" label="Izin Guru" color="slate" onClick=${() => nav.go("izinGuru")} />
+        <${Tile} icon="clock" label="Riwayat & Koreksi" color="coral" onClick=${() => nav.go("riwayatModul", { modul: "mapel" })} />
 </div></${Card}>
       </div>`;
 }
@@ -48,7 +50,7 @@ export function AbsenKelas({ jid, kelas, mapel, tgl: t0 }) {
     if (await put("absenKelas", key, { jadwal: jid, kelas, mapel, guru: me().id, tanggal: tgl, status: st, materi, target, ts: Date.now() })) { toast(materi ? "Absen dan jurnal tersimpan" : "Absen tersimpan, jurnal belum diisi", materi ? "ok" : "err"); nav.back(); }
   };
   return html`<${SubHeader} title=${"Absen Kelas " + kelas} sub=${`${m.nama} · ${L.fmtTgl(tgl)}`} />
-    <div class="wrap"><div class="mb8"><${Counts} st=${st} /></div>
+    <div class="wrap"><${SudahAda} col="absenKelas" recs=${[ex]} teks=${ex ? `Absen kelas ini sudah diisi pukul ${L.fmtJam(ex.ts)}.` : ""} ket=${`Absen kelas ${kelas} ${m.nama} ${L.fmtTgl(tgl)}`} /><div class="mb8"><${Counts} st=${st} /></div>
     <${Card} title=${`${list.length} santri`}>${list.map(s => html`<${AbsenItem} s=${s} sub=${L.sedangIzin(s.id) ? "Sedang izin · otomatis" : null} value=${st[s.id]} onChange=${v => setSt({ ...st, [s.id]: v })} />`)}</${Card}>
     <${Card} title="Jurnal mengajar"><${Field} label="Materi hari ini"><input class="in" value=${materi} placeholder="Misal: Descriptive text" onInput=${e => setMateri(e.target.value)} /></${Field}>
       <${Field} label="Target untuk siswa"><textarea class="in" value=${target} placeholder="Misal: siswa mampu menyusun 1 paragraf" onInput=${e => setTarget(e.target.value)}></textarea></${Field}></${Card}>

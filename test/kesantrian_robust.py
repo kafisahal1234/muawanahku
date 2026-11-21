@@ -12,7 +12,7 @@ SEED = {"santriEdit": {"sx1": {"nama": 12345, "kelas": "8", "asrama": ""}, "sx2"
 async def main():
     errs = []
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome")
+        b = await p.chromium.launch(args=["--host-resolver-rules=MAP *.googleapis.com 127.0.0.1, MAP www.gstatic.com 127.0.0.1, MAP *.firebaseio.com 127.0.0.1, MAP *.firebaseapp.com 127.0.0.1, MAP firebase.googleapis.com 127.0.0.1"], executable_path="/usr/bin/google-chrome")
         async def sesi(user, steps):
             ctx = await b.new_context(viewport={"width": 390, "height": 844}); pg = await ctx.new_page()
             pg.on("pageerror", lambda e: errs.append((user, str(e))))

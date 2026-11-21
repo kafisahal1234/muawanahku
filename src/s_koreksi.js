@@ -1,6 +1,6 @@
 // Koreksi data: ubah & hapus data yang sudah diinput, dengan jejak perubahan (log)
 import { useState } from "preact/hooks";
-import { html, nav, useApp, Icon, Card, SubHeader, Row, Pill, Btn, Empty, Sheet, Confirm, Hint, Seg } from "./ui.js";
+import { html, nav, useApp, Icon, Card, SubHeader, Row, Pill, Btn, Empty, Sheet, Confirm, Hint, Seg, SearchBox } from "./ui.js";
 import { all, get, put, del, toast, uid } from "./store.js";
 import * as L from "./logic.js";
 import { me } from "./common.js";
@@ -47,7 +47,7 @@ export function setoranTerakhir(r) {
   return !l.length || l[l.length - 1].id === r.id;
 }
 
-export function KoreksiSheet({ item, onClose }) {
+export function KoreksiSheet({ item, onClose, onHapus }) {
   const [ask, setAsk] = useState(false);
   if (!item) return null;
   const { col, list } = item, r = list[0], e = entriRiwayat(col, list), boleh = bolehUbah(r);
@@ -63,11 +63,18 @@ export function KoreksiSheet({ item, onClose }) {
   if (col === "mutabaah") ubah = () => nav.go("mutabaah", { tgl: r.tanggal, sid: r.santri });
   if (col === "absenKelas") ubah = () => nav.go("absenKelas", { jid: r.jadwal, kelas: r.kelas, mapel: r.mapel, tgl: r.tanggal });
   if (col === "nilaiMapel") ubah = () => nav.go("nilaiMapel", { mapel: r.mapel, kelas: r.kelas });
+  if (col === "izin") ubah = r.jenis === "Skorsing" && r.bap && get("bap", r.bap) ? () => nav.go("formBap", { edit: r.bap }) : () => nav.go("suratIzin", { edit: r.id });
+  if (col === "bap") ubah = () => nav.go("formBap", { edit: r.id });
+  if (col === "izinGuru") ubah = () => nav.go("izinGuru", { edit: r.id });
   const hapus = async () => {
     setAsk(false);
-    if (await hapusData(col, list.map(x => x.id), `${e.jud} · ${e.det}`)) { toast("Data dihapus. Tercatat di log perubahan."); onClose(); }
+    const ids = list.map(x => x.id), ikut = col === "bap" ? all("izin").filter(i => ids.includes(i.bap)).map(i => i.id) : [];
+    if (await hapusData(col, ids, `${e.jud} · ${e.det}`)) {
+      if (ikut.length) await hapusData("izin", ikut, `Status skorsing dari ${e.jud}`);
+      toast("Data dihapus. Tercatat di log perubahan."); onClose(); if (onHapus) onHapus();
+    }
   };
-  const efek = col === "setoran" && r.jenis === "ziyadah" ? "Posisi hafalan santri kembali ke sebelum setoran ini." : col === "setoran" && r.jenis === "tasmi" && r.lulus ? "Juz kembali belum lulus tasmi', santri kembali ke juz tersebut." : col === "absenHalaqah" || col === "motd" || col === "absenKelas" ? "Sesi ini kembali tercatat belum diabsen pada rekap." : col === "mutabaah" ? "Hari ini kembali tercatat belum diinput (nilai 0) pada rekap." : "";
+  const efek = col === "setoran" && r.jenis === "ziyadah" ? "Posisi hafalan santri kembali ke sebelum setoran ini." : col === "setoran" && r.jenis === "tasmi" && r.lulus ? "Juz kembali belum lulus tasmi', santri kembali ke juz tersebut." : col === "absenHalaqah" || col === "motd" || col === "absenKelas" ? "Sesi ini kembali tercatat belum diabsen pada rekap." : col === "mutabaah" ? "Hari ini kembali tercatat belum diinput (nilai 0) pada rekap." : col === "bap" ? "Poin pelanggaran dan surat-surat dari BAP ini ikut hilang." : col === "izin" ? "Santri tidak lagi tercatat sedang izin." : "";
   return html`<${Sheet} open=${true} title="Koreksi data" onClose=${onClose}>
     <div class="row" style="border:none"><span class="row-ic"><${Icon} n=${e.ic} s=${18} /></span><span class="row-t"><b>${e.jud}</b><small>${e.det}</small></span></div>
     <div class="kv"><span>Dicatat oleh</span><b>${(L.staffById(r.guru || r.oleh) || {}).pendek || "—"}</b></div>
@@ -81,10 +88,11 @@ export function KoreksiSheet({ item, onClose }) {
 }
 
 // Kumpulkan entri riwayat milik guru (atau semua bila pengawas & mode semua)
-export function kumpulRiwayat(id, semua) {
-  const ev = [], mine = r => semua || r.guru === id || r.oleh === id;
-  ["setoran", "absenHalaqah", "mutabaah", "absenKelas", "izin", "bap", "nilaiMapel", "pengumuman", "izinGuru"].forEach(col => all(col).filter(mine).forEach(r => ev.push({ col, list: [r], ts: (r.diubah && r.diubah.ts) || r.ts || 0 })));
-  const g = {}; all("motd").filter(mine).forEach(r => { const k = `${r.pondok}_${r.tanggal}_${r.waktu}`; (g[k] = g[k] || []).push(r); });
+export function kumpulRiwayat(id, semua, cols, cocok = () => true) {
+  const ev = [], mine = r => (semua || r.guru === id || r.oleh === id) && cocok(r);
+  const C = cols || ["setoran", "absenHalaqah", "mutabaah", "absenKelas", "izin", "bap", "nilaiMapel", "pengumuman", "izinGuru", "motd"];
+  C.filter(c => c !== "motd").forEach(col => all(col).filter(mine).forEach(r => ev.push({ col, list: [r], ts: (r.diubah && r.diubah.ts) || r.ts || 0 })));
+  const g = {}; if (C.includes("motd")) all("motd").filter(mine).forEach(r => { const k = `${r.pondok}_${r.tanggal}_${r.waktu}`; (g[k] = g[k] || []).push(r); });
   Object.values(g).forEach(list => ev.push({ col: "motd", list, ts: Math.max(...list.map(x => x.ts || 0)) }));
   return ev.sort((a, b) => b.ts - a.ts);
 }
@@ -96,4 +104,51 @@ export function LogPerubahan() {
     ${l.length ? html`<div class="list">${l.map(x => html`<${Row} name=${x.ket || x.col} sub=${`${x.aksi === "hapus" ? "Dihapus" : "Diubah"} oleh ${(L.staffById(x.oleh) || {}).pendek || x.oleh} · ${L.fmtDT(new Date(x.ts).toISOString())}`}
       icon=${html`<${Icon} n=${x.aksi === "hapus" ? "trash" : "edit"} s=${18} />`} right=${html`<${Pill} t=${x.aksi === "hapus" ? "Hapus" : "Ubah"} tone=${x.aksi === "hapus" ? "red" : "blue"} />`} />`)}</div>`
       : html`<${Empty} t="Belum ada koreksi data." icon="clipboard" />`}</${Card}></div>`;
+}
+
+// ---------------- koreksi langsung dari tiap menu ----------------
+// Tombol "Ubah / hapus" di layar detail (izin, BAP, dll.); hanya staf yang berhak
+export function TombolKoreksi({ col, rec, label = "Ubah / hapus data ini", balik = true }) {
+  const [open, setOpen] = useState(false);
+  if (!rec || !nav.user || nav.user.kind !== "staff" || !bolehUbah(rec)) return null;
+  return html`<div class="koreksi-bar"><${Btn} kind="ghost" icon="edit" onClick=${() => setOpen(true)}>${label}</${Btn}></div>
+    ${open ? html`<${KoreksiSheet} item=${{ col, list: [rec] }} onClose=${() => setOpen(false)} onHapus=${balik ? () => nav.back() : null} />` : null}`;
+}
+// Banner di layar input bila data sudah pernah disimpan: info + tombol hapus
+export function SudahAda({ col, recs, teks, ket }) {
+  const [ask, setAsk] = useState(false);
+  const l = (recs || []).filter(Boolean); if (!l.length) return null;
+  const boleh = nav.user && nav.user.kind === "staff" && l.every(bolehUbah);
+  const hapus = async () => { setAsk(false); if (await hapusData(col, l.map(x => x.id), ket || teks)) { toast("Data dihapus. Tercatat di log perubahan."); nav.back(); } };
+  return html`<div class="sudah-ada"><${Icon} n="check" s=${18} /><span>${teks}${boleh ? " Ubah isiannya lalu simpan lagi untuk memperbaiki." : ""}</span>
+    ${boleh ? html`<button type="button" class="sa-del" onClick=${() => setAsk(true)}><${Icon} n="trash" s=${16} />Hapus</button>` : null}
+    <${Confirm} open=${ask} danger title="Hapus data ini?" text=${`${ket || teks} akan dihapus dan kembali tercatat belum diisi pada rekap. Tercatat di log perubahan.`} yes="Hapus" onYes=${hapus} onNo=${() => setAsk(false)} /></div>`;
+}
+// Riwayat & koreksi per modul (Tahfidz, Asrama, Mapel, Kesantrian, Izin guru)
+export const MODUL = {
+  tahfidz: { judul: "Tahfidz", cols: ["setoran", "absenHalaqah"], pengawas: ["wadir_tahfidz"] },
+  asrama: { judul: "MOTD & Mutaba'ah", cols: ["motd", "mutabaah"], pengawas: ["wadir_kesantrian"] },
+  mapel: { judul: "Mapel", cols: ["absenKelas", "nilaiMapel"], pengawas: ["wadir_kurikulum"] },
+  kesantrian: { judul: "Kesantrian", cols: ["izin", "bap"], pengawas: ["wadir_kesantrian"] },
+  guru: { judul: "Izin Guru", cols: ["izinGuru"], pengawas: ["wadir_kurikulum"] },
+};
+export function RiwayatModul({ modul = "tahfidz" }) {
+  useApp();
+  const M = MODUL[modul] || MODUL.tahfidz, m = me();
+  const pengawas = m.roles.some(r => ["mudir", "admin", ...M.pengawas].includes(r));
+  const [mode, setMode] = useState(pengawas ? "semua" : "saya"); const [q, setQ] = useState(""); const [sel, setSel] = useState(null); const [n, setN] = useState(40);
+  const pondok = m.roles.includes("wadir_kesantrian") && !m.roles.includes("mudir") ? m.pondok : null;
+  const cocok = r => !pondok || !(modul === "kesantrian" || modul === "asrama") || (r.pondok ? r.pondok === pondok : L.pondokOfSantri(L.santriAman(r.santri)) === pondok);
+  const ev = kumpulRiwayat(m.id, pengawas && mode === "semua", M.cols, cocok).map(x => ({ ...x, e: entriRiwayat(x.col, x.list) }))
+    .filter(x => !q || (x.e.jud + " " + x.e.det).toLowerCase().includes(q.toLowerCase()));
+  return html`<${SubHeader} title="Riwayat & Koreksi" sub=${`${M.judul} · ketuk untuk ubah atau hapus`}>
+      ${pengawas ? html`<${Seg} small items=${[["semua", "Semua guru"], ["saya", "Input saya"]]} value=${mode} onChange=${setMode} />` : null}</${SubHeader}>
+    <div class="wrap"><${SearchBox} value=${q} onInput=${setQ} ph="Cari nama santri atau jenis input" />
+      <${Card}>${ev.length ? html`<div class="list">${ev.slice(0, n).map(x => { const r = x.list[0], oleh = L.staffAman(r.guru || r.oleh).pendek;
+        return html`<${Row} name=${x.e.jud} sub=${`${x.e.det} · ${L.fmtShort(L.ymd(new Date(x.ts)))} ${L.fmtJam(x.ts)}${mode === "semua" ? " · " + oleh : ""}`} icon=${html`<${Icon} n=${x.e.ic} s=${18} />`}
+          right=${r.diubah ? html`<${Pill} t="Dikoreksi" tone="blue" />` : null} onClick=${() => setSel(x)} />`; })}</div>
+        ${ev.length > n ? html`<${Btn} kind="ghost" onClick=${() => setN(n + 40)}>Tampilkan lebih banyak</${Btn}>` : null}`
+        : html`<${Empty} t=${q ? "Tidak ada yang cocok." : "Belum ada data yang diinput."} icon="clock" />`}</${Card}>
+      <p class="small center">Setiap ubah & hapus tercatat di log perubahan.</p></div>
+    ${sel ? html`<${KoreksiSheet} item=${sel} onClose=${() => setSel(null)} />` : null}`;
 }

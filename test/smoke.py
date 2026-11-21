@@ -5,7 +5,7 @@ ACC = sys.argv[1].split(",") if len(sys.argv) > 1 else ["kaafi"]
 async def main():
     errs = []
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome")
+        b = await p.chromium.launch(args=["--host-resolver-rules=MAP *.googleapis.com 127.0.0.1, MAP www.gstatic.com 127.0.0.1, MAP *.firebaseio.com 127.0.0.1, MAP *.firebaseapp.com 127.0.0.1, MAP firebase.googleapis.com 127.0.0.1"], executable_path="/usr/bin/google-chrome")
         pg = await b.new_page(reduced_motion="reduce", viewport={"width": 360, "height": 740}, device_scale_factor=1)
         pg.on("console", lambda m: errs.append(("console", m.type, m.text)) if m.type in ("error",) else None)
         pg.on("pageerror", lambda e: errs.append(("pageerror", str(e))))

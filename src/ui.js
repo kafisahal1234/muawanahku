@@ -12,23 +12,37 @@ const N = { stack: [], tab: "home", user: null, ver: 0, dir: "tab", splash: fals
 const nsubs = new Set();
 let live = 0, ignore = false;
 function nemit() { N.ver++; nsubs.forEach(f => f(N.ver)); }
+// Transisi antar layar: View Transitions API (Chrome/Edge, Safari 18+) — layar baru menggeser masuk, tombol kembali menggeser keluar.
+// Browser lama tetap memakai animasi CSS sederhana (.scr.dir-*). Mengikuti pengaturan "kurangi gerakan" perangkat.
+const VT = (() => { try { return typeof document !== "undefined" && !!document.startViewTransition && !matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } })();
+try { if (VT) document.documentElement.classList.add("vt"); } catch (e) { }
+function pindah(dir, ubah) {
+  if (!VT || !N.user || N.splash) { ubah(); return; }
+  const el = document.documentElement;
+  try {
+    el.dataset.nav = dir;
+    const t = document.startViewTransition(() => new Promise(res => { ubah(); setTimeout(res, 0); }));
+    const beres = () => { if (el.dataset.nav === dir) delete el.dataset.nav; };
+    t.ready.catch(() => { }); t.updateCallbackDone.catch(() => { }); t.finished.then(beres, beres);
+  } catch (e) { ubah(); }
+}
 function unwind() { if (live > 0) { try { ignore = true; history.go(-live); } catch (e) { ignore = false; } live = 0; } }
 try {
   window.addEventListener("popstate", () => {
     if (ignore) { ignore = false; return; }
     if (live > 0) live--;
-    if (N.stack.length) { N.dir = "back"; N.stack.pop(); nemit(); window.scrollTo(0, 0); }
-    else if (N.user && N.tab !== "home") { N.dir = "back"; N.tab = "home"; nemit(); }
+    if (N.stack.length) pindah("back", () => { N.dir = "back"; N.stack.pop(); nemit(); window.scrollTo(0, 0); });
+    else if (N.user && N.tab !== "home") pindah("tab", () => { N.dir = "back"; N.tab = "home"; nemit(); });
   });
 } catch (e) { }
 export const nav = {
   get user() { return N.user; }, get tab() { return N.tab; }, get dir() { return N.dir; }, get splash() { return N.splash; }, endSplash() { N.splash = false; nemit(); }, get top() { return N.stack[N.stack.length - 1]; }, get depth() { return N.stack.length; },
   setUser(u, opt = {}) { unwind(); N.user = u; N.stack = []; N.tab = "home"; N.dir = "tab"; N.splash = !!(u && opt.splash); try { u ? sessionStorage.setItem("mk_user", JSON.stringify(u)) : sessionStorage.removeItem("mk_user"); } catch (e) { } nemit(); },
-  go(screen, params = {}) { N.dir = "fwd"; N.stack.push({ screen, params }); try { history.pushState({ mk: N.stack.length }, ""); live++; } catch (e) { } nemit(); window.scrollTo(0, 0); },
-  replace(screen, params = {}) { N.dir = "fwd"; N.stack[N.stack.length - 1] = { screen, params }; nemit(); },
-  back() { if (live > 0) { try { history.back(); return; } catch (e) { } } N.dir = "back"; N.stack.pop(); nemit(); window.scrollTo(0, 0); },
-  home() { unwind(); N.dir = "back"; N.stack = []; N.tab = "home"; nemit(); window.scrollTo(0, 0); },
-  setTab(t) { unwind(); N.dir = "tab"; N.stack = []; N.tab = t; nemit(); window.scrollTo(0, 0); },
+  go(screen, params = {}) { pindah("fwd", () => { N.dir = "fwd"; N.stack.push({ screen, params }); try { history.pushState({ mk: N.stack.length }, ""); live++; } catch (e) { } nemit(); window.scrollTo(0, 0); }); },
+  replace(screen, params = {}) { pindah("fwd", () => { N.dir = "fwd"; N.stack[N.stack.length - 1] = { screen, params }; nemit(); window.scrollTo(0, 0); }); },
+  back() { if (live > 0) { try { history.back(); return; } catch (e) { } } pindah("back", () => { N.dir = "back"; N.stack.pop(); nemit(); window.scrollTo(0, 0); }); },
+  home() { pindah("back", () => { unwind(); N.dir = "back"; N.stack = []; N.tab = "home"; nemit(); window.scrollTo(0, 0); }); },
+  setTab(t) { if (t === N.tab && !N.stack.length) { window.scrollTo({ top: 0, behavior: "smooth" }); return; } pindah("tab", () => { unwind(); N.dir = "tab"; N.stack = []; N.tab = t; nemit(); window.scrollTo(0, 0); }); },
 };
 export function useApp() {
   const [, set] = useState(0);

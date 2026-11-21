@@ -7,7 +7,7 @@ async def login(pg, u):
 async def tile(pg, label): await pg.locator(f".tile:has(.tile-lb:text-is(\"{label}\"))").first.click(); await pg.wait_for_timeout(300)
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome")
+        b = await p.chromium.launch(args=["--host-resolver-rules=MAP *.googleapis.com 127.0.0.1, MAP www.gstatic.com 127.0.0.1, MAP *.firebaseio.com 127.0.0.1, MAP *.firebaseapp.com 127.0.0.1, MAP firebase.googleapis.com 127.0.0.1"], executable_path="/usr/bin/google-chrome")
         pg = await b.new_page(reduced_motion="reduce", viewport={"width": 390, "height": 844}, device_scale_factor=1.5)
         await pg.goto(URL); await pg.wait_for_timeout(2500); await pg.screenshot(path="test/s0_login.png")
         await login(pg, "kaafi"); await pg.wait_for_timeout(2200); await pg.screenshot(path="test/s1_home.png")

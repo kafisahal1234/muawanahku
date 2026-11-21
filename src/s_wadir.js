@@ -30,7 +30,8 @@ export function Pengelolaan({ ro }) {
       <${Tile} icon="users" label="Kelola Halaqah" color="teal" onClick=${() => nav.go("halaqahAdmin")} />` : null}
       <${Tile} icon="star" label="Peringkat Santri" color="gold" onClick=${() => nav.go("peringkat")} />
       <${Tile} icon="mic" label="Rekap Tasmi'" color="teal" onClick=${() => nav.go("rekapTasmi")} />
-      <${Tile} icon="alert" label="Di bawah KKM" color="coral" badge=${gagal || null} onClick=${() => nav.go("bawahKkm")} /></div></${Card}>
+      <${Tile} icon="alert" label="Di bawah KKM" color="coral" badge=${gagal || null} onClick=${() => nav.go("bawahKkm")} />
+      ${!ro ? html`<${Tile} icon="clock" label="Koreksi Input Tahfidz" color="slate" onClick=${() => nav.go("riwayatModul", { modul: "tahfidz" })} />` : null}</div></${Card}>
     <${Card} title="Capaian per halaqah" right=${html`<small>vs target semester</small>`}><div class="list">${L.HALAQAH.map(a => { const st = halaqahStat(a), g = L.staffById(a.guru) || { pendek: "—" };
       return html`<button class="row" onClick=${() => nav.go("progres", { hid: a.id })}><span class="av">${L.initials(g.pendek.replace(/^Ust\.\s*/, ""))}</span><span class="row-t"><b>${a.nama}</b>
         <small>${st.n} santri · capaian target semester ${st.cap}% · rata total ${st.avg.toFixed(1)} juz${st.hadir != null ? " · hadir " + st.hadir + "%" : ""}</small><span style="display:block;margin-top:6px"><${Bar} v=${st.cap} tone=${st.cap >= 75 ? "green" : st.cap >= 50 ? "gold" : "red"} /></span></span><b style="font-size:13px;color:#0B5D3B">${st.cap}%</b></button>`; })}</div></${Card}></div>`;

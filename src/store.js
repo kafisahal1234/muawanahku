@@ -27,7 +27,8 @@ export async function initStore() {
     if (window.claude && typeof window.claude.use === "function") got = await window.claude.use("db");
   } catch (e) { got = null; }
   let cloud = false;
-  if (!got && FIREBASE_CONFIG && /^https?:$/.test(location.protocol)) { try { got = await connectFirestore(FIREBASE_CONFIG); cloud = true; } catch (e) { got = null; S.cloudErr = String((e && (e.code || e.message)) || e).slice(0, 160); } }
+  // Uji lokal (localhost) tidak pernah tersambung ke data asli pondok
+  if (!got && FIREBASE_CONFIG && /^https?:$/.test(location.protocol) && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) { try { got = await connectFirestore(FIREBASE_CONFIG); cloud = true; } catch (e) { got = null; S.cloudErr = String((e && (e.code || e.message)) || e).slice(0, 160); } }
   if (!got) { S.ready = true; emit(); return; }
   db = got; S.mode = "db"; S.cloud = cloud; S.note = cloud ? "Data tersinkron antarperangkat (Firebase)." : "Data tersimpan bersama (semua akun demo melihat data yang sama).";
   COLS.forEach(c => (S.data[c] = {}));
