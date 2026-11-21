@@ -21,6 +21,10 @@ import * as AI from "./s_ai.js";
 import * as AS from "./s_asisten.js";
 import { me } from "./common.js";
 import { LOGO } from "./data.js";
+import { FotoAv, fotoUser } from "./common.js";
+import { aiAda } from "./ai.js";
+import { LOGO as LOGO2 } from "./data.js";
+import { all } from "./store.js";
 
 const SCREENS = {
   tahfidz: T.Tahfidz, absenHalaqah: T.AbsenHalaqah, setorList: T.SetorList, ziyadah: T.Ziyadah, murojaah: T.Murojaah, manzilList: T.ManzilList, manzil: T.Manzil,
@@ -54,6 +58,22 @@ function BottomNav({ wali }) {
     ? html`<button class=${"fab-tab " + (nav.tab === k ? "on" : "")} aria-current=${nav.tab === k ? "page" : null} onClick=${() => nav.setTab(k)}><span class="fab"><${Icon} n=${ic} s=${28} w=${2.4} /></span><em>${lab}</em></button>`
     : html`<button class=${nav.tab === k ? "on" : ""} aria-current=${nav.tab === k ? "page" : null} onClick=${() => nav.setTab(k)}><i><${Icon} n=${ic} s=${26} /></i><em>${lab}</em></button>`)}</nav>`;
 }
+// Navigasi samping khusus layar laptop/PC (di HP/tablet disembunyikan lewat CSS)
+function SideNav({ wali }) {
+  const u = nav.user, nama = wali ? "Wali " + L.santriById(u.id).nama : L.staffById(u.id).nama;
+  const peran = wali ? "Wali santri" : L.staffById(u.id).roles.map(r => L.ROLE_LABEL[r]).join(" · ");
+  const items = wali ? [["home", "Beranda", "home"], ["hafalan", "Hafalan", "bookopen"], ["ananda", "Ananda", "heart"], ["izin", "Izin", "door"], ["akun", "Akun", "user"]]
+    : [["home", "Beranda", "home"], ["jadwal", "Jadwal", "calendar"], ["cari", "Cari santri", "search"], ["riwayat", "Riwayat", "clock"], ["akun", "Akun", "user"]];
+  const baru = all("pengumuman").filter(p => Date.now() - p.ts < 7 * 864e5).length, aktif = !nav.top;
+  return html`<aside class="side" aria-label="Navigasi">
+    <div class="side-brand"><span class="ht-logo"><img src=${LOGO2} alt="" /></span><div><b>Muawanah<i>Ku</i></b><small>Kampung Qur'an Al Muawanah</small></div></div>
+    <button class="side-user" onClick=${() => nav.setTab("akun")}><${FotoAv} src=${fotoUser(u)} nama=${nama} size=${44} /><span><b>${nama}</b><small>${peran}</small></span></button>
+    <nav class="side-nav">${items.map(([k, lab, ic]) => html`<button class=${aktif && nav.tab === k ? "on" : ""} onClick=${() => nav.setTab(k)}><${Icon} n=${ic} s=${21} w=${2.2} /><span>${lab}</span></button>`)}
+      <hr />
+      <button class=${nav.top && nav.top.screen === "pengumuman" ? "on" : ""} onClick=${() => nav.go("pengumuman")}><${Icon} n="bell" s=${21} w=${2.2} /><span>Pengumuman</span>${baru ? html`<b class="side-badge">${baru}</b>` : null}</button>
+      ${aiAda() ? html`<button class=${nav.top && nav.top.screen === "asisten" ? "on" : ""} onClick=${() => nav.go("asisten")}><${Icon} n="chat" s=${21} w=${2.2} /><span>Asisten AI</span></button>` : null}</nav>
+    <small class="side-foot">MuawanahKu ${"1.0.0"}</small></aside>`;
+}
 function useOnline() {
   const [on, setOn] = useState(typeof navigator === "undefined" || navigator.onLine !== false);
   useEffect(() => { const a = () => setOn(true), b = () => setOn(false); window.addEventListener("online", a); window.addEventListener("offline", b); return () => { window.removeEventListener("online", a); window.removeEventListener("offline", b); }; }, []);
@@ -86,7 +106,7 @@ function App() {
   const wali = u.kind === "wali", top = nav.top;
   const Screen = top ? SCREENS[top.screen] : (wali ? WALI_TABS : STAFF_TABS)[nav.tab];
   const key = top ? top.screen + JSON.stringify(top.params) + nav.depth : "tab-" + nav.tab;
-  return html`<div class="app"><div class=${"scr dir-" + nav.dir} key=${key}><${Boundary}>${Screen ? html`<${Screen} ...${top ? top.params : {}} />` : null}</${Boundary}></div>
+  return html`<div class="app"><${SideNav} wali=${wali} /><div class=${"scr dir-" + nav.dir} key=${key}><${Boundary}>${Screen ? html`<${Screen} ...${top ? top.params : {}} />` : null}</${Boundary}></div>
     ${nav.splash ? html`<${Splash} nama=${wali ? "Wali " + L.santriById(u.id).nama : L.staffById(u.id).pendek} />` : null}
     ${!online ? html`<div class="loadpill" role="status" style="color:#A8261C">Tidak ada koneksi. Perubahan dikirim saat online lagi.</div>` : !S.ready ? html`<div class="loadpill" role="status">Menyambungkan data…</div>` : null}<${BottomNav} wali=${wali} /><${ToastHost} /></div>`;
 }
