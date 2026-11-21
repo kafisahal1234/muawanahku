@@ -60,7 +60,7 @@ export function SuratIzin() {
 
 export function IzinView({ id }) {
   useApp();
-  const i = get("izin", id); if (!i) return html`<${SubHeader} title="Surat Izin" /><div class="wrap"><${Empty} t="Data tidak ditemukan." /></div>`;
+  const i0 = get("izin", id), i = i0 && (!nav.user || nav.user.kind !== "wali" || i0.santri === nav.user.id) ? i0 : null; if (!i) return html`<${SubHeader} title="Surat Izin" /><div class="wrap"><${Empty} t="Data tidak ditemukan." /></div>`;
   const s = L.santriById(i.santri), a = L.asramaById(s.asrama), dlOk = useDownloads();
   const doc = () => docHtml("Surat Izin " + s.nama, `<h1>SURAT IZIN ${esc(i.jenis.toUpperCase())}</h1><table class="id">
 <tr><td>Nama santri</td><td>: <b>${esc(s.nama)}</b></td></tr><tr><td>Kelas / asrama</td><td>: ${esc(s.kelas)} · ${esc(a.nama)} · Pondok ${L.pondokOfSantri(s)}</td></tr>
@@ -150,7 +150,7 @@ Jawab JSON: {"kronologi":"","pelanggaran_id":null}` });
 
 export function BapView({ id }) {
   useApp();
-  const b = get("bap", id); if (!b) return html`<${SubHeader} title="BAP" /><div class="wrap"><${Empty} t="Data tidak ditemukan." /></div>`;
+  const b0 = get("bap", id), b = b0 && (!nav.user || nav.user.kind !== "wali" || b0.santri === nav.user.id) ? b0 : null; if (!b) return html`<${SubHeader} title="BAP" /><div class="wrap"><${Empty} t="Data tidak ditemukan." /></div>`;
   const s = L.santriById(b.santri);
   return html`<${SubHeader} title="Berita Acara Pelanggaran" sub=${L.fmtTgl(b.tanggal)} />
     <div class="wrap"><div class="surat"><h4>BERITA ACARA PELANGGARAN</h4><p class="c">Kampung Qur'an Al Muawanah · Pondok ${L.pondokOfSantri(s)}</p>

@@ -560,3 +560,4 @@ input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--g);outline:n
 @media (min-width:1024px) and (hover:hover) and (pointer:fine){
   .app.nonav{background:var(--g) var(--orn) repeat!important;background-size:72px!important}
 }
+.sum-row{flex-wrap:wrap;row-gap:2px}

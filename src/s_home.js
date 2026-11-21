@@ -251,21 +251,22 @@ export function WaliBeranda() {
   const s = L.santriById(nav.user.id), a = L.asramaById(s.asrama);
   const kab = [];
   L.setoranSantri(s.id).forEach(r => kab.push([r.ts, r.jenis === "tasmi" ? `Tasmi' Juz ${r.juz} ${r.lulus ? "lulus" : "diulang"} · nilai ${r.nilai}` : r.jenis === "ziyadah" ? `Ziyadah ${r.baris} baris · nilai ${r.nilai}` : `${r.jenis === "manzil" ? "Manzil" : "Murojaah"} · nilai ${r.nilai}`, "bookopen"]));
-  all("izin").filter(i => i.santri === s.id).forEach(i => kab.push([i.ts, `Izin ${i.jenis.toLowerCase()} sampai ${L.fmtDT(i.kembali)}`, "door"]));
-  all("bap").filter(b => b.santri === s.id).forEach(b => kab.push([b.ts, `Catatan: ${b.pelanggaranNama}`, "clipboard"]));
+  all("izin").filter(i => i.santri === s.id).forEach(i => kab.push([i.ts, `Izin ${i.jenis.toLowerCase()} sampai ${L.fmtDT(i.kembali)}`, "door", () => nav.go("izinView", { id: i.id })]));
+  all("bap").filter(b => b.santri === s.id).forEach(b => kab.push([b.ts, `Catatan pelanggaran: ${b.pelanggaranNama}`, "clipboard", () => nav.go("bapView", { id: b.id })]));
   L.motdCatatan(s.id).forEach(c => kab.push([c.ts || 0, `${c.st === "A" ? "Alpa" : "Masbuq"} ${L.WAKTU.find(x => x[0] === c.waktu)[1]} · pelanggaran ringan`, "moon"]));
   kab.sort((x, y) => y[0] - x[0]);
   const peng = all("pengumuman").sort((x, y) => y.ts - x.ts).slice(0, 2);
   const h = L.hafalan(s), c = L.capaianJuz(s);
   return html`<${HomeTop} nama=${"Wali " + (s.panggilan || s.nama.split(" ")[0])} sub=${`${s.nama} · Kelas ${s.kelas} · ${a.nama}`} bell=${newPeng()} foto=${fotoUser(nav.user)}>
       <div class="sum"><div class="sum-in"><small>Total hafalan ananda</small><div class="sum-big">${L.fmtJumlah(h)}</div>
-        <div class="sum-row"><span>Semester ini <b>${c.juz.toLocaleString("id-ID")}/${c.target} juz</b></span><span>${h.khatam ? "Khatam 30 juz" : `Sedang Juz ${h.aktif}`}</span></div>
+        <div class="sum-row"><span>Juz selesai <b>${h.selesai.length ? h.selesai.join(" · ") : "—"}</b></span><span>${h.khatam ? "Khatam 30 juz" : html`Sedang <b>${L.posLabel(h.aktif, h.baris).replace(" · baris", ", baris")}</b>`}</span></div>
+        <div class="sum-row" style="margin-top:6px"><span>Hafalan baru semester ini <b>${c.juz.toLocaleString("id-ID")}/${c.target} juz</b></span><span>${c.tercapai ? "Target tercapai" : `Kurang ${c.kurang.toLocaleString("id-ID")} juz`}</span></div>
         <span class="sum-bar"><i style=${`width:${c.pct}%`}></i></span></div></div></${HomeTop}>
-    <div class="wrap"><${HafalanCard} s=${s} />
+    <div class="wrap"><button class="strip" onClick=${() => nav.go("waliRekap")}><span class="strip-ic" style=${`background:${WARNA.teal[2]}`}><${Ikon} n="grafik" warna="teal" s=${28} /></span><span class="strip-t"><b>Rekap Ananda</b><small>Hafalan, kehadiran, izin, pelanggaran per periode</small></span><span class="strip-go">Buka <${Icon} n="right" s=${16} w=${2.4} /></span></button>
     ${(() => { const rg = L.periodeRange("bulanan"), kh = L.kehadiranHalaqah(s.id, rg), mp = L.mutPersen(s.id, rg), po = L.poinSantri(s.id);
       return html`<${Card} title="Bulan ini" right=${html`<small>${rg.label}</small>`}><div class="stats"><${Stat} label="Hadir halaqah" value=${kh.pct == null ? "—" : kh.pct + "%"} /><${Stat} label="Mutaba'ah" value=${mp.ibadah == null ? "—" : Math.round((mp.ibadah + mp.adab) / 2) + "%"} /><${Stat} label="Poin catatan" value=${po.total} tone=${po.total ? "gold" : ""} /></div></${Card}>`; })()}
     <${KartuAI} judul="Ringkasan untuk Ayah/Bunda" tombol="Buat ringkasan perkembangan" ket="AI merangkum perkembangan ananda dari data pondok dalam bahasa yang mudah dipahami." buat=${() => ringkasWali(s)} />
-    <${Card} title="Kabar terbaru">${kab.length ? html`<div class="list">${kab.slice(0, 6).map(([ts, t, ic]) => html`<${Row} name=${t} sub=${ts ? `${L.fmtTgl(L.ymd(new Date(ts)))}` : ""} icon=${html`<${Icon} n=${ic} s=${18} />`} />`)}</div>` : html`<${Empty} t="Belum ada kabar baru tentang ananda." icon="heart" />`}</${Card}>
+    <${Card} title="Kabar terbaru">${kab.length ? html`<div class="list">${kab.slice(0, 6).map(([ts, t, ic, go]) => html`<${Row} name=${t} sub=${ts ? `${L.fmtTgl(L.ymd(new Date(ts)))}${go ? " · ketuk untuk detail" : ""}` : ""} icon=${html`<${Icon} n=${ic} s=${18} />`} onClick=${go} />`)}</div>` : html`<${Empty} t="Belum ada kabar baru tentang ananda." icon="heart" />`}</${Card}>
 </div>`;
 }
 export function WaliHafalan() {

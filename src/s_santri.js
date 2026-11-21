@@ -44,9 +44,9 @@ export function CatatanCard({ s }) {
   const bap = all("bap").filter(b => b.santri === s.id).sort((a, b) => b.ts - a.ts), mt = L.motdCatatan(s.id), p = L.poinSantri(s.id);
   return html`<${Card} title="Izin & catatan" right=${html`<${Pill} t=${p.total + " poin"} tone=${p.total ? "red" : "green"} />`}>
     ${!iz.length && !bap.length && !mt.length ? html`<${Empty} t="Tidak ada izin atau catatan pelanggaran." icon="check" />` : null}
-    <div class="list">${iz.map(i => html`<${Row} name=${`Izin ${i.jenis}`} sub=${`${L.fmtDT(i.keluar)} → ${L.fmtDT(i.kembali)} · ${i.alasan}`} icon=${html`<${Icon} n="door" s=${18} />`} right=${html`<${Pill} t=${i.status === "aktif" ? (L.terlambat(i) ? "Terlambat" : "Aktif") : "Kembali"} tone=${i.status === "aktif" ? "gold" : "green"} />`} />`)}
-    ${bap.map(b => html`<${Row} name=${b.pelanggaranNama} sub=${`${L.fmtTgl(b.tanggal)} · BAP`} icon=${html`<${Icon} n="clipboard" s=${18} />`} right=${html`<${Pill} t=${b.poin + " poin"} tone="red" />`} />`)}
-    ${mt.slice(0, 10).map(c => html`<${Row} name=${`${c.st === "A" ? "Alpa" : "Masbuq"} ${L.WAKTU.find(x => x[0] === c.waktu)[1]}`} sub=${L.fmtTgl(c.tanggal) + " · dari MOTD"} icon=${html`<${Icon} n="moon" s=${18} />`} right=${html`<${Pill} t=${c.poin + " poin"} tone="purple" />`} />`)}</div></${Card}>`;
+    <div class="list">${iz.map(i => html`<${Row} name=${`Izin ${i.jenis}`} sub=${`${L.fmtDT(i.keluar)} → ${L.fmtDT(i.kembali)} · ${i.alasan}`} icon=${html`<${Icon} n="door" s=${18} />`} right=${html`<${Pill} t=${i.status === "aktif" ? (L.terlambat(i) ? "Terlambat" : "Aktif") : "Kembali"} tone=${i.status === "aktif" ? "gold" : "green"} />`} onClick=${() => nav.go("izinView", { id: i.id })} />`)}
+    ${bap.map(b => html`<${Row} name=${b.pelanggaranNama} sub=${`${L.fmtTgl(b.tanggal)} · ${b.tingkat || ""} · ketuk untuk kronologi & bukti`} icon=${html`<${Icon} n="clipboard" s=${18} />`} right=${html`<${Pill} t=${b.poin + " poin"} tone="red" />`} onClick=${() => nav.go("bapView", { id: b.id })} />`)}
+    ${mt.slice(0, 10).map(c => html`<${Row} name=${`${c.st === "A" ? "Alpa" : "Masbuq"} ${L.WAKTU.find(x => x[0] === c.waktu)[1]}`} sub=${L.fmtTgl(c.tanggal) + " · pelanggaran ringan (teguran)"} icon=${html`<${Icon} n="moon" s=${18} />`} right=${html`<${Pill} t=${c.poin + " poin"} tone="purple" />`} />`)}</div></${Card}>`;
 }
 
 export function SantriDetail({ sid, tab: t0 }) {

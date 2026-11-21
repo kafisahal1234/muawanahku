@@ -213,3 +213,29 @@ function EditLibur({ e, onClose }) {
     <div class="btn-row mt8">${!e.baru ? html`<${Btn} kind="outline" icon="trash" onClick=${() => setAsk(true)}>Hapus</${Btn}>` : null}<${Btn} disabled=${!ok} onClick=${save}>Simpan</${Btn}></div>
     <${Confirm} open=${ask} danger title="Hapus libur ini?" text="Hari-hari ini akan kembali dihitung sebagai hari aktif di rekap." yes="Hapus" onYes=${hapus} onNo=${() => setAsk(false)} /></${Sheet}>`;
 }
+
+// ---------------- Rekap untuk wali santri (hanya data ananda sendiri) ----------------
+export function WaliRekap() {
+  useApp();
+  const s = L.santriById(nav.user.id), p = usePeriode("bulanan"), rg = p.rg;
+  const kh = L.kehadiranHalaqah(s.id, rg), hf = L.hafalanDalam(s.id, rg), h = L.hafalan(s), c = L.capaianJuz(s), mp = L.mutPersen(s.id, rg), pl = L.pelanggaranDalam(s.id, rg);
+  const kk = rata(DATA.mapel.map(m => L.kehadiranKelas(s.id, m.id, rg).pct)), r = L.rentangHitung(rg);
+  const iz = r.kosong ? [] : all("izin").filter(i => i.santri === s.id && i.keluar && i.keluar.slice(0, 10) >= r.dari && i.keluar.slice(0, 10) <= r.sampai).sort((a, b) => b.ts - a.ts);
+  const motd = r.kosong ? [] : L.motdCatatan(s.id).filter(x => x.tanggal >= r.dari && x.tanggal <= r.sampai);
+  return html`<${SubHeader} title="Rekap Ananda" sub=${s.nama} />
+    <div class="wrap">${p.bar}
+      <${Card} title="Tahfidz"><div class="rk-g">
+        <div><span>Kehadiran halaqah</span><b class=${"t-" + tone(kh.pct)}>${P(kh.pct)}</b><${Bar} v=${kh.pct || 0} tone=${tone(kh.pct) === "muted" ? "green" : tone(kh.pct)} /><small>H ${kh.H} · S ${kh.S} · I ${kh.I} · A ${kh.A}</small></div>
+        <div><span>Hafalan baru</span><b class="t-green" style="font-size:17px">${L.fmtBaris(hf.baris)}</b><small>${hf.hari} hari setor${hf.tasmi.length ? " · tasmi' Juz " + hf.tasmi.join(", ") : ""}</small></div>
+        <div><span>Total hafalan</span><b class="t-green" style="font-size:17px">${L.fmtJumlah(h)}</b><small>semester ${c.juz.toLocaleString("id-ID")}/${c.target} juz</small></div></div></${Card}>
+      <${Card} title="Kehadiran kelas & mutaba'ah"><div class="rk-g">
+        <div><span>Kehadiran kelas</span><b class=${"t-" + tone(kk)}>${P(kk)}</b><${Bar} v=${kk || 0} tone=${tone(kk) === "muted" ? "green" : tone(kk)} /></div>
+        <div><span>Ibadah</span><b class=${"t-" + tone(mp.ibadah)}>${P(mp.ibadah)}</b><${Bar} v=${mp.ibadah || 0} tone=${tone(mp.ibadah) === "muted" ? "green" : tone(mp.ibadah)} /></div>
+        <div><span>Adab</span><b class=${"t-" + tone(mp.adab)}>${P(mp.adab)}</b><${Bar} v=${mp.adab || 0} tone=${tone(mp.adab) === "muted" ? "green" : tone(mp.adab)} /></div></div></${Card}>
+      <${Card} title="Izin" right=${html`<small>${iz.length} kali</small>`}>${iz.length ? html`<div class="list">${iz.map(i => html`<${Row} name=${`Izin ${i.jenis}`} sub=${`${L.fmtDT(i.keluar)} → ${L.fmtDT(i.kembali)} · ${i.alasan}`} icon=${html`<${Icon} n="door" s=${18} />`} right=${html`<${Pill} t=${i.status === "aktif" ? "Aktif" : i.telat ? "Terlambat" : "Kembali"} tone=${i.status === "aktif" || i.telat ? "gold" : "green"} />`} onClick=${() => nav.go("izinView", { id: i.id })} />`)}</div>` : html`<${Empty} t="Tidak ada izin pada periode ini." icon="door" />`}</${Card}>
+      <${Card} title="Pelanggaran" right=${html`<${Pill} t=${pl.poinRingan + pl.poinSB + " poin"} tone=${pl.poinRingan + pl.poinSB ? "red" : "green"} />`}>
+        <div class="rk-g mb8"><div><span>Ringan (teguran)</span><b class="t-gold">${pl.ringan}</b></div><div><span>Sedang</span><b class="t-orange">${pl.sedang}</b></div><div><span>Berat</span><b class="t-red">${pl.berat}</b></div></div>
+        ${pl.bap.length || motd.length ? html`<div class="list">${pl.bap.map(b => html`<${Row} name=${b.pelanggaranNama} sub=${`${L.fmtTgl(b.tanggal)} · ${b.tingkat} · ketuk untuk kronologi & bukti`} icon=${html`<${Icon} n="clipboard" s=${18} />`} right=${html`<${Pill} t=${b.poin + " poin"} tone="red" />`} onClick=${() => nav.go("bapView", { id: b.id })} />`)}
+          ${motd.map(x => html`<${Row} name=${`${x.st === "A" ? "Alpa" : "Masbuq"} sholat ${(L.WAKTU.find(w => w[0] === x.waktu) || [, x.waktu])[1]}`} sub=${L.fmtTgl(x.tanggal) + " · ringan, teguran dari wali asrama"} icon=${html`<${Icon} n="moon" s=${18} />`} right=${html`<${Pill} t=${x.poin + " poin"} tone="gold" />`} />`)}</div>` : html`<${Empty} t="Alhamdulillah, tidak ada pelanggaran pada periode ini." icon="check" />`}</${Card}>
+      <p class="fab-note">Rekap hanya berisi data ananda. Nilai PTS, PAS, dan rapor dibagikan saat pembagian rapor.</p></div>`;
+}
