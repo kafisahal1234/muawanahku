@@ -1,5 +1,6 @@
 // Rapor persis mengikuti Format_Rapor_MuawanahKu (4 halaman A4: kop, A Tahfidz, B Mapel, C Mutaba'ah, D–E catatan, tanda tangan)
 import { useState, useEffect, useRef } from "preact/hooks";
+import { unduhPdf, htmlKePdf } from "./pdf.js";
 import { html, nav, useApp, Icon, Card, SubHeader, Btn, Field, Seg, Hint } from "./ui.js";
 import { get, put, toast } from "./store.js";
 import { DATA } from "./data.js";
@@ -162,6 +163,6 @@ export function RaporView({ sid }) {
         <button class="link" onClick=${() => setZoom(!zoom)}>${zoom ? "Muat ke layar" : "Perbesar"}</button></div>
       <div style=${`overflow:${zoom ? "auto" : "hidden"};margin:0 -16px;padding:0 16px`}>
         <div style=${`width:${794 * k}px;height:${(1123 + 16) * hal * k}px`}><div class="rp" style=${`width:794px;transform:scale(${k});transform-origin:0 0`} dangerouslySetInnerHTML=${{ __html: periode === "mid" ? raporMidHTML(sid) : raporHTML(sid, periode) }}></div></div></div>
-      ${dlOk ? html`<div class="sticky-act"><${Btn} icon="download" onClick=${() => unduh(`Rapor ${s.nama} ${periode === "mid" ? "Tengah Semester" : "Semester Ganjil"}.html`, raporDoc(sid, periode))}>Unduh rapor untuk dicetak</${Btn}></div>` : null}
+      <div class="sticky-act"><${Btn} icon="download" onClick=${() => unduhPdf(`Rapor ${s.nama} ${periode === "mid" ? "Tengah Semester" : "Semester Ganjil"}`, () => htmlKePdf(raporDoc(sid, periode), ".rp-page"))}>Unduh rapor (PDF)</${Btn}></div>
       <p class="fab-note">Rapor tidak tampil di akun wali santri.</p></div>`;
 }

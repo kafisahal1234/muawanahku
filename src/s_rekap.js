@@ -1,5 +1,6 @@
 // Rekap berbasis hari aktif (harian, pekanan, bulanan, mid, semester, tahunan) + kalender akademik
 import { useState } from "preact/hooks";
+import { unduhPdf, tabelKePdf } from "./pdf.js";
 import { html, nav, useApp, Icon, Card, SubHeader, Row, Pill, Btn, Empty, Seg, Section, Sheet, Field, Confirm, Bar, Hint, Stat } from "./ui.js";
 import { all, get, put, del, toast, uid } from "./store.js";
 import { DATA } from "./data.js";
@@ -77,8 +78,11 @@ function unduhRekap(tab, lk, rg, fmt) {
     const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`, sec = (j, x) => [q(j), x.kol.map(q).join(";"), ...x.rows.map(r => r.map(q).join(";"))].join("\r\n");
     return unduh(nama + ".csv", "﻿" + [q(`${t.judul} · ${rg.label}`), "", sec("Ringkasan", t.ringkas), "", sec("Rincian per santri", t.rinci)].join("\r\n"));
   }
-  const tb = x => `<table><tr>${x.kol.map(k => `<th>${esc(k)}</th>`).join("")}</tr>${x.rows.map(r => `<tr>${r.map(v => `<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</table>`;
   const rh = L.rentangHitung(rg);
+  if (fmt === "pdf") return unduhPdf(nama, () => tabelKePdf({ judul: t.judul, sub: `${rg.label}${rh.kosong ? "" : ` · dihitung ${L.fmtTgl(rh.dari, false)} – ${L.fmtTgl(rh.sampai, false)}`}`,
+    catatan: "Persentase = yang tercatat dibagi hari/sesi aktif. Hari tanpa input dihitung 0. Hafalan: 15 baris = 1 halaman, 20 halaman = 1 juz.",
+    oleh: `Dicetak oleh ${me().nama}, ${L.fmtTgl(L.today())} · MuawanahKu`, bagian: [{ judul: "Ringkasan", ...t.ringkas }, { judul: "Rincian per santri", ...t.rinci }] }));
+  const tb = x => `<table><tr>${x.kol.map(k => `<th>${esc(k)}</th>`).join("")}</tr>${x.rows.map(r => `<tr>${r.map(v => `<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</table>`;
   const body = `<h1>${esc(t.judul.toUpperCase())}<br><span class="small">${esc(rg.label)}${rh.kosong ? "" : ` · dihitung ${L.fmtTgl(rh.dari, false)} – ${L.fmtTgl(rh.sampai, false)}`}</span></h1>
     <p class="small">Persentase = yang tercatat dibagi hari/sesi aktif. Hari tanpa input dihitung 0. Hafalan: 15 baris = 1 halaman, 20 halaman = 1 juz. Dicetak oleh ${esc(me().nama)}, ${L.fmtTgl(L.today())}.</p>
     <h2>Ringkasan</h2>${tb(t.ringkas)}<h2>Rincian per santri</h2>${t.rinci.rows.length ? tb(t.rinci) : "<p>Tidak ada data.</p>"}`;
@@ -101,7 +105,7 @@ export function RekapHub({ tab: t0 }) {
       <${Btn} kind="ghost" icon="download" onClick=${() => setDl(true)}>Unduh rekap ini</${Btn}></div>
     <${Sheet} open=${dl} title="Unduh rekap" onClose=${() => setDl(false)}>
       <p class="small" style="margin-top:0">${(lk.tabs.find(x => x[0] === tab) || [])[1]} · ${p.rg.label}. Berisi ringkasan dan rincian per santri.</p>
-      <button class="menu-row" onClick=${() => { setDl(false); unduhRekap(tab, lk, p.rg, "html"); }}><${Icon} n="file" s=${22} c="#0B6B43" /><span>Siap cetak / simpan PDF<br /><small class="small">Buka file lalu pilih Cetak</small></span><${Icon} n="right" s=${18} /></button>
+      <button class="menu-row" onClick=${() => { setDl(false); unduhRekap(tab, lk, p.rg, "pdf"); }}><${Icon} n="file" s=${22} c="#0B6B43" /><span>Dokumen PDF<br /><small class="small">Siap dicetak atau dikirim, dengan kop pondok</small></span><${Icon} n="right" s=${18} /></button>
       <button class="menu-row" onClick=${() => { setDl(false); unduhRekap(tab, lk, p.rg, "csv"); }}><${Icon} n="grid" s=${22} c="#1F56B5" /><span>Tabel Excel (CSV)<br /><small class="small">Bisa dibuka di Excel / Google Sheets</small></span><${Icon} n="right" s=${18} /></button></${Sheet}>`;
 }
 

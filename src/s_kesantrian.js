@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "preact/hooks";
+import { unduhPdf, htmlKePdf } from "./pdf.js";
 import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, Empty, Field, Seg, Section, Sheet, Confirm, SearchBox } from "./ui.js";
 import { all, get, put, toast, uid } from "./store.js";
 import { DATA } from "./data.js";
@@ -252,6 +253,6 @@ export function SuratView({ jenis, id }) {
   const cetak = () => { try { const fw = ref.current.contentWindow; fw.focus(); fw.print(); } catch (e) { toast("Cetak tidak tersedia di tampilan ini. Pakai tombol Unduh.", "err"); } };
   return html`<${SubHeader} title=${sr.judul} sub="Dibuat otomatis oleh sistem · siap cetak A4" />
     <div class="wrap"><div class="surat-prev" style=${`width:${794 * k}px;height:${1123 * k}px`}><iframe ref=${ref} title="Pratinjau surat" srcdoc=${sr.html} style=${`width:794px;height:1123px;transform:scale(${k});transform-origin:0 0`}></iframe></div>
-      <p class="small center mt8">Tombol Cetak juga bisa dipakai untuk menyimpan sebagai PDF.</p>
-      <div class="sticky-act"><div class="btn-row"><${Btn} icon="printer" onClick=${cetak}>Cetak / PDF</${Btn}>${dlOk ? html`<${Btn} kind="outline" icon="download" onClick=${() => unduh(sr.judul + ".html", sr.html)}>Unduh</${Btn}>` : null}</div></div></div>`;
+      <p class="small center mt8">File PDF ukuran A4, siap dicetak atau dikirim ke wali.</p>
+      <div class="sticky-act"><div class="btn-row"><${Btn} icon="download" onClick=${() => unduhPdf(sr.judul, () => htmlKePdf(sr.html, ".pg"))}>Unduh PDF</${Btn}><${Btn} kind="outline" icon="printer" onClick=${cetak}>Cetak</${Btn}></div></div></div>`;
 }
