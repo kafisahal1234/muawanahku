@@ -35,7 +35,11 @@ function segarkanMaster() {
 }
 subscribe(segarkanMaster); segarkanMaster();
 export const staffById = id => STAFF.find(s => s.id === id);
+export const staffAman = id => STAFF.find(s => s.id === id) || { id, nama: "(akun tidak ditemukan)", pendek: "(akun tidak ditemukan)", roles: [], ajar: [] };
 export const asramaById = id => ASRAMA.find(a => a.id === id);
+// Versi aman: tidak pernah undefined (santri dengan asrama kosong/tidak dikenal)
+export const asramaAman = id => ASRAMA.find(a => a.id === id) || { id: id || "", nama: "Belum ada asrama", musyrif: null, pondok: "" };
+export const santriAman = id => santriById(id) || { id, nama: "(santri sudah dihapus)", kelas: "", asrama: "", awal: { selesai: [], aktif: 30, baris: 0 } };
 export const KELAS = DATA.kelas;
 export const MAPEL = DATA.mapel;
 export const mapelById = id => MAPEL.find(m => m.id === id);
@@ -55,15 +59,15 @@ export function santriList() {
   const ed = S.data.santriEdit || {};
   const base = DATA.santri.map(s => (ed[s.id] ? { ...s, ...ed[s.id] } : s));
   const extra = Object.entries(ed).filter(([id]) => !DATA.santri.find(s => s.id === id)).map(([id, v]) => ({ id, awal: { selesai: [], aktif: 30, baris: 0 }, ...v }));
-  return base.concat(extra).filter(s => !s.hapus).map(s => (s.halaqah && HALAQAH.some(h => h.id === s.halaqah) ? s : { ...s, halaqah: halaqahAsramaId(s.asrama) })).sort((a, b) => a.nama.localeCompare(b.nama));
+  return base.concat(extra).filter(s => !s.hapus).map(s => (s.halaqah && HALAQAH.some(h => h.id === s.halaqah) ? s : { ...s, halaqah: halaqahAsramaId(s.asrama) })).map(s => (typeof s.nama === "string" ? s : { ...s, nama: String(s.nama || "(tanpa nama)") })).sort((a, b) => a.nama.localeCompare(b.nama));
 }
 function halaqahAsramaId(aid) { const a = ASRAMA.find(x => x.id === aid), h = a && HALAQAH.find(x => x.guru === a.musyrif); return h ? h.id : null; }
 export const santriById = id => santriList().find(s => s.id === id);
 export const santriAsrama = aid => santriList().filter(s => s.asrama === aid);
 export const santriHalaqah = hid => santriList().filter(s => s.halaqah === hid);
 export const santriKelas = k => santriList().filter(s => s.kelas === k);
-export const pondokOfSantri = s => (s.kelas === "7" || s.kelas === "8" ? "29" : "21");
-export const initials = n => n.replace(/^(M\.?|Muhammad|Muhamad)\s+/i, "").split(/\s+/).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+export const pondokOfSantri = s => (s && (s.kelas === "7" || s.kelas === "8") ? "29" : "21");
+export const initials = n => String(n || "?").replace(/^(M\.?|Muhammad|Muhamad)\s+/i, "").split(/\s+/).slice(0, 2).map(w => w[0]).join("").toUpperCase();
 
 // ---------------- akun ----------------
 export async function sha(t) {
@@ -111,7 +115,7 @@ export function loginWali(kode) {
   const sa = santriList().find(s => kodeAkses(s) === k);
   return sa ? { kind: "wali", id: sa.id } : { err: "Kode akses tidak dikenal. Periksa nama panggilan dan tanggal lahir santri." };
 }
-export const usernameOf = user => (user.kind === "staff" ? staffById(user.id).username : santriById(user.id).wali);
+export const usernameOf = user => (user.kind === "staff" ? staffAman(user.id).username : santriAman(user.id).wali);
 
 // ---------------- mushaf ----------------
 export const juzLines = j => (j === 30 ? 345 : 300);

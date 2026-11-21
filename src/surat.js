@@ -113,7 +113,7 @@ const slip = (jenis, nama) => `<div class="cut">✂ potong di sini · diserahkan
 // ---------------- data bantu ----------------
 const mudir = () => L.STAFF.find(s => (s.roles || []).includes("mudir"));
 const nm = id => (L.staffById(id) || {}).nama || "";
-const dataSantri = s => { const a = L.asramaById(s.asrama); return { s, a, pondok: L.pondokOfSantri(s), musyrif: nm(a.musyrif) }; };
+const dataSantri = s => { s = s || { nama: "", kelas: "" }; const a = L.asramaAman(s.asrama); return { s, a, pondok: L.pondokOfSantri(s), musyrif: nm(a.musyrif) }; };
 const yth = s => (s.ayah ? `Bapak ${esc(s.ayah)}${s.ibu ? " / Ibu " + esc(s.ibu) : ""}` : "Bapak/Ibu Wali Santri");
 const tindakanBap = b => b.tindakan || { jenis: "teguran" };
 const kembaliSkorsing = b => { const t = tindakanBap(b), d = L.parseYmd(t.mulai || b.tanggal); d.setDate(d.getDate() + (+t.hari || 0)); d.setHours(16, 0, 0, 0); return d; };
@@ -121,7 +121,7 @@ export const selesaiSkorsing = kembaliSkorsing;
 
 // ---------------- SURAT IZIN ----------------
 export function suratIzin(i) {
-  const { s, a, pondok } = dataSantri(i.santri ? L.santriById(i.santri) : {}), no = nomorIzin(i), wadir = nm(i.oleh);
+  const { s, a, pondok } = dataSantri(L.santriAman(i.santri)), no = nomorIzin(i), wadir = nm(i.oleh);
   if (i.jenis === "Skorsing" && i.bap && get("bap", i.bap)) return suratSkorsing(get("bap", i.bap));
   const keluar = i.jenis === "Keluar";
   const body = judul(`KESANTRIAN · PONDOK ${pondok}`, keluar ? "SURAT IZIN KELUAR PONDOK" : "SURAT IZIN PULANG SANTRI", no)
@@ -142,7 +142,7 @@ ${slip(`${keluar ? "Izin Keluar" : "Izin Pulang"} · ${no}`, s.nama)}`;
 
 // ---------------- BERITA ACARA PELANGGARAN ----------------
 export function suratBap(b) {
-  const { s, a, pondok, musyrif } = dataSantri(L.santriById(b.santri)), t = tindakanBap(b), no = nomorBap(b);
+  const { s, a, pondok, musyrif } = dataSantri(L.santriAman(b.santri)), t = tindakanBap(b), no = nomorBap(b);
   const totalSaatItu = all("bap").filter(x => x.santri === b.santri && (x.ts || 0) <= (b.ts || 0)).reduce((n, x) => n + (x.poin || 0), 0) + L.motdCatatan(b.santri).filter(c => c.tanggal <= b.tanggal).reduce((n, c) => n + c.poin, 0);
   const kronCls = (b.kronologi || "").length > 520 ? "box sm" : "box";
   const body = judul(`KESANTRIAN · PONDOK ${pondok}`, "BERITA ACARA PELANGGARAN", no)
@@ -159,7 +159,7 @@ ${ttd([{ r: "Santri pelanggar", n: s.nama, img: b.ttdSantri }, { r: "Saksi", n: 
 
 // ---------------- PEMBERITAHUAN PELANGGARAN (ke wali) ----------------
 export function suratPemberitahuan(b) {
-  const { s, a, pondok } = dataSantri(L.santriById(b.santri)), t = tindakanBap(b), no = nomorBap(b, "PP"), md = mudir();
+  const { s, a, pondok } = dataSantri(L.santriAman(b.santri)), t = tindakanBap(b), no = nomorBap(b, "PP"), md = mudir();
   const riwayat = all("bap").filter(x => x.santri === b.santri && (x.ts || 0) <= (b.ts || 0));
   const total = riwayat.reduce((n, x) => n + (x.poin || 0), 0) + L.motdCatatan(b.santri).filter(c => c.tanggal <= b.tanggal).reduce((n, c) => n + c.poin, 0);
   const body = `<div class="tag" style="text-align:left">KESANTRIAN · PONDOK ${pondok}</div><div style="height:2mm"></div>
@@ -179,7 +179,7 @@ ${ttd([{ r: "Mengetahui,<br>Mudir", n: md ? md.nama : "" }, { r: "<br>Wadir Kesa
 
 // ---------------- SURAT PERINGATAN ----------------
 export function suratPeringatan(b) {
-  const { s, a, pondok } = dataSantri(L.santriById(b.santri)), t = tindakanBap(b), td = tindakanById(t.jenis), k = td.ke || 1, md = mudir();
+  const { s, a, pondok } = dataSantri(L.santriAman(b.santri)), t = tindakanBap(b), td = tindakanById(t.jenis), k = td.ke || 1, md = mudir();
   const no = nomorBap(b, "SP-" + k), sampai = new Date(L.parseYmd(b.tanggal).getTime()); sampai.setMonth(sampai.getMonth() + 3);
   const lanjut = k < 3 ? `Surat Peringatan ${k + 1} (SP-${k + 1})` : "pengembalian santri kepada orang tua";
   const body = judul(`KESANTRIAN · PONDOK ${pondok}`, `SURAT PERINGATAN ${k} (SP-${k})`, no)
@@ -198,7 +198,7 @@ ${ttd([{ r: "Santri", n: s.nama }, { r: "Wali santri", n: s.ayah || "" }, { r: "
 
 // ---------------- SKORSING ----------------
 export function suratSkorsing(b) {
-  const { s, a, pondok } = dataSantri(L.santriById(b.santri)), t = tindakanBap(b), md = mudir(), no = nomorBap(b, "SKR");
+  const { s, a, pondok } = dataSantri(L.santriAman(b.santri)), t = tindakanBap(b), md = mudir(), no = nomorBap(b, "SKR");
   const mulai = t.mulai || b.tanggal, back = kembaliSkorsing(b), akhir = new Date(back.getTime() - 864e5);
   const body = judul(`KESANTRIAN · PONDOK ${pondok}`, "SURAT KEPUTUSAN SKORSING", no)
     + `<p>Berdasarkan Berita Acara Pelanggaran Nomor ${nomorBap(b)} tanggal ${tglPanjang(b.tanggal, false)}, pimpinan Kampung Qur'an Al Muawanah memutuskan memberikan sanksi <b>skorsing</b> kepada santri:</p>
@@ -217,7 +217,7 @@ ${slip(`Skorsing · ${no}`, s.nama)}`;
 
 // ---------------- PENGEMBALIAN SANTRI ----------------
 export function suratPengembalian(b) {
-  const { s, a, pondok } = dataSantri(L.santriById(b.santri)), md = mudir(), no = nomorBap(b, "PSO"), riwayat = all("bap").filter(x => x.santri === b.santri);
+  const { s, a, pondok } = dataSantri(L.santriAman(b.santri)), md = mudir(), no = nomorBap(b, "PSO"), riwayat = all("bap").filter(x => x.santri === b.santri);
   const body = judul(`KESANTRIAN · PONDOK ${pondok}`, "SURAT PENGEMBALIAN SANTRI", no)
     + `<p>Berdasarkan Berita Acara Pelanggaran Nomor ${nomorBap(b)} tanggal ${tglPanjang(b.tanggal, false)} serta catatan pembinaan sebelumnya, pimpinan Kampung Qur'an Al Muawanah memutuskan <b>mengembalikan santri kepada orang tua/wali</b>:</p>
 <div class="form">${grp("Data santri")}${row("Nama santri", `<b>${esc(s.nama)}</b>`)}${row("Kelas / asrama", `${esc(s.kelas)} · ${esc(a.nama)}`)}

@@ -54,7 +54,7 @@ export function SantriDetail({ sid, tab: t0 }) {
   const s = L.santriById(sid); const [tab, setTab] = useState(t0 || "hafalan");
   if (!s) return html`<${SubHeader} title="Santri" /><div class="wrap"><${Empty} t="Santri tidak ditemukan." /></div>`;
   const m = me(), canNilai = m && !m.roles.every(r => r === "admin");
-  return html`<${SubHeader} title=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaById(s.asrama).nama} · ${L.namaHalaqah(s)}`}>
+  return html`<${SubHeader} title=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama} · ${L.namaHalaqah(s)}`}>
     <${Seg} small items=${[["hafalan", "Hafalan"], ["hadir", "Kehadiran"], ...(canNilai ? [["nilai", "Nilai"]] : []), ["catatan", "Catatan"]]} value=${tab} onChange=${setTab} /></${SubHeader}>
     <div class="wrap">${tab === "hafalan" ? html`<${HafalanCard} s=${s} />${m ? html`<${KartuAI} judul="Ringkasan AI" tombol="Ringkas kondisi santri" buat=${() => ringkasStaf(s)} />` : null}<${Section} t="Riwayat setoran" /><${Card}><${RiwayatSetoran} sid=${s.id} koreksi=${!!me()} /></${Card}>`
       : tab === "hadir" ? html`<${KehadiranCard} s=${s} />` : tab === "nilai" ? html`<${NilaiCard} s=${s} />` : html`<${CatatanCard} s=${s} />`}</div>`;
@@ -72,7 +72,7 @@ export function RaporList() {
   const [scope, setScope] = useState(a && !lihatSemua ? a.id : (a ? a.id : "all")); const [q, setQ] = useState("");
   const list = (scope === "all" ? L.santriList() : L.santriAsrama(scope)).filter(s => s.nama.toLowerCase().includes(q.toLowerCase()));
   return html`<${SubHeader} title="Rapor" sub="Semester ganjil 2026/2027 · tersusun otomatis">${lihatSemua ? html`<${Seg} small items=${[...(a ? [[a.id, "Asrama saya"]] : []), ["all", "Semua santri"]]} value=${scope} onChange=${setScope} />` : null}</${SubHeader}>
-    <div class="wrap"><${SearchBox} value=${q} onInput=${setQ} /><${Card}><div class="list">${list.map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaById(s.asrama).nama}`} onClick=${() => nav.go("raporView", { sid: s.id })} />`)}</div></${Card}></div>`;
+    <div class="wrap"><${SearchBox} value=${q} onInput=${setQ} /><${Card}><div class="list">${list.map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama}`} onClick=${() => nav.go("raporView", { sid: s.id })} />`)}</div></${Card}></div>`;
 }
 
 export { RaporView } from "./s_rapor.js";
@@ -90,7 +90,7 @@ function MotdAllInner() {
   return html`<div class="wrap">${["29", "21"].map(p => html`<${Section} t=${"Pondok " + p} /><${Card}><div class="list">${L.ASRAMA.filter(a => a.pondok === p).map(a => {
     const n = L.WAKTU.filter(([w]) => get("motd", L.motdKey(a.id, tgl, w))).length; let al = 0;
     all("motd").filter(d => d.asrama === a.id && d.tanggal >= wk).forEach(d => Object.values(d.status).forEach(v => { if (v === "A") al++; }));
-    return html`<${Row} name=${a.nama} sub=${`${L.staffById(a.musyrif).pendek} · ${n}/8 waktu diabsen hari ini · ${al} alpa pekan ini`} icon=${html`<${Icon} n="moon" s=${18} />`} right=${html`<${Pill} t=${n + "/8"} tone=${n === 8 ? "green" : n ? "gold" : "muted"} />`} />`; })}</div></${Card}>`)}</div>`;
+    return html`<${Row} name=${a.nama} sub=${`${L.staffAman(a.musyrif).pendek} · ${n}/8 waktu diabsen hari ini · ${al} alpa pekan ini`} icon=${html`<${Icon} n="moon" s=${18} />`} right=${html`<${Pill} t=${n + "/8"} tone=${n === 8 ? "green" : n ? "gold" : "muted"} />`} />`; })}</div></${Card}>`)}</div>`;
 }
 
 export function KinerjaAll() {

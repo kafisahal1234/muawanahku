@@ -10,10 +10,11 @@ import { tanyaAI, SISTEM_DASAR } from "./ai.js";
 import { TINDAKAN, tindakanById, namaTindakan, saranTindakan, suratUntukBap, buatSurat, nomorIzin, nomorBap, selesaiSkorsing } from "./surat.js";
 
 const inPondok = (p, sid) => { const s = L.santriById(sid); return s && (!p || L.pondokOfSantri(s) === p); };
+const pondokSaya = () => { const m = me() || {}; return m.pondok || (L.asramaOf(m.id) || {}).pondok || "29"; };
 
 export function Kesantrian({ pondok }) {
   useApp();
-  const p = pondok === "all" ? null : (pondok || me().pondok);
+  const p = pondok === "all" ? null : (pondok || pondokSaya());
   const iz = L.izinAktif().filter(i => inPondok(p, i.santri));
   const lambat = iz.filter(L.terlambat);
   const bln = L.today().slice(0, 7), bap = all("bap").filter(b => inPondok(p, b.santri) && (b.tanggal || "").startsWith(bln));
@@ -28,7 +29,7 @@ export function Kesantrian({ pondok }) {
       <${Tile} icon="calendar" label="Rekap Izin" color="teal" onClick=${() => nav.go("rekapIzin", { pondok: p })} />
       <${Tile} icon="alert" label="Rekap Pelanggaran" color="pink" onClick=${() => nav.go("rekapPelanggaran", { pondok: p })} />
 </div></${Card}>
-    <${Card} title="Santri sedang izin" right=${html`<${Pill} t=${iz.length + " santri"} tone="gold" />`}>${iz.length ? html`<div class="list">${iz.map(i => { const s = L.santriById(i.santri);
+    <${Card} title="Santri sedang izin" right=${html`<${Pill} t=${iz.length + " santri"} tone="gold" />`}>${iz.length ? html`<div class="list">${iz.map(i => { const s = L.santriAman(i.santri);
       return html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${i.jenis} · kembali ${L.fmtDT(i.kembali)}`} right=${html`<${Pill} t=${L.terlambat(i) ? "Terlambat" : i.jenis === "Keluar" ? "Keluar" : i.jenis === "Skorsing" ? "Skorsing" : "Di rumah"} tone=${L.terlambat(i) || i.jenis === "Skorsing" ? "red" : "gold"} />`} onClick=${() => nav.go("izinView", { id: i.id })} />`; })}</div>`
       : html`<${Empty} t="Tidak ada santri yang sedang izin." icon="check" />`}</${Card}></div>`;
 }
@@ -36,7 +37,7 @@ export function Kesantrian({ pondok }) {
 const local = d => { const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 16); };
 export function SuratIzin() {
   useApp();
-  const p = me().pondok, list = L.santriList().filter(s => L.pondokOfSantri(s) === p);
+  const p = pondokSaya(), list = L.santriList().filter(s => L.pondokOfSantri(s) === p);
   const now = new Date(), back = new Date(now.getTime() + 2 * 864e5); back.setHours(17, 0, 0, 0);
   const [f, setF] = useState({ santri: "", jenis: "Perpulangan", alasan: "", keluar: local(now), kembali: local(back), penjemput: "" });
   const set = (k, v) => setF(x => {
@@ -44,7 +45,7 @@ export function SuratIzin() {
     if (k === "santri" && !x.penjemput && v) { const s = L.santriById(v); if (s && s.ayah && n.jenis !== "Keluar") n.penjemput = `Bapak ${s.ayah} (ayah)`; }
     if (k === "jenis" && v === "Keluar") { const t = new Date(); t.setHours(t.getHours() + 3, 0, 0, 0); n.kembali = local(t); if (/\((ayah|ibu)\)$/.test(x.penjemput)) n.penjemput = ""; }
     return n; });
-  const sw = f.santri ? L.santriById(f.santri) : null;
+  const sw = f.santri ? L.santriAman(f.santri) : null;
   const [ask, setAsk] = useState(false);
   const save = async () => {
     setAsk(false); const id = uid("i");
@@ -60,32 +61,32 @@ export function SuratIzin() {
       <${Field} label="Kembali"><input type="datetime-local" class="in" value=${f.kembali} onInput=${e => set("kembali", e.target.value)} /></${Field}></div>
       <${Field} label=${f.jenis === "Keluar" ? "Pendamping" : "Penjemput"} hint=${sw ? (sw.hpWali ? `No. HP mengikuti data wali: ${sw.hpWali}` : "No. HP mengikuti data wali (diisi Admin di biodata santri).") : ""}><input class="in" value=${f.penjemput} placeholder=${f.jenis === "Keluar" ? "Misal: Ust. pembina asrama" : "Nama dan hubungan, misal Bapak Hasan (ayah)"} onInput=${e => set("penjemput", e.target.value)} /></${Field}></${Card}>
     <div class="sticky-act"><${Btn} disabled=${!ok} onClick=${() => setAsk(true)} icon="check">Simpan surat izin</${Btn}></div>
-    <${Confirm} open=${ask} title="Simpan surat izin?" text=${ok ? `${L.santriById(f.santri).nama} · ${f.jenis} sampai ${L.fmtDT(new Date(f.kembali).toISOString())}.` : ""} yes="Simpan" onYes=${save} onNo=${() => setAsk(false)} /></div>`;
+    <${Confirm} open=${ask} title="Simpan surat izin?" text=${ok ? `${L.santriAman(f.santri).nama} · ${f.jenis} sampai ${L.fmtDT(new Date(f.kembali).toISOString())}.` : ""} yes="Simpan" onYes=${save} onNo=${() => setAsk(false)} /></div>`;
 }
 
 export function IzinView({ id }) {
   useApp();
   const i0 = get("izin", id), i = i0 && (!nav.user || nav.user.kind !== "wali" || i0.santri === nav.user.id) ? i0 : null; if (!i) return html`<${SubHeader} title="Surat Izin" /><div class="wrap"><${Empty} t="Data tidak ditemukan." /></div>`;
-  const s = L.santriById(i.santri), a = L.asramaById(s.asrama), sk = i.jenis === "Skorsing";
+  const s = L.santriAman(i.santri), a = L.asramaAman(s.asrama), sk = i.jenis === "Skorsing";
   return html`<${SubHeader} title=${sk ? "Skorsing" : "Surat Izin"} sub=${i.status === "aktif" ? "Sedang berlaku" : "Sudah kembali"} />
     <div class="wrap"><div class="surat"><h4>${sk ? "SKORSING" : "SURAT IZIN " + i.jenis.toUpperCase()}</h4><p class="c">No. ${nomorIzin(i)} · Pondok ${L.pondokOfSantri(s)}</p>
       <div class="kv"><span>Nama santri</span><b>${s.nama}</b></div><div class="kv"><span>Kelas / asrama</span><b>${s.kelas} · ${a.nama}</b></div>
       <div class="kv"><span>Alasan</span><b>${i.alasan}</b></div><div class="kv"><span>Keluar</span><b>${L.fmtDT(i.keluar)}</b></div><div class="kv"><span>Kembali</span><b>${L.fmtDT(i.kembali)}</b></div>
-      <div class="kv"><span>${i.jenis === "Keluar" ? "Pendamping" : "Penjemput"}</span><b>${i.penjemput || "—"}</b></div>${s.hpWali ? html`<div class="kv"><span>No. HP wali</span><b>${s.hpWali}</b></div>` : null}<div class="kv"><span>Dicatat oleh</span><b>${L.staffById(i.oleh).nama}</b></div>
+      <div class="kv"><span>${i.jenis === "Keluar" ? "Pendamping" : "Penjemput"}</span><b>${i.penjemput || "—"}</b></div>${s.hpWali ? html`<div class="kv"><span>No. HP wali</span><b>${s.hpWali}</b></div>` : null}<div class="kv"><span>Dicatat oleh</span><b>${(L.staffById(i.oleh) || { nama: '—' }).nama}</b></div>
       ${i.status !== "aktif" ? html`<div class="kv"><span>Kembali pada</span><b>${L.fmtDT(i.kembaliAktual)} ${i.telat ? "· terlambat" : ""}</b></div>` : null}</div>
     <div class="mt12"><${Btn} kind="outline" icon="file" onClick=${() => sk && i.bap ? nav.go("surat", { jenis: "skorsing", id: i.bap }) : nav.go("surat", { jenis: "izin", id: i.id })}>${sk ? "Lihat surat skorsing" : "Lihat & cetak surat izin"}</${Btn}></div></div>`;
 }
 
 export function CatatKembali() {
   useApp();
-  const p = me().pondok, iz = L.izinAktif().filter(i => inPondok(p, i.santri)).sort((a, b) => new Date(a.kembali) - new Date(b.kembali));
+  const p = pondokSaya(), iz = L.izinAktif().filter(i => inPondok(p, i.santri)).sort((a, b) => new Date(a.kembali) - new Date(b.kembali));
   const [sel, setSel] = useState(null);
   const done = async () => { const i = sel; setSel(null); const telat = L.terlambat(i); if (await put("izin", i.id, { ...i, status: "kembali", kembaliAktual: new Date().toISOString(), telat })) toast(telat ? "Tercatat kembali, terlambat" : "Tercatat sudah kembali", telat ? "err" : "ok"); };
   return html`<${SubHeader} title="Catat Kembali" sub=${`Pondok ${p} · ${iz.length} santri sedang izin`} />
-    <div class="wrap"><${Card}>${iz.length ? html`<div class="list">${iz.map(i => { const s = L.santriById(i.santri); return html`<div class="row"><span class=${"av " + (L.terlambat(i) ? "red" : "gold")}>${L.initials(s.nama)}</span>
+    <div class="wrap"><${Card}>${iz.length ? html`<div class="list">${iz.map(i => { const s = L.santriAman(i.santri); return html`<div class="row"><span class=${"av " + (L.terlambat(i) ? "red" : "gold")}>${L.initials(s.nama)}</span>
       <span class="row-t"><b>${s.nama}</b><small>${i.jenis} · kembali ${L.fmtDT(i.kembali)}${L.terlambat(i) ? " · terlambat" : ""}</small></span><${Btn} kind="ghost" full=${false} onClick=${() => setSel(i)}>Sudah kembali</${Btn}></div>`; })}</div>`
       : html`<${Empty} t="Tidak ada santri yang sedang izin." icon="check" />`}</${Card}>
-    <${Confirm} open=${!!sel} title="Catat sudah kembali?" text=${sel ? `${L.santriById(sel.santri).nama} kembali sekarang (${L.fmtDT(new Date().toISOString())}).` : ""} yes="Catat" onYes=${done} onNo=${() => setSel(null)} /></div>`;
+    <${Confirm} open=${!!sel} title="Catat sudah kembali?" text=${sel ? `${L.santriAman(sel.santri).nama} kembali sekarang (${L.fmtDT(new Date().toISOString())}).` : ""} yes="Catat" onYes=${done} onNo=${() => setSel(null)} /></div>`;
 }
 
 function SigPad({ value, onChange, label }) {
@@ -106,7 +107,7 @@ function SigPad({ value, onChange, label }) {
 
 export function FormBap() {
   useApp();
-  const p = me().pondok, list = L.santriList().filter(s => L.pondokOfSantri(s) === p);
+  const p = pondokSaya(), list = L.santriList().filter(s => L.pondokOfSantri(s) === p);
   const [f, setF] = useState({ santri: "", tanggal: L.today(), tempat: "", pel: "", kronologi: "", saksi: "", sanksi: "", foto: "", ttdSantri: "", ttdPetugas: "", tindakan: "", hari: 7, mulai: L.today() });
   const set = (k, v) => setF(x => ({ ...x, [k]: v }));
   const pel = DATA.pelanggaran.find(x => x.id === f.pel);
@@ -132,17 +133,17 @@ Jawab JSON: {"kronologi":"","pelanggaran_id":null}` });
     const rec = { santri: f.santri, tanggal: f.tanggal, tempat: f.tempat, pelanggaran: pel.id, pelanggaranNama: pel.nama, tingkat: pel.tingkat, poin: pel.poin, kronologi: f.kronologi, saksi: f.saksi, sanksi: f.sanksi, foto: f.foto, ttdSantri: f.ttdSantri, ttdPetugas: f.ttdPetugas, tindakan, oleh: me().id, ts: now };
     if (await put("bap", id, rec)) {
       if (jt === "skorsing") { // sistem otomatis mencatat santri sedang skorsing (muncul di daftar izin, Catat Kembali, dan akun wali)
-        const s0 = L.santriById(f.santri), mulai = L.parseYmd(tindakan.mulai); const jamNow = new Date(); mulai.setHours(jamNow.getHours(), jamNow.getMinutes(), 0, 0);
+        const s0 = L.santriAman(f.santri), mulai = L.parseYmd(tindakan.mulai); const jamNow = new Date(); mulai.setHours(jamNow.getHours(), jamNow.getMinutes(), 0, 0);
         await put("izin", uid("i"), { santri: f.santri, jenis: "Skorsing", alasan: `Skorsing ${hari} hari · ${pel.nama}`, keluar: mulai.toISOString(), kembali: selesaiSkorsing({ ...rec, id }).toISOString(), penjemput: s0.ayah ? `Bapak ${s0.ayah} (ayah)` : "Wali santri", status: "aktif", bap: id, oleh: me().id, ts: now + 1 });
       }
       const n = suratUntukBap({ ...rec, id }).length;
       toast(`BAP tersimpan · ${pel.poin} poin · ${n} surat dibuat otomatis`); nav.replace("bapView", { id });
     }
   };
-  const s = f.santri ? L.santriById(f.santri) : null, ps = s ? L.poinSantri(s.id) : null;
+  const s = f.santri ? L.santriAman(f.santri) : null, ps = s ? L.poinSantri(s.id) : null;
   return html`<${SubHeader} title="Form BAP" sub=${`Berita acara pelanggaran · Pondok ${p}`} />
     <div class="wrap"><${Card} title="Santri"><${SantriPicker} list=${list} value=${f.santri} onChange=${v => set("santri", v)} />
-      ${s ? html`<p class="small mt8">${L.asramaById(s.asrama).nama} · total poin saat ini ${ps.total}</p>` : null}</${Card}>
+      ${s ? html`<p class="small mt8">${L.asramaAman(s.asrama).nama} · total poin saat ini ${ps.total}</p>` : null}</${Card}>
     <${Card} title="Kejadian"><div class="btn-row"><${Field} label="Tanggal"><input type="date" class="in" value=${f.tanggal} onInput=${e => set("tanggal", e.target.value)} /></${Field}>
       <${Field} label="Tempat"><input class="in" value=${f.tempat} placeholder="Misal: kamar 3" onInput=${e => set("tempat", e.target.value)} /></${Field}></div>
       <${Field} label="Jenis pelanggaran" hint="BAP untuk pelanggaran sedang sampai berat. Pelanggaran ringan (alpa/masbuq) dicatat lewat MOTD."><select class="in" value=${f.pel} onChange=${e => set("pel", e.target.value)}><option value="">Pilih pelanggaran</option>
@@ -161,22 +162,22 @@ Jawab JSON: {"kronologi":"","pelanggaran_id":null}` });
     <${Card} title="Bukti dan tanda tangan"><${Field} label="Foto bukti"><input type="file" accept="image/*" class="in" onChange=${foto} />${f.foto ? html`<img class="photo" src=${f.foto} alt="Foto bukti" />` : null}</${Field}>
       <div class="btn-row"><${SigPad} label="Santri" value=${f.ttdSantri} onChange=${v => set("ttdSantri", v)} /><${SigPad} label="Petugas" value=${f.ttdPetugas} onChange=${v => set("ttdPetugas", v)} /></div></${Card}>
     <div class="sticky-act"><${Btn} disabled=${!ok} onClick=${() => setAsk(true)} icon="check">Simpan BAP</${Btn}></div>
-    <${Confirm} open=${ask} title="Simpan BAP?" text=${ok ? `${L.santriById(f.santri).nama}: ${pel.nama} (${pel.poin} poin). Tindakan: ${namaTindakan(tindakan)}.` : ""} yes="Simpan" onYes=${save} onNo=${() => setAsk(false)} /></div>`;
+    <${Confirm} open=${ask} title="Simpan BAP?" text=${ok ? `${L.santriAman(f.santri).nama}: ${pel.nama} (${pel.poin} poin). Tindakan: ${namaTindakan(tindakan)}.` : ""} yes="Simpan" onYes=${save} onNo=${() => setAsk(false)} /></div>`;
 }
 
 export function BapView({ id }) {
   useApp();
   const b0 = get("bap", id), b = b0 && (!nav.user || nav.user.kind !== "wali" || b0.santri === nav.user.id) ? b0 : null; if (!b) return html`<${SubHeader} title="BAP" /><div class="wrap"><${Empty} t="Data tidak ditemukan." /></div>`;
-  const s = L.santriById(b.santri), wali = nav.user && nav.user.kind === "wali", daftar = suratUntukBap(b, wali);
+  const s = L.santriAman(b.santri), wali = nav.user && nav.user.kind === "wali", daftar = suratUntukBap(b, wali);
   return html`<${SubHeader} title="Berita Acara Pelanggaran" sub=${L.fmtTgl(b.tanggal)} />
     <div class="wrap"><${Card} title="Surat otomatis" right=${html`<${Pill} t=${daftar.length + " surat"} tone="gold" />`}><div class="list">${daftar.map(d => html`<${Row} name=${d.nama} sub=${d.ket} icon=${html`<${Icon} n="file" s=${18} />`} onClick=${() => nav.go("surat", { jenis: d.jenis, id: b.id })} />`)}</div></${Card}>
     <div class="surat"><h4>BERITA ACARA PELANGGARAN</h4><p class="c">No. ${nomorBap(b)} · Pondok ${L.pondokOfSantri(s)}</p>
-      <div class="kv"><span>Santri</span><b>${s.nama} · ${s.kelas}</b></div><div class="kv"><span>Asrama</span><b>${L.asramaById(s.asrama).nama}</b></div>
+      <div class="kv"><span>Santri</span><b>${s.nama} · ${s.kelas}</b></div><div class="kv"><span>Asrama</span><b>${L.asramaAman(s.asrama).nama}</b></div>
       <div class="kv"><span>Tanggal / tempat</span><b>${L.fmtTgl(b.tanggal)} · ${b.tempat || "—"}</b></div><div class="kv"><span>Pelanggaran</span><b>${b.pelanggaranNama} · ${b.tingkat} · ${b.poin} poin</b></div>
       <div class="kv"><span>Kronologi</span><b>${b.kronologi}</b></div><div class="kv"><span>Saksi</span><b>${b.saksi || "—"}</b></div><div class="kv"><span>Tindakan</span><b>${b.tindakan ? namaTindakan(b.tindakan) : "—"}${b.sanksi ? " · " + b.sanksi : ""}</b></div>
       ${b.foto ? html`<img class="photo" src=${b.foto} alt="Foto bukti" />` : null}
       <div class="btn-row mt12">${[["Santri", b.ttdSantri], ["Petugas", b.ttdPetugas]].map(([l, v]) => html`<div class="center"><div style="height:70px;border-bottom:1px solid #9AB0A5">${v ? html`<img src=${v} alt=${"Tanda tangan " + l} style="height:70px" />` : null}</div><small class="small">${l}</small></div>`)}</div>
-      <p class="small mt8">Dicatat oleh ${L.staffById(b.oleh).nama}</p></div></div>`;
+      <p class="small mt8">Dicatat oleh ${(L.staffById(b.oleh) || { nama: '—' }).nama}</p></div></div>`;
 }
 
 export function Histori({ pondok }) {
@@ -184,7 +185,7 @@ export function Histori({ pondok }) {
   const [q, setQ] = useState("");
   const list = L.santriList().filter(s => (!pondok || L.pondokOfSantri(s) === pondok) && s.nama.toLowerCase().includes(q.toLowerCase()));
   return html`<${SubHeader} title="Histori Santri" sub=${pondok ? "Pondok " + pondok : "Semua pondok"} /><div class="wrap"><${SearchBox} value=${q} onInput=${setQ} />
-    <${Card}><div class="list">${list.map(s => { const p = L.poinSantri(s.id); return html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaById(s.asrama).nama}`} right=${p.total ? html`<${Pill} t=${p.total + " poin"} tone="red" />` : html`<${Pill} t="0 poin" />`} onClick=${() => nav.go("santri", { sid: s.id, tab: "catatan" })} />`; })}</div></${Card}></div>`;
+    <${Card}><div class="list">${list.map(s => { const p = L.poinSantri(s.id); return html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama}`} right=${p.total ? html`<${Pill} t=${p.total + " poin"} tone="red" />` : html`<${Pill} t="0 poin" />`} onClick=${() => nav.go("santri", { sid: s.id, tab: "catatan" })} />`; })}</div></${Card}></div>`;
 }
 
 export function RekapIzin({ pondok }) {
@@ -192,7 +193,7 @@ export function RekapIzin({ pondok }) {
   const [f, setF] = useState("aktif");
   const l = all("izin").filter(i => inPondok(pondok, i.santri) && (f === "semua" || (f === "aktif" ? i.status === "aktif" : i.status !== "aktif"))).sort((a, b) => b.ts - a.ts);
   return html`<${SubHeader} title="Rekap Izin" sub=${pondok ? "Pondok " + pondok : "Semua pondok"}><${Seg} items=${[["aktif", "Aktif"], ["selesai", "Selesai"], ["semua", "Semua"]]} value=${f} onChange=${setF} /></${SubHeader}>
-    <div class="wrap"><${Card}>${l.length ? html`<div class="list">${l.map(i => html`<${Row} name=${L.santriById(i.santri).nama} sub=${`${i.jenis} · ${L.fmtDT(i.keluar)} → ${L.fmtDT(i.kembali)}`} right=${html`<${Pill} t=${i.status === "aktif" ? (L.terlambat(i) ? "Terlambat" : "Aktif") : i.telat ? "Kembali telat" : "Kembali"} tone=${i.status === "aktif" ? (L.terlambat(i) ? "red" : "gold") : i.telat ? "red" : "green"} />`} onClick=${() => nav.go("izinView", { id: i.id })} />`)}</div>` : html`<${Empty} t="Tidak ada data izin." />`}</${Card}></div>`;
+    <div class="wrap"><${Card}>${l.length ? html`<div class="list">${l.map(i => html`<${Row} name=${L.santriAman(i.santri).nama} sub=${`${i.jenis} · ${L.fmtDT(i.keluar)} → ${L.fmtDT(i.kembali)}`} right=${html`<${Pill} t=${i.status === "aktif" ? (L.terlambat(i) ? "Terlambat" : "Aktif") : i.telat ? "Kembali telat" : "Kembali"} tone=${i.status === "aktif" ? (L.terlambat(i) ? "red" : "gold") : i.telat ? "red" : "green"} />`} onClick=${() => nav.go("izinView", { id: i.id })} />`)}</div>` : html`<${Empty} t="Tidak ada data izin." />`}</${Card}></div>`;
 }
 
 export function RekapPelanggaran({ pondok }) {
@@ -201,7 +202,7 @@ export function RekapPelanggaran({ pondok }) {
   const bap = all("bap").filter(b => inPondok(pondok, b.santri)).sort((a, b) => b.ts - a.ts).slice(0, 15);
   return html`<${SubHeader} title="Rekap Pelanggaran" sub="BAP dan catatan MOTD otomatis" /><div class="wrap">
     <${Section} t="Poin tertinggi" /><${Card}>${rows.length ? html`<div class="list">${rows.map(({ s, p }) => html`<${Row} name=${s.nama} sub=${`BAP ${p.bap} poin · MOTD ${p.motd} poin`} right=${html`<${Pill} t=${p.total + " poin"} tone="red" />`} onClick=${() => nav.go("santri", { sid: s.id, tab: "catatan" })} />`)}</div>` : html`<${Empty} t="Belum ada pelanggaran tercatat." icon="check" />`}</${Card}>
-    <${Section} t="BAP terbaru" /><${Card}>${bap.length ? html`<div class="list">${bap.map(b => html`<${Row} name=${L.santriById(b.santri).nama} sub=${`${b.pelanggaranNama} · ${L.fmtTgl(b.tanggal)}`} right=${html`<${Pill} t=${b.poin + " poin"} tone="red" />`} onClick=${() => nav.go("bapView", { id: b.id })} />`)}</div>` : html`<${Empty} t="Belum ada BAP." />`}</${Card}></div>`;
+    <${Section} t="BAP terbaru" /><${Card}>${bap.length ? html`<div class="list">${bap.map(b => html`<${Row} name=${L.santriAman(b.santri).nama} sub=${`${b.pelanggaranNama} · ${L.fmtTgl(b.tanggal)}`} right=${html`<${Pill} t=${b.poin + " poin"} tone="red" />`} onClick=${() => nav.go("bapView", { id: b.id })} />`)}</div>` : html`<${Empty} t="Belum ada BAP." />`}</${Card}></div>`;
 }
 
 export function RekapMotd({ pondok }) {
@@ -212,7 +213,7 @@ export function RekapMotd({ pondok }) {
     ${asr.map(a => { const ids = new Set(L.santriAsrama(a.id).map(s => s.id));
       const today = L.WAKTU.filter(([w]) => get("motd", L.motdKey(a.id, tgl, w))).length;
       let al = 0, mb = 0; all("motd").filter(d => d.asrama === a.id && d.tanggal >= wk).forEach(d => Object.entries(d.status).forEach(([id, v]) => { if (ids.has(id)) { if (v === "A") al++; if (v === "M") mb++; } }));
-      return html`<${Card} title=${a.nama} right=${html`<small>${L.staffById(a.musyrif).pendek}</small>`}><div class="stats"><${Stat} label="Diabsen hari ini" value=${`${today}/8`} tone=${today < 8 ? "gold" : ""} /><${Stat} label="Alpa pekan ini" value=${al} tone=${al ? "red" : ""} /><${Stat} label="Masbuq" value=${mb} tone=${mb ? "blue" : ""} /></div></${Card}>`; })}</div>`;
+      return html`<${Card} title=${a.nama} right=${html`<small>${(L.staffById(a.musyrif) || { pendek: '—' }).pendek}</small>`}><div class="stats"><${Stat} label="Diabsen hari ini" value=${`${today}/8`} tone=${today < 8 ? "gold" : ""} /><${Stat} label="Alpa pekan ini" value=${al} tone=${al ? "red" : ""} /><${Stat} label="Masbuq" value=${mb} tone=${mb ? "blue" : ""} /></div></${Card}>`; })}</div>`;
 }
 
 // Pratinjau surat A4 + cetak/simpan PDF + unduh

@@ -79,7 +79,7 @@ export function UbahSandi() {
 // ---------- permintaan hapus akun (wajib di kedua toko aplikasi) ----------
 export function HapusAkun() {
   useApp();
-  const u = L.usernameOf(nav.user), nama = nav.user.kind === "staff" ? me().nama : "Wali " + L.santriById(nav.user.id).nama;
+  const u = L.usernameOf(nav.user), nama = nav.user.kind === "staff" ? me().nama : "Wali " + L.santriAman(nav.user.id).nama;
   const ada = all("hapusAkun").filter(r => r.username === u).sort((a, b) => b.ts - a.ts)[0];
   const [alasan, setAlasan] = useState(""); const [ask, setAsk] = useState(false);
   const kirim = async () => { setAsk(false); if (await put("hapusAkun", uid("h"), { username: u, nama, alasan, status: "menunggu", ts: Date.now() })) toast("Permintaan terkirim ke Admin"); };

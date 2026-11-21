@@ -52,7 +52,7 @@ export function Jadwal({ ro }) {
     <${Card} title=${hari} right=${!ro ? html`<small>Ketuk sel untuk ubah</small>` : null}><div class="grid-j"><span class="hd">Jam</span>${kelas.map(k => html`<span class="hd">${k}</span>`)}
       ${DATA.jam.map(jm => html`<span class="hd" style="text-align:left;font-size:10.5px">${jm.nama}<br /><small>${jm.mulai}</small></span>${kelas.map(k => { const c = cell(jm.id, k), b = c && L.bentrok(c, c.id).length;
         return html`<button class=${"cell " + (c ? "c-" + c.mapel : "empty")} style=${b ? "outline:2px solid #D9432F" : ""} disabled=${ro} onClick=${() => setEdit({ hari, jam: jm.id, kelas: k, cur: c })}>
-          ${c ? html`${L.mapelById(c.mapel).nama.replace("Pendidikan ", "")}<small>${L.staffById(c.guru).pendek.replace(/^Ust(dzh)?\.\s*/, "")}</small>` : "+"}</button>`; })}`)}</div></${Card}>
+          ${c ? html`${L.mapelById(c.mapel).nama.replace("Pendidikan ", "")}<small>${L.staffAman(c.guru).pendek.replace(/^Ust(dzh)?\.\s*/, "")}</small>` : "+"}</button>`; })}`)}</div></${Card}>
     ${edit ? html`<${EditSlot} e=${edit} onClose=${() => setEdit(null)} />` : null}</div>`;
 }
 function EditSlot({ e, onClose }) {
@@ -69,7 +69,7 @@ function EditSlot({ e, onClose }) {
   return html`<${Sheet} open=${true} title=${`${e.hari} · ${L.jamById(e.jam).nama} · Kelas ${e.kelas}`} onClose=${onClose}>
     <${Field} label="Mata pelajaran"><select class="in" value=${mapel} onChange=${x => { setMapel(x.target.value); setGuru(""); }}><option value="">Pilih mapel</option>${DATA.mapel.map(m => html`<option value=${m.id}>${m.nama}</option>`)}</select></${Field}>
     <${Field} label="Guru" hint="Otomatis pengampu kelas ini, bisa diganti"><select class="in" value=${g} onChange=${x => setGuru(x.target.value)}><option value="">Pilih guru</option>${guruOpts.map(s => html`<option value=${s.id}>${s.nama}</option>`)}</select></${Field}>
-    ${bt.length ? html`<div class="note red"><${Icon} n="alert" s=${18} /><span>Bentrok: ${bt.map(b => `${L.staffById(b.guru).pendek} mengajar ${L.mapelById(b.mapel).nama} di kelas ${b.kelas}`).join("; ")} pada jam yang sama.</span></div>` : null}
+    ${bt.length ? html`<div class="note red"><${Icon} n="alert" s=${18} /><span>Bentrok: ${bt.map(b => `${L.staffAman(b.guru).pendek} mengajar ${L.mapelById(b.mapel).nama} di kelas ${b.kelas}`).join("; ")} pada jam yang sama.</span></div>` : null}
     <div class="btn-row">${e.cur ? html`<${Btn} kind="ghost" onClick=${hapus}>Kosongkan</${Btn}>` : null}<${Btn} disabled=${!mapel || !g || bt.length} onClick=${save}>Simpan</${Btn}></div></${Sheet}>`;
 }
 
@@ -111,5 +111,5 @@ export function RekapNilai() {
 export function RekapIzinGuru() {
   useApp();
   const l = all("izinGuru").sort((a, b) => b.ts - a.ts);
-  return html`<${SubHeader} title="Izin Guru" sub="Tercatat tanpa persetujuan" /><div class="wrap"><${Card}>${l.length ? html`<div class="list">${l.map(i => html`<${Row} name=${L.staffById(i.guru).nama} sub=${`${i.jenis} · ${L.fmtTgl(i.tanggal)} · ${i.alasan || "—"}`} />`)}</div>` : html`<${Empty} t="Belum ada izin guru." />`}</${Card}></div>`;
+  return html`<${SubHeader} title="Izin Guru" sub="Tercatat tanpa persetujuan" /><div class="wrap"><${Card}>${l.length ? html`<div class="list">${l.map(i => html`<${Row} name=${L.staffAman(i.guru).nama} sub=${`${i.jenis} · ${L.fmtTgl(i.tanggal)} · ${i.alasan || "—"}`} />`)}</div>` : html`<${Empty} t="Belum ada izin guru." />`}</${Card}></div>`;
 }

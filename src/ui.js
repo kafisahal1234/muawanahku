@@ -1,4 +1,5 @@
 import { h } from "preact";
+import { createPortal } from "preact/compat";
 import { useState, useEffect, useRef } from "preact/hooks";
 import htm from "htm";
 import { subscribe, onToast } from "./store.js";
@@ -161,14 +162,14 @@ export function StatusPick({ value, opts = ["H", "S", "I", "A"], onChange, name,
 }
 export function Sheet({ open, onClose, title, children }) {
   if (!open) return null;
-  return html`<div class="sheet-bg" onClick=${e => { if (e.target.classList.contains("sheet-bg")) onClose(); }}><div class="sheet" role="dialog" aria-label=${title}>
-    <div class="sheet-h"><h3>${title}</h3><button class="icon-btn" aria-label="Tutup" onClick=${onClose}><${Icon} n="x" /></button></div><div class="sheet-b">${children}</div></div></div>`;
+  return createPortal(html`<div class="sheet-bg" onClick=${e => { if (e.target.classList.contains("sheet-bg")) onClose(); }}><div class="sheet" role="dialog" aria-label=${title}>
+    <div class="sheet-h"><h3>${title}</h3><button type="button" class="icon-btn" aria-label="Tutup" onClick=${onClose}><${Icon} n="x" /></button></div><div class="sheet-b">${children}</div></div></div>`, document.body);
 }
 export function Confirm({ open, title, text, yes = "Ya", onYes, onNo, danger }) {
   if (!open) return null;
-  return html`<div class="sheet-bg center" onClick=${e => { if (e.target.classList.contains("sheet-bg")) onNo(); }}><div class="dialog" role="alertdialog" aria-labelledby="dlg-t">
+  return createPortal(html`<div class="sheet-bg center" onClick=${e => { if (e.target.classList.contains("sheet-bg")) onNo(); }}><div class="dialog" role="alertdialog" aria-labelledby="dlg-t">
     ${danger ? html`<span class="dlg-ic"><${Icon} n="alert" s=${26} c="#B3261E" /></span>` : null}<h3 id="dlg-t">${title}</h3><p>${text}</p>
-    <div class="dlg-stack"><${Btn} kind=${danger ? "danger" : "primary"} onClick=${onYes}>${yes}</${Btn}><${Btn} kind="text" onClick=${onNo}>Batal</${Btn}></div></div></div>`;
+    <div class="dlg-stack"><${Btn} kind=${danger ? "danger" : "primary"} onClick=${onYes}>${yes}</${Btn}><${Btn} kind="text" onClick=${onNo}>Batal</${Btn}></div></div></div>`, document.body);
 }
 export function ToastHost() {
   const [t, setT] = useState(null); const tm = useRef(0);

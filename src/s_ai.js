@@ -20,7 +20,7 @@ export function mirip(a, b) {
   return Math.max(dice, tok);
 }
 function cocokkan(nama, list) { let best = null, sc = 0; list.forEach(s => { const v = mirip(nama, s.nama); if (v > sc) { sc = v; best = s; } }); return { best, sc }; }
-const daftarSantri = () => L.santriList().map(s => `${s.id}|${s.nama}|${s.kelas}|${L.asramaById(s.asrama).nama}`).join("\n");
+const daftarSantri = () => L.santriList().map(s => `${s.id}|${s.nama}|${s.kelas}|${L.asramaAman(s.asrama).nama}`).join("\n");
 
 export function useAIRun() {
   const [busy, setBusy] = useState(false);
@@ -50,7 +50,7 @@ export function dataSantriAI(s) {
   const h = L.hafalan(s), c = L.capaianJuz(s), rg = L.periodeRange("semester"), kh = L.kehadiranHalaqah(s.id, rg), mp = L.mutPersen(s.id, rg), po = L.poinSantri(s.id);
   const nilai = DATA.mapel.map(m => { const n = L.nilaiAkhir(s.id, m.id) || {}; return n.akhir == null ? null : `${m.nama} ${n.akhir}`; }).filter(Boolean);
   const bulan = L.hafalanDalam(s.id, L.periodeRange("bulanan"));
-  return [`Nama: ${s.nama} (panggilan ${s.panggilan || "-"}), kelas ${s.kelas}, asrama ${L.asramaById(s.asrama).nama}, ${L.namaHalaqah(s)}`,
+  return [`Nama: ${s.nama} (panggilan ${s.panggilan || "-"}), kelas ${s.kelas}, asrama ${L.asramaAman(s.asrama).nama}, ${L.namaHalaqah(s)}`,
     `Total hafalan: ${L.fmtJumlah(h)}${h.khatam ? " (khatam)" : `, sedang menghafal Juz ${h.aktif} (${L.posLabel(h.aktif, h.baris)})`}${h.siapTasmi ? ", siap tasmi'" : ""}`,
     `Hafalan baru semester ini: ${c.juz} dari target ${c.target} juz (${c.pct}%)`,
     `Hafalan baru bulan ini: ${L.fmtBaris(bulan.baris)} dalam ${bulan.hari} hari setor`,
@@ -288,9 +288,9 @@ export function ImporSantri() {
       <div class="imp-list">${rows.map(r => { const s = r.sid && L.santriById(r.sid);
         return html`<div class=${"imp-row " + (r.st === "baru" ? "tidak" : r.st === "sama" ? "cek" : "cocok") + (r.ikut && r.st !== "sama" ? "" : " off")}>
           <div class="imp-top"><label class="imp-cek"><input type="checkbox" checked=${r.ikut && r.st !== "sama"} disabled=${r.st === "sama"} onChange=${e => ubah(r.k, { ikut: e.target.checked })} /></label>
-            <div class="imp-t"><b>${s ? s.nama : r.f.nama}</b><small>${s ? (s.nama !== r.f.nama ? `Di dokumen: ${r.f.nama} · ` : "") + `Kelas ${s.kelas} · ${L.asramaById(s.asrama).nama}` : `Santri baru · kelas ${r.f.kelas || kelas} · ${L.asramaById(r.f.asrama || asr).nama}`}</small></div>
+            <div class="imp-t"><b>${s ? s.nama : r.f.nama}</b><small>${s ? (s.nama !== r.f.nama ? `Di dokumen: ${r.f.nama} · ` : "") + `Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama}` : `Santri baru · kelas ${r.f.kelas || kelas} · ${L.asramaAman(r.f.asrama || asr).nama}`}</small></div>
             <${Pill} t=${{ perbarui: "Perbarui", baru: "Baru", sama: "Sama" }[r.st]} tone=${{ perbarui: "green", baru: "blue", sama: "muted" }[r.st]} /></div>
-          ${r.st === "perbarui" ? html`<div class="imp-beda">${r.beda.map(k => html`<span><i>${lab[k]}</i> ${k === "asrama" ? L.asramaById(r.f[k]).nama : k === "lahir" ? L.fmtTgl(r.f[k]) : r.f[k]}</span>`)}</div>` : null}
+          ${r.st === "perbarui" ? html`<div class="imp-beda">${r.beda.map(k => html`<span><i>${lab[k]}</i> ${k === "asrama" ? L.asramaAman(r.f[k]).nama : k === "lahir" ? L.fmtTgl(r.f[k]) : r.f[k]}</span>`)}</div>` : null}
           ${r.st === "baru" ? html`<div class="imp-beda">${BIO.filter(([k]) => r.f[k]).map(([k, l]) => html`<span><i>${l}</i> ${k === "lahir" ? L.fmtTgl(r.f[k]) : r.f[k]}</span>`)}</div>` : null}
           ${r.catatan ? html`<small class="imp-cat">${r.catatan}</small>` : null}</div>`; })}</div>
       <div class="sticky-act"><div class="btn-row"><${Btn} kind="ghost" onClick=${() => setRows(null)}>Ulangi</${Btn}><${Btn} icon="check" disabled=${!ikut.length || sb} onClick=${simpan}>${sb ? "Menyimpan…" : `Simpan ${ikut.length} santri`}</${Btn}></div></div>`}</div>`;
@@ -392,7 +392,7 @@ Jawab hanya JSON: {"jadwal":[{"hari":"Senin","jam":"j1","kelas":"7","mapel":"fiq
     : html`<${Card}><div class="stats"><${Stat} label="Siap disimpan" value=${valid.length} /><${Stat} label="Perlu dilengkapi" value=${rows.length - valid.length} tone="gold" /></div>
       <label class="small" style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" checked=${kosongkan} onChange=${e => setKos(e.target.checked)} style="width:20px;height:20px;accent-color:#0B5D3B" />Kosongkan sel jadwal lama yang tidak ada di dokumen</label></${Card}>
       ${DATA.hari.map(h => { const l = rows.filter(r => r.hari === h); return l.length ? html`<h4 class="imp-h">${h}</h4><div class="imp-list">${l.map(r => html`<div class=${"imp-row " + (r.ok ? (bentrok(r) ? "ganda" : "cocok") : "cek")}>
-        <div class="imp-top"><div class="imp-t"><b>${r.jam ? L.jamById(r.jam).nama : "Jam ?"} · Kelas ${r.kelas || "?"}</b><small>${r.mapel ? L.mapelById(r.mapel).nama : "Mapel belum dikenali"} · ${r.guru ? L.staffById(r.guru).pendek : "guru belum dikenali"}${bentrok(r) ? " · bentrok guru" : ""}</small></div>
+        <div class="imp-top"><div class="imp-t"><b>${r.jam ? L.jamById(r.jam).nama : "Jam ?"} · Kelas ${r.kelas || "?"}</b><small>${r.mapel ? L.mapelById(r.mapel).nama : "Mapel belum dikenali"} · ${r.guru ? L.staffAman(r.guru).pendek : "guru belum dikenali"}${bentrok(r) ? " · bentrok guru" : ""}</small></div>
         <${Pill} t=${r.ok ? "Siap" : "Lengkapi"} tone=${r.ok ? "green" : "gold"} /></div>
         ${!r.ok ? html`<div class="btn-row mt8"><select class="in" value=${r.mapel} onChange=${e => setRows(rows.map(x => x === r ? { ...x, mapel: e.target.value, ok: !!(x.hari && x.jam && x.kelas && e.target.value && x.guru) } : x))}><option value="">Mapel</option>${DATA.mapel.map(m => html`<option value=${m.id}>${m.nama}</option>`)}</select>
           <select class="in" value=${r.guru} onChange=${e => setRows(rows.map(x => x === r ? { ...x, guru: e.target.value, ok: !!(x.hari && x.jam && x.kelas && x.mapel && e.target.value) } : x))}><option value="">Guru</option>${guruList.map(s => html`<option value=${s.id}>${s.pendek}</option>`)}</select></div><small class="imp-cat" style="margin-left:0">Dokumen: ${r.asal}</small>` : null}</div>`)}</div>` : null; })}

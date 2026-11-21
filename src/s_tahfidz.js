@@ -206,7 +206,7 @@ export function TasmiList() {
     <div class="wrap">
     <${Card} title="Siap tasmi'">${siap.length ? html`<div class="list">${siap.map(s => { const h = L.hafalan(s); return html`<${Row} name=${s.nama} sub=${`Selesai Juz ${h.aktif} · ${h.total} dari ${h.total} baris`} right=${html`<${Pill} t="Siap" tone="gold" />`} onClick=${() => nav.go("tasmi", { sid: s.id })} />`; })}</div>`
       : html`<${Empty} t="Belum ada santri yang menyelesaikan juz. Coba input ziyadah sampai akhir juz." icon="mic" />`}</${Card}>
-    <${Section} t="Riwayat tasmi' halaqah" /><${Card}>${hist.length ? html`<div class="list">${hist.map(r => html`<${Row} name=${L.santriById(r.santri).nama} sub=${`Juz ${r.juz} · ${L.fmtTgl(r.tanggal)}`} right=${html`<${StatusPill} r=${r} />`} />`)}</div>` : html`<${Empty} t="Belum ada tasmi'." />`}</${Card}></div>`;
+    <${Section} t="Riwayat tasmi' halaqah" /><${Card}>${hist.length ? html`<div class="list">${hist.map(r => html`<${Row} name=${L.santriAman(r.santri).nama} sub=${`Juz ${r.juz} · ${L.fmtTgl(r.tanggal)}`} right=${html`<${StatusPill} r=${r} />`} />`)}</div>` : html`<${Empty} t="Belum ada tasmi'." />`}</${Card}></div>`;
 }
 
 export function Tasmi({ sid, edit }) {
@@ -261,7 +261,7 @@ export function Ujian({ sid, jenis }) {
 export function Progres({ hid, aid }) {
   useApp();
   const list = (hid ? L.santriHalaqah(hid) : aid ? L.santriAsrama(aid) : L.santriList()).map(s => ({ s, h: L.hafalan(s), c: L.capaianJuz(s) })).sort((a, b) => b.c.juz - a.c.juz);
-  return html`<${SubHeader} title="Progres Santri" sub=${hid ? L.halaqahById(hid).nama : aid ? L.asramaById(aid).nama : "Semua santri"} />
+  return html`<${SubHeader} title="Progres Santri" sub=${hid ? L.halaqahById(hid).nama : aid ? L.asramaAman(aid).nama : "Semua santri"} />
     <div class="wrap"><${Card}><div class="list">${list.map(({ s, h, c }) => html`<button class="row" onClick=${() => nav.go("santri", { sid: s.id })}>
       <span class="av">${L.initials(s.nama)}</span><span class="row-t"><b>${s.nama}</b><small>Baru semester ini ${c.juz.toLocaleString("id-ID")} dari ${c.target} juz · total ${L.fmtJumlah(h)} · sedang Juz ${h.aktif}</small>
       <span style="display:block;margin-top:6px"><${Bar} v=${c.pct} tone=${c.tercapai ? "green" : "gold"} /></span></span></button>`)}</div></${Card}></div>`;

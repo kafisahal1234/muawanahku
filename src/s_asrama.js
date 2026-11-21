@@ -30,11 +30,11 @@ function MotdList({ w, pondok, mine, tgl }) {
   const shown = asr.filter(a => f === "all" || a.id === f);
   const match = s => !q || s.nama.toLowerCase().includes(q.toLowerCase());
   return html`<div class="wrap">
-    ${last ? html`<${Hint}>Terakhir diisi ${L.staffById(last.guru).pendek} pukul ${L.fmtJam(last.ts)}. Alpa & masbuq otomatis jadi pelanggaran ringan.</${Hint}>` : html`<${Hint}>Satu ustadz bertugas mengisi untuk semua santri Pondok ${pondok}. Alpa & masbuq otomatis jadi pelanggaran ringan.</${Hint}>`}
+    ${last ? html`<${Hint}>Terakhir diisi ${L.staffAman(last.guru).pendek} pukul ${L.fmtJam(last.ts)}. Alpa & masbuq otomatis jadi pelanggaran ringan.</${Hint}>` : html`<${Hint}>Satu ustadz bertugas mengisi untuk semua santri Pondok ${pondok}. Alpa & masbuq otomatis jadi pelanggaran ringan.</${Hint}>`}
     <div class="seg small mb8">${[["all", "Semua"], ...asr.map(a => [a.id, a.nama.replace("bin Abi ", "b. ").replace("bin ", "b. ")])].map(([k, lab]) => html`<button class=${k === f ? "on" : ""} onClick=${() => setF(k)}>${lab}${k === mine ? " ★" : ""}</button>`)}</div>
     <${SearchBox} value=${q} onInput=${setQ} />
     <${Card}><${Counts} st=${(() => { const ids = new Set(shown.flatMap(a => L.santriAsrama(a.id).map(x => x.id))); return Object.fromEntries(Object.entries(st).filter(([id]) => ids.has(id))); })()} opts=${["H", "M", "S", "I", "A"]} />
-      ${shown.map(a => { const l = L.santriAsrama(a.id).filter(match); return l.length ? html`<div class="grp">${a.nama} · ${L.staffById(a.musyrif).pendek}</div>
+      ${shown.map(a => { const l = L.santriAsrama(a.id).filter(match); return l.length ? html`<div class="grp">${a.nama} · ${L.staffAman(a.musyrif).pendek}</div>
         ${l.map(s => html`<${AbsenItem} s=${s} sub=${L.sedangIzin(s.id) ? "Sedang izin · otomatis" : null} opts=${["H", "M", "S", "I", "A"]} value=${st[s.id]} onChange=${v => setSt({ ...st, [s.id]: v })} />`)}` : null; })}</${Card}>
     <div class="sticky-act"><${Btn} onClick=${save} icon="check">Simpan absen ${label}</${Btn}></div></div>`;
 }
@@ -81,8 +81,8 @@ export function IzinCatatan({ aid }) {
   const motd = [...ids].flatMap(id => L.motdCatatan(id).map(c => ({ ...c, santri: id }))).slice(0, 20);
   return html`<${SubHeader} title="Izin & Catatan" sub=${`Asrama ${a.nama} · hanya melihat`} />
     <div class="wrap">
-    <${Section} t="Perizinan" /><${Card}>${iz.length ? html`<div class="list">${iz.map(i => html`<${Row} name=${L.santriById(i.santri).nama} sub=${`${i.jenis} · ${L.fmtDT(i.keluar)} → ${L.fmtDT(i.kembali)}`}
+    <${Section} t="Perizinan" /><${Card}>${iz.length ? html`<div class="list">${iz.map(i => html`<${Row} name=${L.santriAman(i.santri).nama} sub=${`${i.jenis} · ${L.fmtDT(i.keluar)} → ${L.fmtDT(i.kembali)}`}
         right=${i.status === "aktif" ? html`<${Pill} t=${L.terlambat(i) ? "Terlambat" : "Sedang izin"} tone=${L.terlambat(i) ? "red" : "gold"} />` : html`<${Pill} t="Kembali" />`} />`)}</div>` : html`<${Empty} t="Belum ada izin." />`}</${Card}>
-    <${Section} t="Pelanggaran (BAP)" /><${Card}>${bap.length ? html`<div class="list">${bap.map(b => html`<${Row} name=${L.santriById(b.santri).nama} sub=${`${b.pelanggaranNama} · ${L.fmtTgl(b.tanggal)}`} right=${html`<${Pill} t=${b.poin + " poin"} tone="red" />`} onClick=${() => nav.go("bapView", { id: b.id })} />`)}</div>` : html`<${Empty} t="Belum ada BAP." />`}</${Card}>
-    <${Section} t="Catatan MOTD" /><${Card}>${motd.length ? html`<div class="list">${motd.map(c => html`<${Row} name=${L.santriById(c.santri).nama} sub=${`${c.st === "A" ? "Alpa" : "Masbuq"} ${L.WAKTU.find(x => x[0] === c.waktu)[1]} · ${L.fmtShort(c.tanggal)}`} right=${html`<${Pill} t=${c.poin + " poin"} tone=${c.st === "A" ? "red" : "purple"} />`} />`)}</div>` : html`<${Empty} t="Belum ada alpa atau masbuq." />`}</${Card}></div>`;
+    <${Section} t="Pelanggaran (BAP)" /><${Card}>${bap.length ? html`<div class="list">${bap.map(b => html`<${Row} name=${L.santriAman(b.santri).nama} sub=${`${b.pelanggaranNama} · ${L.fmtTgl(b.tanggal)}`} right=${html`<${Pill} t=${b.poin + " poin"} tone="red" />`} onClick=${() => nav.go("bapView", { id: b.id })} />`)}</div>` : html`<${Empty} t="Belum ada BAP." />`}</${Card}>
+    <${Section} t="Catatan MOTD" /><${Card}>${motd.length ? html`<div class="list">${motd.map(c => html`<${Row} name=${L.santriAman(c.santri).nama} sub=${`${c.st === "A" ? "Alpa" : "Masbuq"} ${L.WAKTU.find(x => x[0] === c.waktu)[1]} · ${L.fmtShort(c.tanggal)}`} right=${html`<${Pill} t=${c.poin + " poin"} tone=${c.st === "A" ? "red" : "purple"} />`} />`)}</div>` : html`<${Empty} t="Belum ada alpa atau masbuq." />`}</${Card}></div>`;
 }

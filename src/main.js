@@ -60,8 +60,8 @@ function BottomNav({ wali }) {
 }
 // Navigasi samping khusus layar laptop/PC (di HP/tablet disembunyikan lewat CSS)
 function SideNav({ wali }) {
-  const u = nav.user, nama = wali ? "Wali " + L.santriById(u.id).nama : L.staffById(u.id).nama;
-  const peran = wali ? "Wali santri" : L.staffById(u.id).roles.map(r => L.ROLE_LABEL[r]).join(" · ");
+  const u = nav.user, nama = wali ? "Wali " + L.santriAman(u.id).nama : L.staffAman(u.id).nama;
+  const peran = wali ? "Wali santri" : L.staffAman(u.id).roles.map(r => L.ROLE_LABEL[r]).join(" · ");
   const items = wali ? [["home", "Beranda", "home"], ["hafalan", "Hafalan", "bookopen"], ["ananda", "Ananda", "heart"], ["izin", "Izin", "door"], ["akun", "Akun", "user"]]
     : [["home", "Beranda", "home"], ["jadwal", "Jadwal", "calendar"], ["cari", "Cari santri", "search"], ["riwayat", "Riwayat", "clock"], ["akun", "Akun", "user"]];
   const baru = all("pengumuman").filter(p => Date.now() - p.ts < 7 * 864e5).length, aktif = !nav.top;
@@ -84,7 +84,7 @@ class Boundary extends Component {
   constructor() { super(); this.state = { err: null }; }
   componentDidCatch(e) { console.error(e); this.setState({ err: e }); }
   render() {
-    if (this.state.err) return html`<div class="wrap"><div class="note red"><${Icon} n="alert" s=${18} /><span>Halaman ini mengalami kesalahan: ${String(this.state.err.message || this.state.err)}</span></div>
+    if (this.state.err) return html`<div class="wrap"><div class="note red"><${Icon} n="alert" s=${18} /><span>Halaman ini mengalami kesalahan${nav.top ? " (" + nav.top.screen + ")" : ""}: ${String(this.state.err.message || this.state.err)}</span></div>
       <button class="btn primary full" onClick=${() => { this.setState({ err: null }); nav.home(); }}>Kembali ke beranda</button></div>`;
     return this.props.children;
   }
@@ -100,14 +100,14 @@ function App() {
   useEffect(() => { initStore(); try { const u = JSON.parse(sessionStorage.getItem("mk_user") || "null"); if (u) nav.setUser(u); } catch (e) { } }, []);
   const u = nav.user;
   if (!u) return html`<div class="app nonav"><${HM.Login} /><${ToastHost} /></div>`;
-  const hilang = (u.kind === "staff" && (!L.staffById(u.id) || (L.akunOv(L.staffById(u.id).username) || {}).hapus)) || (u.kind === "wali" && !L.santriById(u.id));
+  const hilang = (u.kind === "staff" && (!L.staffById(u.id) || (L.akunOv(L.staffAman(u.id).username) || {}).hapus)) || (u.kind === "wali" && !L.santriById(u.id));
   if (hilang && S.ready) { nav.setUser(null); return null; }
   if (hilang) return html`<div class="app nonav"><div class="loadpill" role="status">Memuat data…</div></div>`;
   const wali = u.kind === "wali", top = nav.top;
   const Screen = top ? SCREENS[top.screen] : (wali ? WALI_TABS : STAFF_TABS)[nav.tab];
   const key = top ? top.screen + JSON.stringify(top.params) + nav.depth : "tab-" + nav.tab;
   return html`<div class="app"><${SideNav} wali=${wali} /><div class=${"scr dir-" + nav.dir} key=${key}><${Boundary}>${Screen ? html`<${Screen} ...${top ? top.params : {}} />` : null}</${Boundary}></div>
-    ${nav.splash ? html`<${Splash} nama=${wali ? "Wali " + L.santriById(u.id).nama : L.staffById(u.id).pendek} />` : null}
+    ${nav.splash ? html`<${Splash} nama=${wali ? "Wali " + L.santriAman(u.id).nama : L.staffAman(u.id).pendek} />` : null}
     ${!online ? html`<div class="loadpill" role="status" style="color:#A8261C">Tidak ada koneksi. Perubahan dikirim saat online lagi.</div>` : !S.ready ? html`<div class="loadpill" role="status">Menyambungkan data…</div>` : null}<${BottomNav} wali=${wali} /><${ToastHost} /></div>`;
 }
 // Rasa aplikasi asli: tanpa zoom cubit/ketuk-ganda, efek sentuh (ripple), service worker di hosting sendiri

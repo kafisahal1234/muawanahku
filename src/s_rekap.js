@@ -146,7 +146,7 @@ export function RekapDetail({ jenis: j0, aid, hid, kelas, mapel, pondok, pj }) {
   const jenis = ALIAS[j0] || j0, rg = pj || L.periodeRange("pekanan");
   const list = hid ? L.santriHalaqah(hid) : pondok ? santriPondok(pondok) : aid ? L.santriAsrama(aid) : L.santriKelas(kelas);
   const judul = { tahfidz: "Rekap Tahfidz", mapel: "Rekap Mapel", pelanggaran: "Rekap Pelanggaran", mut: "Rekap Mutaba'ah" }[jenis];
-  const nm = hid ? L.halaqahById(hid).nama : pondok ? "Pondok " + pondok : aid ? L.asramaById(aid).nama : `${L.mapelById(mapel).nama} · Kelas ${kelas}`;
+  const nm = hid ? L.halaqahById(hid).nama : pondok ? "Pondok " + pondok : aid ? L.asramaAman(aid).nama : `${L.mapelById(mapel).nama} · Kelas ${kelas}`;
   const pjk = jenis === "mapel" ? L.projekDalam(mapel, kelas, rg) : [];
   const rows = list.map(s => {
     if (jenis === "tahfidz") { const k = L.kehadiranHalaqah(s.id, rg), x = L.hafalanDalam(s.id, rg);

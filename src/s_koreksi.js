@@ -29,7 +29,7 @@ export function entriRiwayat(col, list) {
     const det = r.jenis === "ziyadah" ? `${r.baris} baris · nilai ${r.nilai}` : r.jenis === "murojaah" ? `Juz ${r.juz} hal. ${r.halDari}–${r.halSampai} · nilai ${r.nilai}` : `Juz ${r.juz} · nilai ${r.nilai}`;
     return { jud, det: det + (r.lulus ? "" : " · ulang"), ic: "bookopen" };
   }
-  if (col === "absenHalaqah") return { jud: `Absen halaqah ${r.sesi}`, det: `${L.asramaById(r.asrama).nama} · ${L.fmtTgl(r.tanggal)}`, ic: "checksq" };
+  if (col === "absenHalaqah") return { jud: `Absen halaqah ${r.sesi}`, det: `${L.asramaAman(r.asrama).nama} · ${L.fmtTgl(r.tanggal)}`, ic: "checksq" };
   if (col === "motd") return { jud: `Absen MOTD ${(L.WAKTU.find(x => x[0] === r.waktu) || [0, r.waktu])[1]}`, det: `Pondok ${r.pondok} · ${list.length} asrama · ${L.fmtTgl(r.tanggal)}`, ic: "moon" };
   if (col === "mutabaah") return { jud: `Mutaba'ah · ${(L.santriById(r.santri) || {}).nama}`, det: L.fmtTgl(r.tanggal), ic: "checksq" };
   if (col === "absenKelas") return { jud: `Absen kelas ${r.kelas} · ${L.mapelById(r.mapel).nama}`, det: `${L.fmtTgl(r.tanggal)} · ${r.materi ? "Jurnal: " + r.materi : "Jurnal belum diisi"}`, ic: "users" };

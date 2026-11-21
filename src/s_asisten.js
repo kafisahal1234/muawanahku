@@ -32,7 +32,7 @@ function santriLingkup(m) {
 }
 function barisSantri(s) {
   const h = L.hafalan(s), c = L.capaianJuz(s), kh = L.kehadiranHalaqah(s.id), mp = L.mutPersen(s.id), po = L.poinSantri(s.id);
-  return `${s.nama} | kls ${s.kelas} | ${L.asramaById(s.asrama).nama} | ${L.namaHalaqah(s)} | hafal ${L.fmtJumlah(h)}${h.khatam ? "" : `, sedang Juz ${h.aktif}`} | semester ${c.juz}/${c.target} juz | hadir halaqah ${kh.pct == null ? "-" : kh.pct + "%"} | mutaba'ah ${mp.ibadah == null ? "-" : Math.round((mp.ibadah + mp.adab) / 2) + "%"} | poin ${po.total}`;
+  return `${s.nama} | kls ${s.kelas} | ${L.asramaAman(s.asrama).nama} | ${L.namaHalaqah(s)} | hafal ${L.fmtJumlah(h)}${h.khatam ? "" : `, sedang Juz ${h.aktif}`} | semester ${c.juz}/${c.target} juz | hadir halaqah ${kh.pct == null ? "-" : kh.pct + "%"} | mutaba'ah ${mp.ibadah == null ? "-" : Math.round((mp.ibadah + mp.adab) / 2) + "%"} | poin ${po.total}`;
 }
 function konteks() {
   const tgl = L.today(), peng = all("pengumuman").sort((a, b) => b.ts - a.ts).slice(0, 3).map(p => `- ${p.judul}: ${(p.isi || "").slice(0, 200)}`).join("\n") || "-";

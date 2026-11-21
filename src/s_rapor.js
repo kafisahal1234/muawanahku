@@ -94,7 +94,7 @@ export function raporHTML(sid, periode) {
     ${ket.map((r, i) => `<tr>${r.map((v, j) => `<td class="qc ${j === 0 ? "qb" : ""} ${i === 3 && j === 0 ? "qred" : ""}">${v}</td>`).join("")}</tr>`).join("")}</table>
     <div class="qttd" style="margin-top:32px"><div></div><div>Metro, ${tg}</div></div>
     <div class="qttd"><div>Orang Tua / Wali<div class="qg"></div><b>(…………………………………)</b></div><div>Wali Asrama / Wali Halaqah<div class="qg"></div><b>(${esc(mus.nama)})</b></div></div>
-    <div class="qttd" style="margin-top:14px"><div>Mengetahui,<br>Mudir<div class="qg"></div><b style="text-decoration:underline">${esc(L.staffById("syamsul").nama.replace(/^Ust\.\s*/, ""))}</b></div></div>${foot}</div>`;
+    <div class="qttd" style="margin-top:14px"><div>Mengetahui,<br>Mudir<div class="qg"></div><b style="text-decoration:underline">${esc(L.staffAman("syamsul").nama.replace(/^Ust\.\s*/, ""))}</b></div></div>${foot}</div>`;
   return p1 + p2 + p3 + p4;
 }
 
@@ -125,7 +125,7 @@ export function raporMidHTML(sid) {
     <div class="qsec">C. MUTABA'AH IBADAH DAN ADAB</div><p class="qnote">Persentase dari ${mp.hari} hari aktif, ${mp.isi || 0} hari diinput (hari tanpa input dihitung 0): A 90–100% · B 75–89% · C 60–74% · D di bawah 60%.</p>${C}
     <div class="qsec">D. CATATAN WALI ASRAMA</div><div class="qbox" style="min-height:50px">${esc(cat)}</div>
     <div class="qttd3" style="margin-top:12px"><div></div><div></div><div>Metro, ${tg}</div></div>
-    <div class="qttd3" style="margin-top:2px"><div>Orang Tua / Wali<div class="qg"></div><b>(…………………………)</b></div><div>Wali Asrama<div class="qg"></div><b>(${esc(mus.nama)})</b></div><div>Mengetahui, Mudir<div class="qg"></div><b style="text-decoration:underline">${esc(L.staffById("syamsul").nama.replace(/^Ust\.\s*/, ""))}</b></div></div>${foot}</div>`;
+    <div class="qttd3" style="margin-top:2px"><div>Orang Tua / Wali<div class="qg"></div><b>(…………………………)</b></div><div>Wali Asrama<div class="qg"></div><b>(${esc(mus.nama)})</b></div><div>Mengetahui, Mudir<div class="qg"></div><b style="text-decoration:underline">${esc(L.staffAman("syamsul").nama.replace(/^Ust\.\s*/, ""))}</b></div></div>${foot}</div>`;
 }
 
 export function raporDoc(sid, periode) {

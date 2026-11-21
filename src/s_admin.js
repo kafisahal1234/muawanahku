@@ -29,11 +29,11 @@ export function SantriAdmin({ asrama, kelas }) {
   useApp();
   const [q, setQ] = useState(""); const [k, setK] = useState(kelas || "all"); const [ed, setEd] = useState(null);
   const list = L.santriList().filter(s => (!asrama || s.asrama === asrama) && (k === "all" || s.kelas === k) && s.nama.toLowerCase().includes(q.toLowerCase()));
-  return html`<${SubHeader} title="Data Santri" sub=${asrama ? "Asrama " + L.asramaById(asrama).nama : `${list.length} santri`}><${Seg} small items=${[["all", "Semua"], ["7", "Kls 7"], ["8", "Kls 8"], ["9A", "9A"], ["9B", "9B"]]} value=${k} onChange=${setK} /></${SubHeader}>
+  return html`<${SubHeader} title="Data Santri" sub=${asrama ? "Asrama " + L.asramaAman(asrama).nama : `${list.length} santri`}><${Seg} small items=${[["all", "Semua"], ["7", "Kls 7"], ["8", "Kls 8"], ["9A", "9A"], ["9B", "9B"]]} value=${k} onChange=${setK} /></${SubHeader}>
     <div class="wrap"><${SearchBox} value=${q} onInput=${setQ} />
     <button class="up-cta" onClick=${() => nav.go("impor")}><span class="up-ic"><${Icon} n="upload" s=${22} /></span><span><b>Impor / lengkapi dari dokumen</b><small>Tgl lahir, NIS, orang tua · dibaca AI</small></span><${Icon} n="chev" s=${18} /></button>
     <${Btn} kind="ghost" icon="plus" onClick=${() => setEd({ baru: true, nama: "", kelas: "7", asrama: asrama || "a1" })}>Tambah santri</${Btn}>
-    <div class="mt12"><${Card}><div class="list">${list.map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaById(s.asrama).nama} · akun wali: ${s.wali}`} onClick=${() => setEd({ ...s })} />`)}</div></${Card}></div>
+    <div class="mt12"><${Card}><div class="list">${list.map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama} · akun wali: ${s.wali}`} onClick=${() => setEd({ ...s })} />`)}</div></${Card}></div>
     ${ed ? html`<${EditSantri} e=${ed} onClose=${() => setEd(null)} />` : null}</div>`;
 }
 function EditSantri({ e, onClose }) {
@@ -116,7 +116,7 @@ function EditStaff({ e, onClose }) {
     <${Field} label="Peran"><div class="chips">${PERAN.map(r => html`<button type="button" class=${"pill " + (f.roles.includes(r) ? "green" : "muted")} style="min-height:36px;padding:0 12px" aria-pressed=${f.roles.includes(r)} onClick=${() => togR(r)}>${f.roles.includes(r) ? "✓ " : ""}${L.ROLE_LABEL[r]}</button>`)}</div></${Field}>
     ${f.roles.includes("wadir_kesantrian") ? html`<${Field} label="Wadir kesantrian untuk"><${Seg} small items=${[["29", "Pondok 29"], ["21", "Pondok 21"]]} value=${f.pondok || "29"} onChange=${v => set("pondok", v)} /></${Field}>` : null}
     ${f.roles.includes("musyrif") ? html`<${Field} label="Asrama binaan (wali asrama)"><select class="in" value=${f.asrama} onChange=${x => set("asrama", x.target.value)}><option value="">— belum ada —</option>
-      ${L.ASRAMA.map(a => html`<option value=${a.id}>${a.nama} · ${a.musyrif === e.id ? "saat ini" : L.staffById(a.musyrif).pendek}</option>`)}</select></${Field}>
+      ${L.ASRAMA.map(a => html`<option value=${a.id}>${a.nama} · ${a.musyrif === e.id ? "saat ini" : L.staffAman(a.musyrif).pendek}</option>`)}</select></${Field}>
       ${pindah && ganti && ganti.id !== e.id ? html`<p class="small" style="margin-top:-6px">${oldA ? `Ditukar: ${ganti.pendek} pindah ke ${oldA.nama}.` : `${ganti.pendek} tidak lagi membina ${pindah.nama}.`}</p>` : null}` : null}
     ${f.roles.includes("guru_tahfidz") && !e.baru ? html`<div class="pos" style="margin:0 0 12px"><span>Halaqah tahfidz</span><b>${(L.halaqahOf(e.id) || {}).nama || "Belum ada · buat di menu Halaqah"}</b></div>` : null}
     ${f.roles.includes("guru_mapel") ? html`<${Field} label="Mapel yang diajar"><div style="display:grid;gap:6px">${DATA.mapel.map(m => html`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><b style="font-size:13px;width:110px">${m.nama.replace("Pendidikan ", "P. ")}</b>
@@ -129,7 +129,7 @@ function EditStaff({ e, onClose }) {
 export function AsramaAdmin({ halaqah }) {
   useApp();
   return html`<${SubHeader} title=${halaqah ? "Halaqah" : "Asrama"} sub="11 asrama di 2 pondok" /><div class="wrap">
-    ${["29", "21"].map(p => html`<${Card} title=${"Pondok " + p}><div class="list">${L.ASRAMA.filter(a => a.pondok === p).map(a => html`<${Row} name=${(halaqah ? "Halaqah " : "") + (halaqah ? L.staffById(a.musyrif).pendek : a.nama)} sub=${halaqah ? `Asrama ${a.nama} · ${L.santriAsrama(a.id).length} santri` : `${L.staffById(a.musyrif).nama} · ${L.santriAsrama(a.id).length} santri`} onClick=${() => nav.go("santriAdmin", { asrama: a.id })} />`)}</div></${Card}>`)}</div>`;
+    ${["29", "21"].map(p => html`<${Card} title=${"Pondok " + p}><div class="list">${L.ASRAMA.filter(a => a.pondok === p).map(a => html`<${Row} name=${(halaqah ? "Halaqah " : "") + (halaqah ? L.staffAman(a.musyrif).pendek : a.nama)} sub=${halaqah ? `Asrama ${a.nama} · ${L.santriAsrama(a.id).length} santri` : `${L.staffAman(a.musyrif).nama} · ${L.santriAsrama(a.id).length} santri`} onClick=${() => nav.go("santriAdmin", { asrama: a.id })} />`)}</div></${Card}>`)}</div>`;
 }
 
 export function KelasAdmin() {
@@ -156,7 +156,7 @@ export function Pengumuman() {
       <${Field} label="Lampiran PDF (nama file saja di demo)"><input type="file" accept="application/pdf" class="in" onChange=${e => setF({ ...f, lampiran: e.target.files[0] ? e.target.files[0].name : "" })} /></${Field}>
       <${Btn} disabled=${!f.judul.trim()} onClick=${save} icon="megaphone">Kirim pengumuman</${Btn}></${Card}>` : null}
     <${Section} t="Semua pengumuman" /><${Card}>${l.length ? html`<div class="list">${l.map(p => html`<div class="row" style="align-items:flex-start"><span class="row-ic"><${Icon} n="megaphone" s=${18} /></span><span class="row-t"><b style="white-space:normal">${p.judul}</b>
-      <small>${p.oleh ? L.staffById(p.oleh).nama : "Pondok"} · ${L.fmtTgl(L.ymd(new Date(p.ts)))}${p.lampiran ? " · 📎 " + p.lampiran : ""}</small>${p.isi ? html`<p style="margin:6px 0 0;font-size:13.5px;line-height:1.5;white-space:pre-line">${p.isi}</p>` : null}</span>
+      <small>${p.oleh ? L.staffAman(p.oleh).nama : "Pondok"} · ${L.fmtTgl(L.ymd(new Date(p.ts)))}${p.lampiran ? " · 📎 " + p.lampiran : ""}</small>${p.isi ? html`<p style="margin:6px 0 0;font-size:13.5px;line-height:1.5;white-space:pre-line">${p.isi}</p>` : null}</span>
       ${can ? html`<button class="icon-btn" aria-label="Hapus pengumuman" onClick=${() => setAsk(p)}><${Icon} n="x" s=${16} /></button>` : null}</div>`)}</div>` : html`<${Empty} t="Belum ada pengumuman." icon="megaphone" />`}</${Card}>
     <${Confirm} open=${!!ask} danger title="Hapus pengumuman?" text=${ask ? ask.judul : ""} yes="Hapus" onYes=${() => { del("pengumuman", ask.id); setAsk(null); }} onNo=${() => setAsk(null)} /></div>`;
 }

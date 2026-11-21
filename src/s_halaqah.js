@@ -43,15 +43,15 @@ export function HalaqahEdit({ hid }) {
   const pindah = async (s, ke) => { const tujuan = ke || halaqahAsal(s); if (!tujuan) return toast("Halaqah asal tidak ditemukan.", "err");
     if (await put("santriEdit", s.id, { ...((S.data.santriEdit || {})[s.id] || {}), halaqah: tujuan.id })) logUbah("ubah", "santriEdit", s.id, `${s.nama} pindah ke ${tujuan.nama}`); };
   const hapus = async () => { setAsk(false); for (const s of l) await pindah(s); await put("halaqahEdit", h.id, { ...((S.data.halaqahEdit || {})[h.id] || {}), hapus: true }); logUbah("hapus", "halaqahEdit", h.id, `Halaqah ${h.nama} dihapus`); toast("Halaqah dihapus, santri kembali ke halaqah asramanya"); nav.back(); };
-  const cari = L.santriList().filter(s => s.halaqah !== h.id && (!q || s.nama.toLowerCase().includes(q.toLowerCase()) || L.asramaById(s.asrama).nama.toLowerCase().includes(q.toLowerCase()))).slice(0, 60);
+  const cari = L.santriList().filter(s => s.halaqah !== h.id && (!q || s.nama.toLowerCase().includes(q.toLowerCase()) || L.asramaAman(s.asrama).nama.toLowerCase().includes(q.toLowerCase()))).slice(0, 60);
   return html`<${SubHeader} title=${h.nama} sub=${`${g.nama || "—"} · ${l.length} santri`} /><div class="wrap">
     ${!asal ? html`<${Hint}>Guru ini tidak memegang asrama. Ambil santri dari asrama mana pun; santri tetap tinggal di asramanya, hanya setoran dan absen halaqahnya pindah ke sini.</${Hint}>` : html`<${Hint}>Halaqah bawaan asrama ${L.asramaOf(h.guru).nama}. Santri yang diambil guru lain otomatis keluar dari daftar ini.</${Hint}>`}
     ${boleh ? html`<${Btn} kind="ghost" icon="plus" onClick=${() => setPick(true)}>Tambah santri dari asrama lain</${Btn}>` : null}
-    <div class="mt12"><${Card} title=${`Anggota · ${l.length}`}>${l.length ? html`<div class="list">${l.map(s => html`<div class="row"><span class="av">${L.initials(s.nama)}</span><span class="row-t"><b>${s.nama}</b><small>Kelas ${s.kelas} · Asrama ${L.asramaById(s.asrama).nama}</small></span>
+    <div class="mt12"><${Card} title=${`Anggota · ${l.length}`}>${l.length ? html`<div class="list">${l.map(s => html`<div class="row"><span class="av">${L.initials(s.nama)}</span><span class="row-t"><b>${s.nama}</b><small>Kelas ${s.kelas} · Asrama ${L.asramaAman(s.asrama).nama}</small></span>
       ${boleh && !asal ? html`<button class="icon-btn" aria-label=${"Kembalikan " + s.nama} onClick=${() => pindah(s)}><${Icon} n="x" s=${20} /></button>` : null}</div>`)}</div>` : html`<${Empty} t="Belum ada santri. Ketuk Tambah santri." icon="users" />`}</${Card}></div>
     ${boleh && !asal ? html`<${Btn} kind="outline" icon="trash" onClick=${() => setAsk(true)}>Hapus halaqah ini</${Btn}>` : null}
     <${Sheet} open=${pick} title="Ambil santri" onClose=${() => setPick(false)}>
       <${SearchBox} value=${q} onInput=${setQ} ph="Cari nama atau asrama" />
-      <div class="list">${cari.map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaById(s.asrama).nama} · sekarang ${L.namaHalaqah(s)}`} onClick=${async () => { await pindah(s, h); toast(`${s.nama} masuk ${h.nama}`); }} />`)}</div></${Sheet}>
+      <div class="list">${cari.map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama} · sekarang ${L.namaHalaqah(s)}`} onClick=${async () => { await pindah(s, h); toast(`${s.nama} masuk ${h.nama}`); }} />`)}</div></${Sheet}>
     <${Confirm} open=${ask} danger title="Hapus halaqah?" text=${`Semua santri (${l.length}) kembali ke halaqah asramanya masing-masing. Riwayat setoran tetap tersimpan.`} yes="Hapus" onYes=${hapus} onNo=${() => setAsk(false)} /></div>`;
 }

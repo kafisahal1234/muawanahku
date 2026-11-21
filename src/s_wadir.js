@@ -80,7 +80,7 @@ export function RekapHalaqah() {
   useApp();
   return html`<${SubHeader} title="Rekap Halaqah" sub="11 halaqah · 103 santri" /><div class="wrap">
     ${L.ASRAMA.map(a => { const st = halaqahStat(a); return html`<${Card} title=${a.nama} right=${html`<button class="link" onClick=${() => nav.go("progres", { aid: a.id })}>Detail</button>`}>
-      <div class="small mb8">${L.staffById(a.musyrif).nama} · Pondok ${a.pondok}</div>
+      <div class="small mb8">${L.staffAman(a.musyrif).nama} · Pondok ${a.pondok}</div>
       <div class="stats"><${Stat} label="Santri" value=${st.n} /><${Stat} label="Rata hafalan" value=${st.avg.toFixed(1)} sub="juz" /><${Stat} label="Hadir" value=${st.hadir == null ? "—" : st.hadir + "%"} /></div></${Card}>`; })}</div>`;
 }
 
@@ -97,12 +97,12 @@ export function RekapTasmi() {
   useApp();
   const l = all("setoran").filter(r => r.jenis === "tasmi").sort((a, b) => b.ts - a.ts);
   return html`<${SubHeader} title="Rekap Tasmi'" sub=${`${l.filter(r => r.lulus).length} lulus · ${l.filter(r => !r.lulus).length} ulang`} /><div class="wrap"><${Card}>
-    ${l.length ? html`<div class="list">${l.map(r => html`<${Row} name=${L.santriById(r.santri).nama} sub=${`Juz ${r.juz} · ${L.fmtTgl(r.tanggal)} · penguji ${r.penguji || "—"}`} right=${html`<${Pill} t=${(r.lulus ? "Lulus " : "Ulang ") + r.nilai} tone=${r.lulus ? "green" : "red"} />`} />`)}</div>` : html`<${Empty} t="Belum ada tasmi'." icon="mic" />`}</${Card}></div>`;
+    ${l.length ? html`<div class="list">${l.map(r => html`<${Row} name=${L.santriAman(r.santri).nama} sub=${`Juz ${r.juz} · ${L.fmtTgl(r.tanggal)} · penguji ${r.penguji || "—"}`} right=${html`<${Pill} t=${(r.lulus ? "Lulus " : "Ulang ") + r.nilai} tone=${r.lulus ? "green" : "red"} />`} />`)}</div>` : html`<${Empty} t="Belum ada tasmi'." icon="mic" />`}</${Card}></div>`;
 }
 
 export function BawahKkm() {
   useApp();
   const tgl = L.today(), l = all("setoran").filter(r => r.tanggal === tgl && !r.lulus).sort((a, b) => b.ts - a.ts);
   return html`<${SubHeader} title="Di bawah KKM" sub=${"Setoran hari ini · " + L.fmtTgl(tgl)} /><div class="wrap"><${Card}>
-    ${l.length ? html`<div class="list">${l.map(r => html`<${Row} name=${L.santriById(r.santri).nama} sub=${`${r.jenis} · Juz ${r.juz} · ${L.staffById(r.guru).pendek}`} right=${html`<${Pill} t=${r.nilai} tone="red" />`} />`)}</div>` : html`<${Empty} t="Tidak ada setoran di bawah KKM hari ini." icon="check" />`}</${Card}></div>`;
+    ${l.length ? html`<div class="list">${l.map(r => html`<${Row} name=${L.santriAman(r.santri).nama} sub=${`${r.jenis} · Juz ${r.juz} · ${L.staffAman(r.guru).pendek}`} right=${html`<${Pill} t=${r.nilai} tone="red" />`} />`)}</div>` : html`<${Empty} t="Tidak ada setoran di bawah KKM hari ini." icon="check" />`}</${Card}></div>`;
 }

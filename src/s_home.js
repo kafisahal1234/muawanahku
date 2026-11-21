@@ -83,7 +83,7 @@ export function Login() {
         <div style="margin-top:4px"><code>${s.username}</code> <code>${s.password}</code></div></span></button>`)}
       <${Section} t=${`Wali santri (${L.santriList().length} akun)`} /><${SearchBox} value=${q} onInput=${setQ} ph="Cari nama santri" />
       ${walis.map(s => html`<button class="demo-acc" onClick=${() => { setDemo(false); masukWali(L.kodeAkses(s)); }}><span class="av gold">${L.initials(s.nama)}</span>
-        <span style="flex:1;min-width:0"><b style="font-size:14px">Wali ${s.nama}</b><div class="small">Kelas ${s.kelas} · ${L.asramaById(s.asrama).nama}</div><div style="margin-top:4px"><code>${L.kodeAkses(s)}</code>${L.lahirSantri(s).contoh ? html` <span class="small">· tgl lahir contoh</span>` : null}</div></span></button>`)}
+        <span style="flex:1;min-width:0"><b style="font-size:14px">Wali ${s.nama}</b><div class="small">Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama}</div><div style="margin-top:4px"><code>${L.kodeAkses(s)}</code>${L.lahirSantri(s).contoh ? html` <span class="small">· tgl lahir contoh</span>` : null}</div></span></button>`)}
     </${Sheet}></div>`;
 }
 
@@ -211,7 +211,7 @@ export function CariSantri() {
   useApp();
   const [q, setQ] = useState(""); const list = L.santriScope(nav.user).filter(s => s.nama.toLowerCase().includes(q.toLowerCase()));
   return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Cari Santri</h1><p>${list.length} santri sesuai akses Anda</p></div></div></div>
-    <div class="wrap"><${SearchBox} value=${q} onInput=${setQ} /><${Card}><div class="list">${list.slice(0, 80).map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaById(s.asrama).nama}`} onClick=${() => nav.go("santri", { sid: s.id })} />`)}</div></${Card}></div>`;
+    <div class="wrap"><${SearchBox} value=${q} onInput=${setQ} /><${Card}><div class="list">${list.slice(0, 80).map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama}`} onClick=${() => nav.go("santri", { sid: s.id })} />`)}</div></${Card}></div>`;
 }
 
 export function RiwayatSaya() {
@@ -235,7 +235,7 @@ export function Akun() {
   return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Akun</h1></div></div></div>
     <div class="wrap">
       <div class="acc-head"><${FotoAv} src=${fotoUser(u)} nama=${st ? st.pendek : sa.nama} size=${58} />
-        <span class="acc-t"><b>${st ? st.nama : "Wali " + sa.nama}</b><small>${st ? st.roles.map(r => L.ROLE_LABEL[r]).join(" · ") : `Kelas ${sa.kelas} · ${L.asramaById(sa.asrama).nama}`}</small></span></div>
+        <span class="acc-t"><b>${st ? st.nama : "Wali " + sa.nama}</b><small>${st ? st.roles.map(r => L.ROLE_LABEL[r]).join(" · ") : `Kelas ${sa.kelas} · ${L.asramaAman(sa.asrama).nama}`}</small></span></div>
       ${st ? html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil", pr ? "Biodata & foto profil" : "Lengkapi biodata & foto profil", () => nav.go("profil"), "green")}${item("lock", "Keamanan", "Username & kata sandi", () => nav.go("keamanan"), "blue")}</div>`
         : html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil Ananda", fotoUser(u) ? "Biodata & foto profil" : "Biodata · tambahkan foto profil", () => nav.go("waliProfil"), "green")}</div>`}
       ${pengawas ? html`<${Section} t="Pengawasan" /><div class="group">${item("clipboard", "Log perubahan data", "Jejak koreksi & penghapusan", () => nav.go("logUbah"), "gold")}</div>` : null}
