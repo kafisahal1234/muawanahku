@@ -44,7 +44,7 @@ function EditSantri({ e, onClose }) {
     const asalLama = e.baru ? null : L.HALAQAH.find(h => h.guru === (L.asramaById(e.asrama) || {}).musyrif), asalBaru = L.HALAQAH.find(h => h.guru === (L.asramaById(f.asrama) || {}).musyrif);
     const hq = f.halaqah && !(asalLama && f.halaqah === asalLama.id && f.asrama !== e.asrama) ? f.halaqah : asalBaru ? asalBaru.id : null;
     const bio = Object.fromEntries(["tempatLahir", "hobi", "cita", "alamat", "ayah", "ibu", "hpWali"].map(k => [k, (f[k] || "").trim()]));
-    const base = { nama: f.nama.trim(), kelas: f.kelas, asrama: f.asrama, halaqah: hq, nis: (f.nis || "").trim(), ...bio, ...(f.lahir ? { lahir: f.lahir } : {}) };
+    const base = { nama: f.nama.trim(), kelas: f.kelas || e.kelas || "", asrama: f.asrama || e.asrama || "", halaqah: hq || undefined, nis: (f.nis || "").trim(), ...bio, ...(f.lahir ? { lahir: f.lahir } : {}) };
     if (e.baru) { const w = f.nama.trim().split(/\s+/).find(x => !/^(m\.?|muhammad|muhamad|ahmad)$/i.test(x)) || "santri"; base.wali = (w.toLowerCase().replace(/[^a-z]/g, "") || "santri") + Math.floor(10 + Math.random() * 89); base.panggilan = w; }
     if (await put("santriEdit", id, { ...((S.data.santriEdit || {})[id] || {}), ...base })) { toast(e.baru ? `Santri ditambahkan. Akun wali: ${base.wali}` : "Data santri disimpan"); onClose(); }
   };

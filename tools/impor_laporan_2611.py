@@ -1,6 +1,6 @@
 """Impor laporan kegiatan Tahfidz/Tahsin 20–21 November 2026 (grup WA) ke data dasar MuawanahKu (src/data.js).
 - Total hafalan tiap santri sesuai laporan (juz + halaman; 1 lembar = 2 halaman; 0,5 juz = 10 halaman)
-- Susunan halaqah & asrama sesuai laporan, ustadz baru: Ust. Hanif (Teuku Umar), Ust. Khoirul Anwar (Hasyim Asy'ari)
+- Susunan halaqah & asrama sesuai laporan; ustadz memakai akun yang sudah ada (ugi = Ust. Hanif, habib = Ust. Irul)
 - Status Tahsin awal (Iqro' KH. As'ad Humam, jilid 1–6 → Al-Qur'an) untuk santri yang dilaporkan tingkat Iqro'-nya
 Rincian juz mana saja yang sudah selesai adalah perkiraan dari total + juz yang sedang disetorkan; bisa dirapikan
 Wadir Tahfidz lewat menu Data Awal Hafalan."""
@@ -80,22 +80,22 @@ HALAQAH = {  # santri pindah halaqah sesuai laporan
   "s066": "h12", "s069": "h12", "s070": "h12", "s071": "h12", "s072": "h12", "s073": "h12",
   "s083": "h9", "s093": "h10", "s103": "h11",
 }
-# ---- ustadz baru & penyesuaian nama ----
-ids = {s["id"] for s in D["staff"]}
-if "hanif" not in ids:
-    D["staff"].append(dict(id="hanif", nama="Ust. Hanif", pendek="Ust. Hanif", roles=["guru_tahfidz", "musyrif"], ajar=[], username="hanif", password="hanif123"))
-if "khoirulanwar" not in ids:
-    D["staff"].append(dict(id="khoirulanwar", nama="Ust. Khoirul Anwar", pendek="Ust. Khoirul Anwar", roles=["guru_tahfidz", "musyrif"], ajar=[], username="khoirulanwar", password="khoirulanwar123"))
-for s in D["staff"]:
-    if s["id"] == "khoirul": s["pendek"] = "Ust. Khoirul Anam"
-for a in D["asrama"]:
-    if a["id"] == "a2": a["musyrif"] = "hanif"
-    if a["id"] == "a3": a["musyrif"] = "khoirulanwar"; a["nama"] = "K.H. Hasyim Asy'ari"
+# ---- ustadz: pakai akun yang SUDAH ADA (Admin sudah mengganti namanya di database) ----
+# akun "ugi" = Ust. Hanif (Teuku Umar), akun "habib" = Ust. Irul / Khoirul Anwar (K.H. Hasyim Asy'ari),
+# akun "naufal" = Ust. Ugi Abdul Halim Suhul (Agus Salim). Jangan membuat akun baru agar tidak dobel.
+D["staff"] = [x for x in D["staff"] if x["id"] not in ("hanif", "khoirulanwar")]
+NAMA = {"ugi": ("Ust. Hanif", "Ust. Hanif"), "habib": ("Ust. Irul", "Ust. Irul"), "naufal": ("Ust. Ugi Abdul Halim Suhul", "Ust. Ugi"), "khoirul": ("Ust. Khoirul Anam", "Ust. Khoirul Anam")}
+for x in D["staff"]:
+    if x["id"] in NAMA: x["nama"], x["pendek"] = NAMA[x["id"]]
+for a_ in D["asrama"]:
+    if a_["id"] == "a2": a_["musyrif"] = "ugi"
+    if a_["id"] == "a3": a_["musyrif"] = "habib"; a_["nama"] = "K.H. Hasyim Asy'ari"
 for h in D["halaqah"]:
-    if h["id"] == "h2": h.update(guru="hanif", nama="Halaqah Ust. Hanif")
-    if h["id"] == "h3": h.update(guru="khoirulanwar", nama="Halaqah Ust. Khoirul Anwar")
+    if h["id"] == "h2": h.update(guru="ugi"); h.pop("nama", None); h["nama"] = "Halaqah Ust. Hanif"
+    if h["id"] == "h3": h.update(guru="habib"); h["nama"] = "Halaqah Ust. Irul"
+    if h["id"] == "h5": h["nama"] = "Halaqah Ust. Ugi"
     if h["id"] == "h11": h["nama"] = "Halaqah Ust. Khoirul Anam"
-    if h["id"] == "h12": h["nama"] = "Halaqah Ust. Hidayat (Abu Bakar)"
+    if h["id"] == "h12": h["nama"] = "Halaqah Ust. Hidayat (Abu Bakar)"; h["namaTetap"] = True
 # ---- santri ----
 for s in D["santri"]:
     sid = s["id"]

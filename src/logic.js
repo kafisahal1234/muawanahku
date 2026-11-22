@@ -27,10 +27,14 @@ function segarkanMaster() {
   const ed = S.data.staffEdit || {}, ae = S.data.asramaEdit || {};
   const base = DATA.staff.map(s => (ed[s.id] ? { ...s, ...ed[s.id] } : s));
   const extra = Object.entries(ed).filter(([id]) => !DATA.staff.find(s => s.id === id)).map(([id, v]) => ({ id, ajar: [], roles: [], ...v }));
-  STAFF.splice(0, STAFF.length, ...base, ...extra);
+  // satu username = satu akun: bila ada username kembar, yang pertama yang dipakai (mencegah akun tampil dobel)
+  const dipakai = new Set(), unik = [...base, ...extra].filter(s => { const u = String(s.username || "").toLowerCase(); if (!u) return true; if (dipakai.has(u)) return false; dipakai.add(u); return true; });
+  STAFF.splice(0, STAFF.length, ...unik);
   ASRAMA.splice(0, ASRAMA.length, ...DATA.asrama.map(a => (ae[a.id] ? { ...a, ...ae[a.id] } : { ...a })));
   const he = S.data.halaqahEdit || {};
-  const hb = DATA.halaqah.map(h => (he[h.id] ? { ...h, ...he[h.id] } : { ...h })), hx = Object.entries(he).filter(([id]) => !DATA.halaqah.find(h => h.id === id)).map(([id, v]) => ({ id, ...v }));
+  // nama halaqah bawaan mengikuti nama guru terkini (bila Admin mengganti nama akun), kecuali bernama khusus
+  const namaIkut = h => { if (h.namaTetap) return h; const g = STAFF.find(s => s.id === h.guru); return g ? { ...h, nama: "Halaqah " + g.pendek } : h; };
+  const hb = DATA.halaqah.map(h => (he[h.id] ? { ...namaIkut(h), ...he[h.id] } : namaIkut(h))), hx = Object.entries(he).filter(([id]) => !DATA.halaqah.find(h => h.id === id)).map(([id, v]) => ({ id, ...v }));
   HALAQAH.splice(0, HALAQAH.length, ...hb.concat(hx).filter(h => !h.hapus));
 }
 subscribe(segarkanMaster); segarkanMaster();
@@ -57,7 +61,8 @@ export const ROLE_LABEL = { mudir: "Mudir", wadir_tahfidz: "Wadir Tahfidz", wadi
 
 export function santriList() {
   const ed = S.data.santriEdit || {};
-  const base = DATA.santri.map(s => (ed[s.id] ? { ...s, ...ed[s.id] } : s));
+  const isi = o => Object.fromEntries(Object.entries(o || {}).filter(([k, v]) => !(["kelas", "asrama", "halaqah", "nama", "wali"].includes(k) && (v == null || v === ""))));
+  const base = DATA.santri.map(s => (ed[s.id] ? { ...s, ...isi(ed[s.id]) } : s));
   const extra = Object.entries(ed).filter(([id]) => !DATA.santri.find(s => s.id === id)).map(([id, v]) => ({ id, awal: { selesai: [], aktif: 30, baris: 0 }, ...v }));
   return base.concat(extra).filter(s => !s.hapus).map(s => (s.halaqah && HALAQAH.some(h => h.id === s.halaqah) ? s : { ...s, halaqah: halaqahAsramaId(s.asrama) })).map(s => (typeof s.nama === "string" ? s : { ...s, nama: String(s.nama || "(tanpa nama)") })).sort((a, b) => a.nama.localeCompare(b.nama));
 }
