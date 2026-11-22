@@ -14,6 +14,7 @@ import { KartuAsisten } from "./s_asisten.js";
 import { Ikon, WARNA } from "./ikon.js";
 import { LOGO } from "./data.js";
 import { aiAda } from "./ai.js";
+import { TahsinCard, JalurIqra } from "./s_tahsin.js";
 const PrivasiIsi = () => html`<div class="prose"><p>Data dipakai hanya untuk administrasi pendidikan pondok: hafalan, absensi, nilai, perizinan, dan pembinaan santri. Data tidak dijual, tidak untuk iklan, dan tidak dibagikan ke pihak luar. Setiap pengguna hanya melihat data sesuai perannya; wali hanya melihat anaknya sendiri. Kebijakan lengkap ada di menu Akun setelah masuk.</p></div>`;
 
 // ---------------- lupa kata sandi (lewat email pemulihan) ----------------
@@ -248,7 +249,25 @@ export function Akun() {
 // ---------------- wali ----------------
 // Kartu hafalan ananda (beranda wali): total hafalan, yang sedang dihafal, juz selesai, target semester
 const angka = (v, d = 1) => (Math.round(v * 10 ** d) / 10 ** d).toLocaleString("id-ID");
-function KartuHafalan({ h, c }) {
+function KartuTahsinUtama({ h, c, t }) {
+  const R = 50, K = 2 * Math.PI * R, persen = t.pct / 100;
+  return html`<div class="hf">
+    <div class="hf-top">
+      <div class="hf-ring" role="img" aria-label=${`Iqro' ${t.jilid || "-"} dari 6 jilid`}>
+        <svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="hfg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE08A" /><stop offset="1" stop-color="#E0A52A" /></linearGradient></defs>
+          <circle cx="60" cy="60" r=${R} class="hf-trk" /><circle cx="60" cy="60" r=${R} class="hf-val" stroke-dasharray=${`${K * persen} ${K}`} transform="rotate(-90 60 60)" /></svg>
+        <span><b>${t.jilid || "–"}</b><small>dari 6 jilid</small></span></div>
+      <div class="hf-main"><small class="hf-lbl">Tahsin ananda</small>
+        <div class="hf-big">Iqro' <em>${t.jilid || "–"}</em></div>
+        ${t.siapUjian ? html`<span class="hf-pill">Siap ujian kenaikan jilid</span>` : html`<small class="hf-lbl hf-now"><i></i>Sedang belajar membaca</small>
+          <div class="hf-pos">${t.jilid ? html`<b>Hal. ${t.hal || 0}</b><span>dari ${L.IQRA_HAL} halaman</span>` : html`<span>tingkat sedang diatur ustadz</span>`}</div>`}</div></div>
+    <div class="hf-juz"><div class="hf-row"><span>Perjalanan Iqro' 1–6 menuju Al-Qur'an</span><b>${t.pct}%</b></div><${JalurIqra} t=${t} kecil=${true} /></div>
+    <div class="hf-target"><div class="hf-row"><span>Hafalan Al-Qur'an</span><b>${h.jumlah > 0 ? L.fmtJumlah(h) : "Belum ada"}</b></div>
+      <small class="hf-ket">Setelah lulus Iqro' 6, ananda mulai membaca Al-Qur'an. Hafalan tetap bisa ditambah lewat talaqqi.</small></div>
+  </div>`;
+}
+function KartuHafalan({ h, c, t }) {
+  if (t && !t.quran && h.jumlah === 0) return html`<${KartuTahsinUtama} h=${h} c=${c} t=${t} />`;
   const R = 50, K = 2 * Math.PI * R, persen = Math.min(1, h.jumlah / 30), hal = Math.floor(h.baris / 15), sisaBaris = h.baris % 15;
   const halTotal = Math.max(1, Math.round(h.total / 15)), pAktif = h.khatam ? 100 : Math.min(100, Math.round((h.baris / h.total) * 100));
   return html`<div class="hf">
@@ -263,6 +282,8 @@ function KartuHafalan({ h, c }) {
           <div class="hf-pos"><b>Juz ${h.aktif}</b>${h.baris ? html`<span>hal. ${Math.ceil(h.baris / 15)} · baris ${((h.baris - 1) % 15) + 1}</span>` : html`<span>belum mulai</span>`}</div>`}</div></div>
     ${h.khatam ? null : html`<div class="hf-juz"><div class="hf-row"><span>Progres Juz ${h.aktif} · ${hal} dari ${halTotal} hal.</span><b>${pAktif}%</b></div>
       <div class="hf-bar"><i style=${`width:${pAktif}%`}></i></div></div>`}
+    ${t ? html`<div class="hf-tahsin"><div class="hf-row"><span>Tahsin · ${t.quran ? "lulus Iqro', membaca Al-Qur'an" : "membaca Iqro'"}</span><b>${t.quran ? (t.ket || "Al-Qur'an") : t.jilid ? `Iqro' ${t.jilid} · hal. ${t.hal || 0}/${L.IQRA_HAL}` : "Belum diatur"}</b></div>
+      <${JalurIqra} t=${t} kecil=${true} /></div>` : null}
     <div class="hf-target"><div class="hf-row"><span>Target hafalan baru semester ini</span><b>${angka(c.juz, 2)} / ${c.target} juz</b></div>
       <div class="hf-bar emas"><i style=${`width:${Math.max(c.pct, c.juz > 0 ? 3 : 0)}%`}></i></div>
       <small class=${"hf-ket" + (c.tercapai ? " ok" : "")}>${c.tercapai ? "Alhamdulillah, target semester tercapai" : `Kurang ${angka(c.kurang)} juz lagi untuk mencapai target`}</small></div>
@@ -280,7 +301,7 @@ export function WaliBeranda() {
   const peng = all("pengumuman").sort((x, y) => y.ts - x.ts).slice(0, 2);
   const h = L.hafalan(s), c = L.capaianJuz(s);
   return html`<${HomeTop} cls="hc-hf" nama=${"Wali " + (s.panggilan || s.nama.split(" ")[0])} sub=${`${s.nama} · Kelas ${s.kelas} · ${a.nama}`} bell=${newPeng()} foto=${fotoUser(nav.user)}>
-      <${KartuHafalan} h=${h} c=${c} /></${HomeTop}>
+      <${KartuHafalan} h=${h} c=${c} t=${L.tahsinStatus(s)} /></${HomeTop}>
     <div class="wrap"><button class="strip" onClick=${() => nav.go("waliRekap")}><span class="strip-ic" style=${`background:${WARNA.teal[2]}`}><${Ikon} n="grafik" warna="teal" s=${28} /></span><span class="strip-t"><b>Rekap Ananda</b><small>Hafalan, kehadiran, izin, pelanggaran per periode</small></span><span class="strip-go">Buka <${Icon} n="right" s=${16} w=${2.4} /></span></button>
     ${(() => { const rg = L.periodeRange("bulanan"), kh = L.kehadiranHalaqah(s.id, rg), mp = L.mutPersen(s.id, rg), po = L.poinSantri(s.id);
       return html`<${Card} title="Bulan ini" right=${html`<small>${rg.label}</small>`}><div class="stats"><${Stat} label="Hadir halaqah" value=${kh.pct == null ? "—" : kh.pct + "%"} /><${Stat} label="Mutaba'ah" value=${mp.ibadah == null ? "—" : Math.round((mp.ibadah + mp.adab) / 2) + "%"} /><${Stat} label="Poin catatan" value=${po.total} tone=${po.total ? "gold" : ""} /></div></${Card}>`; })()}
@@ -290,7 +311,7 @@ export function WaliBeranda() {
 }
 export function WaliHafalan() {
   useApp(); const s = L.santriById(nav.user.id);
-  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Hafalan Ananda</h1><p>${s.nama}</p></div></div></div><div class="wrap"><${HafalanCard} s=${s} /><${Section} t="Riwayat setoran dan tasmi'" /><${Card}><${RiwayatSetoran} sid=${s.id} n=${20} /></${Card}></div>`;
+  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Hafalan Ananda</h1><p>${s.nama}</p></div></div></div><div class="wrap"><${TahsinCard} s=${s} /><${HafalanCard} s=${s} /><${Section} t="Riwayat setoran dan tasmi'" /><${Card}><${RiwayatSetoran} sid=${s.id} n=${20} /></${Card}></div>`;
 }
 export function WaliAnanda() {
   useApp(); const s = L.santriById(nav.user.id);

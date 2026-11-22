@@ -216,6 +216,36 @@ function indeksSetoran() {
   if (_idxSet.ref !== ref) { const m = new Map(); all("setoran").forEach(r => { let l = m.get(r.santri); if (!l) m.set(r.santri, (l = [])); l.push(r); }); m.forEach(l => l.sort((a, b) => a.ts - b.ts)); _idxSet = { ref, map: m }; }
   return _idxSet.map;
 }
+// ---------------- Tahsin (Iqro' KH. As'ad Humam: jilid 1–6, lalu Al-Qur'an) ----------------
+export const IQRA_HAL = 32; // tiap jilid ±32 halaman
+export const TAHSIN_NILAI = { L: "Lancar", KL: "Kurang lancar", U: "Ulang" };
+export function tahsinAwal(s) { const o = (S.data.tahsinAwal || {})[s.id]; if (o) return o.hapus ? null : o; return s.tahsin || null; }
+export function tahsinRiwayat(sid) { return all("tahsin").filter(r => r.santri === sid).sort((a, b) => a.ts - b.ts); }
+// Posisi tahsin terkini = data awal + seluruh catatan bacaan & ujian
+export function tahsinStatus(s) {
+  if (!s) return null;
+  const aw = tahsinAwal(s), rec = tahsinRiwayat(s.id);
+  if (!aw && !rec.length) return null;
+  const st = { tingkat: (aw && aw.tingkat) || "iqra", jilid: aw ? aw.jilid || null : 1, hal: (aw && aw.hal) || 0, siapUjian: !!(aw && aw.ujian), ket: (aw && aw.ket) || "", gagal: false, terakhir: null };
+  for (const r of rec) {
+    st.terakhir = r;
+    if (r.jenis === "baca") {
+      if (r.tingkat === "quran") { st.tingkat = "quran"; if (r.posisi) st.ket = r.posisi; continue; }
+      st.tingkat = "iqra"; st.jilid = r.jilid || st.jilid;
+      if (r.nilai !== "U") st.hal = Math.max(r.jilid === st.jilid ? st.hal : 0, Number(r.sampai) || 0);
+      if (r.siap || st.hal >= IQRA_HAL) st.siapUjian = true;
+    } else if (r.jenis === "ujian") {
+      if (r.lulus) { st.gagal = false; st.siapUjian = false; if ((r.jilid || st.jilid) >= 6) { st.tingkat = "quran"; st.ket = ""; } else { st.jilid = (r.jilid || st.jilid) + 1; st.hal = 0; } }
+      else { st.gagal = true; st.siapUjian = false; }
+    }
+  }
+  st.quran = st.tingkat === "quran";
+  st.label = st.quran ? "Al-Qur'an" + (st.ket ? " · " + st.ket : "") : st.jilid ? `Iqro' ${st.jilid}` + (st.hal ? ` · hal. ${st.hal}` : "") : "Tingkat belum diatur";
+  st.pendek = st.quran ? "Lulus Iqro'" : st.jilid ? `Iqro' ${st.jilid}` : "Belum diatur";
+  st.pct = st.quran ? 100 : st.jilid ? Math.min(100, Math.round((((st.jilid - 1) * IQRA_HAL + Math.min(st.hal, IQRA_HAL)) / (6 * IQRA_HAL)) * 100)) : 0;
+  return st;
+}
+export const santriIqra = s => { const t = tahsinStatus(s); return !!t && !t.quran; };
 export function setoranSantri(sid, kecuali) { const l = indeksSetoran().get(sid) || []; return kecuali ? l.filter(r => r.id !== kecuali) : l.slice(); }
 export function hafalan(s, kecuali) {
   const aw = dataAwal(s);

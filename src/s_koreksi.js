@@ -29,6 +29,9 @@ export function entriRiwayat(col, list) {
     const det = r.jenis === "ziyadah" ? `${r.baris} baris · nilai ${r.nilai}` : r.jenis === "murojaah" ? `Juz ${r.juz} hal. ${r.halDari}–${r.halSampai} · nilai ${r.nilai}` : `Juz ${r.juz} · nilai ${r.nilai}`;
     return { jud, det: det + (r.lulus ? "" : " · ulang"), ic: "bookopen" };
   }
+  if (col === "tahsin") { const s = L.santriById(r.santri), nm = s ? s.nama : "-";
+    if (r.jenis === "ujian") return { jud: `Ujian Iqro' ${r.jilid} · ${nm}`, det: `${r.lulus ? "Lulus" : "Belum lulus"}${r.skor != null ? " · nilai " + r.skor : ""} · ${L.fmtTgl(r.tanggal)}`, ic: "award" };
+    return { jud: `Tahsin · ${nm}`, det: `${r.tingkat === "quran" ? r.posisi || "Al-Qur'an" : `Iqro' ${r.jilid} hal. ${r.dari}–${r.sampai}`} · ${L.TAHSIN_NILAI[r.nilai] || ""} · ${L.fmtTgl(r.tanggal)}`, ic: "book" }; }
   if (col === "absenHalaqah") return { jud: `Absen halaqah ${r.sesi}`, det: `${L.asramaAman(r.asrama).nama} · ${L.fmtTgl(r.tanggal)}`, ic: "checksq" };
   if (col === "motd") return { jud: `Absen MOTD ${(L.WAKTU.find(x => x[0] === r.waktu) || [0, r.waktu])[1]}`, det: `Pondok ${r.pondok} · ${list.length} asrama · ${L.fmtTgl(r.tanggal)}`, ic: "moon" };
   if (col === "mutabaah") return { jud: `Mutaba'ah · ${(L.santriById(r.santri) || {}).nama}`, det: L.fmtTgl(r.tanggal), ic: "checksq" };
@@ -58,6 +61,7 @@ export function KoreksiSheet({ item, onClose, onHapus }) {
     if (r.jenis === "murojaah") ubah = () => nav.go("murojaah", { sid: r.santri, edit: r.id });
     if (r.jenis === "tasmi") ubah = () => nav.go("tasmi", { sid: r.santri, edit: r.id });
   }
+  if (col === "tahsin") ubah = () => nav.go("tahsin", { sid: r.santri, edit: r.id });
   if (col === "absenHalaqah") ubah = () => nav.go("absenHalaqah", { sesi: r.sesi, tgl: r.tanggal, ubah: true });
   if (col === "motd") ubah = () => nav.go("motd", { tgl: r.tanggal, waktu: r.waktu, ubah: true });
   if (col === "mutabaah") ubah = () => nav.go("mutabaah", { tgl: r.tanggal, sid: r.santri, ubah: true });
@@ -90,7 +94,7 @@ export function KoreksiSheet({ item, onClose, onHapus }) {
 // Kumpulkan entri riwayat milik guru (atau semua bila pengawas & mode semua)
 export function kumpulRiwayat(id, semua, cols, cocok = () => true) {
   const ev = [], mine = r => (semua || r.guru === id || r.oleh === id) && cocok(r);
-  const C = cols || ["setoran", "absenHalaqah", "mutabaah", "absenKelas", "izin", "bap", "nilaiMapel", "pengumuman", "izinGuru", "motd"];
+  const C = cols || ["setoran", "tahsin", "absenHalaqah", "mutabaah", "absenKelas", "izin", "bap", "nilaiMapel", "pengumuman", "izinGuru", "motd"];
   C.filter(c => c !== "motd").forEach(col => all(col).filter(mine).forEach(r => ev.push({ col, list: [r], ts: (r.diubah && r.diubah.ts) || r.ts || 0 })));
   const g = {}; if (C.includes("motd")) all("motd").filter(mine).forEach(r => { const k = `${r.pondok}_${r.tanggal}_${r.waktu}`; (g[k] = g[k] || []).push(r); });
   Object.values(g).forEach(list => ev.push({ col: "motd", list, ts: Math.max(...list.map(x => x.ts || 0)) }));
@@ -132,7 +136,7 @@ export function SudahAda({ col, recs, teks, ket }) {
 }
 // Riwayat & koreksi per modul (Tahfidz, Asrama, Mapel, Kesantrian, Izin guru)
 export const MODUL = {
-  tahfidz: { judul: "Tahfidz", cols: ["setoran", "absenHalaqah"], pengawas: ["wadir_tahfidz"] },
+  tahfidz: { judul: "Tahfidz", cols: ["setoran", "tahsin", "absenHalaqah"], pengawas: ["wadir_tahfidz"] },
   asrama: { judul: "MOTD & Mutaba'ah", cols: ["motd", "mutabaah"], pengawas: ["wadir_kesantrian"] },
   mapel: { judul: "Mapel", cols: ["absenKelas", "nilaiMapel"], pengawas: ["wadir_kurikulum"] },
   kesantrian: { judul: "Kesantrian", cols: ["izin", "bap"], pengawas: ["wadir_kesantrian"] },

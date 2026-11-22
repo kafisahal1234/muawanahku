@@ -12,8 +12,9 @@ import { perolehanBulan } from "./s_hafalanbulan.js";
 
 export const PANDUAN = `Panduan aplikasi MuawanahKu (pakai nama menu persis seperti ini bila menunjukkan jalan):
 - Navigasi bawah akun ustadz: Beranda, Jadwal, Cari (cari santri), Riwayat (input milik sendiri), Akun (Profil, Keamanan, Log perubahan data milik akun sendiri, Keluar). Navigasi bawah hanya tampil di 5 layar utama; layar lain memakai tombol kembali.
-- Guru tahfidz → Beranda → Tahfidz: Absen Halaqah, Ziyadah, Murojaah, Manzil, Tasmi', Siap tasmi', Progres Santri, Nilai Mid/Smt, Rekap Halaqah, Perolehan Bulanan (baris/halaman/juz per bulan, unduh PDF), Izin Guru, Riwayat & Koreksi. Sesi halaqah Shubuh, Dhuha, Malam (Senin–Jumat); Sabtu hanya Shubuh; Ahad libur.
-- Wadir Tahfidz → Pengelolaan Tahfidz: Data Awal Hafalan, Target Hafalan, Kelola Halaqah, Rekap Tahfidz, Perolehan Bulanan, Peringkat Santri, Rekap Tasmi', Koreksi Input Tahfidz.
+- Guru tahfidz → Beranda → Tahfidz: Absen Halaqah, Ziyadah, Murojaah, Tahsin (Iqro'), Manzil, Tasmi', Siap tasmi', Progres Santri, Nilai Mid/Smt, Rekap Halaqah, Perolehan Bulanan (baris/halaman/juz per bulan, unduh PDF), Izin Guru, Riwayat & Koreksi. Sesi halaqah Shubuh, Dhuha, Malam (Senin–Jumat); Sabtu hanya Shubuh; Ahad libur.
+- Tahsin (Iqro' KH. As'ad Humam, jilid 1–6 ±32 halaman, lalu Al-Qur'an): santri yang masih Iqro' dicatat bacaannya (halaman, Lancar/Kurang lancar/Ulang) dan ujian kenaikan jilid di menu Tahsin, bukan di Ziyadah hafalan. Rekap Tahsin bisa diunduh PDF.
+- Wadir Tahfidz → Pengelolaan Tahfidz: Data Awal Hafalan, Target Hafalan, Kelola Halaqah, Rekap Tahfidz, Perolehan Bulanan, Rekap Tahsin, Peringkat Santri, Rekap Tasmi', Koreksi Input Tahfidz.
 - Wadir Kurikulum → Kurikulum: Jam Pelajaran, Jadwal Mengajar, Mapel & Pengampu, Rekap KBM (kinerja guru: pertemuan terlaksana & jurnal, kehadiran kelas, unduh PDF), Rekap Nilai, Izin Guru, Koreksi Input Mapel. Juga Kalender di Beranda.
 - Guru mapel → Beranda → Mapel <nama>: Absen & Jurnal, Input Nilai (Projek bisa banyak, PTS, PAS, Aspek), Rekap Kelas, Izin Guru, Riwayat & Koreksi. KBM Senin–Jumat, Jam 1 10.15–11.45, Jam 2 13.00–14.30. Nilai akhir = 10% hadir + 30% projek + 25% PTS + 35% PAS, KKM 70.
 - Wali asrama (musyrif): MOTD dan Mutaba'ah di Beranda, serta menu Asrama Saya (Absen MOTD, Mutaba'ah, Izin & Catatan, Rekap Asrama, Perolehan Hafalan, Riwayat & Koreksi).
@@ -30,7 +31,8 @@ const RG = () => ({ pk: L.periodeRange("pekanan"), bl: L.periodeRange("bulanan")
 
 function barisSantri(s, bl) {
   const h = L.hafalan(s), c = L.capaianJuz(s), kh = L.kehadiranHalaqah(s.id), mp = L.mutPersen(s.id), po = L.poinSantri(s.id), pb = perolehanBulan(s.id, bl);
-  return `${s.nama} | kls ${s.kelas} | ${L.asramaAman(s.asrama).nama} | ${L.namaHalaqah(s)} | hafal ${L.fmtJumlah(h)}${h.khatam ? "" : `, sedang Juz ${h.aktif}`} | ziyadah bulan ini ${pb.baris} baris | semester ${c.juz}/${c.target} juz | hadir halaqah ${pct(kh.pct)} | mutaba'ah ${mp.ibadah == null ? "-" : Math.round((mp.ibadah + mp.adab) / 2) + "%"} | poin ${po.total}${L.sedangIzin(s.id) ? " | sedang izin" : ""}`;
+  const ts = L.tahsinStatus(s);
+  return `${s.nama} | kls ${s.kelas} | ${L.asramaAman(s.asrama).nama} | ${L.namaHalaqah(s)}${ts ? ` | tahsin ${ts.label}${ts.siapUjian ? " (siap ujian)" : ""}` : ""} | hafal ${L.fmtJumlah(h)}${h.khatam ? "" : `, sedang Juz ${h.aktif}`} | ziyadah bulan ini ${pb.baris} baris | semester ${c.juz}/${c.target} juz | hadir halaqah ${pct(kh.pct)} | mutaba'ah ${mp.ibadah == null ? "-" : Math.round((mp.ibadah + mp.adab) / 2) + "%"} | poin ${po.total}${L.sedangIzin(s.id) ? " | sedang izin" : ""}`;
 }
 
 function blokGuruMapel(guru, r) {

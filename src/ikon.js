@@ -29,6 +29,7 @@ export const DUO = {
   toa: [["a", "M3 10v4a1 1 0 0 0 1 1h3l8.5 5V4L7 9H4a1 1 0 0 0-1 1z"], ["b", "M7 9v6l8.5 5V4z"], ["gs", "M18.6 8.6a4.8 4.8 0 0 1 0 6.8M20.8 6.4a8 8 0 0 1 0 11.2"]],
   obrolan: [["a", "M3.5 6a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-6.3L6 21v-4h0a2.5 2.5 0 0 1-2.5-2.5z"], ["w", "M8.4 10h.01M12 10h.01M15.6 10h.01"], ["g", "M20.5 1.2l.8 1.7 1.7.8-1.7.8-.8 1.7-.8-1.7-1.7-.8 1.7-.8z"]],
   unggah: [["a", "M6.5 2.5H14l5.5 5.5v12A1.5 1.5 0 0 1 18 21.5H6.5A1.5 1.5 0 0 1 5 20V4a1.5 1.5 0 0 1 1.5-1.5z"], ["b", "M14 2.5V8h5.5z"], ["w", "M12.2 18v-6.4M9.6 14.2l2.6-2.6 2.6 2.6"]],
+  iqra: [["a", "M5 4.5A2.5 2.5 0 0 1 7.5 2H19v15.5H7.5A2.5 2.5 0 0 0 5 20z"], ["b", "M5 20a2.5 2.5 0 0 1 2.5-2.5H19V22H7.5A2.5 2.5 0 0 1 5 20z"], ["w", "M10 5.5v6M12.8 9.2c0 1.9.9 2.7 2.6 2.7 1 0 1.6-.4 1.9-1"], ["g", C(15, 14.1, 1)]],
   dokumen: [["a", "M6.5 2.5H14l5.5 5.5v12A1.5 1.5 0 0 1 18 21.5H6.5A1.5 1.5 0 0 1 5 20V4a1.5 1.5 0 0 1 1.5-1.5z"], ["b", "M14 2.5V8h5.5z"], ["w", "M8.5 12h7M8.5 15h7M8.5 18h4"]],
   nilai: [["a", "M6.5 2.5h11A1.5 1.5 0 0 1 19 4v16a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20V4a1.5 1.5 0 0 1 1.5-1.5z"], ["w", "M8.5 7.5h7M8.5 11h7M8.5 14.5h3.5"], ["g", C(17, 17.5, 4.3)], ["w", "M15.2 17.6l1.3 1.3 2.4-2.6"]],
   absen: [...KAL, ["w", "M8.6 15.2l2.4 2.4 4.6-4.8"]],
@@ -48,7 +49,7 @@ export const DUO = {
 export const PETA = { bookopen: "quran", book: "quran", calendar: "kalender", cal2: "kalender2", moon: "masjid", checksq: "ceklis", door: "pintu", award: "medali", chart: "grafik", trend: "grafik",
   layers: "mapel", grid: "database", shield: "perisai", sliders: "atur", users: "jamaah", mic: "mik", plus: "ziyadah", repeat: "murojaah", megaphone: "toa", sparkle: "obrolan",
   upload: "unggah", file: "dokumen", edit: "nilai", clipboard: "bap", alert: "bap", star: "bintang", target: "target", user: "orang", lock: "gembok", bell: "lonceng", clock: "jam",
-  heart: "hati", home: "rumah", home2: "rumah", briefcase: "tas", printer: "cetak", pen: "nilai" };
+  iqro: "iqra", heart: "hati", home: "rumah", home2: "rumah", briefcase: "tas", printer: "cetak", pen: "nilai" };
 // palet ikon: [utama, gelap, latar muda]
 export const WARNA = { emerald: ["#2DB673", "#0C7547", "#E5F5EC"], green: ["#36B06A", "#156E3C", "#E6F4EB"], blue: ["#4D8EF5", "#1E59C6", "#E7EFFD"], orange: ["#FF9B42", "#D45F10", "#FFF0E1"],
   coral: ["#FF6F61", "#C63A2D", "#FFEBE8"], gold: ["#F5BC3A", "#B98008", "#FFF5DC"], teal: ["#26B3A5", "#0D7A70", "#E1F5F3"], indigo: ["#7C7DF4", "#4846C6", "#EDEDFD"],

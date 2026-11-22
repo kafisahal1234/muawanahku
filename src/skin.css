@@ -753,3 +753,29 @@ html.pad-on,html.pad-on body{overscroll-behavior:none}
 @media (max-width:360px){.hf-ring{width:92px;height:92px}.hf-ring b{font-size:23px}.hf-big{font-size:27px}}
 
 .tunggu{display:flex;flex-direction:column;align-items:flex-start;gap:4px}.tunggu .bubble{margin:0}.tunggu small{font-size:12.5px;font-weight:700;color:var(--mut);padding-left:4px}
+
+/* v14: Tahsin (Iqro') */
+.iq-jalur{display:flex;gap:4px;align-items:stretch;margin-top:10px}
+.iq-jalur>span{position:relative;flex:1;height:34px;border-radius:9px;background:#EEF3F0;border:1px solid #DCE7E0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.iq-jalur>span i{position:absolute;left:0;top:0;bottom:0;background:#BFE8D0}
+.iq-jalur>span b{position:relative;font-size:13px;font-weight:900;color:#5B6F64}
+.iq-jalur>span.ok{background:#1F9D5C;border-color:#1F9D5C}.iq-jalur>span.ok b{color:#fff}
+.iq-jalur>span.kini{border:2px solid #1F9D5C;background:#F4FBF7}.iq-jalur>span.kini b{color:#0C6B3D}
+.iq-jalur>span.qr{flex:2.2}.iq-jalur>span.qr b{font-size:12px}.iq-jalur>span.qr.ok{background:linear-gradient(135deg,#E2A93B,#C98A12);border-color:#C98A12}
+.iq-jalur.kecil{margin-top:8px;gap:3px}.iq-jalur.kecil>span{height:24px;border-radius:7px;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.16)}
+.iq-jalur.kecil>span b{font-size:11px;color:#D6EDE0}.iq-jalur.kecil>span i{background:rgba(95,227,156,.45)}
+.iq-jalur.kecil>span.ok{background:#5FE39C;border-color:#5FE39C}.iq-jalur.kecil>span.ok b{color:#0A4A2E}
+.iq-jalur.kecil>span.kini{background:rgba(255,255,255,.08);border:1.5px solid #5FE39C}.iq-jalur.kecil>span.kini b{color:#fff}
+.iq-jalur.kecil>span.qr.ok{background:#F2C14E;border-color:#F2C14E}.iq-jalur.kecil>span.qr.ok b{color:#3A2A00}
+.iq-kepala{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.iq-kepala b{font-size:22px;font-weight:900;color:#0C6B3D}.iq-kepala span{font-size:13px;font-weight:700;color:var(--mut);text-align:right}
+.iq-ringkas{display:grid;grid-template-columns:repeat(6,1fr) 1.6fr;gap:5px}
+.iq-ringkas span{display:flex;flex-direction:column;align-items:center;padding:8px 2px;border-radius:12px;background:#F2F5F3;color:#7B8F86}
+.iq-ringkas span b{font-size:19px;font-weight:900;line-height:1.1}.iq-ringkas span small{font-size:10.5px;font-weight:700;white-space:nowrap}
+.iq-ringkas span.ada{background:#E4F3EA;color:#0C6B3D}.iq-ringkas span.qr.ada{background:#FFF3D6;color:#7A5200}
+.iq-mini{display:flex;flex-direction:column;align-items:center;min-width:44px;padding:4px 6px;border-radius:10px;background:#E7F2EC;color:#0C6B3D;line-height:1.1}.iq-mini b{font-size:15px;font-weight:900}.iq-mini small{font-size:11px;font-weight:700}
+.iq-pilih{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.iq-pilih.dua{grid-template-columns:1fr 1fr;margin-bottom:12px}.iq-pilih.tiga{grid-template-columns:repeat(3,1fr)}
+.iq-pilih button{min-height:46px;border-radius:12px;border:1.5px solid #CFDDD5;background:#fff;font-weight:800;font-size:14px;color:#22352B;padding:0 6px}
+.iq-pilih button.on{background:var(--g);border-color:var(--g);color:#fff}.iq-pilih button.on.emas{background:#C98A12;border-color:#C98A12}.iq-pilih button.on.merah{background:#C0392B;border-color:#C0392B}
+.iq-dua{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.iq-chk{display:flex;align-items:center;gap:10px;min-height:44px;font-weight:700;font-size:14px}.iq-chk input{width:22px;height:22px;accent-color:var(--g)}
+.hf-tahsin{position:relative;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.13)}

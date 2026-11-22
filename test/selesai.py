@@ -28,7 +28,7 @@ async def main():
         async def tile(pg, t): await pg.locator(f".tile:has-text(\"{t}\")").first.click(); await pg.wait_for_timeout(600)
         async def h1(pg): return await pg.locator(".sub-h h1, .sub-t h1").first.inner_text()
         async def tab(pg, t): await keUtama(pg); await pg.locator(f".bnav button:has-text('{t}')").first.click(); await pg.wait_for_timeout(500)
-        pg = await baru(); await login(pg, "ugi")
+        pg = await baru(); await login(pg, "hanif")
         home = await pg.locator(".tile").all_inner_texts(); notes.append(("home tiles", [x.split("\n")[0] for x in home]))
         notes.append(("rekap tile on home", any(x.split("\n")[0].strip() == "Rekap" for x in home)))
         # ---- Absen halaqah -> tampilan selesai
@@ -81,10 +81,10 @@ async def main():
         # ---- Profil: foto tetap ada setelah ubah nama; foto bisa diperbesar
         await tab(pg, "Akun"); await pg.locator(".menu-row:has-text('Profil')").first.click(); await pg.wait_for_timeout(500)
         await pg.locator(".foto-edit input[type=file]").first.set_input_files({"name": "f.png", "mimeType": "image/png", "buffer": PNG}); await pg.wait_for_timeout(1500)
-        notes.append(("foto saved", await pg.evaluate(f"!!({DB}.profil||{{}}).ugi?.foto")))
+        notes.append(("foto saved", await pg.evaluate(f"!!({DB}.profil||{{}}).hanif?.foto")))
         await pg.click("text=Ubah profil"); await pg.wait_for_timeout(400)
-        await pg.locator(".form-page input.in").first.fill("Ust. Ugi Test"); await pg.click("text=Simpan profil"); await pg.wait_for_timeout(800)
-        notes.append(("foto after name edit", await pg.evaluate(f"!!({DB}.profil||{{}}).ugi?.foto")))
+        await pg.locator(".form-page input.in").first.fill("Ust. Hanif Test"); await pg.click("text=Simpan profil"); await pg.wait_for_timeout(800)
+        notes.append(("foto after name edit", await pg.evaluate(f"!!({DB}.profil||{{}}).hanif?.foto")))
         await pg.locator(".foto-btn").first.click(); await pg.wait_for_timeout(400)
         notes.append(("lightbox", await pg.locator(".foto-lb img").count())); await pg.screenshot(path=f"{O}/d5_lightbox.png")
         await pg.locator(".lb-x").click(); await pg.wait_for_timeout(300); notes.append(("lightbox closed", await pg.locator(".foto-lb").count()))

@@ -14,16 +14,17 @@ export function Tahfidz() {
   const st = me(), a = myHalaqah(); const list = L.santriHalaqah(a.id);
   const tgl = L.today();
   const sudah = x => !!get("absenHalaqah", L.halaqahKey(a.id, tgl, x));
-  const zDone = list.filter(s => L.ziyadahHari(s.id, tgl).some(r => r.lulus)).length;
+  const hafal = list.filter(s => !L.santriIqra(s)), zDone = hafal.filter(s => L.ziyadahHari(s.id, tgl).some(r => r.lulus)).length;
+  const tahsin = list.filter(s => L.tahsinStatus(s)), tBelum = tahsin.filter(s => !all("tahsin").some(r => r.santri === s.id && r.tanggal === tgl)).length;
   const mDone = list.filter(s => all("setoran").some(r => r.santri === s.id && r.jenis === "murojaah" && r.tanggal === tgl)).length;
   const siap = list.filter(s => L.hafalan(s).siapTasmi).length;
   const wk = L.weekStart(tgl);
   const manzil = list.filter(s => { const m = L.manzilWeek(s, wk); const p = L.manzilWeek(s, L.addDays(wk, -7)); return (m && !m.lulus) || (p && !p.lulus); }).length;
-  const belum = list.filter(s => !L.kunci(s).sudah);
+  const belum = hafal.filter(s => !L.kunci(s).sudah);
   return html`<${SubHeader} title="Tahfidz" sub=${`Halaqah ${st.pendek} · ${list.length} santri`} />
     <div class="wrap">
       <${Card}><div class="stats">
-        <${Stat} label="Ziyadah" value=${`${zDone}/${list.length}`} />
+        <${Stat} label="Ziyadah" value=${`${zDone}/${hafal.length}`} />
         <${Stat} label="Murojaah" value=${`${mDone}/${list.length}`} />
         <${Stat} label="Siap tasmi'" value=${siap} /></div>
         <div class="minis mt8">${L.adaHalaqah() ? L.sesiHari().map(x => html`<${Pill} t=${(sudah(x) ? "✓ " : "") + "Absen " + x} tone=${sudah(x) ? "green" : "muted"} />`) : html`<${Pill} t="Ahad · tidak ada halaqah" tone="muted" />`}${L.hariIni() === "Sabtu" ? html`<${Pill} t="Sabtu: Halaqah Shubuh saja" tone="gold" />` : null}</div></${Card}>
@@ -31,12 +32,14 @@ export function Tahfidz() {
         <${Tile} icon="checksq" label="Absen Halaqah" color="emerald" onClick=${() => nav.go("absenHalaqah", { sesi: L.sesiNow() })} />
         <${Tile} icon="bookopen" label="Ziyadah" color="blue" badge=${belum.length || null} onClick=${() => nav.go("setorList", { jenis: "ziyadah" })} />
         <${Tile} icon="repeat" label="Murojaah" color="teal" onClick=${() => nav.go("setorList", { jenis: "murojaah" })} />
+        ${tahsin.length ? html`<${Tile} icon="iqro" label="Tahsin (Iqro')" color="emerald" badge=${tBelum || null} onClick=${() => nav.go("tahsinList")} />` : null}
         <${Tile} icon="layers" label="Manzil" color="indigo" badge=${manzil || null} onClick=${() => nav.go("manzilList")} />
         <${Tile} icon="mic" label="Tasmi'" color="orange" badge=${siap || null} onClick=${() => nav.go("tasmiList")} />
         <${Tile} icon="award" label="Nilai Mid/Smt" color="gold" onClick=${() => nav.go("ujianList")} />
         <${Tile} icon="trend" label="Progres Santri" color="purple" onClick=${() => nav.go("progres", { hid: a.id })} />
         <${Tile} icon="chart" label="Rekap Halaqah" color="teal" onClick=${() => nav.go("rekap", { modul: "tahfidz" })} />
         <${Tile} icon="calendar" label="Perolehan Bulanan" color="pink" onClick=${() => nav.go("hafalanBulan")} />
+        ${tahsin.length ? html`<${Tile} icon="clipboard" label="Rekap Tahsin" color="indigo" onClick=${() => nav.go("rekapTahsin")} />` : null}
         <${Tile} icon="briefcase" label="Izin Guru" color="slate" onClick=${() => nav.go("izinGuru")} />
         <${Tile} icon="edit" label="Riwayat & Koreksi" color="coral" onClick=${() => nav.go("riwayatModul", { modul: "tahfidz" })} />
 </div></${Card}>
@@ -83,7 +86,8 @@ export function SetorList({ jenis }) {
   const a = myHalaqah(), list = L.santriHalaqah(a.id), tgl = L.today();
   const title = jenis === "ziyadah" ? "Ziyadah" : "Murojaah";
   // santri yang sudah setor (lulus) hari ini pindah ke bagian "Sudah setor" dan tidak bisa diinput ulang; koreksi lewat Riwayat
-  const data = list.map(s => { const recs = all("setoran").filter(r => r.santri === s.id && r.jenis === jenis && r.tanggal === tgl).sort((x, y) => x.ts - y.ts); return { s, last: recs[recs.length - 1] }; });
+  const iqra = jenis === "ziyadah" ? list.filter(s => L.santriIqra(s) && !all("setoran").some(r => r.santri === s.id && r.jenis === jenis && r.tanggal === tgl)) : [];
+  const data = list.filter(s => !iqra.includes(s)).map(s => { const recs = all("setoran").filter(r => r.santri === s.id && r.jenis === jenis && r.tanggal === tgl).sort((x, y) => x.ts - y.ts); return { s, last: recs[recs.length - 1] }; });
   const selesai = d => d.last && (jenis === "murojaah" || d.last.lulus !== false);
   const belum = data.filter(d => !selesai(d)), sudah = data.filter(selesai);
   return html`<${SubHeader} title=${title} sub=${`${a.nama} · ${L.fmtTgl(tgl)} · ${sudah.length}/${list.length} sudah setor`} />
@@ -95,7 +99,10 @@ export function SetorList({ jenis }) {
       })}</div>` : html`<div class="selesai-card" style="margin:4px 0"><span class="sc-ic"><${Icon} n="check" s=${24} c="#fff" w=${3} /></span><div><b>Semua santri sudah setor ${title.toLowerCase()} hari ini</b><small>Alhamdulillah</small></div></div>`}</${Card}>
       ${sudah.length ? html`<${Card} title=${`Sudah setor hari ini (${sudah.length})`}><div class="list">${sudah.map(({ s, last }) => html`<${Row} name=${s.nama}
         sub=${jenis === "ziyadah" ? `${last.baris} baris · ${L.posLabel(last.juz, last.sesudah)} · ${L.fmtJam(last.ts)}` : `Juz ${last.juz} · ${L.fmtJam(last.ts)}`} right=${html`<${StatusPill} r=${last} />`} />`)}</div>
-        <p class="riwayat-hint">Salah input? <button type="button" class="link" onClick=${() => nav.go("riwayatModul", { modul: "tahfidz" })}>Koreksi lewat Riwayat & Koreksi</button></p></${Card}>` : null}</div>`;
+        <p class="riwayat-hint">Salah input? <button type="button" class="link" onClick=${() => nav.go("riwayatModul", { modul: "tahfidz" })}>Koreksi lewat Riwayat & Koreksi</button></p></${Card}>` : null}
+      ${iqra.length ? html`<${Card} title=${`Masih belajar Iqro' (${iqra.length})`}><p class="small" style="margin:0 0 6px">Ziyadah Iqro' dicatat di menu Tahsin. Bila santri ini juga menghafal (talaqqi), ketuk namanya untuk mencatat setoran hafalan.</p>
+        <div class="list">${iqra.map(s => { const t = L.tahsinStatus(s); return html`<${Row} name=${s.nama} sub=${`${t.label} · hafalan ${L.fmtJumlah(L.hafalan(s))}`} right=${html`<${Pill} t=${t.pendek} tone="blue" />`} onClick=${() => nav.go("ziyadah", { sid: s.id })} />`; })}</div>
+        <${Btn} kind="ghost" icon="book" onClick=${() => nav.go("tahsinList")}>Buka Tahsin (Iqro')</${Btn}></${Card}>` : null}</div>`;
 }
 
 function SantriHead({ s, h }) {
