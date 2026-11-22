@@ -5,7 +5,7 @@ import { html, nav, useApp, Icon, SubHeader, Sheet, Confirm, SearchBox } from ".
 import { toast, uid } from "./store.js";
 import * as L from "./logic.js";
 import { me, compressImage, FotoBesar } from "./common.js";
-import { ngobrolAI, aiAda, aiNama } from "./ai.js";
+import { ngobrolAI, aiAda, aiNama, siapkanAI } from "./ai.js";
 import { TeksAI, teksPolos } from "./s_ai.js";
 import { bacaBerkas, TERIMA } from "./berkas.js";
 import { konteksAkun, PANDUAN } from "./ai_konteks.js";
@@ -105,9 +105,10 @@ export function Asisten() {
   const [cid, setCid] = useState(() => { const id = sessionStorage.getItem(sesiKey()); return id && muatChat().some(c => c.id === id) ? id : null; });
   const [msgs, setMsgs] = useState(() => (cid && (muatChat().find(c => c.id === cid) || {}).msgs) || []);
   const [q, setQ] = useState(""), [busy, setBusy] = useState(false), [lamp, setLamp] = useState([]), [baca, setBaca] = useState(0);
-  const [menu, setMenu] = useState(false), [riw, setRiw] = useState(false), [dengar, setDengar] = useState(false);
+  const [menu, setMenu] = useState(false), [riw, setRiw] = useState(false), [dengar, setDengar] = useState(false), [tahap, setTahap] = useState("");
   const stopRef = useRef(false), akhir = useRef(null), inp = useRef(null), fKam = useRef(null), fGal = useRef(null), fDok = useRef(null), rec = useRef(null), ikuti = useRef(true);
   useEffect(() => { try { cid ? sessionStorage.setItem(sesiKey(), cid) : sessionStorage.removeItem(sesiKey()); } catch (e) { } }, [cid]);
+  useEffect(() => { siapkanAI(); }, []);
   useEffect(() => { if (akhir.current && ikuti.current) akhir.current.scrollIntoView({ behavior: busy ? "auto" : "smooth", block: "end" }); }, [msgs, busy]);
   useEffect(() => { const f = () => { ikuti.current = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 160; }; addEventListener("scroll", f, { passive: true }); return () => { removeEventListener("scroll", f); if (rec.current) try { rec.current.stop(); } catch (e) { } }; }, []);
   const tinggi = el => { if (!el) return; el.style.height = "auto"; el.style.height = Math.min(140, el.scrollHeight) + "px"; };
@@ -135,7 +136,8 @@ export function Asisten() {
     setMsgs([...awal, { id: idA, r: "a", t: "", stream: true, ts: Date.now() }]); setBusy(true); stopRef.current = false; ikuti.current = true;
     let hasil;
     try {
-      const k = konteksAkun();
+      setTahap("Membaca data akun…"); await new Promise(r => setTimeout(r, 30));
+      const k = konteksAkun(); setTahap("Menyusun jawaban…");
       const sistem = `Kamu "Asisten MuawanahKu", asisten AI (seperti Gemini) di aplikasi Pondok Tahfidz Modern Kampung Qur'an Al Muawanah, Kota Metro, Lampung. Jawab dalam Bahasa Indonesia yang santun dan hangat. Jawaban jelas dan langsung ke inti; rapikan dengan **tebal**, butir "- ", daftar bernomor, dan tabel Markdown bila membandingkan beberapa orang/angka. Pengguna: ${k.nama} (${k.peran}). ${k.aturan} Jangan mengarang data. Bila pengguna melampirkan foto atau berkas, baca isinya dengan teliti (misalnya jadwal, daftar nilai, surat, tulisan tangan) lalu kerjakan permintaannya. Untuk pertanyaan agama, jawab secara umum dan sarankan bertanya kepada ustadz untuk fatwa. Jangan meminta kata sandi.\n\n${PANDUAN}\n\n=== DATA YANG BISA DILIHAT AKUN INI (dibaca langsung dari aplikasi, ${L.fmtTgl(L.today())} pukul ${jamPendek(Date.now())}) ===\n${k.data}`;
       const riwayat = riwayatMsgs.filter(m => !m.err && (m.t || m.img || m.file)).slice(-16).map(m => ({ r: m.r, t: (m.t || "") + (m.img && m.img.length ? `\n[melampirkan ${m.img.length} foto]` : "") + (m.file && m.file.length ? `\n[melampirkan berkas: ${m.file.map(f => f.nama).join(", ")}]` : "") }));
       const teksBerkas = lampiran.filter(x => x.teks).map(x => `\n\n[Isi berkas "${x.nama}"]\n${x.teks.slice(0, 40000)}`).join("");
@@ -146,7 +148,7 @@ export function Asisten() {
     } catch (e) { hasil = { id: idA, r: "a", t: e.message || "Maaf, AI sedang tidak bisa menjawab.", err: true, ts: Date.now() }; }
     if (stopRef.current && !hasil.t) hasil = { ...hasil, t: "_Jawaban dihentikan._" };
     const akhirMsgs = [...awal, hasil];
-    setMsgs(akhirMsgs); setBusy(false); simpanPercakapan(id, akhirMsgs);
+    setMsgs(akhirMsgs); setBusy(false); setTahap(""); simpanPercakapan(id, akhirMsgs);
   };
   const kirim = async teks => {
     const t = (teks != null ? teks : q).trim();
@@ -182,7 +184,7 @@ export function Asisten() {
           <div class="chat-saran">${saranPeran().map(s => html`<button type="button" disabled=${!ada} onClick=${() => kirim(s)}><${Icon} n="sparkle" s=${16} /><span>${s}</span></button>`)}</div>
           ${muatChat().length ? html`<button type="button" class="link" style="margin-top:6px" onClick=${() => setRiw(true)}>Lihat riwayat percakapan (${muatChat().length})</button>` : null}</div>` : null}
       ${msgs.map((m, i) => html`<${Pesan} key=${m.id || i} m=${m} akhirAI=${i === iA && i === msgs.length - 1 && !busy} akhirUser=${i === iU && !busy} onUlang=${ulangi} onUbah=${ubah} />`)}
-      ${busy && msgs[msgs.length - 1] && msgs[msgs.length - 1].stream && !msgs[msgs.length - 1].t ? html`<div class="cm cm-a"><span class="cm-av muter"><${Icon} n="sparkle" s=${18} /></span><div class="bubble ai typing"><i></i><i></i><i></i></div></div>` : null}
+      ${busy && msgs[msgs.length - 1] && msgs[msgs.length - 1].stream && !msgs[msgs.length - 1].t ? html`<div class="cm cm-a"><span class="cm-av muter"><${Icon} n="sparkle" s=${18} /></span><div class="tunggu"><div class="bubble ai typing"><i></i><i></i><i></i></div>${tahap ? html`<small>${tahap}</small>` : null}</div></div>` : null}
       <div ref=${akhir} style="height:4px"></div>
       ${msgs.length ? html`<p class="ai-catat" style="text-align:center">Jawaban AI bisa keliru. Periksa kembali hal penting.</p>` : null}</div>
     <div class="chat-dock">

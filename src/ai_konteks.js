@@ -1,7 +1,7 @@
 // Konteks data untuk Asisten AI, dibatasi sesuai hak akses akun yang sedang masuk.
 // AI hanya "melihat" apa yang memang bisa dilihat akun itu di aplikasi: santri dalam lingkupnya,
 // kinerja guru (untuk Wadir/Mudir), kinerja halaqah, asrama, izin, pelanggaran, nilai, dan jadwal.
-import { all, get } from "./store.js";
+import { all, get, S } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
 import { nav } from "./ui.js";
@@ -63,7 +63,7 @@ function blokHalaqah(hqs, r) {
   const baris = hqs.map(h => {
     const g = L.staffAman(h.guru), list = L.santriHalaqah(h.id), a = L.kinerjaHalaqah(h.id, r.pk), b = L.kinerjaHalaqah(h.id, r.bl), c = L.kinerjaHalaqah(h.id, r.sm);
     const per = list.map(s => perolehanBulan(s.id, bulan)), tot = per.reduce((n, p) => n + p.baris, 0);
-    const setorHariIni = list.filter(s => all("setoran").some(x => x.santri === s.id && x.tanggal === r.t)).length;
+    const setorHariIni = list.filter(s => L.setoranSantri(s.id).some(x => x.tanggal === r.t)).length;
     const sesi = L.sesiHari(r.t).map(se => `${se} ${get("absenHalaqah", L.halaqahKey(h.id, r.t, se)) ? "sudah" : "belum"}`).join(", ");
     return `${h.nama} (guru ${g.nama}) | ${list.length} santri | absen sesi pekan ini ${a.isi}/${a.sesi} (${pct(a.pct)}) | bulan ini ${b.isi}/${b.sesi} (${pct(b.pct)}) | semester ${pct(c.pct)} | ziyadah bulan ini ${tot} baris (${L.fmtBaris(tot)}), ${per.filter(p => p.baris > 0).length}/${list.length} santri setor | setor hari ini ${setorHariIni}/${list.length} | absen hari ini: ${sesi || "tidak ada halaqah"}`;
   });
@@ -104,8 +104,14 @@ function santriLingkup(m) {
   return [...o.values()];
 }
 
-// Dibangun ulang setiap pertanyaan supaya AI selalu membaca data terbaru.
+// Disimpan sementara: dibangun ulang bila ada data berubah, berganti akun, atau sudah lewat 2 menit (status "hari ini" ikut segar)
+let _ktx = { kunci: "", val: null };
 export function konteksAkun() {
+  const k = `${nav.user && nav.user.kind}:${nav.user && nav.user.id}:${S.ver}:${Math.floor(Date.now() / 12e4)}`;
+  if (_ktx.kunci !== k) _ktx = { kunci: k, val: bangunKonteks() };
+  return _ktx.val;
+}
+function bangunKonteks() {
   const r = RG(), peng = all("pengumuman").sort((a, b) => b.ts - a.ts).slice(0, 3).map(p => `- ${p.judul}: ${(p.isi || "").slice(0, 200)}`).join("\n") || "-";
   const umum = `Hari ini: ${L.fmtTgl(r.t)}${L.hariAktif(r.t, "kbm") ? "" : " (bukan hari KBM)"}. Target hafalan: ${L.targetSemester()} juz hafalan baru per semester. 15 baris = 1 halaman, 20 halaman = 1 juz.\nPengumuman terbaru:\n${peng}`;
   if (nav.user && nav.user.kind === "wali") {

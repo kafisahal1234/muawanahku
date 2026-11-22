@@ -210,7 +210,13 @@ const pct = (a, b) => (b ? Math.round((a / b) * 100) : null);
 
 // ---------------- hafalan ----------------
 export function dataAwal(s) { const o = (S.data.dataAwal || {})[s.id]; return o ? o : s.awal; }
-export function setoranSantri(sid, kecuali) { return all("setoran").filter(r => r.santri === sid && r.id !== kecuali).sort((a, b) => a.ts - b.ts); }
+let _idxSet = { ref: null, map: null };
+function indeksSetoran() {
+  const ref = S.data.setoran;
+  if (_idxSet.ref !== ref) { const m = new Map(); all("setoran").forEach(r => { let l = m.get(r.santri); if (!l) m.set(r.santri, (l = [])); l.push(r); }); m.forEach(l => l.sort((a, b) => a.ts - b.ts)); _idxSet = { ref, map: m }; }
+  return _idxSet.map;
+}
+export function setoranSantri(sid, kecuali) { const l = indeksSetoran().get(sid) || []; return kecuali ? l.filter(r => r.id !== kecuali) : l.slice(); }
 export function hafalan(s, kecuali) {
   const aw = dataAwal(s);
   let selesai = [...(aw.selesai || [])], aktif = aw.aktif, baris = aw.baris || 0, khatam = false;

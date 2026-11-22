@@ -11,7 +11,7 @@ const BLN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Ag
 const namaBulan = b => { const [y, m] = b.split("-"); return `${BLN[+m - 1]} ${y}`; };
 const dk = (n, d) => n.toFixed(d).replace(".", ",");
 export function perolehanBulan(sid, bulan) {
-  const recs = all("setoran").filter(r => r.santri === sid && r.tanggal && r.tanggal.startsWith(bulan));
+  const recs = L.setoranSantri(sid).filter(r => r.tanggal && r.tanggal.startsWith(bulan));
   const z = recs.filter(r => r.jenis === "ziyadah" && r.lulus !== false), baris = z.reduce((n, r) => n + (Number(r.baris) || 0), 0);
   return { baris, hal: baris / 15, juz: baris / 300, hari: new Set(z.map(r => r.tanggal)).size, muro: recs.filter(r => r.jenis === "murojaah").length,
     tasmi: recs.filter(r => r.jenis === "tasmi" && r.lulus).map(r => r.juz) };

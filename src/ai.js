@@ -8,6 +8,21 @@ import { firebaseApp, V, imp } from "./cloud.js";
 const MODELS = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.8-flash", "gemini-2.5-flash"];
 const LS = "mk_ai_model";
 let sampleP = null, aiMod = null;
+// Kecepatan: model Gemini Flash bawaannya "berpikir" tingkat MEDIUM sebelum menjawab (bisa belasan detik).
+// Tanya-jawab & ringkasan cukup tingkat LOW; Gemini 2.5 Flash berpikirnya dimatikan. Impor data (JSON) tetap bawaan agar teliti.
+const LS_TOLAK = "mk_ai_pikir_tolak";
+const ditolak = m => { try { return (localStorage.getItem(LS_TOLAK) || "").split(",").includes(m); } catch (e) { return false; } };
+const catatTolak = m => { try { const l = (localStorage.getItem(LS_TOLAK) || "").split(",").filter(Boolean); if (!l.includes(m)) localStorage.setItem(LS_TOLAK, [...l, m].join(",")); } catch (e) { } };
+function cfgPikir(ai, m) {
+  if (ditolak(m)) return null;
+  const TL = ai.ThinkingLevel || {};
+  if (m === "gemini-2.5-flash") return { thinkingBudget: 0 };
+  if (/^gemini-3\.\d+-flash$/.test(m)) return { thinkingLevel: TL.LOW || "LOW" };
+  return null;
+}
+const galatPikir = e => /think/i.test(String(e && e.message)) && /\b400\b|INVALID_ARGUMENT|not supported|invalid/i.test(String(e && e.message));
+// Muat SDK AI lebih awal (saat layar Asisten dibuka) supaya pertanyaan pertama tidak menunggu unduhan
+export function siapkanAI() { try { if (!aiMod && firebaseApp() && !(typeof window !== "undefined" && window.__AI_MOCK)) aiMod = imp(`https://www.gstatic.com/firebasejs/${V}/firebase-ai.js`); } catch (e) { } }
 
 export function aiMesin() {
   if (typeof window !== "undefined" && window.__AI_MOCK) return "mock";
@@ -60,16 +75,21 @@ async function viaGemini({ teks, sistem, berkas, json }) {
   const parts = [{ text: teks }, ...(berkas || []).map(b => ({ inlineData: { mimeType: b.mime, data: b.b64 } }))];
   let akhir = null;
   for (const m of urut) {
-    try {
-      const model = ai.getGenerativeModel(inst, { model: m, ...(sistem ? { systemInstruction: sistem } : {}), generationConfig: json ? { responseMimeType: "application/json", temperature: 0.1 } : { temperature: 0.5 } });
-      const r = await model.generateContent(parts);
-      try { localStorage.setItem(LS, m); } catch (e) { }
-      const t = r.response.text();
-      return json ? bersihJSON(t) : t.trim();
-    } catch (e) {
-      akhir = e; const msg = String(e && e.message);
-      if (/\b404\b|not found|is not supported|NOT_FOUND|unknown model|deprecated|retired/i.test(msg)) continue;
-      throw e;
+    const pk = json ? null : cfgPikir(ai, m);
+    for (const pakai of pk ? [true, false] : [false]) {
+      try {
+        const gc = json ? { responseMimeType: "application/json", temperature: 0.1 } : { temperature: 0.5, ...(pakai ? { thinkingConfig: pk } : {}) };
+        const model = ai.getGenerativeModel(inst, { model: m, ...(sistem ? { systemInstruction: sistem } : {}), generationConfig: gc });
+        const r = await model.generateContent(parts);
+        try { localStorage.setItem(LS, m); } catch (e) { }
+        const t = r.response.text();
+        return json ? bersihJSON(t) : t.trim();
+      } catch (e) {
+        akhir = e;
+        if (pakai && galatPikir(e)) { catatTolak(m); continue; } // model menolak pengaturan berpikir → ulangi tanpa pengaturan
+        if (/\b404\b|not found|is not supported|NOT_FOUND|unknown model|deprecated|retired/i.test(String(e && e.message))) break;
+        throw e;
+      }
     }
   }
   throw akhir || new Error("Model AI tidak ditemukan.");
@@ -100,18 +120,22 @@ async function chatGemini({ sistem, riwayat, teks, berkas, onTeks, berhenti }) {
   const suka = localStorage.getItem(LS), urut = suka ? [suka, ...MODELS.filter(m => m !== suka)] : MODELS;
   let akhir = null;
   for (const m of urut) {
-    let out = "";
-    try {
-      const model = ai.getGenerativeModel(inst, { model: m, ...(sistem ? { systemInstruction: sistem } : {}), generationConfig: { temperature: 0.6 } });
-      const r = await model.generateContentStream({ contents });
-      for await (const ch of r.stream) { if (berhenti && berhenti()) break; let d = ""; try { d = ch.text(); } catch (e) { } if (d) { out += d; onTeks && onTeks(out); } }
-      try { localStorage.setItem(LS, m); } catch (e) { }
-      return out.trim();
-    } catch (e) {
-      akhir = e;
-      if (!out && /\b404\b|not found|is not supported|NOT_FOUND|unknown model|deprecated|retired/i.test(String(e && e.message))) continue;
-      if (out) return out.trim();
-      throw e;
+    const pk = cfgPikir(ai, m);
+    for (const pakai of pk ? [true, false] : [false]) {
+      let out = "";
+      try {
+        const model = ai.getGenerativeModel(inst, { model: m, ...(sistem ? { systemInstruction: sistem } : {}), generationConfig: { temperature: 0.6, ...(pakai ? { thinkingConfig: pk } : {}) } });
+        const r = await model.generateContentStream({ contents });
+        for await (const ch of r.stream) { if (berhenti && berhenti()) break; let d = ""; try { d = ch.text(); } catch (e) { } if (d) { out += d; onTeks && onTeks(out); } }
+        try { localStorage.setItem(LS, m); } catch (e) { }
+        return out.trim();
+      } catch (e) {
+        akhir = e;
+        if (out) return out.trim();
+        if (pakai && galatPikir(e)) { catatTolak(m); continue; }
+        if (/\b404\b|not found|is not supported|NOT_FOUND|unknown model|deprecated|retired/i.test(String(e && e.message))) break;
+        throw e;
+      }
     }
   }
   throw akhir || new Error("Model AI tidak ditemukan.");
