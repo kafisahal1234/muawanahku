@@ -33,7 +33,18 @@ export async function connectFirestore(cfg) {
       ac.initializeAppCheck(app, { provider: new ac.ReCaptchaV3Provider(RECAPTCHA_SITE_KEY), isTokenAutoRefreshEnabled: true }); }
     catch (e) { console.warn("App Check gagal dimuat", e); }
   }
-  try { await au.signInAnonymously(au.getAuth(app)); } catch (e) { console.warn("Login anonim gagal", e); throw new Error("Login Anonymous belum aktif (" + (e.code || e.message) + ")"); }
+  const auth = au.getAuth(app);
+  try { await Promise.race([auth.authStateReady(), new Promise(r => setTimeout(r, 4000))]); } catch (e) { }
+  if (!auth.currentUser) {
+    const masuk = () => au.signInAnonymously(auth);
+    try { await masuk(); }
+    catch (e) {
+      // sinyal lemah/putus: tetap jalan memakai data tersimpan di HP; masuk ulang otomatis begitu sinyal kembali
+      if (!/network|unavailable|timeout|internal/i.test(String(e && (e.code || e.message)))) { console.warn("Login anonim gagal", e); throw new Error("Login Anonymous belum aktif (" + (e.code || e.message) + ")"); }
+      const ulang = () => { if (auth.currentUser) return; masuk().catch(() => setTimeout(ulang, 15000)); };
+      addEventListener("online", ulang); setTimeout(ulang, 8000);
+    }
+  }
   const d = fs.initializeFirestore(app, { localCache: fs.persistentLocalCache() });
   APP = app;
   return {

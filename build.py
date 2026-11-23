@@ -29,11 +29,16 @@ json.dump({"name": "MuawanahKu", "short_name": "MuawanahKu", "description": "Apl
               {"src": "icon-maskable-512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}], "id": "./"},
     open("dist/manifest.webmanifest", "w"))
 open("dist/sw.js", "w").write("""// Service worker: utamakan jaringan (selalu versi terbaru), cadangan cache saat offline
-const C = "mk-v4";
+const C = "mk-v5", FB = "mk-firebase-v1";
 self.addEventListener("install", e => { self.skipWaiting(); e.waitUntil(caches.open(C).then(c => c.addAll(["./", "./index.html", "./icon-192.png"]))); });
-self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
+self.addEventListener("activate", e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== C && k !== FB).map(k => caches.delete(k)))).then(() => self.clients.claim())));
 self.addEventListener("fetch", e => {
-  if (e.request.method !== "GET" || new URL(e.request.url).origin !== location.origin) return;
+  const u = new URL(e.request.url);
+  // pustaka Firebase versi tetap (berkas tidak pernah berubah): ambil dari HP dulu, jaringan bila belum ada
+  if (e.request.method === "GET" && u.hostname === "www.gstatic.com" && u.pathname.startsWith("/firebasejs/")) {
+    e.respondWith(caches.open(FB).then(c => c.match(e.request).then(hit => hit || fetch(e.request).then(r => { if (r.ok) c.put(e.request, r.clone()); return r; })))); return;
+  }
+  if (e.request.method !== "GET" || u.origin !== location.origin) return;
   const nav = e.request.mode === "navigate" || /\/(index\.html)?$/.test(new URL(e.request.url).pathname);
   e.respondWith(fetch(nav ? new Request(e.request, { cache: "no-store" }) : e.request).then(r => { const k = r.clone(); caches.open(C).then(c => c.put(e.request, k)); return r; }).catch(() => caches.match(e.request).then(r => r || caches.match("./index.html"))));
 });

@@ -1,7 +1,7 @@
 import { render, Component } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { html, nav, useApp, Icon, ToastHost } from "./ui.js";
-import { S, initStore } from "./store.js";
+import { S, initStore, sambungUlang } from "./store.js";
 import * as L from "./logic.js";
 import * as T from "./s_tahfidz.js";
 import * as A from "./s_asrama.js";
@@ -111,7 +111,10 @@ function App() {
   const key = top ? top.screen + JSON.stringify(top.params) + nav.depth : "tab-" + nav.tab;
   return html`<div class=${"app" + (top ? " sub" : "")}><${SideNav} wali=${wali} /><div class=${"scr dir-" + nav.dir} key=${key}><${Boundary}>${Screen ? html`<${Screen} ...${top ? top.params : {}} />` : null}</${Boundary}></div>
     ${nav.splash ? html`<${Splash} nama=${wali ? "Wali " + L.santriAman(u.id).nama : L.staffAman(u.id).pendek} />` : null}
-    ${!online ? html`<div class="loadpill" role="status" style="color:#A8261C">Tidak ada koneksi. Perubahan dikirim saat online lagi.</div>` : !S.ready ? html`<div class="loadpill" role="status">Menyambungkan data…</div>` : null}${top ? null : html`<${BottomNav} wali=${wali} />`}<${ToastHost} /></div>`;
+    ${S.terputus ? html`<div class="sync-bar" role="alert"><span><b>Belum tersambung ke database pondok.</b> ${S.antrean ? `${S.antrean} input tersimpan sementara di HP, dikirim otomatis saat tersambung.` : "Data yang tampil mungkin belum terbaru."}</span><button type="button" onClick=${() => sambungUlang()} disabled=${S.menyambung}>${S.menyambung ? "Menyambung…" : "Coba lagi"}</button></div>`
+      : !online ? html`<div class="loadpill" role="status" style="color:#A8261C">Tidak ada sinyal. Data yang tampil dari HP; input dikirim saat online lagi.</div>`
+      : !S.ready ? html`<div class="loadpill" role="status">Menyambungkan data…</div>`
+      : S.antrean ? html`<div class="loadpill" role="status">Mengirim ${S.antrean} input tertunda…</div>` : null}${top ? null : html`<${BottomNav} wali=${wali} />`}<${ToastHost} /></div>`;
 }
 // Rasa aplikasi asli: tanpa zoom cubit/ketuk-ganda, efek sentuh (ripple), service worker di hosting sendiri
 try {

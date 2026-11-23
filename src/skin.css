@@ -779,3 +779,7 @@ html.pad-on,html.pad-on body{overscroll-behavior:none}
 .iq-dua{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .iq-chk{display:flex;align-items:center;gap:10px;min-height:44px;font-weight:700;font-size:14px}.iq-chk input{width:22px;height:22px;accent-color:var(--g)}
 .hf-tahsin{position:relative;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.13)}
+
+/* v15: status sambungan database */
+.sync-bar{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 8px);z-index:450;width:calc(100% - 20px);max-width:460px;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 14px;border-radius:14px;background:#7A1E14;color:#fff;font-size:13px;line-height:1.35;box-shadow:0 10px 24px -10px rgba(60,10,5,.6)}
+.sync-bar b{font-weight:800}.sync-bar button{flex:none;min-height:40px;padding:0 14px;border-radius:12px;background:#fff;color:#7A1E14;font-weight:800;font-size:13px}.sync-bar button:disabled{opacity:.6}
