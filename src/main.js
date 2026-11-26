@@ -126,6 +126,22 @@ function App() {
       : !S.ready ? html`<div class="loadpill" role="status">Menyambungkan data…</div>`
       : S.antrean ? html`<div class="loadpill" role="status">Mengirim ${S.antrean} input tertunda…</div>` : null}${top ? null : html`<${BottomNav} wali=${wali} />`}<${ToastHost} /></div>`;
 }
+// iOS (mode aplikasi/PWA): setelah keyboard ditutup, tinggi layar kadang tidak kembali sehingga navigasi bawah
+// (position:fixed) ikut terangkat ke tengah layar. Paksa browser menghitung ulang tata letak setelah keyboard tertutup.
+try {
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (ios) {
+    let tm = 0;
+    const isian = () => { const e = document.activeElement; return !!e && (/^(INPUT|TEXTAREA|SELECT)$/.test(e.tagName) || e.isContentEditable); };
+    const rapikan = () => { clearTimeout(tm); tm = setTimeout(() => { if (isian()) return; const y = window.scrollY; window.scrollTo(window.scrollX, y + 1); window.scrollTo(window.scrollX, y);
+      document.documentElement.style.height = "100.1%"; requestAnimationFrame(() => { document.documentElement.style.height = ""; }); }, 250); };
+    document.addEventListener("focusout", rapikan, true);
+    if (window.visualViewport) window.visualViewport.addEventListener("resize", rapikan);
+    window.addEventListener("orientationchange", rapikan); window.addEventListener("pageshow", rapikan);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) rapikan(); });
+    document.addEventListener("click", e => { if (e.target && e.target.closest && e.target.closest(".bnav")) rapikan(); }, true);
+  }
+} catch (e) { }
 // Rasa aplikasi asli: tanpa zoom cubit/ketuk-ganda, efek sentuh (ripple), service worker di hosting sendiri
 try {
   ["gesturestart", "gesturechange"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
