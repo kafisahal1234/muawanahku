@@ -1,5 +1,5 @@
 import { useState } from "preact/hooks";
-import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, Empty, Field, Seg, Section, Sheet, SearchBox, Confirm, Hint } from "./ui.js";
+import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, Empty, Field, Seg, Section, Sheet, SearchBox, Confirm, Hint, PassInput } from "./ui.js";
 import { S, all, get, put, del, toast, uid } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
@@ -104,7 +104,8 @@ function EditStaff({ e, onClose, onSandi }) {
   const un = (f.username || "").trim().toLowerCase(), saya = !e.baru && e.id === me().id;
   const dupe = L.STAFF.some(s => s.username === un && s.id !== e.id) || L.santriList().some(s => s.wali === un);
   const oldA = e.baru ? null : L.asramaOf(e.id), newA = f.roles.includes("musyrif") ? f.asrama : "";
-  const err = !f.nama.trim() ? "Nama wajib diisi." : !/^[a-z0-9]{3,20}$/.test(un) ? "Username 3–20 huruf kecil/angka tanpa spasi." : dupe ? "Username sudah dipakai." : !f.roles.length ? "Pilih minimal satu peran."
+  const sandiBaru = String(f.sandi || ""), bawaan = L.sandiReset({ ...f, pendek: (f.pendek || "").trim() || f.nama });
+  const err = !f.nama.trim() ? "Nama wajib diisi." : sandiBaru && sandiBaru.length < 6 ? "Kata sandi minimal 6 karakter." : !/^[a-z0-9]{3,20}$/.test(un) ? "Username 3–20 huruf kecil/angka tanpa spasi." : dupe ? "Username sudah dipakai." : !f.roles.length ? "Pilih minimal satu peran."
     : saya && e.roles.includes("admin") && !f.roles.includes("admin") ? "Anda tidak bisa mencabut peran Admin dari akun sendiri." : oldA && newA !== oldA.id && !newA ? `${oldA.nama} akan tanpa wali asrama. Pilih asrama pengganti, atau tetapkan guru lain untuk ${oldA.nama} dulu.` : "";
   const pindah = newA && (!oldA || newA !== oldA.id) ? L.asramaById(newA) : null, ganti = pindah ? L.staffById(pindah.musyrif) : null;
   const save = async () => {
@@ -112,20 +113,20 @@ function EditStaff({ e, onClose, onSandi }) {
     const id = e.baru ? uid("g").toLowerCase() : e.id, rename = !e.baru && un !== e.username;
     const d = { nama: f.nama.trim(), pendek: (f.pendek || "").trim() || f.nama.trim().split(",")[0].split(" ").slice(0, 2).join(" "), username: un, roles: f.roles, ajar: f.roles.includes("guru_mapel") ? f.ajar : [], ...(f.roles.includes("wadir_kesantrian") ? { pondok: f.pondok || "29" } : {}),
     };
-    const pw = e.baru || rename ? L.sandiAcak() : null, lama = { ...((S.data.staffEdit || {})[id] || {}) }; delete lama.password; delete lama.sandiHash;
+    const pw = sandiBaru || (e.baru || rename ? L.sandiReset(d) : null), lama = { ...((S.data.staffEdit || {})[id] || {}) }; delete lama.password; delete lama.sandiHash;
     let ok = await put("staffEdit", id, { ...lama, ...d });
     if (ok && pw) { const ov = { ...(rename ? L.akunOv(e.username) || {} : {}) }; delete ov.email; delete ov.menungguReset; ok = await put("akun", un, { ...ov, hash: await L.sha(un + ":" + pw), diubah: Date.now() }); if (ok && rename) await del("akun", e.username); }
     if (ok && pindah) { const AE = S.data.asramaEdit || {}; await put("asramaEdit", pindah.id, { ...(AE[pindah.id] || {}), musyrif: id }); if (oldA && ganti) await put("asramaEdit", oldA.id, { ...(AE[oldA.id] || {}), musyrif: ganti.id }); }
     setBusy(false);
     if (ok) { logUbah(e.baru ? "tambah" : "ubah", "staffEdit", id, `${e.baru ? "Akun baru" : "Ubah akun"} ${d.nama}${rename ? ` (username ${e.username} → ${un})` : ""}${pindah ? ` · asrama ${pindah.nama}` : ""}`);
-      toast(e.baru ? "Akun dibuat" : rename ? "Disimpan. Username baru, kata sandi direset" : "Data akun disimpan"); if (pw && onSandi) onSandi(un, pw); onClose(); }
+      toast(e.baru ? "Akun dibuat" : sandiBaru ? "Disimpan. Kata sandi baru berlaku" : rename ? "Disimpan. Username baru, kata sandi direset" : "Data akun disimpan"); if (pw && !sandiBaru && onSandi) onSandi(un, pw); onClose(); }
   };
-  const reset = async () => { const pw = L.sandiAcak(), ov = { ...(L.akunOv(e.username) || {}) }; delete ov.email; delete ov.menungguReset; if (!(await put("akun", e.username, { ...ov, hash: await L.sha(e.username + ":" + pw), diubah: Date.now() }))) return; const se = { ...((S.data.staffEdit || {})[e.id] || {}) }; if (se.password) { delete se.password; await put("staffEdit", e.id, se); } logUbah("ubah", "akun", e.username, `Reset sandi ${e.nama}`); toast("Kata sandi direset"); if (onSandi) onSandi(e.username, pw); onClose(); };
+  const reset = async () => { const pw = L.sandiReset(e), ov = { ...(L.akunOv(e.username) || {}) }; delete ov.email; delete ov.menungguReset; if (!(await put("akun", e.username, { ...ov, hash: await L.sha(e.username + ":" + pw), diubah: Date.now() }))) return; const se = { ...((S.data.staffEdit || {})[e.id] || {}) }; if (se.password) { delete se.password; await put("staffEdit", e.id, se); } logUbah("ubah", "akun", e.username, `Reset sandi ${e.nama}`); toast("Kata sandi direset"); if (onSandi) onSandi(e.username, pw); onClose(); };
   return html`<${Sheet} open=${true} title=${e.baru ? "Tambah akun guru" : "Ubah akun guru"} onClose=${onClose}>
     <${Field} label="Nama lengkap dengan gelar"><input class="in" value=${f.nama} placeholder="Ust. Nama Lengkap, S.Pd" onInput=${x => set("nama", x.target.value)} /></${Field}>
     <div class="btn-row"><${Field} label="Nama panggilan"><input class="in" value=${f.pendek} placeholder="Ust. Nama" onInput=${x => set("pendek", x.target.value)} /></${Field}>
       <${Field} label="Username"><input class="in" autocapitalize="none" value=${f.username} onInput=${x => set("username", x.target.value.toLowerCase().replace(/\s/g, ""))} /></${Field}></div>
-    ${!e.baru && un !== e.username ? html`<p class="small" style="margin-top:-6px">Username berubah: kata sandi akan direset ke sandi acak baru.</p>` : null}
+    <${Field} label=${e.baru ? "Kata sandi" : "Kata sandi baru"} hint=${e.baru ? `Kosongkan untuk memakai sandi bawaan: ${bawaan}` : un !== e.username ? `Username berubah: bila dikosongkan, sandi menjadi ${bawaan}` : "Kosongkan bila tidak diganti"}><${PassInput} value=${f.sandi || ""} autocomplete="new-password" placeholder=${e.baru ? bawaan : "tidak diganti"} onInput=${x => set("sandi", x.target.value)} /></${Field}>
     <${Field} label="Peran"><div class="chips">${PERAN.map(r => html`<button type="button" class=${"pill " + (f.roles.includes(r) ? "green" : "muted")} style="min-height:36px;padding:0 12px" aria-pressed=${f.roles.includes(r)} onClick=${() => togR(r)}>${f.roles.includes(r) ? "✓ " : ""}${L.ROLE_LABEL[r]}</button>`)}</div></${Field}>
     ${f.roles.includes("wadir_kesantrian") ? html`<${Field} label="Wadir kesantrian untuk"><${Seg} small items=${[["29", "Pondok 29"], ["21", "Pondok 21"]]} value=${f.pondok || "29"} onChange=${v => set("pondok", v)} /></${Field}>` : null}
     ${f.roles.includes("musyrif") ? html`<${Field} label="Asrama binaan (wali asrama)"><select class="in" value=${f.asrama} onChange=${x => set("asrama", x.target.value)}><option value="">— belum ada —</option>

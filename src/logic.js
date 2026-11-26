@@ -83,6 +83,8 @@ export const akunOv = u => (S.data.akun || {})[u] || null;
 // Kata sandi tidak pernah disimpan apa adanya: yang disimpan hanya sidik acak (hash). Akun tanpa hash tidak bisa masuk.
 // st = data akun (memakai st.sandiHash bawaan bila belum ada hash di database) atau string sandi bawaan lama.
 export async function cekSandi(u, p, st) { const ov = akunOv(u), h = ov && ov.hash ? ov.hash : st && typeof st === "object" ? st.sandiHash : null; if (h) return (await sha(u + ":" + p)) === h; return typeof st === "string" && !!st && p === st; }
+// Sandi bawaan saat Admin mereset: nama panggilan (tanpa gelar Ust./Miss) + 123, contoh Ust. Kafi → kafi123
+export const sandiReset = st => { const w = String((st && (st.pendek || st.nama)) || "").replace(/^\s*(ust(adz|adzah|dzh|dz)?|ustazah|miss|mr|mrs|bu|pak)\.?\s+/i, "").trim().split(/\s+/)[0]; return (hurufKode(w) || (st && st.username) || "guru") + "123"; };
 export const sandiAcak = () => { const a = "abcdefghjkmnpqrstuvwxyz", b = new Uint32Array(8); crypto.getRandomValues(b); return [...b].map((x, i) => (i < 4 ? a[x % a.length] : String(x % 10))).join(""); };
 // hasil: {kind,id} | {err}
 // Akun guru/pengurus: username + kata sandi. Akun yang dihapus Admin tidak bisa masuk.
