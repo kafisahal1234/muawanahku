@@ -8,6 +8,8 @@ import os, shutil
 os.makedirs("dist/vendor", exist_ok=True)
 r2 = subprocess.run(["npx", "esbuild", "src/pdfkit_entry.js", "--bundle", "--format=iife", "--minify", "--target=es2019", "--external:canvg", "--external:dompurify", "--external:html2canvas", "--outfile=dist/vendor/pdfkit.js"], capture_output=True, text=True)
 if r2.returncode: print(r2.stderr); raise SystemExit(1)
+r3 = subprocess.run(["npx", "esbuild", "src/docx_entry.js", "--bundle", "--format=iife", "--minify", "--target=es2019", "--outfile=dist/vendor/docxkit.js"], capture_output=True, text=True)
+if r3.returncode: print(r3.stderr); raise SystemExit(1)
 for src, dst in [("vendor/pdf.min.mjs", "pdf.min.mjs"), ("vendor/pdf.worker.min.mjs", "pdf.worker.min.mjs"), ("vendor/mammoth.browser.min.js", "mammoth.browser.min.js"), ("vendor/xlsx.mjs", "xlsx.mjs")]:
     shutil.copy(src, "dist/vendor/" + dst)
 try:  # Mode Gelap: dibuat ulang otomatis bila tinycss2 tersedia; bila tidak, pakai src/dark.css yang tersimpan

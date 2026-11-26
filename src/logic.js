@@ -393,7 +393,7 @@ export function kehadiranHalaqah(sid, rg = rgSemester()) {
   const s = santriById(sid), c = { H: 0, S: 0, I: 0, A: 0 }, hari = hariAktifDalam(rg, "halaqah");
   let sesi = 0, terisi = 0;
   hari.forEach(t => sesiHari(t).forEach(se => { sesi++; const d = s && get("absenHalaqah", halaqahKey(s.halaqah, t, se)); const v = d && d.status && d.status[sid]; if (v && c[v] != null) { c[v]++; terisi++; } }));
-  return { ...c, tot: terisi, sesi, kosong: sesi - terisi, hari: hari.length, pct: pct(c.H, sesi) };
+  return { ...c, tot: terisi, sesi, kosong: sesi - terisi, hari: hari.length, pct: terisi ? pct(c.H, terisi) : null };
 }
 // kinerja input guru tahfidz: sesi halaqah yang diabsen / sesi aktif
 export function kinerjaHalaqah(hid, rg) {
@@ -434,7 +434,8 @@ export function kehadiranKelas(sid, mapel, rg = rgSemester()) {
   const c = { H: 0, S: 0, I: 0, A: 0 }; let sesi = 0, terisi = 0;
   hariAktifDalam(rg, "kbm").forEach(t => jadwalHari(t).filter(j => j.kelas === s.kelas && (!mapel || j.mapel === mapel)).forEach(j => {
     sesi++; const d = get("absenKelas", absenKelasKey(j.id, t)), v = d && d.status && d.status[sid]; if (v && c[v] != null) { c[v]++; terisi++; } }));
-  return { ...c, tot: terisi, sesi, kosong: sesi - terisi, pct: pct(c.H, sesi) };
+  // hanya pertemuan yang absennya terisi yang dihitung (absen kosong ≠ alpa)
+  return { ...c, tot: terisi, sesi, kosong: sesi - terisi, pct: terisi ? pct(c.H, terisi) : null };
 }
 // kinerja guru mapel: pertemuan terlaksana (absen) & jurnal / jadwal pada hari aktif KBM
 export function kinerjaMapel(guruId, rg, kelas) {
@@ -504,7 +505,7 @@ export function mutPersen(sid, rg = rgSemester()) {
   const { semua, dinilai: hari } = hariMutSantri(sid, rg); if (!hari.length) return { ibadah: null, adab: null, hari: 0, isi: 0, kosong: 0, dikecualikan: semua.length, menyusul: 0 };
   let ib = 0, ad = 0, isi = 0, menyusul = 0;
   hari.forEach(t => { const d = get("mutabaah", mutKey(sid, t)); if (d) { isi++; if (d.menyusul) menyusul++; ib += (d.ibadah || []).length; ad += (d.adab || []).length; } });
-  return { ibadah: pct(ib, hari.length * DATA.ibadah.length), adab: pct(ad, hari.length * DATA.adab.length), hari: hari.length, isi, kosong: hari.length - isi, dikecualikan: semua.length - hari.length, menyusul };
+  return { ibadah: isi ? pct(ib, isi * DATA.ibadah.length) : null, adab: isi ? pct(ad, isi * DATA.adab.length) : null, hari: hari.length, isi, kosong: hari.length - isi, dikecualikan: semua.length - hari.length, menyusul };
 }
 export function predikatMut(v) {
   if (v == null || isNaN(v)) return { h: "—", t: "Belum ada data", c: "muted" };
@@ -514,9 +515,10 @@ export function predikatMut(v) {
   return { h: "D", t: "Perlu bimbingan", c: "red" };
 }
 export function mutPerButir(sid, rg = rgSemester()) {
-  const hari = hariMutSantri(sid, rg).dinilai, n = hari.length, docs = hari.map(t => get("mutabaah", mutKey(sid, t))).filter(Boolean);
+  // nilai dihitung dari hari yang mutaba'ahnya terisi saja (hari kosong tidak menurunkan nilai)
+  const hari = hariMutSantri(sid, rg).dinilai, docs = hari.map(t => get("mutabaah", mutKey(sid, t))).filter(Boolean), n = docs.length;
   const f = (key, len) => Array.from({ length: len }, (_, i) => (n ? Math.round((docs.filter(d => (d[key] || []).includes(i)).length / n) * 100) : null));
-  return { hari: n, isi: docs.length, ibadah: f("ibadah", DATA.ibadah.length), adab: f("adab", DATA.adab.length) };
+  return { hari: hari.length, isi: docs.length, ibadah: f("ibadah", DATA.ibadah.length), adab: f("adab", DATA.adab.length) };
 }
 // MOTD: waktu yang diabsen / (hari aktif × 8 waktu)
 export function kinerjaMotd(aid, rg) {

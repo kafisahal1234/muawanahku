@@ -1,6 +1,7 @@
 // Rapor persis mengikuti Format_Rapor_MuawanahQu (4 halaman A4: kop, A Tahfidz, B Mapel, C Mutaba'ah, D–E catatan, tanda tangan)
 import { useState, useEffect, useRef } from "preact/hooks";
 import { unduhPdf, htmlKePdf } from "./pdf.js";
+import { unduhWord, htmlKeDocx } from "./word.js";
 import { html, nav, useApp, Icon, Card, SubHeader, Btn, Field, Seg, Hint } from "./ui.js";
 import { get, put, toast } from "./store.js";
 import { DATA } from "./data.js";
@@ -90,7 +91,7 @@ export function raporHTML(sid, periode) {
   const mt = (items, pcts) => { const half = Math.ceil(items.length / 2); let b = "";
     for (let r = 0; r < half; r++) b += `<tr class="${r % 2 ? "qz" : ""}">` + [r, r + half].map(i => items[i] ? `<td class="qc qs">${i + 1}</td><td class="qs">${esc(items[i])}</td><td class="qc qv">${pcts[i] == null ? "" : L.predikatMut(pcts[i]).h}</td>` : "<td></td><td></td><td></td>").join("") + "</tr>";
     return `<table><colgroup>${"<col style='width:27px'><col style='width:240px'><col style='width:39px'>".repeat(2)}</colgroup><tr>${"<th>No</th><th>Poin</th><th>Nilai</th>".repeat(2)}</tr>${b}</table>`; };
-  const p3 = `<div class="rp-page">${head}<div class="qsec" style="margin-top:0">C. MUTABA'AH IBADAH DAN ADAB</div><p class="qnote">Nilai (A–D) dihitung otomatis dari persentase pelaksanaan selama satu semester${mb.hari ? ` (${mb.hari} hari aktif, ${mb.isi} hari diinput)` : ""}.</p>
+  const p3 = `<div class="rp-page">${head}<div class="qsec" style="margin-top:0">C. MUTABA'AH IBADAH DAN ADAB</div><p class="qnote">Nilai (A–D) dihitung otomatis dari persentase pelaksanaan pada hari yang mutaba'ahnya terisi${mb.isi ? ` (${mb.isi} hari terisi)` : ""}.</p>
     <div class="qlbl" style="margin-top:2px">Ibadah</div>${mt(DATA.ibadah, mb.ibadah)}<div class="qlbl" style="margin-top:14px">Adab</div>${mt(DATA.adab, mb.adab)}${foot}</div>`;
   // ---------- halaman 4: catatan & tanda tangan ----------
   const tgl = new Date(), tg = `${tgl.getDate()} ${["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][tgl.getMonth()]} ${tgl.getFullYear()}`;
@@ -169,6 +170,8 @@ export function RaporView({ sid }) {
         <button class="link" onClick=${() => setZoom(!zoom)}>${zoom ? "Muat ke layar" : "Perbesar"}</button></div>
       <div style=${`overflow:${zoom ? "auto" : "hidden"};margin:0 -16px;padding:0 16px`}>
         <div style=${`width:${794 * k}px;height:${(1123 + 16) * hal * k}px`}><div class="rp" style=${`width:794px;transform:scale(${k});transform-origin:0 0`} dangerouslySetInnerHTML=${{ __html: periode === "mid" ? raporMidHTML(sid) : raporHTML(sid, periode) }}></div></div></div>
-      <div class="sticky-act"><${Btn} icon="download" onClick=${() => unduhPdf(`Rapor ${s.nama} ${periode === "mid" ? "Tengah Semester" : "Semester Ganjil"}`, () => htmlKePdf(raporDoc(sid, periode), ".rp-page"))}>Unduh rapor (PDF)</${Btn}></div>
+      <div class="sticky-act"><div class="btn-row"><${Btn} icon="download" onClick=${() => unduhPdf(`Rapor ${s.nama} ${periode === "mid" ? "Tengah Semester" : "Semester Ganjil"}`, () => htmlKePdf(raporDoc(sid, periode), ".rp-page"))}>Unduh PDF</${Btn}>
+        <${Btn} kind="outline" icon="file" onClick=${() => unduhWord(`Rapor ${s.nama} ${periode === "mid" ? "Tengah Semester" : "Semester Ganjil"}`, () => htmlKeDocx(raporDoc(sid, periode), ".rp-page"))}>Unduh Word</${Btn}></div></div>
+      <p class="fab-note" style="margin-bottom:0">PDF untuk dicetak langsung. Word bisa diedit (misalnya memperbaiki nilai) sebelum dicetak.</p>
       <p class="fab-note">Rapor tidak tampil di akun wali santri.</p></div>`;
 }

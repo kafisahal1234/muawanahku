@@ -120,17 +120,18 @@ export async function tabelKePdf({ judul, sub, catatan, bagian, oleh, ttd }) {
 
 // Simpan file ke perangkat: unduhan biasa; di iPhone/iPad (aplikasi terpasang) memakai menu Bagikan → Simpan ke File
 export async function simpanFile(nama, blob) {
+  const word = /\.docx$/i.test(nama), jenis = word ? "File Word" : "PDF", mime = word ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : "application/pdf";
   const d = await getDownloads();
-  if (d) { try { await d.save({ filename: nama, data: blob }); toast("PDF diunduh."); return; } catch (e) { if (e && e.code === "declined") return; } }
+  if (d) { try { await d.save({ filename: nama, data: blob }); toast(`${jenis} diunduh.`); return; } catch (e) { if (e && e.code === "declined") return; } }
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  const file = typeof File === "function" ? new File([blob], nama, { type: "application/pdf" }) : null;
+  const file = typeof File === "function" ? new File([blob], nama, { type: mime }) : null;
   if (ios && file && navigator.canShare && navigator.canShare({ files: [file] })) {
     try { await navigator.share({ files: [file], title: nama }); return; } catch (e) { if (e && e.name === "AbortError") return; }
   }
   try {
     const url = URL.createObjectURL(blob), a = document.createElement("a");
     a.href = url; a.download = nama; a.rel = "noopener"; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60000); toast("PDF diunduh. Cek folder Unduhan.");
+    setTimeout(() => URL.revokeObjectURL(url), 60000); toast(`${jenis} diunduh. Cek folder Unduhan.`);
   } catch (e) { toast("File tidak bisa diunduh di perangkat ini.", "err"); }
 }
 // Satu pintu: siapkan PDF lalu simpan, dengan pesan proses
