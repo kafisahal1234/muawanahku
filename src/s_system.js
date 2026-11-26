@@ -9,7 +9,11 @@ import { APP_LOGO } from "./logo_app.js";
 import * as L from "./logic.js";
 import { me, has } from "./common.js";
 
-export const VERSI = "1.0.0 (" + (typeof __BUILD__ !== "undefined" ? __BUILD__ : "dev") + ")";
+// Versi aplikasi: naikkan angka belakang untuk pembaruan biasa (v1.5 → v1.6), angka depan untuk perubahan besar (v2.0)
+export const VERSI = "v1.5";
+const BUILD = typeof __BUILD__ !== "undefined" ? __BUILD__ : "";
+// tanggal pembaruan dari kode build (DDMMYY.HHMM) → "27 Nov 2026"; dipakai untuk memastikan aplikasi sudah versi terbaru
+export const TGL_PEMBARUAN = (() => { const m = /^(\d{2})(\d{2})(\d{2})\.(\d{2})(\d{2})$/.exec(BUILD); if (!m) return ""; const bl = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"][+m[2] - 1]; return `${+m[1]} ${bl} 20${m[3]}, ${m[4]}.${m[5]}`; })();
 
 // ---------- unduhan ----------
 let dlp = null;
@@ -156,10 +160,9 @@ function bukaWa(e, no, teks) {
   location.href = `whatsapp://send?phone=${d}&text=${encodeURIComponent(teks)}`;
   setTimeout(() => { document.removeEventListener("visibilitychange", f); if (!pergi) window.open(L.waLink(no, teks), "_blank", "noopener"); }, 1600);
 }
-const PIMPINAN = ["admin", "mudir", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian"];
 function KontakAdmin() {
   useApp();
-  const m = me(), bisaAtur = !!m && m.roles.some(r => PIMPINAN.includes(r)), st = L.setelan(), no = st.waPondok, ikon = st.waIkon, [ed, setEd] = useState(false), [v, setV] = useState(""), [ik, setIk] = useState(null);
+  const m = me(), bisaAtur = !!m && m.roles.includes("admin"), st = L.setelan(), no = st.waPondok, ikon = st.waIkon, [ed, setEd] = useState(false), [v, setV] = useState(""), [ik, setIk] = useState(null);
   const siapa = m ? `${m.nama} (${m.roles.map(r => L.ROLE_LABEL[r]).join(", ")})` : nav.user && nav.user.kind === "wali" ? `wali dari ${L.santriAman(nav.user.id).nama}` : "";
   const teks = `Assalamu'alaikum, ${TIM_IT.label} MuawanahQu. Saya ${siapa} ingin bertanya tentang aplikasi MuawanahQu: `, link = L.waLink(no, teks);
   const buka = () => { setV(no ? "0" + L.waNomor(no).slice(2) : ""); setIk(ikon || null); setEd(true); };
@@ -198,7 +201,7 @@ export function Bantuan() {
 export function Tentang() {
   return html`<${SubHeader} title="Tentang aplikasi" />
     <div class="wrap"><${Card}><div class="center" style="padding:8px 0 4px"><img src=${APP_LOGO} alt="Logo MuawanahQu" style="width:96px;height:72px;object-fit:contain" />
-      <h3 style="margin:8px 0 2px;font-size:18px">Muawanah<span style="color:#E2A93B">Qu</span></h3><p class="small" style="margin:0">Versi ${VERSI}</p></div>
+      <h3 style="margin:8px 0 2px;font-size:18px">Muawanah<span style="color:#E2A93B">Qu</span></h3><p class="small" style="margin:0">Versi ${VERSI}${TGL_PEMBARUAN ? html`<br />Diperbarui ${TGL_PEMBARUAN} WIB` : null}</p></div>
       <div class="kv mt12"><span>Pemilik</span><b>Kampung Qur'an Al Muawanah</b></div><div class="kv"><span>Dikembangkan oleh</span><b style="text-align:right">${TIM_IT.label}<br /><span style="font-weight:500">${TIM_IT.nama}</span></b></div>
       <div class="kv"><span>Penyimpanan data</span><b>${S.mode === "db" ? "Tersinkron antarperangkat" : "Perangkat ini"}</b></div></${Card}>
     <p class="fab-note">© 2026 Kampung Qur'an Al Muawanah</p></div>`;
