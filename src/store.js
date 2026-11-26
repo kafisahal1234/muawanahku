@@ -1,7 +1,7 @@
 // Penyimpanan: db bersama Claude (artifact) → Firebase (bila dikonfigurasi) → localStorage browser.
 import { FIREBASE_CONFIG, connectFirestore } from "./cloud.js";
 export const COLS = ["setoran", "absenHalaqah", "motd", "mutabaah", "izin", "bap", "absenKelas", "nilaiMapel", "nilaiTahfidz",
-  "jadwal", "izinGuru", "pengumuman", "dataAwal", "santriEdit", "target", "akun", "hapusAkun", "raporCatatan", "kalender", "log", "staffEdit", "asramaEdit", "halaqahEdit", "profil", "ttd", "tahsin", "tahsinAwal", "mutLibur"];
+  "jadwal", "izinGuru", "pengumuman", "dataAwal", "santriEdit", "target", "akun", "hapusAkun", "raporCatatan", "kalender", "log", "staffEdit", "asramaEdit", "halaqahEdit", "profil", "ttd", "tahsin", "tahsinAwal", "mutLibur", "khidmah"];
 const LSKEY = "muawanahku_demo_v1";
 export const S = { ready: false, mode: "local", note: "", data: {}, ver: 0, readonly: false };
 COLS.forEach(c => (S.data[c] = {}));

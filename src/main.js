@@ -23,6 +23,7 @@ import * as AS from "./s_asisten.js";
 import * as HB from "./s_hafalanbulan.js";
 import * as TT from "./s_ttd.js";
 import * as TS from "./s_tahsin.js";
+import * as KH from "./s_khidmah.js";
 import { me } from "./common.js";
 import { LOGO } from "./data.js";
 import { FotoAv, fotoUser } from "./common.js";
@@ -33,7 +34,7 @@ import { all } from "./store.js";
 const SCREENS = {
   tahfidz: T.Tahfidz, absenHalaqah: T.AbsenHalaqah, setorList: T.SetorList, ziyadah: T.Ziyadah, murojaah: T.Murojaah, manzilList: T.ManzilList, manzil: T.Manzil,
   tasmiList: T.TasmiList, tasmi: T.Tasmi, ujianList: T.UjianList, ujian: T.Ujian, progres: T.Progres, izinGuru: T.IzinGuru,
-  motd: A.Motd, mutabaah: A.Mutabaah, izinCatatan: A.IzinCatatan, asramaSaya: A.AsramaSaya, hafalanBulan: HB.RekapHafalanBulan, tandaTangan: TT.TandaTangan, tahsinList: TS.TahsinList, tahsin: TS.Tahsin, rekapTahsin: TS.RekapTahsin,
+  motd: A.Motd, mutabaah: A.Mutabaah, izinCatatan: A.IzinCatatan, asramaSaya: A.AsramaSaya, khidmah: KH.Khidmah, khidmahRiwayat: KH.KhidmahRiwayat, rekapKhidmah: KH.RekapKhidmah, hafalanBulan: HB.RekapHafalanBulan, tandaTangan: TT.TandaTangan, tahsinList: TS.TahsinList, tahsin: TS.Tahsin, rekapTahsin: TS.RekapTahsin,
   mapel: M.Mapel, absenKelasPilih: M.AbsenKelasPilih, absenKelas: M.AbsenKelas, nilaiPilih: M.NilaiPilih, nilaiMapel: M.NilaiMapel, rekapKelasPilih: M.RekapKelasPilih, rekapKelas: M.RekapKelas,
   kurikulum: K.Kurikulum, jamPelajaran: K.JamPelajaran, jadwal: K.Jadwal, pengampu: K.Pengampu, kinerjaGuru: K.KinerjaGuru, rekapKehadiran: K.RekapKehadiran, rekapNilai: K.RekapNilai, rekapIzinGuru: K.RekapIzinGuru,
   kesantrian: KS.Kesantrian, suratIzin: KS.SuratIzin, izinView: KS.IzinView, catatKembali: KS.CatatKembali, formBap: KS.FormBap, bapView: KS.BapView, surat: KS.SuratView, histori: KS.Histori, rekapIzin: KS.RekapIzin, rekapPelanggaran: KS.RekapPelanggaran, rekapMotd: KS.RekapMotd,

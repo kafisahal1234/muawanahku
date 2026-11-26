@@ -833,3 +833,17 @@ html.pad-on,html.pad-on body{overscroll-behavior:none}
 .rx-pj{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #EEF2EF}.rx-pj:last-child{border:0}.rx-pj b{display:block;font-size:14px}.rx-pj small{font-size:12px;color:#6B7D72}
 .rx-mapel{overflow-x:auto}.rx-mapel button{flex:none;padding:0 12px}
 @media (max-width:360px){.rx-k,.rx-grp .rx-m{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* v17: Khidmah Harian (ceklis musyrif) */
+.kh-hero{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#0B6B3F,#0E8F52);color:#fff;border-radius:20px;padding:16px;margin:0 0 12px;box-shadow:0 8px 20px rgba(14,143,82,.22)}
+.kh-hero>div:last-child{display:flex;flex-direction:column;gap:3px}.kh-hero b{font-size:15.5px}.kh-hero small{font-size:12.5px;color:rgba(255,255,255,.85)}
+.kh-ring{--p:0;flex:none;width:66px;height:66px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#F2BE4E calc(var(--p)*1%),rgba(255,255,255,.2) 0)}
+.kh-ring b{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:#0C7A47;font-size:15px!important}
+.kh-ket{display:block;font-size:12px;color:var(--mut);font-weight:600;margin-top:2px}
+.check.on .kh-ket{color:inherit;opacity:.8}
+.kh-multi{border-bottom:1px solid #EEF2EF;padding-bottom:8px;margin-bottom:4px}.kh-multi .check{border-bottom:0}
+.kh-chips{display:flex;flex-wrap:wrap;gap:7px;padding:0 0 4px 36px}
+.kh-chips button{min-height:36px;padding:0 12px;border-radius:999px;background:#F1F5F2;color:#33503F;font-weight:700;font-size:12.5px;border:1px solid #DCE7E0}
+.kh-chips button.on{background:#0E8F52;color:#fff;border-color:#0E8F52}
+.kh-chips button.auto.on{background:#E3F3EA;color:#0B6B3F;border-color:#9FD3B6}
+.kh-chips button:disabled:not(.on){opacity:.6}
+.check.auto:not(.on) .box{background:#F1F4F2!important;border:2px dashed #B8C7BE!important}

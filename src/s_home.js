@@ -4,6 +4,7 @@ import { fbSiap, fbLupa, pesanAuth } from "./cloud.js";
 import { S, all, get, resetAll, toast } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
+import * as KH from "./s_khidmah.js";
 import { kumpulRiwayat, entriRiwayat, KoreksiSheet } from "./s_koreksi.js";
 import { me, FotoAv, FotoLihat, fotoUser } from "./common.js";
 import { HafalanCard, RiwayatSetoran, KehadiranCard, CatatanCard } from "./s_santri.js";
@@ -107,6 +108,7 @@ function tilesFor(st) {
   }
   if (r.includes("musyrif") && a) {
     add("checksq", "Mutaba'ah", "teal", () => nav.go("mutabaah"));
+    add("clipboard", "Khidmah Harian", "emerald", () => nav.go("khidmah"), (() => { const k = KH.hasilKhidmah(st.id, L.today()); return L.hariAktif(L.today(), "asrama") && k.pct < 100 ? k.units.length - k.selesai.size : null; })());
     const ids = new Set(L.santriAsrama(a.id).map(s => s.id));
     add("home", "Asrama Saya", "coral", () => nav.go("asramaSaya"), (!r.includes("wadir_kesantrian") && L.izinAktif().filter(i => ids.has(i.santri)).length) || null);
     add("award", "Rapor", "gold", () => nav.go("raporList"));

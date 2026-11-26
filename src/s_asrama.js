@@ -159,6 +159,7 @@ export function AsramaSaya() {
       <${Card} title="Menu Asrama"><div class="tiles">
         <${Tile} icon="moon" label="Absen MOTD" color="indigo" onClick=${() => nav.go("motd")} />
         <${Tile} icon="checksq" label="Mutaba'ah" color="teal" onClick=${() => nav.go("mutabaah")} />
+        <${Tile} icon="clipboard" label="Khidmah Harian" color="emerald" onClick=${() => nav.go("khidmah")} />
         ${!m.roles.includes("wadir_kesantrian") ? html`<${Tile} icon="door" label="Izin & Catatan" color="coral" badge=${izin || null} onClick=${() => nav.go("izinCatatan")} />` : null}
         <${Tile} icon="chart" label="Rekap Asrama" color="purple" onClick=${() => nav.go("rekapAsrama")} />
         <${Tile} icon="calendar" label="Perolehan Hafalan" color="pink" onClick=${() => nav.go("hafalanBulan")} />
