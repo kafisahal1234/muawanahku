@@ -14,6 +14,7 @@ import { KartuAI, ringkasWali } from "./s_ai.js";
 import { KartuAsisten } from "./s_asisten.js";
 import { Ikon, WARNA } from "./ikon.js";
 import { LOGO } from "./data.js";
+import { APP_LOGO } from "./logo_app.js";
 import { aiAda } from "./ai.js";
 import { TahsinCard, JalurIqra } from "./s_tahsin.js";
 const PrivasiIsi = () => html`<div class="prose"><p>Data dipakai hanya untuk administrasi pendidikan pondok: hafalan, absensi, nilai, perizinan, dan pembinaan santri. Data tidak dijual, tidak untuk iklan, dan tidak dibagikan ke pihak luar. Setiap pengguna hanya melihat data sesuai perannya; wali hanya melihat anaknya sendiri. Kebijakan lengkap ada di menu Akun setelah masuk.</p></div>`;
@@ -62,7 +63,7 @@ export function Login() {
     LOCK.fails = 0; setErr(""); nav.setUser(r, { splash: true });
   };
   const walis = L.santriList().filter(s => s.nama.toLowerCase().includes(q.toLowerCase()) || s.wali.includes(q.toLowerCase())).slice(0, 40);
-  return html`<div class="login"><div class="lg"><${Logo} s=${92} /><h1>Muawanah<i>Qu</i></h1><p>Pondok Tahfidz Modern Kampung Qur'an Al Muawanah</p></div>
+  return html`<div class="login"><div class="lg"><${Logo} s=${150} /><h1 class="sr-only">MuawanahQu</h1><p>Pondok Tahfidz Modern Kampung Qur'an Al Muawanah</p></div>
     <form class="card" onSubmit=${e => { e.preventDefault(); mode === "wali" ? masukWali() : masuk(); }}>
       <${Seg} items=${[["staff", "Ustadz / Staf"], ["wali", "Wali Santri"]]} value=${mode} onChange=${m => { setMode(m); setErr(""); setU(""); setP(""); }} />
       ${mode === "wali" ? html`<div class="mt12"><${Field} label="Kode akses" hint="Nama panggilan santri + tanggal lahir (tanggal, bulan, tahun). Contoh: adiyatma15082011">
@@ -170,7 +171,7 @@ function tasksFor(st) {
 
 // ---------- kepala beranda (gaya aplikasi: header solid, kartu ringkasan menimpa header) ----------
 function HomeTop({ nama, sub, bell, foto, children, cls }) {
-  return html`<header class="ht"><div class="ht-row"><span class="ht-logo"><img src=${LOGO} alt="Logo Kampung Qur'an Al Muawanah" /></span>
+  return html`<header class="ht"><div class="ht-row"><span class="ht-logo applogo"><img src=${APP_LOGO} alt="Logo MuawanahQu" /></span>
       <div class="ht-hi"><small>Assalamu'alaikum,</small><b>${nama}</b></div>
       <button class="ht-btn ab-btn" aria-label=${bell ? `Pengumuman, ${bell} baru` : "Pengumuman"} onClick=${() => nav.go("pengumuman")}><${Icon} n="bell" s=${23} w=${2.2} />${bell ? html`<b>${bell}</b>` : null}</button>
       ${aiAda() ? html`<button class="ht-btn ab-btn ab-ai" aria-label="Asisten AI" onClick=${() => nav.go("asisten")}><${Icon} n="chat" s=${23} w=${2.2} /></button>` : null}

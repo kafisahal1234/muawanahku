@@ -849,3 +849,11 @@ html.pad-on,html.pad-on body{overscroll-behavior:none}
 .check.auto:not(.on) .box{background:#F1F4F2!important;border:2px dashed #B8C7BE!important}
 .rx-target{display:flex;align-items:center;gap:8px;background:#FFF7E6;border:1px solid #F2D79B;border-radius:12px;padding:8px 10px;margin:0 0 10px;color:#6B4A00;font-size:12.5px;font-weight:600}
 .rx-target span{flex:1}.rx-target b{color:#8A5A00;font-weight:900}.rx-target em{flex:none;font-style:normal;font-weight:800;color:#0B7A45}
+
+/* v19: logo aplikasi MuawanahQu (sudah berbingkai sendiri) */
+.applogo{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;overflow:visible!important;border-radius:0!important}
+.applogo img{width:100%!important;height:100%!important;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,.22))}
+.ht-logo.applogo{width:48px;height:48px}
+.sp-logo.applogo{width:120px;height:120px}
+.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.login .lg .applogo{margin-bottom:14px}

@@ -4,6 +4,7 @@ import { html, nav, useApp, Icon, Card, SubHeader, Row, Pill, Btn, Empty, Field,
 import { fbSiap, fbUbahSandi, pesanAuth, salahSandi } from "./cloud.js";
 import { S, all, get, put, toast, uid } from "./store.js";
 import { LOGO } from "./data.js";
+import { APP_LOGO } from "./logo_app.js";
 import * as L from "./logic.js";
 import { me, has } from "./common.js";
 
@@ -195,7 +196,7 @@ export function Bantuan() {
 
 export function Tentang() {
   return html`<${SubHeader} title="Tentang aplikasi" />
-    <div class="wrap"><${Card}><div class="center" style="padding:8px 0 4px"><img src=${LOGO} alt="Logo MuawanahQu" style="width:72px;height:72px;object-fit:contain" />
+    <div class="wrap"><${Card}><div class="center" style="padding:8px 0 4px"><img src=${APP_LOGO} alt="Logo MuawanahQu" style="width:96px;height:72px;object-fit:contain" />
       <h3 style="margin:8px 0 2px;font-size:18px">Muawanah<span style="color:#E2A93B">Qu</span></h3><p class="small" style="margin:0">Versi ${VERSI}</p></div>
       <div class="kv mt12"><span>Pemilik</span><b>Kampung Qur'an Al Muawanah</b></div><div class="kv"><span>Pengembang</span><b>Tim IT pondok</b></div>
       <div class="kv"><span>Penyimpanan data</span><b>${S.mode === "db" ? "Tersinkron antarperangkat" : "Perangkat ini"}</b></div></${Card}>

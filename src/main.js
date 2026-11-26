@@ -26,6 +26,7 @@ import * as TS from "./s_tahsin.js";
 import * as KH from "./s_khidmah.js";
 import { me } from "./common.js";
 import { LOGO } from "./data.js";
+import { APP_LOGO } from "./logo_app.js";
 import { FotoAv, fotoUser } from "./common.js";
 import { aiAda } from "./ai.js";
 import { LOGO as LOGO2 } from "./data.js";
@@ -71,7 +72,7 @@ function SideNav({ wali }) {
     : [["home", "Beranda", "home"], ["jadwal", "Jadwal", "calendar"], ["cari", "Cari santri", "search"], ["riwayat", "Riwayat", "clock"], ["akun", "Akun", "user"]];
   const baru = all("pengumuman").filter(p => Date.now() - p.ts < 7 * 864e5).length, aktif = !nav.top;
   return html`<aside class="side" aria-label="Navigasi">
-    <div class="side-brand"><span class="ht-logo"><img src=${LOGO2} alt="" /></span><div><b>Muawanah<i>Qu</i></b><small>Kampung Qur'an Al Muawanah</small></div></div>
+    <div class="side-brand"><span class="ht-logo applogo"><img src=${APP_LOGO} alt="" /></span><div><b>Muawanah<i>Qu</i></b><small>Kampung Qur'an Al Muawanah</small></div></div>
     <button class="side-user" onClick=${() => nav.setTab("akun")}><${FotoAv} src=${fotoUser(u)} nama=${nama} size=${44} /><span><b>${nama}</b><small>${peran}</small></span></button>
     <nav class="side-nav">${items.map(([k, lab, ic]) => html`<button class=${aktif && nav.tab === k ? "on" : ""} onClick=${() => nav.setTab(k)}><${Icon} n=${ic} s=${21} w=${2.2} /><span>${lab}</span></button>`)}
       <hr />
@@ -97,7 +98,7 @@ class Boundary extends Component {
 
 function Splash({ nama }) {
   useEffect(() => { const t = setTimeout(() => nav.endSplash(), 1700); return () => clearTimeout(t); }, []);
-  return html`<div class="splash" role="status" aria-live="polite"><div class="sp-ring"><span class="sp-orbit"></span><span class="sp-logo"><img src=${LOGO} alt="" /></span></div>
+  return html`<div class="splash" role="status" aria-live="polite"><div class="sp-ring"><span class="sp-orbit"></span><span class="sp-logo applogo"><img src=${APP_LOGO} alt="" /></span></div>
     <b>Assalamu'alaikum</b><small>${nama}</small><i class="sp-bar"><em></em></i></div>`;
 }
 function App() {

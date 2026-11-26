@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "preact/hooks";
 import htm from "htm";
 import { subscribe, onToast } from "./store.js";
 import { LOGO } from "./data.js";
+import { APP_LOGO } from "./logo_app.js";
 import { Ikon, adaIkon, WARNA } from "./ikon.js";
 export const html = htm.bind(h);
 
@@ -117,7 +118,7 @@ export const TILE = { emerald: ["#22B573", "#0B7A45"], blue: ["#4B8DF0", "#1D58C
   indigo: ["#7C7CF0", "#4646C2"], purple: ["#A07AF7", "#6A3BD9"], pink: ["#F06BA3", "#C22D6C"], slate: ["#7B8F86", "#435650"], green: ["#16A063", "#0B5D3B"] };
 
 // ---------------- komponen ----------------
-export const Logo = ({ s = 44 }) => html`<span class="logo" style=${`width:${s}px;height:${s}px`}><img src=${LOGO} alt="Logo Kampung Qur'an Al Muawanah" /></span>`;
+export const Logo = ({ s = 44 }) => html`<span class="logo applogo" style=${`width:${s}px;height:${s}px`}><img src=${APP_LOGO} alt="Logo MuawanahQu" /></span>`;
 export function Tile({ icon, label, color = "emerald", badge, onClick }) {
   const w = WARNA[color] || WARNA.emerald;
   return html`<button class="tile" onClick=${onClick}><span class="tile-ic" style=${`background:${w[2]}`}>${adaIkon(icon) ? html`<${Ikon} n=${icon} warna=${color} s=${34} />` : html`<${Icon} n=${icon} s=${28} c=${w[1]} w=${2.2} />`}${badge ? html`<b class="badge">${badge > 99 ? "99+" : badge}</b>` : null}</span><span class="tile-lb">${label}</span></button>`;
