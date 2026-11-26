@@ -118,7 +118,7 @@ export function Khidmah({ tgl: t0, gid: g0 }) {
 // Riwayat satu musyrif: 14 hari terakhir + rekap periode
 export function KhidmahRiwayat({ gid: g0 }) {
   useApp();
-  const gid = g0 || me().id, g = L.staffAman(gid), [per, setPer] = useState("pekanan"), rg = L.periodeRange(per), rk = rekapKhidmah(gid, rg);
+  const gid = g0 || me().id, g = L.staffAman(gid), [per, setPer] = useState("bulanan"), rg = L.periodeRange(per), rk = rekapKhidmah(gid, rg);
   const hari = Array.from({ length: 14 }, (_, i) => L.addDays(L.today(), -i)).filter(t => L.hariAktif(t, "asrama") && t >= L.setelan().mulaiPakai);
   const lemah = Object.values(rk.perButir).filter(o => o.n).map(o => ({ ...o, p: Math.round((o.ok / o.n) * 100) })).sort((x, y) => x.p - y.p).slice(0, 4);
   return html`<${SubHeader} title="Riwayat Ceklis" sub=${g.nama}><${Seg} small items=${L.PERIODE.filter(([k]) => ["pekanan", "bulanan", "semester"].includes(k))} value=${per} onChange=${setPer} /></${SubHeader}>
@@ -133,7 +133,7 @@ export function KhidmahRiwayat({ gid: g0 }) {
 // Rekap semua musyrif (Mudir, Wadir Kesantrian)
 export function RekapKhidmah({ pondok }) {
   useApp();
-  const [per, setPer] = useState("harian"), rg = L.periodeRange(per), p = pondok === "all" ? null : pondok;
+  const [per, setPer] = useState("bulanan"), rg = L.periodeRange(per), p = pondok === "all" ? null : pondok;
   const rows = musyrifList(p).map(({ a, g }) => ({ a, g, rk: per === "harian" ? null : rekapKhidmah(g.id, rg), h: hasilKhidmah(g.id, L.today()) }))
     .map(x => ({ ...x, v: x.rk ? x.rk.pct : x.h.pct })).sort((x, y) => (x.v ?? -1) - (y.v ?? -1));
   const rata = rows.filter(x => x.v != null), avg = rata.length ? Math.round(rata.reduce((n, x) => n + x.v, 0) / rata.length) : null;

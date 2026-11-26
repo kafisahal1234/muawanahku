@@ -16,7 +16,7 @@ import { ttdUntukPdf } from "./s_ttd.js";
 const tone = v => (v == null ? "muted" : v >= 90 ? "green" : v >= 75 ? "blue" : v >= 60 ? "gold" : "red");
 const P = v => (v == null ? "—" : v + "%");
 
-export function usePeriode(def = "pekanan", izin = null, fokus = null) {
+export function usePeriode(def = "bulanan", izin = null, fokus = null) {
   const [jenis0, setJenis] = useState(def); const [ref, setRef] = useState(L.today());
   const opsi = L.PERIODE.filter(([k]) => !izin || izin.includes(k)), jenis = opsi.some(([k]) => k === jenis0) ? jenis0 : opsi[0][0];
   const rg = L.periodeRange(jenis, ref), geser = ["harian", "pekanan", "bulanan"].includes(jenis);
@@ -101,7 +101,7 @@ const MODUL_JUDUL = { tahfidz: "Rekap Tahfidz", mapel: "Rekap Kelas", kurikulum:
 export function RekapHub({ tab: t0, modul }) {
   useApp();
   const lk0 = lingkup(), lk = modul && MODUL_TAB[modul] ? { ...lk0, tabs: lk0.tabs.filter(([k]) => MODUL_TAB[modul].includes(k)) } : lk0, t1 = ALIAS[t0] || t0; const [tab, setTab] = useState(lk.tabs.find(x => x[0] === t1) ? t1 : (lk.tabs[0] || [""])[0]); const [dl, setDl] = useState(false);
-  const p = usePeriode("pekanan");
+  const p = usePeriode("bulanan");
   const judul = MODUL_JUDUL[modul] || "Rekap";
   if (!lk.tabs.length) return html`<${SubHeader} title=${judul} /><div class="wrap"><${Card}><${Empty} t="Tidak ada data rekap untuk peran ini." icon="chart" /></${Card}></div>`;
   return html`<${SubHeader} title=${judul} sub="Sesuai kewenangan · berdasarkan hari aktif">${lk.tabs.length > 1 ? html`<div class="seg rk-tabs">${lk.tabs.map(([k, t]) => html`<button type="button" class=${k === tab ? "on" : ""} onClick=${() => setTab(k)}>${t}</button>`)}</div>` : null}</${SubHeader}>

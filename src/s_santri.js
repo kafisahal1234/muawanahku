@@ -31,7 +31,7 @@ export function RiwayatSetoran({ sid, n = 12, koreksi }) {
 }
 
 export function KehadiranCard({ s }) {
-  const [j, setJ] = useState("semester"), rg = L.periodeRange(j);
+  const [j, setJ] = useState("bulanan"), rg = L.periodeRange(j);
   const kh = L.kehadiranHalaqah(s.id, rg), kk = L.kehadiranKelas(s.id, null, rg), mp = L.mutPersen(s.id, rg);
   const sub = k => (k.sesi ? `H${k.H} S${k.S} I${k.I} A${k.A} · ${k.sesi} sesi${k.kosong ? `, ${k.kosong} belum diabsen` : ""}` : "belum ada hari aktif");
   return html`<${Card} title="Kehadiran & mutaba'ah" right=${html`<small>${rg.label}</small>`}>

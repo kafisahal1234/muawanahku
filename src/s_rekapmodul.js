@@ -84,7 +84,7 @@ const tgtBaris = jenis => Math.round(L.targetHal(jenis) * 15);
 const nadaTarget = (baris, tg) => (!tg ? (baris ? "hijau" : "mut") : baris >= tg ? "hijau" : baris >= tg / 2 ? "emas" : baris ? "merah" : "mut");
 export function RekapTahfidz({ hid }) {
   useApp();
-  const lk = lingkup(), hqs = hid ? [L.halaqahById(hid)] : lk.hqs, p = usePeriode("pekanan", null, "halaqah");
+  const lk = lingkup(), hqs = hid ? [L.halaqahById(hid)] : lk.hqs, p = usePeriode("bulanan", null, "halaqah");
   if (!hqs.length || !hqs[0]) return kosong("Rekap Tahfidz", "Akun ini belum memegang halaqah.");
   const satu = hqs.length === 1, semua = hqs.flatMap(h => L.santriHalaqah(h.id)), d = dataTahfidz(semua, p.rg), r = ringkasTahfidz(d);
   const kin = satu ? L.kinerjaHalaqah(hqs[0].id, p.rg) : null, tg = tgtBaris(p.jenis), capai = d.filter(o => !o.iq && o.x.zBaris >= tg).length, nonIq = d.filter(o => !o.iq).length;
@@ -109,7 +109,7 @@ function dataKelas(mp, k, rg) {
 }
 export function RekapMapel({ mapel, kelas, modul }) {
   useApp();
-  const lk = lingkup(), p = usePeriode("pekanan", null, "kbm");
+  const lk = lingkup(), p = usePeriode("bulanan", null, "kbm");
   const pairs = mapel && kelas ? [[mapel, kelas]] : modul === "mapel" && (lk.m.ajar || []).length ? lk.m.ajar.map(x => [...x]) : lk.pairs, mps = [...new Set(pairs.map(([mp]) => mp))];
   const milik = (lk.m.ajar || []).map(([mp]) => mp).find(x => mps.includes(x)); const [f, setF] = useState(milik || mps[0]), [urut, setUrut] = useState("hadir");
   if (!pairs.length) return kosong("Rekap Mapel", "Akun ini belum mengajar mapel.");
@@ -157,7 +157,7 @@ function itemAsrama(d, mut) {
 }
 export function RekapAsrama({ aid }) {
   useApp();
-  const lk = lingkup(), asr = aid ? [L.asramaById(aid)] : lk.asr, p = usePeriode("pekanan", null, "asrama"), [urut, setUrut] = useState("mut");
+  const lk = lingkup(), asr = aid ? [L.asramaById(aid)] : lk.asr, p = usePeriode("bulanan", null, "asrama"), [urut, setUrut] = useState("mut");
   if (!asr.length || !asr[0]) return kosong("Rekap Asrama", "Akun ini belum memegang asrama.");
   const satu = asr.length === 1, semua = asr.flatMap(a => L.santriAsrama(a.id)), d = dataAsrama(semua, p.rg), mut = satu ? L.kinerjaMut(asr[0].id, p.rg) : null;
   const f = { mut: o => o.mut ?? 101, ibadah: o => o.m.ibadah ?? 101, adab: o => o.m.adab ?? 101, nama: () => 0 }[urut], rows = [...d].sort((a, b) => f(a) - f(b) || a.s.nama.localeCompare(b.s.nama));
