@@ -31,6 +31,7 @@ import { FotoAv, fotoUser } from "./common.js";
 import { aiAda } from "./ai.js";
 import { LOGO as LOGO2 } from "./data.js";
 import { all } from "./store.js";
+import { terapkanTema, terapkanBahasa } from "./i18n.js";
 
 const SCREENS = {
   tahfidz: T.Tahfidz, absenHalaqah: T.AbsenHalaqah, setorList: T.SetorList, ziyadah: T.Ziyadah, murojaah: T.Murojaah, manzilList: T.ManzilList, manzil: T.Manzil,
@@ -139,4 +140,5 @@ try {
   }, { passive: true });
   if ("serviceWorker" in navigator && location.protocol === "https:" && window.top === window && !/claude|anthropic/.test(location.hostname)) navigator.serviceWorker.register("sw.js").catch(() => {});
 } catch (e) { }
+terapkanTema(); terapkanBahasa();
 render(html`<${App} />`, document.getElementById("root"));

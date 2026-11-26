@@ -15,6 +15,7 @@ import { KartuAsisten } from "./s_asisten.js";
 import { Ikon, WARNA } from "./ikon.js";
 import { LOGO } from "./data.js";
 import { APP_LOGO } from "./logo_app.js";
+import { temaSaatIni, setTema, BAHASA, bahasa, setBahasa } from "./i18n.js";
 import { aiAda } from "./ai.js";
 import { TahsinCard, JalurIqra } from "./s_tahsin.js";
 const PrivasiIsi = () => html`<div class="prose"><p>Data dipakai hanya untuk administrasi pendidikan pondok: hafalan, absensi, nilai, perizinan, dan pembinaan santri. Data tidak dijual, tidak untuk iklan, dan tidak dibagikan ke pihak luar. Setiap pengguna hanya melihat data sesuai perannya; wali hanya melihat anaknya sendiri. Kebijakan lengkap ada di menu Akun setelah masuk.</p></div>`;
@@ -235,7 +236,7 @@ export function RiwayatSaya() {
 export function Akun() {
   useApp();
   const u = nav.user, st = u.kind === "staff" ? me() : null, sa = u.kind === "wali" ? L.santriById(u.id) : null;
-  const [ask, setAsk] = useState(false);
+  const [ask, setAsk] = useState(false), [pilih, setPilih] = useState(null), [tema, setTemaS] = useState(temaSaatIni());
   const item = (ic, t, sub, go, tone) => html`<button class="menu-row" onClick=${go}><span class=${"mr-ic " + (tone || "")}><${Icon} n=${ic} s=${20} /></span><span class="mr-t">${t}${sub ? html`<small>${sub}</small>` : null}</span><${Icon} n="right" s=${18} /></button>`;
   const pengawas = st && st.roles.some(r => ["mudir", "admin", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian"].includes(r)), pr = st ? get("profil", st.id) : null;
   return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Akun</h1></div></div></div>
@@ -245,9 +246,15 @@ export function Akun() {
       ${st ? html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil", pr ? "Biodata & foto profil" : "Lengkapi biodata & foto profil", () => nav.go("profil"), "green")}${item("lock", "Keamanan", "Username & kata sandi", () => nav.go("keamanan"), "blue")}${st.roles.some(r => L.TTD_ROLES.includes(r)) ? item("pen", "Tanda Tangan", get("ttd", st.id) ? "Tersimpan · otomatis di rapor & surat" : "Belum ada · tulis di layar atau foto dari kertas", () => nav.go("tandaTangan"), "purple") : null}</div>`
         : html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil Ananda", fotoUser(u) ? "Biodata & foto profil" : "Biodata · tambahkan foto profil", () => nav.go("waliProfil"), "green")}</div>`}
       <div class="group mt8">${item("clipboard", "Log perubahan data", st ? "Koreksi & penghapusan oleh akun ini" : "Perubahan biodata ananda", () => nav.go("logUbah"), "gold")}</div>
+      <${Section} t="Tampilan & bahasa" /><div class="group">${item(tema === "gelap" ? "moon" : "sun", "Tema", { terang: "Mode terang", gelap: "Mode gelap", sistem: "Ikuti pengaturan HP" }[tema], () => setPilih("tema"), "indigo")}${item("globe", "Bahasa", (BAHASA.find(x => x[0] === bahasa()) || BAHASA[0])[1], () => setPilih("bahasa"), "teal")}</div>
       <${Section} t="Informasi" /><div class="group">${item("bookopen", "Bantuan", null, () => nav.go("bantuan"), "teal")}${item("shield", "Kebijakan Privasi", null, () => nav.go("privasi"), "purple")}${item("settings", "Tentang aplikasi", VERSI, () => nav.go("tentang"), "slate")}</div>
       <div class="group mt12"><button class="menu-row out" onClick=${() => setAsk(true)}><span class="mr-ic red"><${Icon} n="logout" s=${20} /></span><span class="mr-t">Keluar</span></button></div>
       <p class="fab-note">Muawanah<b style="color:#E2A93B">Qu</b> ${VERSI} · Pondok Tahfidz Modern Kampung Qur'an Al Muawanah</p>
+    <${Sheet} open=${!!pilih} title=${pilih === "tema" ? "Tema" : "Bahasa"} onClose=${() => setPilih(null)}>
+      ${pilih === "tema" ? [["terang", "sun", "Mode terang", "Latar putih, cocok di siang hari"], ["gelap", "moon", "Mode gelap", "Latar gelap, nyaman di malam hari & hemat baterai"], ["sistem", "settings", "Ikuti pengaturan HP", "Berganti otomatis mengikuti HP"]].map(([k, ic, t, sub]) =>
+        html`<button class=${"menu-row pilih " + (tema === k ? "on" : "")} onClick=${() => { setTema(k); setTemaS(k); setPilih(null); }}><span class="mr-ic indigo"><${Icon} n=${ic} s=${20} /></span><span class="mr-t">${t}<small>${sub}</small></span>${tema === k ? html`<${Icon} n="check" s=${20} c="#0E8F52" />` : null}</button>`)
+      : BAHASA.map(([k, t]) => html`<button class=${"menu-row pilih " + (bahasa() === k ? "on" : "")} onClick=${() => { if (k !== bahasa()) setBahasa(k); else setPilih(null); }}><span class="mr-ic teal"><${Icon} n="globe" s=${20} /></span><span class="mr-t" dir=${k === "ar" ? "rtl" : "ltr"}>${t}<small>${{ id: "Tampilan aplikasi dalam Bahasa Indonesia", en: "Menus and buttons in English", ar: "القوائم والأزرار باللغة العربية" }[k]}</small></span>${bahasa() === k ? html`<${Icon} n="check" s=${20} c="#0E8F52" />` : null}</button>`)}
+      ${pilih === "bahasa" ? html`<p class="small" style="margin:10px 4px 0">Menu, tombol dan judul ikut berganti bahasa. Data santri, rekap rinci, rapor dan surat resmi tetap berbahasa Indonesia.</p>` : null}</${Sheet}>
     <${Confirm} open=${ask} danger title="Keluar dari akun?" text=${st ? "Anda perlu memasukkan username dan kata sandi lagi untuk masuk." : "Anda perlu memasukkan kode akses lagi untuk masuk."} yes="Keluar" onYes=${() => { setAsk(false); nav.setUser(null); }} onNo=${() => setAsk(false)} /></div>`;
 }
 

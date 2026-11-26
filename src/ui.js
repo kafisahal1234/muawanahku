@@ -78,6 +78,7 @@ const P = {
   alert: "M12 3 2 20h20zM12 10v4M12 17v.5",
   star: "M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z",
   moon: "M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z",
+  globe: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3.6 9h16.8M3.6 15h16.8M12 3c2.4 2.5 3.6 5.5 3.6 9s-1.2 6.5-3.6 9c-2.4-2.5-3.6-5.5-3.6-9s1.2-6.5 3.6-9z",
   sun: "M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4",
   shield: "M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6zM9 12l2 2 4-4",
   upload: "M12 16V4M7 9l5-5 5 5M4 16v4h16v-4",
@@ -112,7 +113,7 @@ const P = {
   camera: "M4 7h4l2-3h4l2 3h4v13H4zM12 10a4 4 0 1 1 0 8 4 4 0 0 1 0-8z",
 };
 export function Icon({ n, s = 22, w = 2, c = "currentColor" }) {
-  return html`<svg width=${s} height=${s} viewBox="0 0 24 24" fill="none" stroke=${c} stroke-width=${w} stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d=${P[n] || P.grid} /></svg>`;
+  return html`<svg width=${s} height=${s} viewBox="0 0 24 24" fill="none" stroke=${c} stroke-width=${w} stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class=${"ic ic-" + n}><path d=${P[n] || P.grid} /></svg>`;
 }
 export const TILE = { emerald: ["#22B573", "#0B7A45"], blue: ["#4B8DF0", "#1D58C4"], orange: ["#F7883A", "#C9500D"], coral: ["#F06A55", "#C23324"], gold: ["#F2BE4E", "#C3860D"], teal: ["#22AEB2", "#0A7479"],
   indigo: ["#7C7CF0", "#4646C2"], purple: ["#A07AF7", "#6A3BD9"], pink: ["#F06BA3", "#C22D6C"], slate: ["#7B8F86", "#435650"], green: ["#16A063", "#0B5D3B"] };
