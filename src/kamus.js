@@ -17,7 +17,7 @@ export const KAMUS = {
   "Guru": ["Teacher", "المعلم"], "Santri": ["Students", "الطلاب"], "santri": ["students", "طالب"], "Kelas": ["Class", "الفصل"], "Asrama": ["Dormitory", "السكن"], "Halaqah": ["Halaqah", "الحلقة"],
   "Wali asrama": ["Dorm supervisor", "مشرف السكن"], "Juz": ["Juz", "الجزء"], "juz": ["juz", "جزء"], "baris": ["lines", "سطر"], "Jilid": ["Volume", "المجلد"], "Materi": ["Material", "المادة العلمية"], "Target": ["Target", "الهدف"],
   // modul & menu
-  "Tahfidz": ["Tahfidz", "التحفيظ"], "Kurikulum": ["Curriculum", "المنهج"], "Mutaba'ah": ["Mutaba'ah", "المتابعة"], "Ceklis Musyrif": ["Supervisor Checklist", "قائمة المشرف"],
+  "Tahfidz": ["Tahfidz", "التحفيظ"], "Kurikulum": ["Curriculum", "المنهج"], "Mutaba'ah": ["Mutaba'ah", "المتابعة"], "Ceklis Musyrif": ["Supervisor Checklist", "قائمة المشرف"], "Ujian Iqro'": ["Iqro' Exam", "اختبار إقرأ"], "Menunggu ujian": ["Awaiting exam", "بانتظار الاختبار"], "Hasil ujian terakhir": ["Latest exam results", "آخر نتائج الاختبار"], "Uji santri lain": ["Test another student", "اختبار طالب آخر"],
   "Asrama Saya": ["My Dormitory", "سكني"], "Rapor": ["Report Card", "كشف الدرجات"], "Kalender": ["Calendar", "التقويم"], "Kesantrian": ["Student Affairs", "شؤون الطلاب"],
   "Pengumuman": ["Announcements", "الإعلانات"], "Bantuan": ["Help", "المساعدة"], "Kebijakan Privasi": ["Privacy Policy", "سياسة الخصوصية"], "Tentang aplikasi": ["About the app", "عن التطبيق"],
   "Asisten AI": ["AI Assistant", "المساعد الذكي"], "Tanda Tangan": ["Signature", "التوقيع"], "Profil": ["Profile", "الملف الشخصي"], "Keamanan": ["Security", "الأمان"], "Akun saya": ["My account", "حسابي"],

@@ -10,9 +10,15 @@ import { unduhPdf, tabelKePdf } from "./pdf.js";
 import { ttdUntukPdf } from "./s_ttd.js";
 
 const NILAI_TONE = { L: "green", KL: "gold", U: "red" };
+// Ujian kenaikan jilid hanya oleh Wadir Tahfidz (penguji). Musyrif mengajar & mengajukan ujian, tidak bisa mengubah status jilid.
+export const bolehUji = () => { const m = me(); return !!m && m.roles.includes("wadir_tahfidz"); };
+const bolehAtur = () => { const m = me(); return !!m && m.roles.some(r => ["wadir_tahfidz", "admin"].includes(r)); };
+export const namaPenguji = () => (L.STAFF.filter(g => g.roles.includes("wadir_tahfidz")).map(g => g.pendek).join(" / ") || "Wadir Tahfidz");
+export const ujianTerakhir = sid => L.tahsinRiwayat(sid).filter(r => r.jenis === "ujian").pop() || null;
+export const siapUjianSemua = () => L.santriList().map(s => ({ s, t: L.tahsinStatus(s) })).filter(x => x.t && !x.t.quran && x.t.siapUjian);
 const bolehSemua = () => { const m = me(); return !!m && m.roles.some(r => ["mudir", "wadir_tahfidz", "admin"].includes(r)); };
 const halaqahSaya = () => { const m = me(); return m ? L.halaqahOf(m.id) : null; };
-const bacaHariIni = (sid, tgl) => all("tahsin").filter(r => r.santri === sid && r.tanggal === tgl).sort((a, b) => a.ts - b.ts).pop() || null;
+const bacaHariIni = (sid, tgl) => all("tahsin").filter(r => r.santri === sid && r.tanggal === tgl && r.jenis === "baca").sort((a, b) => a.ts - b.ts).pop() || null;
 
 // Jalur Iqro' 1–6 → Al-Qur'an (visual)
 export function JalurIqra({ t, kecil }) {
@@ -25,7 +31,7 @@ export function JalurIqra({ t, kecil }) {
 export function TahsinCard({ s, aksi }) {
   const t = L.tahsinStatus(s); if (!t) return null;
   const n = L.tahsinRiwayat(s.id).filter(r => r.jenis === "baca"), akhir = n[n.length - 1];
-  return html`<${Card} title="Tahsin (Iqro')" right=${t.siapUjian ? html`<${Pill} t="Siap ujian" tone="gold" />` : t.quran ? html`<${Pill} t="Lulus Iqro'" tone="green" />` : null}>
+  return html`<${Card} title="Tahsin (Iqro')" right=${t.siapUjian ? html`<${Pill} t="Menunggu ujian" tone="gold" />` : t.quran ? html`<${Pill} t="Lulus Iqro'" tone="green" />` : null}>
     <div class="iq-kepala"><b>${t.quran ? "Al-Qur'an" : t.jilid ? `Iqro' ${t.jilid}` : "Belum diatur"}</b><span>${t.quran ? t.ket || "Sudah lulus Iqro' 6" : t.jilid ? `Halaman ${t.hal || 0} dari ${L.IQRA_HAL}` : "Guru tahfidz perlu mengatur tingkat Iqro'"}</span></div>
     <${JalurIqra} t=${t} />
     ${t.halSemester != null ? html`<div class="imp-cap ok" style="margin:8px 0 0"><span>Kemajuan semester ini (dari Iqro' ${t.awalSem.jilid} hal. ${t.awalSem.hal || 0})</span><b>+${t.halSemester} halaman</b></div>` : null}
@@ -43,12 +49,12 @@ export function TahsinList({ hid }) {
   const per = [1, 2, 3, 4, 5, 6].map(j => data.filter(x => !x.t.quran && x.t.jilid === j).length), lulus = data.filter(x => x.t.quran).length;
   const bisaInput = !hid || (me() && hq.guru === me().id) || semua;
   const baris = ({ s, t, r }) => html`<${Row} name=${s.nama} sub=${r ? (r.jenis === "ujian" ? `Ujian Iqro' ${r.jilid} · ${r.lulus ? "lulus" : "belum lulus"} · kini ${t.label}` : `${r.tingkat === "quran" ? r.posisi || "Al-Qur'an" : `Iqro' ${r.jilid} hal. ${r.dari}–${r.sampai}`} · ${L.TAHSIN_NILAI[r.nilai] || ""}`) : t.label}
-    right=${t.siapUjian ? html`<${Pill} t="Siap ujian" tone="gold" />` : t.quran ? html`<${Pill} t="Al-Qur'an" tone="green" />` : html`<span class="iq-mini"><b>${t.jilid || "?"}</b><small>${t.hal || 0}/${L.IQRA_HAL}</small></span>`}
+    right=${t.siapUjian ? html`<${Pill} t="Menunggu ujian" tone="gold" />` : t.quran ? html`<${Pill} t="Al-Qur'an" tone="green" />` : html`<span class="iq-mini"><b>${t.jilid || "?"}</b><small>${t.hal || 0}/${L.IQRA_HAL}</small></span>`}
     onClick=${bisaInput ? () => nav.go("tahsin", { sid: s.id }) : () => nav.go("santri", { sid: s.id })} />`;
   return html`<${SubHeader} title="Tahsin (Iqro')" sub=${`${hq.nama} · ${L.fmtTgl(tgl)} · ${sudah.length}/${data.length} sudah membaca`} />
     <div class="wrap">
       <${Card}><div class="iq-ringkas">${per.map((n, i) => html`<span class=${n ? "ada" : ""}><b>${n}</b><small>Iqro' ${i + 1}</small></span>`)}<span class=${"qr" + (lulus ? " ada" : "")}><b>${lulus}</b><small>Al-Qur'an</small></span></div>
-        ${siap ? html`<p class="small" style="margin:10px 0 0"><b style="color:#8A5A00">${siap} santri siap ujian kenaikan jilid.</b> Buka namanya untuk mencatat hasil ujian.</p>` : null}</${Card}>
+        ${siap ? html`<p class="small" style="margin:10px 0 0"><b style="color:#8A5A00">${siap} santri menunggu ujian kenaikan jilid.</b> ${bolehUji() ? "Buka namanya untuk mencatat hasil ujian." : `Diuji oleh Wadir Tahfidz (${namaPenguji()}).`}</p>` : null}</${Card}>
       ${data.length ? null : html`<${Card}><${Empty} t="Belum ada santri tahsin di halaqah ini." icon="bookopen" /></${Card}>`}
       ${belum.length ? html`<${Card} title=${`Belum membaca hari ini (${belum.length})`}><div class="list">${belum.map(baris)}</div></${Card}>` : data.length ? html`<div class="selesai-card"><span class="sc-ic"><${Icon} n="check" s=${24} c="#fff" w=${3} /></span><div><b>Semua santri tahsin sudah membaca hari ini</b><small>Alhamdulillah</small></div></div>` : null}
       ${sudah.length ? html`<${Card} title=${`Sudah hari ini (${sudah.length})`}><div class="list">${sudah.map(baris)}</div>
@@ -93,20 +99,24 @@ export function Tahsin({ sid, edit }) {
   const t0 = s && L.tahsinStatus(s);
   // saat mengoreksi, posisi dihitung tanpa catatan yang sedang dikoreksi
   const t = ed && s ? (() => { const d = S.data.tahsin; S.data.tahsin = { ...d }; delete S.data.tahsin[ed.id]; const x = L.tahsinStatus(s); S.data.tahsin = d; return x; })() : t0;
-  const [mode, setMode] = useState(ed ? ed.jenis : t && t.siapUjian ? "ujian" : "baca");
+  const uji = bolehUji();
+  const [mode, setMode] = useState(ed ? ed.jenis : uji && t && t.siapUjian ? "ujian" : "baca");
   const [dari, setDari] = useState(ed && ed.dari != null ? ed.dari : Math.min(L.IQRA_HAL, ((t && t.hal) || 0) + 1));
   const [sampai, setSampai] = useState(ed && ed.sampai != null ? ed.sampai : Math.min(L.IQRA_HAL, ((t && t.hal) || 0) + 1));
   const [nilai, setNilai] = useState(ed ? ed.nilai || "L" : "L"), [posisi, setPosisi] = useState(ed ? ed.posisi || "" : (t && t.ket) || ""), [cat, setCat] = useState(ed ? ed.catatan || "" : "");
   const [lulus, setLulus] = useState(ed && ed.jenis === "ujian" ? !!ed.lulus : true), [skor, setSkor] = useState(ed && ed.skor != null ? ed.skor : ""), [atur, setAtur] = useState(false);
   if (!s || !t) return html`<${SubHeader} title="Tahsin" /><div class="wrap"><${Card}><${Empty} t="Santri belum tercatat di Tahsin." icon="bookopen" /></${Card}></div>`;
-  const quran = t.quran, sudah = !ed && bacaHariIni(s.id, tgl);
+  const quran = t.quran, sudah = !ed && bacaHariIni(s.id, tgl), uT = ujianTerakhir(s.id);
+  if (ed && ed.jenis === "ujian" && !uji) return html`<${SubHeader} title="Hasil ujian Iqro'" sub=${s.nama} /><div class="wrap"><${Card}><p style="margin:0">Ujian Iqro' ${ed.jilid}: <b>${ed.lulus ? "Lulus" : "Belum lulus"}</b>${ed.skor != null ? ` · nilai ${ed.skor}` : ""}</p><p class="small" style="margin:6px 0 0">Hasil ujian hanya bisa diubah oleh Wadir Tahfidz (${namaPenguji()}).</p></${Card}></div>`;
+  const ajukan = async () => { if (await put("tahsin", uid("t"), { jenis: "ajukan", tingkat: "iqra", jilid: t.jilid, santri: s.id, tanggal: tgl, guru: me().id, ts: Date.now() })) { toast(`${s.nama} diajukan ujian Iqro' ${t.jilid}`); } };
   const simpan = async () => {
     if (!quran && !t.jilid) return toast("Atur dulu tingkat Iqro' santri ini.", "err");
     let rec;
-    if (mode === "ujian") rec = { jenis: "ujian", tingkat: "iqra", jilid: t.jilid, lulus, skor: skor === "" ? null : Number(skor), nilai: lulus ? "L" : "U", catatan: cat.trim() };
+    if (mode === "ujian") { if (!uji) return toast("Ujian kenaikan jilid hanya oleh Wadir Tahfidz.", "err"); rec = { jenis: "ujian", tingkat: "iqra", jilid: t.jilid, lulus, skor: skor === "" ? null : Number(skor), nilai: lulus ? "L" : "U", catatan: cat.trim(), penguji: me().id }; }
     else if (quran) rec = { jenis: "baca", tingkat: "quran", posisi: posisi.trim(), nilai, catatan: cat.trim() };
     else { if (Number(sampai) < Number(dari)) return toast("Halaman sampai tidak boleh lebih kecil dari halaman awal.", "err"); rec = { jenis: "baca", tingkat: "iqra", jilid: t.jilid, dari: Number(dari), sampai: Number(sampai), nilai, catatan: cat.trim(), siap: Number(sampai) >= L.IQRA_HAL && nilai !== "U" }; }
-    const id = ed ? ed.id : uid("t"), base = ed ? { santri: ed.santri, tanggal: ed.tanggal, guru: ed.guru, ts: ed.ts, diubah: { oleh: me().id, ts: Date.now() } } : { santri: s.id, tanggal: tgl, guru: me().id, ts: Date.now() };
+    const hq = L.halaqahSantri(s);
+    const id = ed ? ed.id : uid("t"), base = ed ? { santri: ed.santri, tanggal: ed.tanggal, guru: ed.guru, ts: ed.ts, diubah: { oleh: me().id, ts: Date.now() } } : { santri: s.id, tanggal: tgl, guru: mode === "ujian" && hq && hq.guru ? hq.guru : me().id, ts: Date.now() };
     if (await put("tahsin", id, { ...base, ...rec })) {
       if (ed) logUbah("ubah", "tahsin", id, `Tahsin ${s.nama} ${L.fmtTgl(tgl)} dikoreksi`, ed);
       toast(mode === "ujian" ? (lulus ? (t.jilid >= 6 ? `${s.nama} lulus Iqro' 6 · naik ke Al-Qur'an` : `${s.nama} lulus · naik ke Iqro' ${t.jilid + 1}`) : "Hasil ujian disimpan · mengulang jilid ini") : "Bacaan tahsin disimpan");
@@ -115,16 +125,19 @@ export function Tahsin({ sid, edit }) {
   };
   return html`<${SubHeader} title=${ed ? "Koreksi Tahsin" : "Tahsin"} sub=${`${s.nama} · ${L.fmtTgl(tgl)}`} />
     <div class="wrap form-page">
-      <${TahsinCard} s=${s} aksi=${!ed ? html`<button type="button" class="link" style="min-height:40px;margin-top:6px" onClick=${() => setAtur(true)}>Atur posisi / tingkat</button>` : null} />
+      <${TahsinCard} s=${s} aksi=${!ed && bolehAtur() ? html`<button type="button" class="link" style="min-height:40px;margin-top:6px" onClick=${() => setAtur(true)}>Atur posisi / tingkat</button>` : null} />
+      ${!ed && !uji && !quran && t.jilid ? (t.siapUjian ? html`<div class="note mt8" style="background:#FFF6E0;color:#8A5A00"><${Icon} n="clock" s=${18} />Menunggu ujian kenaikan Iqro' ${t.jilid} oleh Wadir Tahfidz (${namaPenguji()}). Status jilid berubah setelah hasil ujian diinput penguji.</div>`
+        : html`<div class="mt8"><${Btn} kind="ghost" icon="send" onClick=${ajukan}>Ajukan ujian kenaikan Iqro' ${t.jilid}</${Btn}></div>`) : null}
+      ${!ed && uT ? html`<p class="small mt8" style="margin-bottom:0">Ujian terakhir: Iqro' ${uT.jilid} · <b style=${uT.lulus ? "color:#1B7A43" : "color:#A8261C"}>${uT.lulus ? "Lulus" : "Belum lulus"}</b>${uT.skor != null ? ` · nilai ${uT.skor}` : ""} · ${L.fmtTgl(uT.tanggal)}${uT.penguji ? ` · diuji ${L.staffAman(uT.penguji).pendek}` : ""}</p>` : null}
       ${sudah ? html`<div class="note mt8"><${Icon} n="check" s=${18} />Sudah ada catatan hari ini (${sudah.jenis === "ujian" ? "ujian" : sudah.tingkat === "quran" ? "Al-Qur'an" : `hal. ${sudah.dari}–${sudah.sampai}`}). Menyimpan lagi menambah catatan baru; untuk memperbaiki pakai Riwayat & Koreksi.</div>` : null}
-      ${!quran && t.jilid && !ed ? html`<${Seg} items=${[["baca", "Bacaan harian"], ["ujian", `Ujian Iqro' ${t.jilid}`]]} value=${mode} onChange=${setMode} />` : null}
+      ${uji && !quran && t.jilid && !ed ? html`<${Seg} items=${[["baca", "Bacaan harian"], ["ujian", `Ujian Iqro' ${t.jilid}`]]} value=${mode} onChange=${setMode} />` : null}
       ${mode === "ujian" ? html`<${Card} title=${`Ujian kenaikan Iqro' ${t.jilid}`}>
           <div class="iq-pilih dua"><button type="button" class=${lulus ? "on" : ""} onClick=${() => setLulus(true)}>Lulus${t.jilid >= 6 ? " · ke Al-Qur'an" : ` · ke Iqro' ${t.jilid + 1}`}</button><button type="button" class=${!lulus ? "on merah" : ""} onClick=${() => setLulus(false)}>Belum lulus</button></div>
           <${Field} label="Nilai ujian (boleh kosong)"><input class="in" type="number" inputmode="numeric" min="0" max="100" value=${skor} onInput=${e => setSkor(e.target.value)} placeholder="0–100" /></${Field}></${Card}>`
         : quran ? html`<${Card} title="Bacaan Al-Qur'an"><${Field} label="Posisi bacaan"><input class="in" placeholder="Contoh: Juz 30 · Al-Fajr ayat 1–15" value=${posisi} onInput=${e => setPosisi(e.target.value)} /></${Field}></${Card}>`
         : html`<${Card} title=${`Bacaan Iqro' ${t.jilid || "?"}`}><div class="iq-dua"><${Field} label="Dari halaman"><${Stepper} value=${dari} onChange=${setDari} min=${1} max=${40} label="Dari halaman" /></${Field}>
             <${Field} label="Sampai halaman"><${Stepper} value=${sampai} onChange=${setSampai} min=${1} max=${40} label="Sampai halaman" /></${Field}></div>
-            ${Number(sampai) >= L.IQRA_HAL ? html`<p class="small" style="margin:6px 0 0;color:#8A5A00;font-weight:700">Sampai halaman terakhir jilid: santri ditandai siap ujian kenaikan jilid.</p>` : null}</${Card}>`}
+            ${Number(sampai) >= L.IQRA_HAL ? html`<p class="small" style="margin:6px 0 0;color:#8A5A00;font-weight:700">Sampai halaman terakhir jilid: santri otomatis diajukan ujian kenaikan jilid ke Wadir Tahfidz.</p>` : null}</${Card}>`}
       ${mode !== "ujian" ? html`<${Card} title="Penilaian"><div class="iq-pilih tiga">${Object.entries(L.TAHSIN_NILAI).map(([k, v]) => html`<button type="button" class=${(nilai === k ? "on " : "") + (k === "U" ? "merah" : k === "KL" ? "emas" : "")} onClick=${() => setNilai(k)}>${v}</button>`)}</div>
           ${nilai === "U" ? html`<p class="small" style="margin:8px 0 0">"Ulang": halaman ini belum dihitung maju, dibaca lagi di pertemuan berikutnya.</p>` : null}</${Card}>` : null}
       <${Card}><${Field} label="Catatan untuk santri/wali (boleh kosong)"><textarea class="in" rows="2" value=${cat} onInput=${e => setCat(e.target.value)} placeholder="Contoh: makhraj ح masih tertukar dengan ه"></textarea></${Field}></${Card}>
@@ -148,6 +161,27 @@ export function RekapTahsin() {
       <${Card}><div class="iq-ringkas">${per.map((n, i) => html`<span class=${n ? "ada" : ""}><b>${n}</b><small>Iqro' ${i + 1}</small></span>`)}<span class=${"qr" + (lulus ? " ada" : "")}><b>${lulus}</b><small>Al-Qur'an</small></span></div>
         <div class="stats mt8"><${Stat} label="Santri tahsin" value=${rows.length} /><${Stat} label="Siap ujian" value=${siap} tone=${siap ? "gold" : ""} /><${Stat} label="Lulus Iqro'" value=${lulus} tone="green" /></div></${Card}>
       ${grup.map(g => html`<${Card} title=${g.h.nama} right=${html`<small>${g.rows.length} santri</small>`}><div class="list">${g.rows.map(({ s, t, n }) => html`<${Row} name=${s.nama} sub=${`${t.label} · ${n.length}x membaca bulan ini`}
-        right=${t.siapUjian ? html`<${Pill} t="Siap ujian" tone="gold" />` : t.quran ? html`<${Pill} t="Al-Qur'an" tone="green" />` : html`<span class="iq-mini"><b>${t.jilid || "?"}</b><small>${t.hal || 0}/${L.IQRA_HAL}</small></span>`} onClick=${() => nav.go("santri", { sid: s.id })} />`)}</div></${Card}>`)}
+        right=${t.siapUjian ? html`<${Pill} t="Menunggu ujian" tone="gold" />` : t.quran ? html`<${Pill} t="Al-Qur'an" tone="green" />` : html`<span class="iq-mini"><b>${t.jilid || "?"}</b><small>${t.hal || 0}/${L.IQRA_HAL}</small></span>`} onClick=${() => nav.go("santri", { sid: s.id })} />`)}</div></${Card}>`)}
       <div class="sticky-act"><${Btn} icon="download" onClick=${unduh}>Unduh rekap tahsin (PDF)</${Btn}></div>` : html`<${Card}><${Empty} t="Belum ada santri tahsin." icon="bookopen" /></${Card}>`}</div>`;
+}
+
+// Ujian kenaikan jilid Iqro' — khusus Wadir Tahfidz (penguji). Santri masuk daftar ini saat musyrif mengajukan / bacaan sampai halaman terakhir jilid.
+export function UjianIqra() {
+  useApp();
+  const [q, setQ] = useState("");
+  if (!bolehUji()) return html`<${SubHeader} title="Ujian Iqro'" /><div class="wrap"><${Card}><${Empty} t="Ujian kenaikan jilid hanya untuk Wadir Tahfidz." icon="lock" /></${Card}></div>`;
+  const siap = siapUjianSemua(), grup = L.HALAQAH.map(h => ({ h, rows: siap.filter(x => x.s.halaqah === h.id) })).filter(g => g.rows.length);
+  const tanpa = siap.filter(x => !L.HALAQAH.some(h => h.id === x.s.halaqah));
+  const hasil = all("tahsin").filter(r => r.jenis === "ujian").sort((a, b) => b.ts - a.ts).slice(0, 30);
+  const semuaIq = q.trim().length >= 2 ? L.santriList().filter(s => s.nama.toLowerCase().includes(q.trim().toLowerCase())).map(s => ({ s, t: L.tahsinStatus(s) })).filter(x => x.t && !x.t.quran).slice(0, 20) : [];
+  const baris = ({ s, t }) => html`<${Row} name=${s.nama} sub=${`${t.label} · ${L.namaHalaqah(s)}`} right=${html`<${Pill} t=${`Uji Iqro' ${t.jilid}`} tone="gold" />`} onClick=${() => nav.go("tahsin", { sid: s.id })} />`;
+  return html`<${SubHeader} title="Ujian Iqro'" sub=${`${siap.length} santri menunggu ujian kenaikan jilid`} />
+    <div class="wrap">
+      <${Hint}>Musyrif mengajar dan mengajukan ujian. Penguji (Wadir Tahfidz) mencatat hasil lulus / belum lulus; status jilid santri di akun musyrif dan wali berubah otomatis.</${Hint}>
+      ${siap.length ? [...grup.map(g => html`<${Card} title=${`${g.h.nama} (${g.rows.length})`}><div class="list">${g.rows.map(baris)}</div></${Card}>`), tanpa.length ? html`<${Card} title="Tanpa halaqah"><div class="list">${tanpa.map(baris)}</div></${Card}>` : null]
+        : html`<${Card}><${Empty} t="Belum ada santri yang diajukan ujian." icon="check" /></${Card}>`}
+      <${Card} title="Uji santri lain"><input class="in" placeholder="Cari nama santri Iqro'" value=${q} onInput=${e => setQ(e.target.value)} />
+        ${semuaIq.length ? html`<div class="list mt8">${semuaIq.map(({ s, t }) => html`<${Row} name=${s.nama} sub=${`${t.label} · ${L.namaHalaqah(s)}`} onClick=${() => nav.go("tahsin", { sid: s.id })} />`)}</div>` : null}</${Card}>
+      ${hasil.length ? html`<${Card} title="Hasil ujian terakhir"><div class="list">${hasil.map(r => { const s = L.santriById(r.santri); return s ? html`<${Row} name=${s.nama} sub=${`Iqro' ${r.jilid} · ${L.fmtTgl(r.tanggal)}${r.skor != null ? " · nilai " + r.skor : ""}`} right=${html`<${Pill} t=${r.lulus ? "Lulus" : "Belum lulus"} tone=${r.lulus ? "green" : "red"} />`} onClick=${() => nav.go("tahsin", { sid: s.id, edit: r.id })} />` : null; })}</div></${Card}>` : null}
+    </div>`;
 }

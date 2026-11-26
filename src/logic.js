@@ -259,6 +259,7 @@ export function tahsinStatus(s) {
       st.tingkat = "iqra"; st.jilid = r.jilid || st.jilid;
       if (r.nilai !== "U") st.hal = Math.max(r.jilid === st.jilid ? st.hal : 0, Number(r.sampai) || 0);
       if (r.siap || st.hal >= IQRA_HAL) st.siapUjian = true;
+    } else if (r.jenis === "ajukan") { if (!st.quran) { st.siapUjian = true; st.gagal = false; }
     } else if (r.jenis === "ujian") {
       if (r.lulus) { st.gagal = false; st.siapUjian = false; if ((r.jilid || st.jilid) >= 6) { st.tingkat = "quran"; st.ket = ""; } else { st.jilid = (r.jilid || st.jilid) + 1; st.hal = 0; } }
       else { st.gagal = true; st.siapUjian = false; }

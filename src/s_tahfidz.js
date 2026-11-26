@@ -15,7 +15,7 @@ export function Tahfidz() {
   const tgl = L.today();
   const sudah = x => !!get("absenHalaqah", L.halaqahKey(a.id, tgl, x));
   const hafal = list.filter(s => !L.santriIqra(s)), zDone = hafal.filter(s => L.ziyadahHari(s.id, tgl).some(r => r.lulus)).length;
-  const tahsin = list.filter(s => L.tahsinStatus(s)), tBelum = tahsin.filter(s => !all("tahsin").some(r => r.santri === s.id && r.tanggal === tgl)).length;
+  const tahsin = list.filter(s => L.tahsinStatus(s)), tBelum = tahsin.filter(s => !all("tahsin").some(r => r.santri === s.id && r.tanggal === tgl && r.jenis === "baca")).length;
   const mDone = list.filter(s => all("setoran").some(r => r.santri === s.id && r.jenis === "murojaah" && r.tanggal === tgl)).length;
   const siap = list.filter(s => L.hafalan(s).siapTasmi).length;
   const wk = L.weekStart(tgl);

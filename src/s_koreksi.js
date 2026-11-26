@@ -30,7 +30,8 @@ export function entriRiwayat(col, list) {
     return { jud, det: det + (r.lulus ? "" : " · ulang"), ic: "bookopen" };
   }
   if (col === "tahsin") { const s = L.santriById(r.santri), nm = s ? s.nama : "-";
-    if (r.jenis === "ujian") return { jud: `Ujian Iqro' ${r.jilid} · ${nm}`, det: `${r.lulus ? "Lulus" : "Belum lulus"}${r.skor != null ? " · nilai " + r.skor : ""} · ${L.fmtTgl(r.tanggal)}`, ic: "award" };
+    if (r.jenis === "ujian") return { jud: `Ujian Iqro' ${r.jilid} · ${nm}`, det: `${r.lulus ? "Lulus" : "Belum lulus"}${r.skor != null ? " · nilai " + r.skor : ""}${r.penguji ? " · penguji " + L.staffAman(r.penguji).pendek : ""} · ${L.fmtTgl(r.tanggal)}`, ic: "award" };
+    if (r.jenis === "ajukan") return { jud: `Pengajuan ujian Iqro' ${r.jilid} · ${nm}`, det: `Menunggu ujian Wadir Tahfidz · ${L.fmtTgl(r.tanggal)}`, ic: "send" };
     return { jud: `Tahsin · ${nm}`, det: `${r.tingkat === "quran" ? r.posisi || "Al-Qur'an" : `Iqro' ${r.jilid} hal. ${r.dari}–${r.sampai}`} · ${L.TAHSIN_NILAI[r.nilai] || ""} · ${L.fmtTgl(r.tanggal)}`, ic: "book" }; }
   if (col === "absenHalaqah") return { jud: `Absen halaqah ${r.sesi}`, det: `${L.asramaAman(r.asrama).nama} · ${L.fmtTgl(r.tanggal)}`, ic: "checksq" };
   if (col === "motd") return { jud: `Absen MOTD ${(L.WAKTU.find(x => x[0] === r.waktu) || [0, r.waktu])[1]}`, det: `Pondok ${r.pondok} · ${list.length} asrama · ${L.fmtTgl(r.tanggal)}`, ic: "moon" };
@@ -61,7 +62,7 @@ export function KoreksiSheet({ item, onClose, onHapus }) {
     if (r.jenis === "murojaah") ubah = () => nav.go("murojaah", { sid: r.santri, edit: r.id });
     if (r.jenis === "tasmi") ubah = () => nav.go("tasmi", { sid: r.santri, edit: r.id });
   }
-  if (col === "tahsin") ubah = () => nav.go("tahsin", { sid: r.santri, edit: r.id });
+  if (col === "tahsin" && r.jenis !== "ajukan") ubah = () => nav.go("tahsin", { sid: r.santri, edit: r.id });
   if (col === "absenHalaqah") ubah = () => nav.go("absenHalaqah", { sesi: r.sesi, tgl: r.tanggal, ubah: true });
   if (col === "motd") ubah = () => nav.go("motd", { tgl: r.tanggal, waktu: r.waktu, ubah: true });
   if (col === "mutabaah") ubah = () => nav.go("mutabaah", { tgl: r.tanggal, sid: r.santri, ubah: true });
