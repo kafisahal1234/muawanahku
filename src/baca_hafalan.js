@@ -20,7 +20,8 @@ export function keHalaman(v) {
   const t = bersih(v).toLowerCase(); if (kosong(t)) return null;
   let m = t.match(/(\d+(?:[.,]\d+)?)\s*juz(?:\s*(\d+)\s*(?:hal|halaman|hlm))?/);
   if (m) return Math.round(parseFloat(m[1].replace(",", ".")) * 20 + (m[2] ? +m[2] : 0));
-  m = t.match(/^juz\s*(\d+)$/); if (m) return 20; // "Juz 30" sebagai awal = hafal 1 juz (ditandai untuk dicek)
+  m = t.match(/^juz\s*(\d{1,2})(?:\s*(?:hal|halaman|hlm)\.?\s*(\d{1,2}))?$/); // "Juz 3" = sedang di juz 3 → juz sebelumnya (urutan 30, 29, 1, 2, …) sudah hafal
+  if (m && URUT.includes(+m[1])) return URUT.indexOf(+m[1]) * 20 + (m[2] ? +m[2] : 0);
   m = t.match(/^(\d+(?:[.,]\d+)?)$/); if (m) return Math.round(parseFloat(m[1].replace(",", ".")) * 20); // angka saja = juz
   m = t.match(/(\d+)\s*(?:hal|halaman|hlm)/); if (m) return +m[1];
   return null;
@@ -81,17 +82,21 @@ function olah(c) {
   }
   // ---------- santri Al-Qur'an ----------
   let sel = daftarJuz(f.juz), pos = kePosisi(f.sekarang), awalSemHal = keHalaman(f.awalSem), totalLapor = keHalaman(f.total);
-  if (f.awalSem && /^\s*juz\s*\d+\s*$/i.test(f.awalSem)) cat.push(`Awal semester "${bersih(f.awalSem)}" dibaca 1 juz`);
+  const mPos = String(f.awalSem || "").match(/^\s*juz\s*(\d{1,2})/i);
+  if (mPos && !/\d\s*juz/i.test(f.awalSem)) cat.push(`Awal semester "${bersih(f.awalSem)}" dibaca: sedang di juz ${mPos[1]}, sudah hafal ${fmt(awalSemHal || 0)}`);
   if (f.awalSem && /^\s*\d+(?:[.,]\d+)?\s*$/.test(f.awalSem)) cat.push(`Awal semester "${bersih(f.awalSem)}" dibaca ${bersih(f.awalSem)} juz`);
   if (!sel.length && totalLapor != null) sel = URUT.slice(0, Math.floor(totalLapor / 20)); // hanya total yang diisi
   let aktif = pos && pos.juz, baris = 0;
   if (pos) baris = (pos.hal != null ? pos.hal * 15 : 0) + (pos.baris != null && pos.hal != null ? 0 : pos.baris || 0);
   if (pos && pos.baris != null && pos.hal != null) baris = (pos.hal - 1) * 15 + pos.baris; // "halaman 18 baris 15" = 17 halaman penuh + 15 baris
   if (pos && pos.surah && pos.hal == null) cat.push(`Posisi ditulis nama surah ("${pos.surah}"), halaman perlu dicek`);
-  if (aktif && sel.includes(aktif)) { cat.push(`Hafalan sekarang menyebut juz ${aktif} yang sudah selesai; dianggap mulai juz berikutnya`); aktif = null; baris = 0; }
+  if (aktif && sel.includes(aktif)) {
+    if (pos.hal != null && pos.hal < 20) sel = sel.filter(j => j !== aktif); // ditulis ikut "sudah hafal" padahal masih berjalan
+    else { cat.push(`Hafalan sekarang menyebut juz ${aktif} yang tertulis sudah selesai; dianggap mulai juz berikutnya`); aktif = null; baris = 0; }
+  }
   if (!aktif) aktif = URUT.find(j => !sel.includes(j)) || 30;
   const posHal = sel.length * 20 + baris / 15;
-  if (totalLapor != null && Math.abs(totalLapor - posHal) > 3) cat.push(`Total tertulis ${fmt(totalLapor)}, sedangkan juz & posisi menunjukkan ${fmt(posHal)}`);
+  if (totalLapor != null && Math.abs(totalLapor - posHal) > 10) cat.push(`Total tertulis ${fmt(totalLapor)}, sedangkan juz & posisi menunjukkan ${fmt(posHal)}`);
   if (awalSemHal != null && awalSemHal > posHal + 1) cat.push("Hafalan awal semester lebih banyak dari hafalan sekarang");
   if (!f.sekarang && !f.juz && !f.total) { cat.push("Data hafalan belum diisi"); return r; }
   r.awal = { selesai: sel, aktif, baris: Math.round(baris), awalSemHal: awalSemHal == null ? null : awalSemHal, totalLapor };
