@@ -115,7 +115,7 @@ export async function login(username, password) {
   return { kind: "staff", id: st.id };
 }
 // Wali santri: satu kotak kode akses = nama panggilan santri + tanggal lahir (DDMMYY), huruf kecil semua.
-// Contoh: panggilan Atsal, lahir 7 September 2012 → atsal070912.
+// Contoh: panggilan Fulan, lahir 1 Januari 2012 → fulan010112.
 // Akun wali melekat pada data santri: santri dihapus → kode akses otomatis tidak berlaku.
 export function lahirSantri(s) {
   if (s.lahir) return { tgl: s.lahir, contoh: false };
