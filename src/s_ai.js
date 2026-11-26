@@ -290,7 +290,7 @@ Aturan:
 - Kosongkan ("") data yang tidak ada di dokumen. Jangan mengarang.
 Jawab hanya JSON: {"baris":[{"nama":"","santri_id":null,"nis":"","kelas":"","asrama":"","tanggal_lahir":"","tempat_lahir":"","ayah":"","ibu":"","hp_wali":"","alamat":"","hobi":"","cita":"","catatan":""}]}`;
 
-function waliBaru(nama) { const w = nama.trim().split(/\s+/).find(x => !/^(m\.?|muh\.?|muhammad|muhamad|ahmad)$/i.test(x)) || "santri"; return { wali: (w.toLowerCase().replace(/[^a-z]/g, "") || "santri") + Math.floor(10 + Math.random() * 89), panggilan: w }; }
+function waliBaru(nama) { const w = nama.trim().split(/\s+/).find(x => !/^(m\.?|muh\.?|muhammad|muhamad|ahmad)$/i.test(x)) || "santri"; return { wali: (L.hurufKode(w) || "santri") + Math.floor(10 + Math.random() * 89), panggilan: w }; }
 export function ImporSantri() {
   useApp();
   const [langkah, setLangkah] = useState(""); const [busy, setBusy] = useState(false); const [rows, setRows] = useState(null); const [dok, setDok] = useState("");

@@ -109,7 +109,8 @@ export async function login(username, password) {
   if (!(await cekSandi(u, p, st))) return { err: "Username atau kata sandi salah." };
   return { kind: "staff", id: st.id };
 }
-// Wali santri: satu kotak kode akses = nama panggilan santri + tanggal lahir (DDMMYYYY), misal adiyatma15082011.
+// Wali santri: satu kotak kode akses = nama panggilan santri + tanggal lahir (DDMMYY), huruf kecil semua.
+// Contoh: panggilan Atsal, lahir 7 September 2012 → atsal070912.
 // Akun wali melekat pada data santri: santri dihapus → kode akses otomatis tidak berlaku.
 export function lahirSantri(s) {
   if (s.lahir) return { tgl: s.lahir, contoh: false };
@@ -117,12 +118,18 @@ export function lahirSantri(s) {
   return { tgl: `${th}-${pad(((n * 5) % 12) + 1)}-${pad(((n * 7) % 28) + 1)}`, contoh: true };
 }
 // Kode akses dikunci (s.kode) begitu biodata diubah wali, agar kode tidak ikut berubah saat nama/tanggal lahir diperbaiki
-export const kodeHitung = s => { const [y, m, d] = lahirSantri(s).tgl.split("-"); return `${s.wali}${d}${m}${y}`; };
-export const kodeAkses = s => s.kode || kodeHitung(s);
+export const hurufKode = x => String(x || "").toLowerCase().normalize("NFD").replace(/[^a-z]/g, "");
+export const tebakPanggilan = nama => String(nama || "").trim().split(/\s+/).find(x => !/^(m\.?|muh\.?|moh\.?|muhammad|muhamad|mohammad|ahmad)$/i.test(x)) || "";
+export const dasarKode = s => hurufKode(s.panggilan) || hurufKode(tebakPanggilan(s.nama)) || hurufKode(s.wali) || "santri";
+export const kodeHitung = s => { const [y, m, d] = lahirSantri(s).tgl.split("-"); return `${dasarKode(s)}${d}${m}${y.slice(-2)}`; };
+// kode terkunci format lama (tahun 4 digit) diganti format baru; kode lama tetap diterima saat masuk agar wali tidak terkunci
+const kodeFormatLama = k => /\d{8}$/.test(k || "");
+export const kodeAkses = s => (s.kode && !kodeFormatLama(s.kode) ? s.kode : kodeHitung(s));
+const kodeLama = s => { if (kodeFormatLama(s.kode)) return s.kode; const [y, m, d] = lahirSantri(s).tgl.split("-"); return `${s.wali}${d}${m}${y}`; };
 const normKode = k => (k || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 export function loginWali(kode) {
   const k = normKode(kode); if (!k) return { err: "Isi kode akses." };
-  const sa = santriList().find(s => kodeAkses(s) === k);
+  const sa = santriList().find(s => kodeAkses(s) === k) || santriList().find(s => normKode(kodeLama(s)) === k);
   return sa ? { kind: "wali", id: sa.id } : { err: "Kode akses tidak dikenal. Periksa nama panggilan dan tanggal lahir santri." };
 }
 export const usernameOf = user => (user.kind === "staff" ? staffAman(user.id).username : santriAman(user.id).wali);

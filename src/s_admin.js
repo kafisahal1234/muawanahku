@@ -37,30 +37,41 @@ export function SantriAdmin({ asrama, kelas }) {
     ${ed ? html`<${EditSantri} e=${ed} onClose=${() => setEd(null)} />` : null}</div>`;
 }
 function EditSantri({ e, onClose }) {
-  const [f, setF] = useState(e); const [ask, setAsk] = useState(false);
+  const [f, setF] = useState({ ...e, panggilan: e.panggilan || L.tebakPanggilan(e.nama) }); const [ask, setAsk] = useState(false);
+  const [pgTulis, setPgTulis] = useState(!!e.panggilan);
   const set = (k, v) => setF({ ...f, [k]: v });
+  const setNama = v => setF({ ...f, nama: v, ...(pgTulis ? {} : { panggilan: L.tebakPanggilan(v) }) });
+  const panggilan = String(f.panggilan || "").trim() || L.tebakPanggilan(f.nama);
+  const kode = L.kodeHitung({ ...e, ...f, panggilan, kode: undefined });
+  const kembar = f.lahir && L.santriList().find(s => s.id !== e.id && L.kodeAkses(s) === kode);
   const save = async () => {
     const id = e.baru ? uid("s") : e.id;
     const asalLama = e.baru ? null : L.HALAQAH.find(h => h.guru === (L.asramaById(e.asrama) || {}).musyrif), asalBaru = L.HALAQAH.find(h => h.guru === (L.asramaById(f.asrama) || {}).musyrif);
     const hq = f.halaqah && !(asalLama && f.halaqah === asalLama.id && f.asrama !== e.asrama) ? f.halaqah : asalBaru ? asalBaru.id : null;
     const bio = Object.fromEntries(["tempatLahir", "hobi", "cita", "alamat", "ayah", "ibu", "hpWali"].map(k => [k, (f[k] || "").trim()]));
     const base = { nama: f.nama.trim(), kelas: f.kelas || e.kelas || "", asrama: f.asrama || e.asrama || "", halaqah: hq || undefined, nis: (f.nis || "").trim(), ...bio, ...(f.lahir ? { lahir: f.lahir } : {}) };
-    if (e.baru) { const w = f.nama.trim().split(/\s+/).find(x => !/^(m\.?|muhammad|muhamad|ahmad)$/i.test(x)) || "santri"; base.wali = (w.toLowerCase().replace(/[^a-z]/g, "") || "santri") + Math.floor(10 + Math.random() * 89); base.panggilan = w; }
-    if (await put("santriEdit", id, { ...((S.data.santriEdit || {})[id] || {}), ...base })) { toast(e.baru ? `Santri ditambahkan. Akun wali: ${base.wali}` : "Data santri disimpan"); onClose(); }
+    base.panggilan = panggilan;
+    if (e.baru) base.wali = (L.hurufKode(panggilan) || "santri") + Math.floor(10 + Math.random() * 89);
+    // kode akses dibuat otomatis: panggilan + tanggal lahir (DDMMYY), huruf kecil
+    if (f.lahir) base.kode = kode; else delete base.kode;
+    const lama = { ...((S.data.santriEdit || {})[id] || {}) }; if (!f.lahir) delete lama.kode;
+    if (await put("santriEdit", id, { ...lama, ...base })) { toast(e.baru ? `Santri ditambahkan. Kode akses wali: ${kode}` : `Data santri disimpan. Kode akses wali: ${kode}`); onClose(); }
   };
   const hapus = async () => { setAsk(false); if (await put("santriEdit", e.id, { ...((S.data.santriEdit || {})[e.id] || {}), hapus: true })) { logUbah("hapus", "santriEdit", e.id, `Santri ${e.nama} dan akun walinya dihapus`); toast("Santri dan akun walinya dihapus"); onClose(); } };
   return html`<${Sheet} open=${true} title=${e.baru ? "Tambah santri" : "Ubah data santri"} onClose=${onClose}>
-    <${Field} label="Nama lengkap"><input class="in" value=${f.nama} onInput=${x => set("nama", x.target.value)} /></${Field}>
+    <${Field} label="Nama lengkap"><input class="in" value=${f.nama} onInput=${x => setNama(x.target.value)} /></${Field}>
+    <${Field} label="Nama panggilan" hint="Dipakai untuk kode akses wali. Contoh: Daffa Atsal Atmaja → Atsal"><input class="in" value=${f.panggilan || ""} placeholder=${L.tebakPanggilan(f.nama) || "Nama panggilan"} onInput=${x => { setPgTulis(true); set("panggilan", x.target.value); }} /></${Field}>
     <div class="btn-row"><${Field} label="NIS" hint="Tampil di rapor"><input class="in" inputmode="numeric" value=${f.nis || ""} onInput=${x => set("nis", x.target.value)} /></${Field}>
     <${Field} label="Tanggal lahir" hint=${f.lahir ? "Untuk kode akses wali" : "Belum diisi · sementara pakai tanggal contoh"}><input class="in" type="date" value=${f.lahir || ""} onInput=${x => set("lahir", x.target.value)} /></${Field}></div>
     <details class="bio-det"><summary>Biodata lain (tampil di profil wali)</summary>
       ${[["tempatLahir", "Tempat lahir"], ["hobi", "Hobi"], ["cita", "Cita-cita"], ["alamat", "Alamat"], ["ayah", "Nama ayah"], ["ibu", "Nama ibu"], ["hpWali", "No. HP wali"]].map(([k, lab]) => html`<${Field} label=${lab}><input class="in" value=${f[k] || ""} inputmode=${k === "hpWali" ? "tel" : null} onInput=${x => set(k, x.target.value)} /></${Field}>`)}</details>
-    ${!e.baru ? html`<div class="pos" style="margin:0 0 12px"><span>Kode akses wali</span><b>${L.kodeAkses({ ...e, ...f, lahir: f.lahir || e.lahir })}</b></div>` : null}
+    ${f.nama.trim() ? html`<div class="pos" style="margin:0 0 12px"><span>Kode akses wali${f.lahir ? "" : " (tanggal lahir belum diisi)"}</span><b>${f.lahir ? kode : "—"}</b></div>` : null}
+    ${kembar ? html`<div class="note red"><${Icon} n="alert" s=${18} />Kode ${kode} sudah dipakai ${kembar.nama}. Bedakan nama panggilannya.</div>` : null}
     <div class="btn-row"><${Field} label="Kelas"><select class="in" value=${f.kelas} onChange=${x => set("kelas", x.target.value)}>${L.KELAS.map(k => html`<option value=${k.id}>${k.nama}</option>`)}</select></${Field}>
     <${Field} label="Asrama"><select class="in" value=${f.asrama} onChange=${x => set("asrama", x.target.value)}>${L.ASRAMA.map(a => html`<option value=${a.id}>${a.nama}</option>`)}</select></${Field}></div>
     <${Field} label="Halaqah tahfidz" hint="Bawaan ikut wali asrama; bisa dipindah ke halaqah guru lain"><select class="in" value=${f.halaqah || ""} onChange=${x => set("halaqah", x.target.value)}><option value="">Ikut halaqah asrama</option>${L.HALAQAH.map(h => html`<option value=${h.id}>${h.nama}</option>`)}</select></${Field}>
     <p class="small">Saat santri pindah asrama, halaqah, atau kelas, datanya ikut pindah dan riwayat tetap tersimpan.</p>
-    <div class="btn-row mt8">${!e.baru ? html`<${Btn} kind="ghost" onClick=${() => setAsk(true)}>Hapus</${Btn}>` : null}<${Btn} disabled=${!f.nama.trim()} onClick=${save}>Simpan</${Btn}></div>
+    <div class="btn-row mt8">${!e.baru ? html`<${Btn} kind="ghost" onClick=${() => setAsk(true)}>Hapus</${Btn}>` : null}<${Btn} disabled=${!f.nama.trim() || !!kembar} onClick=${save}>Simpan</${Btn}></div>
     <${Confirm} open=${ask} danger title="Hapus santri?" text=${`${e.nama} akan dihapus dari daftar santri. Akun wali santri ini otomatis ikut terhapus dan kode aksesnya tidak bisa dipakai lagi.`} yes="Hapus" onYes=${hapus} onNo=${() => setAsk(false)} /></${Sheet}>`;
 }
 
@@ -78,7 +89,7 @@ export function AkunAdmin() {
         <small style="display:block;font-size:13px;color:var(--mut)">username <b style="display:inline">${s.username}</b>${del0 ? " · akun dihapus" : ""}${a ? ` · asrama ${a.nama}` : ""}</small>
         <span class="chips" style="margin-top:6px">${s.roles.map(r => html`<${Pill} t=${L.ROLE_LABEL[r] + (r === "wadir_kesantrian" ? " " + s.pondok : "")} tone="blue" />`)}${s.ajar.length ? html`<${Pill} t=${s.ajar.map(([m, k]) => `${L.mapelById(m).nama.replace("Pendidikan ", "").replace("Bahasa ", "B. ")} ${k}`).join(", ")} tone="muted" />` : null}</span></span></button>
       ${saya ? null : del0 ? html`<button class="link" onClick=${() => pulihkan(s)}>Pulihkan</button>` : html`<button class="icon-btn" aria-label=${"Hapus akun " + s.username} onClick=${() => setAsk(s)}><${Icon} n="trash" s=${20} c="#B3261E" /></button>`}</div>`; })}</div></${Card}></div>
-    <${Card} title="Akun wali santri"><p class="small" style="margin:0">Setiap santri punya satu akun wali. Wali masuk dengan satu kotak <b>kode akses</b>: nama panggilan santri + tanggal lahir (tanggal, bulan, tahun), contoh <b>adiyatma15082011</b>. Tanggal lahir diisi di Data Santri. Akun wali otomatis terhapus saat santri dihapus dari Data Santri.</p>
+    <${Card} title="Akun wali santri"><p class="small" style="margin:0">Setiap santri punya satu akun wali. Wali masuk dengan satu kotak <b>kode akses</b>: nama panggilan santri + tanggal lahir (tanggal, bulan, tahun), contoh <b>atsal070912</b> (Atsal, lahir 7 September 2012). Kode dibuat otomatis, huruf kecil semua. Tanggal lahir diisi di Data Santri. Akun wali otomatis terhapus saat santri dihapus dari Data Santri.</p>
       <div class="mt8"><${Btn} kind="ghost" icon="users" onClick=${() => nav.go("santriAdmin")}>Buka Data Santri</${Btn}></div></${Card}>
     ${ed ? html`<${EditStaff} e=${ed} onClose=${() => setEd(null)} onSandi=${(u, pw) => setBaruSandi({ u, pw })} />` : null}
     <${Confirm} open=${!!baruSandi} title="Kata sandi awal" text=${baruSandi ? `Username ${baruSandi.u}, kata sandi awal ${baruSandi.pw}. Catat dan sampaikan langsung ke pemilik akun, lalu minta ia menggantinya lewat Akun → Ubah kata sandi. Sandi ini tidak bisa dilihat lagi setelah jendela ditutup.` : ""} yes="Sudah dicatat" onYes=${() => setBaruSandi(null)} onNo=${() => setBaruSandi(null)} />
