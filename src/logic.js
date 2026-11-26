@@ -237,6 +237,7 @@ export function tahsinStatus(s) {
   if (!aw && !rec.length) return null;
   const st = { tingkat: (aw && aw.tingkat) || "iqra", jilid: aw ? aw.jilid || null : 1, hal: (aw && aw.hal) || 0, siapUjian: !!(aw && aw.ujian), ket: (aw && aw.ket) || "", gagal: false, terakhir: null };
   for (const r of rec) {
+    if (aw && aw.ts && r.ts && r.ts < aw.ts && aw.awalSem) continue; // posisi impor terbaru sudah mencakup catatan sebelumnya
     st.terakhir = r;
     if (r.jenis === "baca") {
       if (r.tingkat === "quran") { st.tingkat = "quran"; if (r.posisi) st.ket = r.posisi; continue; }
@@ -251,6 +252,10 @@ export function tahsinStatus(s) {
   st.quran = st.tingkat === "quran";
   st.label = st.quran ? "Al-Qur'an" + (st.ket ? " · " + st.ket : "") : st.jilid ? `Iqro' ${st.jilid}` + (st.hal ? ` · hal. ${st.hal}` : "") : "Tingkat belum diatur";
   st.pendek = st.quran ? "Lulus Iqro'" : st.jilid ? `Iqro' ${st.jilid}` : "Belum diatur";
+  // kemajuan Iqro' semester ini (halaman) dari posisi awal semester bila tercatat
+  const posIq = (j, hl) => (Math.max(1, j) - 1) * IQRA_HAL + Math.min(hl || 0, IQRA_HAL);
+  st.awalSem = aw && aw.awalSem ? aw.awalSem : null; st.lulus = (aw && aw.lulus) || [];
+  st.halSemester = st.awalSem && st.awalSem.jilid ? Math.max(0, (st.quran ? 6 * IQRA_HAL : posIq(st.jilid, st.hal)) - posIq(st.awalSem.jilid, st.awalSem.hal)) : null;
   st.pct = st.quran ? 100 : st.jilid ? Math.min(100, Math.round((((st.jilid - 1) * IQRA_HAL + Math.min(st.hal, IQRA_HAL)) / (6 * IQRA_HAL)) * 100)) : 0;
   return st;
 }
@@ -260,6 +265,7 @@ export function hafalan(s, kecuali) {
   const aw = dataAwal(s);
   let selesai = [...(aw.selesai || [])], aktif = aw.aktif, baris = aw.baris || 0, khatam = false;
   for (const r of setoranSantri(s.id, kecuali)) {
+    if (aw.ts && r.ts && r.ts < aw.ts) continue; // data awal yang diisi belakangan sudah mencakup setoran sebelumnya
     if (r.jenis === "ziyadah" && r.lulus && r.juz === aktif) baris = Math.min(juzLines(aktif), r.sesudah);
     if (r.jenis === "tasmi" && r.lulus && r.juz === aktif) {
       if (!selesai.includes(aktif)) selesai.push(aktif);
@@ -271,10 +277,19 @@ export function hafalan(s, kecuali) {
   return { selesai, aktif, baris, total, siapTasmi, khatam, jumlah: selesai.length + (khatam ? 0 : baris / total) };
 }
 export const barisTotal = h => h.selesai.reduce((a, j) => a + juzLines(j), 0) + (h.khatam ? 0 : h.baris || 0);
+// Halaman hafalan dari sebuah posisi (juz selesai × 20 + halaman di juz yang sedang dihafal)
+export const halPosisi = h => (h.selesai || []).length * 20 + (h.khatam ? 0 : (h.baris || 0) / 15);
+// Hafalan baru semester ini dalam halaman. Bila data awal mencatat "hafalan awal semester" (awalSemHal),
+// hitungan = posisi sekarang − awal semester (termasuk hafalan sebelum aplikasi dipakai). Bila tidak, = setoran sejak data awal.
+export function halSemester(s) {
+  const aw = dataAwal(s), h = hafalan(s);
+  if (aw && aw.awalSemHal != null && !isNaN(aw.awalSemHal)) return Math.max(0, halPosisi(h) - Number(aw.awalSemHal));
+  const awH = { selesai: aw.selesai || [], baris: aw.baris || 0, khatam: false };
+  return Math.max(0, barisTotal(h) - barisTotal(awH)) / 15;
+}
 export function capaianSemester(s) {
   const aw = dataAwal(s), h = hafalan(s);
-  const awH = { selesai: aw.selesai || [], baris: aw.baris || 0, khatam: false };
-  const n = Math.max(0, barisTotal(h) - barisTotal(awH));
+  const n = Math.round(halSemester(s) * 15);
   const juzBaru = h.selesai.filter(j => !(aw.selesai || []).includes(j));
   const zi = setoranSantri(s.id).filter(r => r.jenis === "ziyadah" && r.lulus).length;
   return { baris: n, juzBaru, setor: zi, h };
@@ -291,7 +306,7 @@ export const fmtHal = h => { const r = Math.round(h * 10) / 10; return r >= 20 ?
 export function capaianJuz(s) {
   const aw = dataAwal(s), h = hafalan(s), prog = (sel, akt, br) => j => (sel.includes(j) ? 1 : j === akt ? Math.min(1, (br || 0) / juzLines(j)) : 0);
   const a = prog(aw.selesai || [], aw.aktif, aw.baris), b = prog(h.selesai, h.khatam ? null : h.aktif, h.baris);
-  const juz = DATA.urutanJuz.reduce((x, j) => x + Math.max(0, b(j) - a(j)), 0), t = targetSemester();
+  const juz = aw && aw.awalSemHal != null ? halSemester(s) / 20 : DATA.urutanJuz.reduce((x, j) => x + Math.max(0, b(j) - a(j)), 0), t = targetSemester();
   return { juz: Math.round(juz * 100) / 100, target: t, pct: Math.min(100, Math.round((juz / t) * 100)), tercapai: juz >= t, kurang: Math.max(0, Math.round((t - juz) * 10) / 10) };
 }
 // Perkembangan hafalan dalam periode: dari setoran ziyadah lulus & tasmi' lulus bertanggal dalam rentang

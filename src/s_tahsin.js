@@ -28,6 +28,7 @@ export function TahsinCard({ s, aksi }) {
   return html`<${Card} title="Tahsin (Iqro')" right=${t.siapUjian ? html`<${Pill} t="Siap ujian" tone="gold" />` : t.quran ? html`<${Pill} t="Lulus Iqro'" tone="green" />` : null}>
     <div class="iq-kepala"><b>${t.quran ? "Al-Qur'an" : t.jilid ? `Iqro' ${t.jilid}` : "Belum diatur"}</b><span>${t.quran ? t.ket || "Sudah lulus Iqro' 6" : t.jilid ? `Halaman ${t.hal || 0} dari ${L.IQRA_HAL}` : "Guru tahfidz perlu mengatur tingkat Iqro'"}</span></div>
     <${JalurIqra} t=${t} />
+    ${t.halSemester != null ? html`<div class="imp-cap ok" style="margin:8px 0 0"><span>Kemajuan semester ini (dari Iqro' ${t.awalSem.jilid} hal. ${t.awalSem.hal || 0})</span><b>+${t.halSemester} halaman</b></div>` : null}
     ${t.gagal ? html`<p class="small" style="margin:8px 0 0;color:#A8261C;font-weight:700">Ujian terakhir belum lulus, mengulang Iqro' ${t.jilid}.</p>` : null}
     ${akhir ? html`<p class="small" style="margin:8px 0 0">Terakhir membaca ${L.fmtTgl(akhir.tanggal)}${akhir.tingkat === "quran" ? ` · ${akhir.posisi || "Al-Qur'an"}` : ` · hal. ${akhir.dari}–${akhir.sampai}`} · ${L.TAHSIN_NILAI[akhir.nilai] || "-"}</p>` : null}
     ${aksi || null}</${Card}>`;

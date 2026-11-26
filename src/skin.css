@@ -917,3 +917,6 @@ html.pad-on,html.pad-on body{overscroll-behavior:none}
 @keyframes inR{from{opacity:0;transform:translate3d(24px,0,0)}to{opacity:1;transform:none}}
 @keyframes inL{from{opacity:0;transform:translate3d(-24px,0,0)}to{opacity:1;transform:none}}
 .scr.dir-fwd{animation:inR .24s cubic-bezier(.2,.7,.2,1)}.scr.dir-back{animation:inL .22s cubic-bezier(.2,.7,.2,1)}.scr.dir-tab{animation:vtMuncul .18s linear}
+/* v22: capaian semester di pratinjau impor data awal */
+.imp-cap{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;padding:7px 10px;border-radius:10px;background:#FFF7E6;color:#6B4A00;font-size:12.5px}
+.imp-cap b{font-weight:800;white-space:nowrap}.imp-cap.ok{background:#E3F5EB;color:#0B6B3F}

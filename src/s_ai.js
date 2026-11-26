@@ -8,6 +8,7 @@ import { me } from "./common.js";
 import { logUbah } from "./s_koreksi.js";
 import { tanyaAI, aiAda, aiNama, SISTEM_DASAR } from "./ai.js";
 import { bacaBerkas, parseCSV, TERIMA } from "./berkas.js";
+import { bacaFormatHafalan, cocokFormat, keHalaman, keIqro, fmt as fmtHal } from "./baca_hafalan.js";
 
 // ---------- alat bantu ----------
 const norm = s => String(s || "").toLowerCase().replace(/\b(muhammad|muhamad|moh|muh|mohammad|m)\b\.?/g, " ").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
@@ -132,7 +133,14 @@ export function keAwal(r) {
   sel = U.filter(j => sel.includes(j));
   if (!aktif || sel.includes(aktif)) aktif = U.find(j => !sel.includes(j)) || 30;
   if (r.baris_aktif != null && r.baris_aktif !== "") baris = Number(r.baris_aktif) || 0; else if (r.halaman_aktif != null && r.halaman_aktif !== "") baris = Math.round(Number(r.halaman_aktif) * 15) || 0;
-  return { selesai: sel, aktif, baris: Math.max(0, Math.min(L.juzLines(aktif), baris)) };
+  const o = { selesai: sel, aktif, baris: Math.max(0, Math.min(L.juzLines(aktif), baris)) };
+  const as = keHalaman(r.awal_semester); if (as != null) o.awalSemHal = as;
+  return o;
+}
+// baris AI untuk santri Iqro' → data tahsin
+function keTahsin(r) {
+  const now = keIqro(r.iqro_sekarang); if (!now) return null;
+  return { tingkat: "iqra", jilid: now.jilid, hal: now.hal, awalSem: keIqro(r.iqro_awal_semester), lulus: (r.iqro_lulus || []).map(Number).filter(n => n >= 1 && n <= 6) };
 }
 const angkaJuz = t => { const out = []; String(t || "").replace(/(\d{1,2})\s*(?:-|–|s\.?d\.?|sampai)\s*(\d{1,2})|(\d{1,2})/gi, (m, a, b, c) => { if (a) { a = +a; b = +b; for (let j = Math.min(a, b); j <= Math.max(a, b); j++) out.push(j); } else out.push(+c); return m; }); return out.filter(j => j >= 1 && j <= 30); };
 // Pembaca tanpa AI: tabel dengan judul kolom
@@ -156,71 +164,95 @@ Aturan:
 - juz_selesai: nomor juz yang sudah hafal penuh. Rentang "1-5" berarti 1,2,3,4,5. Urutan hafalan pondok: Juz 30, 29, lalu 1, 2, 3, dst.
 - Bila dokumen hanya menyebut jumlah juz (misal "5 juz" atau "3,5 juz") tanpa nomor juz, isi jumlah_juz (angka) dan biarkan juz_selesai kosong.
 - juz_aktif: juz yang sedang dihafal bila disebut. halaman_aktif: berapa halaman sudah dihafal di juz itu (1 juz = 20 halaman). baris_aktif hanya bila disebut dalam baris. Bila disebut surah/ayat, perkirakan halamannya.
+- awal_semester: hafalan santri saat awal semester bila disebut (misal "Hafalan Awal Semester : 7 Juz" atau "2 juz 5 halaman"), tulis sebagai teks aslinya. Angka saja ("7") berarti juz.
+- total: total hafalan sekarang bila disebut, tulis teks aslinya.
+- "Hal"/"Hlm" = halaman. "Juz 8 Halaman 14" berarti sedang di juz 8 dan sudah 14 halaman.
+- Santri yang masih Iqro' (buku Iqro' jilid 1–6): isi iqro_sekarang & iqro_awal_semester seperti "jilid 3 halaman 32" dan iqro_lulus = daftar jilid yang sudah lulus. Bila tertulis "3 jilid 3 halaman 3", artinya jilid 3 halaman 3. Untuk santri Iqro', kosongkan juz.
 - catatan: keterangan singkat bila ada yang janggal atau perlu dicek; kosongkan bila tidak ada.
-Jawab hanya JSON: {"baris":[{"nama":"","santri_id":null,"juz_selesai":[],"jumlah_juz":null,"juz_aktif":null,"halaman_aktif":null,"baris_aktif":null,"catatan":""}]}`;
+Jawab hanya JSON: {"baris":[{"nama":"","santri_id":null,"juz_selesai":[],"jumlah_juz":null,"juz_aktif":null,"halaman_aktif":null,"baris_aktif":null,"awal_semester":null,"total":null,"iqro_sekarang":null,"iqro_awal_semester":null,"iqro_lulus":[],"catatan":""}]}`;
 
 export function ImporAwal() {
   useApp();
   const [langkah, setLangkah] = useState(""); const [busy, setBusy] = useState(false); const [rows, setRows] = useState(null); const [dok, setDok] = useState("");
   const [ed, setEd] = useState(null); const [simpanBusy, setSB] = useState(false);
   const semua = L.santriList();
+  // cocokkan nama; utamakan santri di halaqah yang disebut di pesan ("Halaqah Ust. Kafi")
+  const cariSantri = (r, dipakai) => {
+    let s = r.santri_id && semua.find(x => x.id === r.santri_id), sc = s ? mirip(r.nama, s.nama) : 0;
+    if (r.halaqah) {
+      const hq = L.HALAQAH.find(h => mirip(r.halaqah, h.nama.replace(/^Halaqah\s+/i, "")) >= 0.7 || mirip(r.halaqah, (L.staffById(h.guru) || {}).pendek || "") >= 0.7);
+      if (hq) { const c = cocokkan(r.nama, L.santriHalaqah(hq.id)); if (c.sc >= 0.55 && c.sc >= sc) { s = c.best; sc = Math.max(c.sc, 0.8); } }
+    }
+    if (!s || sc < 0.35) { const c = cocokkan(r.nama, semua); if (c.sc >= 0.6) { s = c.best; sc = c.sc; } else if (!s) s = null; }
+    const ganda = s && dipakai.has(s.id); if (s) dipakai.add(s.id);
+    return { sid: s ? s.id : "", st: !s ? "tidak" : ganda ? "ganda" : sc >= 0.8 ? "cocok" : "cek" };
+  };
   const baca = async inp => {
     setBusy(true);
     try {
       const d = await siapkanDokumen(inp, setLangkah); setDok(d.nama);
       let hasil;
-      if (aiAda()) {
+      if (d.teks && cocokFormat(d.teks)) {
+        setLangkah("Membaca format pendataan…");
+        hasil = bacaFormatHafalan(d.teks).map(r => ({ nama: r.nama, halaqah: r.halaqah, iqra: r.iqra, awal: r.awal, tahsin: r.tahsin, catatan: r.catatan.join(" · ") }));
+      } else if (aiAda()) {
         setLangkah(`${aiNama()} sedang membaca isi dokumen…`);
         const j = await tanyaAI({ sistem: SISTEM_DASAR, json: true, berkas: d.berkas, teks: PROMPT_AWAL.replace("{SANTRI}", daftarSantri()) + isiDok(d) });
-        hasil = (Array.isArray(j) ? j : j.baris || []).filter(r => r && r.nama);
-      } else hasil = awalLokal(d.tabel || []);
+        hasil = (Array.isArray(j) ? j : j.baris || []).filter(r => r && r.nama).map(r => { const t = keTahsin(r); return { nama: r.nama, santri_id: r.santri_id, iqra: !!t, tahsin: t, awal: t ? null : keAwal(r), catatan: r.catatan || "" }; });
+      } else hasil = awalLokal(d.tabel || []).map(r => ({ nama: r.nama, awal: keAwal(r), catatan: "" }));
+      hasil = hasil.filter(r => r.awal || r.tahsin);
       if (!hasil.length) throw new Error("Tidak ada data santri yang terbaca dari dokumen ini.");
       const dipakai = new Set();
-      const rs = hasil.map((r, i) => {
-        let s = r.santri_id && semua.find(x => x.id === r.santri_id), sc = s ? mirip(r.nama, s.nama) : 0;
-        if (!s || sc < 0.35) { const c = cocokkan(r.nama, semua); if (c.sc >= 0.6) { s = c.best; sc = c.sc; } else if (!s) { s = null; } }
-        const awal = keAwal(r), ganda = s && dipakai.has(s.id); if (s) dipakai.add(s.id);
-        const st = !s ? "tidak" : ganda ? "ganda" : sc >= 0.8 ? "cocok" : "cek";
-        return { k: i, nama: r.nama, sid: s ? s.id : "", st, ikut: st === "cocok" || st === "cek", awal, catatan: r.catatan || "" };
-      });
-      setRows(rs); setLangkah("");
+      setRows(hasil.map((r, i) => { const m = cariSantri(r, dipakai); return { k: i, ...r, ...m, ikut: m.st === "cocok" || m.st === "cek" }; })); setLangkah("");
     } catch (e) { toast(e.message || "Gagal membaca dokumen", "err"); }
     finally { setBusy(false); setLangkah(""); }
   };
   const ubah = (k, o) => setRows(rows.map(r => (r.k === k ? { ...r, ...o } : r)));
   const n = st => rows.filter(r => r.st === st).length, ikut = rows ? rows.filter(r => r.ikut && r.sid) : [];
   const simpan = async () => {
-    setSB(true); let ok = 0;
-    for (const r of ikut) if (await put("dataAwal", r.sid, r.awal)) ok++;
-    logUbah("ubah", "dataAwal", "impor", `Impor data awal hafalan ${ok} santri dari ${dok}`);
-    setSB(false); toast(`Data awal ${ok} santri disimpan`); nav.back();
+    setSB(true); let ok = 0, iq = 0; const ts = Date.now(), oleh = me().id;
+    for (const r of ikut) {
+      if (r.tahsin) { if (await put("tahsinAwal", r.sid, { ...r.tahsin, ujian: r.tahsin.hal >= L.IQRA_HAL, oleh, ts, tgl: L.today() })) iq++; }
+      else if (await put("dataAwal", r.sid, { ...r.awal, oleh, ts, tgl: L.today() })) ok++;
+    }
+    logUbah("ubah", "dataAwal", "impor", `Impor data awal: ${ok} santri Al-Qur'an, ${iq} santri Iqro' dari ${dok}`);
+    setSB(false); toast(`Tersimpan: ${ok} santri Al-Qur'an${iq ? `, ${iq} santri Iqro'` : ""}`); nav.back();
   };
-  return html`<${SubHeader} title="Unggah Data Awal" sub="Dari dokumen hafalan santri" />
-    <div class="wrap">${!rows ? html`<${Hint}>Unggah rekap hafalan santri dalam format apa pun (Excel, Word, PDF, foto tulisan/tabel). Nama santri dicocokkan otomatis dengan data pondok.</${Hint}>
-      <${PilihDokumen} onBaca=${baca} busy=${busy} langkah=${langkah} contoh=${"Contoh:\nAhmad Faeyza  juz 30, 29, 1-2  sedang juz 3 hal 5\nM. Raya Anugrah  3,5 juz"} />`
-    : html`<${Card}><div class="stats"><${Stat} label="Cocok" value=${n("cocok")} /><${Stat} label="Perlu dicek" value=${n("cek") + n("ganda")} tone="gold" /><${Stat} label="Tidak ditemukan" value=${n("tidak")} tone="blue" /></div>
-        <p class="small" style="margin:8px 0 0">Dari <b>${dok}</b>. Periksa nama yang ditandai kuning. Ketuk "Ubah" untuk membetulkan juz.</p></${Card}>
-      <div class="imp-list">${rows.map(r => { const s = r.sid && L.santriById(r.sid);
+  // ringkasan capaian semester sebelum disimpan
+  const tg = L.targetSemester() * 20;
+  const capai = a => { if (a.awalSemHal == null) return null; const now = a.selesai.length * 20 + a.baris / 15, g = Math.max(0, now - a.awalSemHal); return { now, g, ok: g >= tg }; };
+  const posIq = (j, h) => (j - 1) * L.IQRA_HAL + (h || 0);
+  return html`<${SubHeader} title="Unggah Data Awal" sub="Dari pesan, dokumen, atau foto" />
+    <div class="wrap">${!rows ? html`<${Hint}>Tempel pesan pendataan hafalan dari WhatsApp (bisa beberapa halaqah sekaligus), atau unggah Excel, Word, PDF, foto. Santri Al-Qur'an masuk ke Data Awal Hafalan, santri Iqro' masuk ke Tahsin.</${Hint}>
+      <${PilihDokumen} onBaca=${baca} busy=${busy} langkah=${langkah} contoh=${"Tempel pesan pendataan, contoh:\n*1. Adiyatma Wiryateja*\nHafalan Awal Semester : 7 Juz\nTotal Hafalan : 9 Juz 13 Halaman\nJuz Yang Sudah di Hafal : 29,30,1,2,3,4,5,6,7\nHafalan Sekarang : Juz 8 Halaman 14"} />`
+    : html`<${Card}><div class="stats"><${Stat} label="Cocok" value=${n("cocok")} /><${Stat} label="Perlu dicek" value=${rows.filter(r => r.st === "cek" || r.st === "ganda" || r.catatan).length} tone="gold" /><${Stat} label="Tidak ditemukan" value=${n("tidak")} tone="blue" /></div>
+        <p class="small" style="margin:8px 0 0">Dari <b>${dok}</b> · ${rows.filter(r => !r.tahsin).length} santri Al-Qur'an, ${rows.filter(r => r.tahsin).length} santri Iqro'. Periksa yang bertanda kuning sebelum menyimpan.</p></${Card}>
+      <div class="imp-list">${rows.map(r => { const c = r.awal && capai(r.awal), t = r.tahsin;
+        const gIq = t && t.awalSem ? Math.max(0, posIq(t.jilid, t.hal) - posIq(t.awalSem.jilid, t.awalSem.hal)) : null;
         return html`<div class=${"imp-row " + r.st + (r.ikut && r.sid ? "" : " off")}>
           <div class="imp-top"><label class="imp-cek"><input type="checkbox" checked=${r.ikut && !!r.sid} disabled=${!r.sid} onChange=${e => ubah(r.k, { ikut: e.target.checked })} /></label>
-            <div class="imp-t"><small>Di dokumen: ${r.nama}</small>
+            <div class="imp-t"><small>${r.halaqah ? `Halaqah ${r.halaqah} · ` : ""}Di pesan: ${r.nama}</small>
               <select class="in" value=${r.sid} onChange=${e => ubah(r.k, { sid: e.target.value, st: e.target.value ? "cocok" : "tidak", ikut: !!e.target.value })}><option value="">— Tidak dipakai —</option>${semua.map(x => html`<option value=${x.id}>${x.nama} · ${x.kelas}</option>`)}</select></div>
             <${Pill} t=${{ cocok: "Cocok", cek: "Cek nama", ganda: "Ganda", tidak: "Tak ada" }[r.st]} tone=${{ cocok: "green", cek: "gold", ganda: "red", tidak: "muted" }[r.st]} /></div>
-          <div class="imp-isi"><span>Hafal <b>${r.awal.selesai.length} juz</b>${r.awal.selesai.length ? ` (${r.awal.selesai.join(", ")})` : ""} · sedang ${L.posLabel(r.awal.aktif, r.awal.baris)}</span>
-            <button class="link" onClick=${() => setEd(r)}>Ubah</button></div>
-          ${s && L.dataAwal(s).selesai ? html`<small class="imp-lama">Sebelumnya: ${L.dataAwal(s).selesai.length} juz · ${L.posLabel(L.dataAwal(s).aktif, L.dataAwal(s).baris)}</small>` : null}
+          ${t ? html`<div class="imp-isi"><span><b>Iqro' ${t.jilid}</b> hal. ${t.hal}${t.awalSem ? ` · awal semester Iqro' ${t.awalSem.jilid} hal. ${t.awalSem.hal}` : ""}${t.lulus.length ? ` · lulus jilid ${t.lulus.join(", ")}` : ""}</span></div>
+              ${gIq != null ? html`<div class="imp-cap"><span>Kemajuan semester ini</span><b>+${gIq} halaman Iqro'</b></div>` : null}`
+            : html`<div class="imp-isi"><span>Hafal <b>${r.awal.selesai.length} juz</b>${r.awal.selesai.length ? ` (${r.awal.selesai.join(", ")})` : ""} · sedang ${L.posLabel(r.awal.aktif, r.awal.baris)}</span><button class="link" onClick=${() => setEd(r)}>Ubah</button></div>
+              ${c ? html`<div class=${"imp-cap " + (c.ok ? "ok" : "")}><span>Awal semester ${fmtHal(r.awal.awalSemHal)} → sekarang ${fmtHal(c.now)}</span><b>+${fmtHal(c.g)}${c.ok ? " · target tercapai ✓" : ` dari ${L.targetSemester()} juz`}</b></div>` : null}`}
           ${r.catatan ? html`<small class="imp-cat">${r.catatan}</small>` : null}</div>`; })}</div>
       <div class="sticky-act"><div class="btn-row"><${Btn} kind="ghost" onClick=${() => setRows(null)}>Ulangi</${Btn}><${Btn} icon="check" disabled=${!ikut.length || simpanBusy} onClick=${simpan}>${simpanBusy ? "Menyimpan…" : `Simpan ${ikut.length} santri`}</${Btn}></div></div>
       ${ed ? html`<${AwalSheet} judul=${ed.nama} awal=${ed.awal} onClose=${() => setEd(null)} onSimpan=${a => { ubah(ed.k, { awal: a }); setEd(null); }} />` : null}`}</div>`;
 }
 export function AwalSheet({ judul, awal, onSimpan, onClose, tombol = "Pakai" }) {
   const [sel, setSel] = useState(new Set(awal.selesai)); const [aktif, setAktif] = useState(awal.aktif); const [baris, setBaris] = useState(awal.baris);
+  const as0 = awal.awalSemHal == null ? null : Number(awal.awalSemHal); const [asJ, setAsJ] = useState(as0 == null ? 0 : Math.floor(as0 / 20)), [asH, setAsH] = useState(as0 == null ? 0 : Math.round(as0 % 20)), [adaAs, setAdaAs] = useState(as0 != null);
   const tog = j => { const n = new Set(sel); n.has(j) ? n.delete(j) : n.add(j); setSel(n); if (n.has(aktif)) setAktif(U.find(x => !n.has(x)) || 30); };
   return html`<${Sheet} open=${true} title=${judul} onClose=${onClose}>
     <${Field} label="Juz yang sudah hafal (ketuk untuk memilih)"><div class="chips">${U.map(j => html`<button type="button" class=${"pill " + (sel.has(j) ? "green" : "muted")} style="padding:7px 10px;font-size:12.5px" onClick=${() => tog(j)}>${j}</button>`)}</div></${Field}>
     <${Field} label="Juz yang sedang dihafal"><select class="in" value=${aktif} onChange=${e => setAktif(Number(e.target.value))}>${U.filter(j => !sel.has(j)).map(j => html`<option value=${j}>Juz ${j}</option>`)}</select></${Field}>
     <${Field} label="Baris yang sudah dihafal di juz ini" hint=${`Maksimal ${L.juzLines(Number(aktif))} baris · ${L.posLabel(Number(aktif), Number(baris) || 0)}`}><${Stepper} value=${baris} onChange=${setBaris} max=${L.juzLines(Number(aktif))} step=${15} label="baris" /></${Field}>
-    <${Btn} icon="check" onClick=${() => onSimpan({ selesai: U.filter(j => sel.has(j)), aktif: Number(aktif), baris: Math.min(L.juzLines(Number(aktif)), Number(baris) || 0) })}>${tombol}</${Btn}></${Sheet}>`;
+    <${Field} label="Hafalan awal semester" hint=${adaAs ? `${asJ} juz ${asH} halaman · untuk menghitung capaian target semester` : "Opsional: isi bila hafalan saat awal semester diketahui"}>
+      ${adaAs ? html`<div class="btn-row"><${Stepper} value=${asJ} onChange=${setAsJ} max=${30} label="juz" /><${Stepper} value=${asH} onChange=${v => setAsH(Math.min(19, v))} max=${19} label="halaman" /></div>` : html`<button type="button" class="link" onClick=${() => setAdaAs(true)}>+ Isi hafalan awal semester</button>`}</${Field}>
+    <${Btn} icon="check" onClick=${() => onSimpan({ ...awal, selesai: U.filter(j => sel.has(j)), aktif: Number(aktif), baris: Math.min(L.juzLines(Number(aktif)), Number(baris) || 0), awalSemHal: adaAs ? asJ * 20 + asH : null })}>${tombol}</${Btn}></${Sheet}>`;
 }
 
 // ================= IMPOR BIODATA SANTRI =================

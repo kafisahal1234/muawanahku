@@ -48,12 +48,15 @@ export function DataAwal() {
     <div class="wrap"><${Hint}>Isi posisi hafalan setiap santri di awal semester. Ketuk santri untuk mengubahnya, atau unggah rekap hafalan sekaligus.</${Hint}>
     <button class="up-cta" onClick=${() => nav.go("imporAwal")}><span class="up-ic"><${Icon} n="upload" s=${22} /></span><span><b>Unggah dari dokumen</b><small>Excel, Word, PDF, atau foto · dibaca AI</small></span><${Icon} n="chev" s=${18} /></button>
     <${SearchBox} value=${q} onInput=${setQ} /><${Card}><div class="list">${list.map(s => { const a = L.dataAwal(s);
-      return html`<${Row} name=${s.nama} sub=${`Hafal: ${a.selesai.length ? a.selesai.join(", ") : "—"} · ${L.posLabel(a.aktif, a.baris)}`} right=${(S.data.dataAwal || {})[s.id] ? html`<${Pill} t="Diubah" tone="blue" />` : null} onClick=${() => setSel(s.id)} />`; })}</div></${Card}>
+      const c = a.awalSemHal != null ? L.capaianJuz(s) : null;
+      return html`<${Row} name=${s.nama} sub=${`Hafal: ${a.selesai.length ? a.selesai.join(", ") : "—"} · ${L.posLabel(a.aktif, a.baris)}${c ? ` · semester ini +${c.juz.toLocaleString("id-ID")} juz${c.tercapai ? " ✓" : ""}` : ""}`} right=${(S.data.dataAwal || {})[s.id] ? html`<${Pill} t="Diubah" tone="blue" />` : null} onClick=${() => setSel(s.id)} />`; })}</div></${Card}>
     ${sel ? html`<${EditAwal} sid=${sel} onClose=${() => setSel(null)} />` : null}</div>`;
 }
 function EditAwal({ sid, onClose }) {
   const s = L.santriById(sid);
-  const save = async a => { if (await put("dataAwal", sid, a)) { toast("Data awal hafalan disimpan"); onClose(); } };
+  // bila hafalan awal semester diisi, data ini menjadi potret posisi SEKARANG (setoran sebelumnya sudah tercakup)
+  const save = async a => { const v = { ...a, oleh: me().id, ...(a.awalSemHal != null ? { ts: Date.now(), tgl: L.today() } : {}) }; if (a.awalSemHal == null) { delete v.ts; delete v.tgl; }
+    if (await put("dataAwal", sid, v)) { toast("Data awal hafalan disimpan"); onClose(); } };
   return html`<${AwalSheet} judul=${s.nama} awal=${L.dataAwal(s)} onClose=${onClose} onSimpan=${save} tombol="Simpan" />`;
 }
 

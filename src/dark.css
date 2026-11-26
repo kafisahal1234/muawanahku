@@ -574,3 +574,5 @@ html[data-tema=gelap] .rx-target{background:#3f3318;border:1px solid #6b5d3e;col
 html[data-tema=gelap] .rx-target b{color:#f7d698}
 html[data-tema=gelap] .rx-target em{color:#a3efcb}
 @media (prefers-reduced-motion: no-preference){html[data-tema=gelap] .login .lg>.lg-dot{background:#F2C55E}html[data-tema=gelap] .splash.sp2{background:radial-gradient(90% 60% at 50% 35%,rgba(242,197,94,.28),transparent 60%),linear-gradient(160deg,#12804F,#0B5D3B 55%,#063D27)}html[data-tema=gelap] .sp-c1{stroke:#816f46}html[data-tema=gelap] .sp-star{background:#F2C55E}html[data-tema=gelap] .splash.sp2 small{color:#E3F2E9}html[data-tema=gelap] .sp-waktu{color:#F2D08A}}
+html[data-tema=gelap] .imp-cap{background:#3f3318;color:#f8e0aa}
+html[data-tema=gelap] .imp-cap.ok{background:#273c30;color:#acf0d1}
