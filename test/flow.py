@@ -2,10 +2,10 @@ import asyncio, json
 from playwright.async_api import async_playwright
 URL = "file:///home/claude/webapp/dist/index.html"
 async def login(pg, u, p=None):
-    await pg.evaluate("sessionStorage.clear()"); await pg.goto(URL); await pg.wait_for_timeout(300)
+    await pg.evaluate("sessionStorage.clear(); localStorage.removeItem('mk_user')"); await pg.goto(URL); await pg.wait_for_timeout(300)
     await pg.fill("input[autocomplete=username]", u); await pg.fill("input[type=password]", p or u + "123"); await pg.click("button[type=submit]"); await pg.wait_for_timeout(300)
 async def loginWali(pg, nama):
-    await pg.evaluate("sessionStorage.clear()"); await pg.goto(URL); await pg.wait_for_timeout(300)
+    await pg.evaluate("sessionStorage.clear(); localStorage.removeItem('mk_user')"); await pg.goto(URL); await pg.wait_for_timeout(300)
     await pg.click("text=Lihat semua akun demo"); await pg.fill(".sheet .search input", nama); await pg.wait_for_timeout(100); await pg.locator(".demo-acc:has(.av.gold)").first.click(); await pg.wait_for_timeout(300)
 async def tile(pg, label): await pg.locator(f".tile:has(.tile-lb:text-is(\"{label}\"))").first.click(); await pg.wait_for_timeout(250)
 

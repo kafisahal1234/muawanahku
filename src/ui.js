@@ -37,8 +37,8 @@ try {
   });
 } catch (e) { }
 export const nav = {
-  get user() { return N.user; }, get tab() { return N.tab; }, get dir() { return N.dir; }, get splash() { return N.splash; }, endSplash() { N.splash = false; nemit(); }, get top() { return N.stack[N.stack.length - 1]; }, get depth() { return N.stack.length; },
-  setUser(u, opt = {}) { unwind(); N.user = u; N.stack = []; N.tab = "home"; N.dir = "tab"; N.splash = !!(u && opt.splash); try { u ? sessionStorage.setItem("mk_user", JSON.stringify(u)) : sessionStorage.removeItem("mk_user"); } catch (e) { } nemit(); },
+  get user() { return N.user; }, get tab() { return N.tab; }, get dir() { return N.dir; }, get splash() { return N.splash; }, get kembali() { return N.kembali; }, endSplash() { N.splash = false; nemit(); }, get top() { return N.stack[N.stack.length - 1]; }, get depth() { return N.stack.length; },
+  setUser(u, opt = {}) { unwind(); N.user = u; N.stack = []; N.tab = "home"; N.dir = "tab"; N.splash = !!(u && opt.splash); N.kembali = !!opt.kembali; try { if (u) localStorage.setItem("mk_user", JSON.stringify(u)); else { localStorage.removeItem("mk_user"); sessionStorage.removeItem("mk_user"); } } catch (e) { } nemit(); },
   go(screen, params = {}) { pindah("fwd", () => { N.dir = "fwd"; N.stack.push({ screen, params }); try { history.pushState({ mk: N.stack.length }, ""); live++; } catch (e) { } nemit(); window.scrollTo(0, 0); }); },
   replace(screen, params = {}) { pindah("fwd", () => { N.dir = "fwd"; N.stack[N.stack.length - 1] = { screen, params }; nemit(); window.scrollTo(0, 0); }); },
   back() { if (live > 0) { try { history.back(); return; } catch (e) { } } pindah("back", () => { N.dir = "back"; N.stack.pop(); nemit(); window.scrollTo(0, 0); }); },
@@ -129,7 +129,21 @@ export function Card({ title, right, children, cls = "" }) {
 export function SubHeader({ title, sub, right, children }) {
   return html`<header class="sub-h"><div class="sub-row"><button class="back" aria-label="Kembali" onClick=${() => nav.back()}><${Icon} n="left" s=${24} /></button><div class="sub-t"><h1>${title}</h1>${sub ? html`<p>${sub}</p>` : null}</div>${right || null}</div>${children || null}</header>`;
 }
-export function Stat({ label, value, sub, tone }) { return html`<div class=${"stat " + (tone || "")}><span>${label}</span><b>${value}</b>${sub ? html`<small>${sub}</small>` : null}</div>`; }
+// Angka yang "menghitung naik" saat pertama tampil (mengikuti pengaturan kurangi gerakan)
+const KURANGI = (() => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return true; } })();
+const angkaKe = (p, e) => { const dec = (p.split(",")[1] || "").length, n = Number(p.replace(",", ".")) * e, t = dec ? n.toFixed(dec).replace(".", ",") : String(Math.round(n)); return p.length > 1 && p[0] === "0" && !dec ? t.padStart(p.length, "0") : t; };
+export function Angka({ v }) {
+  const s = String(v ?? ""); const [d, setD] = useState(s); const awal = useRef(true);
+  useEffect(() => {
+    if (!awal.current) { setD(s); return; } awal.current = false;
+    const parts = s.split(/(\d+(?:,\d+)?)/); if (KURANGI || parts.length < 2 || s.length > 24) return;
+    const t0 = performance.now(); let raf;
+    const step = now => { const k = Math.min(1, (now - t0) / 750), e = 1 - Math.pow(1 - k, 3); setD(parts.map((p, i) => (i % 2 ? angkaKe(p, e) : p)).join("")); if (k < 1) raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step); return () => cancelAnimationFrame(raf);
+  }, [s]);
+  return html`${d}`;
+}
+export function Stat({ label, value, sub, tone }) { return html`<div class=${"stat " + (tone || "")}><span>${label}</span><b>${typeof value === "string" || typeof value === "number" ? html`<${Angka} v=${value} />` : value}</b>${sub ? html`<small>${sub}</small>` : null}</div>`; }
 export function Avatar({ name, tone }) {
   const t = (name || "?").replace(/^(Ust\.|Ustdzh\.)\s*/, "").replace(/^(M\.?|Muhammad|Muhamad)\s+/i, "").split(/\s+/).slice(0, 2).map(w => w[0]).join("").toUpperCase();
   return html`<span class=${"av " + (tone || "")}>${t}</span>`;

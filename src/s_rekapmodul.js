@@ -1,6 +1,6 @@
 // Rekap per modul: Tahfidz, Mapel/Kurikulum, Asrama, Kesantrian — masing-masing berdiri sendiri, tanpa tab campuran
 import { useState } from "preact/hooks";
-import { html, nav, useApp, Icon, Card, SubHeader, Btn, Empty, Hint, Sheet, Seg } from "./ui.js";
+import { html, nav, useApp, Icon, Card, SubHeader, Btn, Empty, Hint, Sheet, Seg, Angka } from "./ui.js";
 import * as L from "./logic.js";
 import { me } from "./common.js";
 import { unduhPdf, tabelKePdf } from "./pdf.js";
@@ -19,7 +19,7 @@ const pendek = n => String(n || "").split(" ").slice(0, 3).join(" ");
 // angka utama: [label, nilai, keterangan, persen-untuk-bar|null, nada]
 function Metrik({ items }) {
   return html`<div class="rx-m">${items.filter(Boolean).map(([lab, val, ket, bar, t]) => html`<div class=${"rx-mi " + (t || "")}>
-    <span>${lab}</span><b>${val}</b>${bar != null ? html`<i class="rx-bar"><i style=${`width:${Math.max(0, Math.min(100, bar))}%`}></i></i>` : null}${ket ? html`<small>${ket}</small>` : null}</div>`)}</div>`;
+    <span>${lab}</span><b><${Angka} v=${val} /></b>${bar != null ? html`<i class="rx-bar"><i style=${`width:${Math.max(0, Math.min(100, bar))}%`}></i></i>` : null}${ket ? html`<small>${ket}</small>` : null}</div>`)}</div>`;
 }
 function Grup({ judul, sub, items, onClick }) {
   return html`<button type="button" class="rx-grp" onClick=${onClick}><div class="rx-grp-h"><div><b>${judul}</b>${sub ? html`<small>${sub}</small>` : null}</div><span class="rx-lihat">Rincian <${Icon} n="right" s=${16} /></span></div>

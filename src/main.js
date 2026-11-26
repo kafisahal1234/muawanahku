@@ -97,13 +97,19 @@ class Boundary extends Component {
 }
 
 function Splash({ nama }) {
-  useEffect(() => { const t = setTimeout(() => nav.endSplash(), 1700); return () => clearTimeout(t); }, []);
-  return html`<div class="splash" role="status" aria-live="polite"><div class="sp-ring"><span class="sp-orbit"></span><span class="sp-logo applogo"><img src=${APP_LOGO} alt="" /></span></div>
-    <b>Assalamu'alaikum</b><small>${nama}</small><i class="sp-bar"><em></em></i></div>`;
+  const kb = nav.kembali, dur = kb ? 1500 : 2200, j = new Date().getHours();
+  const salam = j < 11 ? "Selamat pagi" : j < 15 ? "Selamat siang" : j < 18 ? "Selamat sore" : "Selamat malam";
+  useEffect(() => { const t = setTimeout(() => nav.endSplash(), dur); return () => clearTimeout(t); }, []);
+  return html`<div class=${"splash sp2" + (kb ? " kb" : "")} style=${`--dur:${dur}ms`} role="status" aria-live="polite">
+    <div class="sp-stage"><svg class="sp-svg" viewBox="0 0 200 200" aria-hidden="true"><circle class="sp-c0" cx="100" cy="100" r="92" /><circle class="sp-c1" cx="100" cy="100" r="92" /><circle class="sp-c2" cx="100" cy="100" r="80" /></svg>
+      <span class="sp-glow"></span>${Array.from({ length: 8 }, (_, i) => html`<i class="sp-star" style=${`--i:${i}`}></i>`)}
+      <span class="sp-logo applogo"><img src=${APP_LOGO} alt="" /><i class="sp-shine"></i></span></div>
+    <b class="sp-t">${"Assalamu'alaikum".split("").map((c, i) => html`<span style=${`--k:${i}`}>${c}</span>`)}</b><small>${nama}</small>
+    <em class="sp-waktu">${kb ? "Selamat datang kembali" : salam} · ${L.fmtTgl(L.today())}</em><i class="sp-bar"><em></em></i></div>`;
 }
 function App() {
   useApp(); const online = useOnline();
-  useEffect(() => { initStore(); try { const u = JSON.parse(sessionStorage.getItem("mk_user") || "null"); if (u) nav.setUser(u); } catch (e) { } }, []);
+  useEffect(() => { initStore(); try { const u = JSON.parse(localStorage.getItem("mk_user") || sessionStorage.getItem("mk_user") || "null"); if (u) nav.setUser(u, { splash: true, kembali: true }); } catch (e) { } }, []);
   const u = nav.user;
   if (!u) return html`<div class="app nonav"><${HM.Login} /><${ToastHost} /></div>`;
   const hilang = (u.kind === "staff" && (!L.staffById(u.id) || (L.akunOv(L.staffAman(u.id).username) || {}).hapus)) || (u.kind === "wali" && !L.santriById(u.id));

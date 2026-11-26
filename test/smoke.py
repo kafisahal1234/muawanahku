@@ -20,7 +20,7 @@ async def main():
         pg.on("pageerror", lambda e: errs.append(("pageerror", str(e))))
         await pg.goto(URL); await pg.wait_for_timeout(600)
         for acc in ACC:
-            await pg.evaluate("sessionStorage.clear()"); await pg.goto(URL); await pg.wait_for_timeout(400)
+            await pg.evaluate("sessionStorage.clear(); localStorage.removeItem('mk_user')"); await pg.goto(URL); await pg.wait_for_timeout(400)
             await pg.fill("input[autocomplete=username]", acc); await pg.fill("input[type=password]", acc + "123")
             await pg.click("button[type=submit]"); await pg.wait_for_timeout(400)
             await pg.screenshot(path=f"test/{acc}_home.png", full_page=True)

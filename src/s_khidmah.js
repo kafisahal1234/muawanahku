@@ -1,6 +1,6 @@
 // Ceklis Musyrif: ceklis harian musyrif / wali asrama (ringkasan dari "Ceklis Harian Musyrif", 58 poin → 16 butir)
 import { useState } from "preact/hooks";
-import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, Empty, Seg, Hint } from "./ui.js";
+import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, Empty, Seg, Hint, Angka } from "./ui.js";
 import { all, get, put, toast } from "./store.js";
 import * as L from "./logic.js";
 import { me } from "./common.js";
@@ -76,6 +76,11 @@ export function rekapKhidmah(gid, rg) {
 }
 export const musyrifList = (pondok) => L.ASRAMA.filter(a => a.musyrif && (!pondok || a.pondok === pondok)).map(a => ({ a, g: L.staffById(a.musyrif) })).filter(x => x.g);
 
+// taburan bintang & kertas warna saat ceklis lengkap 100%
+export function Konfeti() {
+  const W = ["#E2A93B", "#F2C55E", "#22B573", "#4B8DF0", "#F06A55", "#fff"];
+  return html`<div class="konfeti" aria-hidden="true">${Array.from({ length: 22 }, (_, i) => html`<i style=${`--x:${(i * 37) % 100}%;--d:${(i % 7) * 70}ms;--r:${(i * 53) % 360}deg;--c:${W[i % W.length]};--s:${0.7 + (i % 4) * 0.15}`}></i>`)}</div>`;
+}
 const nada = v => (v == null ? "muted" : v >= 90 ? "green" : v >= 75 ? "blue" : v >= 60 ? "gold" : "red");
 
 export function Khidmah({ tgl: t0, gid: g0 }) {
@@ -96,7 +101,7 @@ export function Khidmah({ tgl: t0, gid: g0 }) {
   const grup = KHIDMAH.map(gr => ({ gr, units: h.units.filter(u => u.g.id === gr.id) })).filter(x => x.units.length);
   return html`<${SubHeader} title="Ceklis Musyrif" sub=${`${milik ? "" : g.pendek + " · "}${a ? "Asrama " + a.nama + " · " : ""}${L.fmtTgl(tgl)}`} />
     <div class="wrap">
-      <div class="kh-hero"><div class="kh-ring" style=${`--p:${pct}`}><b>${pct}%</b></div><div><b>${selesai.size} dari ${h.units.length} terlaksana</b>
+      <div class="kh-hero"><div class="kh-ring" style=${`--p:${pct}`}><b><${Angka} v=${pct + "%"} /></b></div>${pct >= 100 ? html`<${Konfeti} />` : null}<div><b>${selesai.size} dari ${h.units.length} terlaksana</b>
         <small>${pct >= 100 ? "MasyaAllah, ceklis hari ini lengkap." : boleh ? "Centang setiap tugas begitu selesai. Tersimpan otomatis." : milik ? "Hanya hari ini dan kemarin yang bisa diisi." : "Hanya melihat."}</small></div></div>
       ${grup.map(({ gr, units }) => { const ok = units.filter(u => selesai.has(u.id)).length;
         const butir = [...new Set(units.map(u => u.b))];
