@@ -10,7 +10,7 @@ import { dataSantriAI } from "./s_ai.js";
 import { slotStatus } from "./s_kurikulum.js";
 import { perolehanBulan } from "./s_hafalanbulan.js";
 
-export const PANDUAN = `Panduan aplikasi MuawanahKu (pakai nama menu persis seperti ini bila menunjukkan jalan):
+export const PANDUAN = `Panduan aplikasi MuawanahQu (pakai nama menu persis seperti ini bila menunjukkan jalan):
 - Navigasi bawah akun ustadz: Beranda, Jadwal, Cari (cari santri), Riwayat (input milik sendiri), Akun (Profil, Keamanan, Log perubahan data milik akun sendiri, Keluar). Navigasi bawah hanya tampil di 5 layar utama; layar lain memakai tombol kembali.
 - Guru tahfidz → Beranda → Tahfidz: Absen Halaqah, Ziyadah, Murojaah, Tahsin (Iqro'), Manzil, Tasmi', Siap tasmi', Progres Santri, Nilai Mid/Smt, Rekap Halaqah, Perolehan Bulanan (baris/halaman/juz per bulan, unduh PDF), Izin Guru, Riwayat & Koreksi. Sesi halaqah Shubuh, Dhuha, Malam (Senin–Jumat); Sabtu hanya Shubuh dan khusus manzil (tidak ada ziyadah & murojaah); Ahad libur. Mutaba'ah diisi Senin–Jumat; Sabtu & Ahad libur mutaba'ah dan tidak mengurangi nilai. Hari yang terlewat boleh diisi menyusul paling lambat 7 hari (tombol "Isi menyusul" di layar Mutaba'ah, tercatat "diisi menyusul"). Hari tidak dihitung bila kosong karena: wali asrama izin (Izin Guru) atau ditandai "tidak dinilai" dengan alasan, atau santri sedang izin. Hari yang sudah diisi selalu dihitung; hari aktif lain yang kosong bernilai 0.
 - Tahsin (Iqro' KH. As'ad Humam, jilid 1–6 ±32 halaman, lalu Al-Qur'an): santri yang masih Iqro' dicatat bacaannya (halaman, Lancar/Kurang lancar/Ulang) dan ujian kenaikan jilid di menu Tahsin, bukan di Ziyadah hafalan. Rekap Tahsin bisa diunduh PDF.

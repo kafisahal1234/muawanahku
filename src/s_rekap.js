@@ -82,7 +82,7 @@ function unduhRekap(tab, lk, rg, fmt) {
   const rh = L.rentangHitung(rg);
   if (fmt === "pdf") return unduhPdf(nama, () => tabelKePdf({ judul: t.judul, sub: `${rg.label}${rh.kosong ? "" : ` · dihitung ${L.fmtTgl(rh.dari, false)} – ${L.fmtTgl(rh.sampai, false)}`}`,
     catatan: "Persentase = yang tercatat dibagi hari/sesi aktif. Hari tanpa input dihitung 0. Hafalan: 15 baris = 1 halaman, 20 halaman = 1 juz.",
-    oleh: `Dicetak oleh ${me().nama}, ${L.fmtTgl(L.today())} · MuawanahKu`, bagian: [{ judul: "Ringkasan", ...t.ringkas }, { judul: "Rincian per santri", ...t.rinci }],
+    oleh: `Dicetak oleh ${me().nama}, ${L.fmtTgl(L.today())} · MuawanahQu`, bagian: [{ judul: "Ringkasan", ...t.ringkas }, { judul: "Rincian per santri", ...t.rinci }],
     ttd: ttdUntukPdf({ tahfidz: "tahfidz", halaqah: "tahfidz", mapel: "mapel", kbm: "mapel", pelanggaran: "kesantrian", mut: "asrama", motd: "asrama" }[tab] || "") }));
   const tb = x => `<table><tr>${x.kol.map(k => `<th>${esc(k)}</th>`).join("")}</tr>${x.rows.map(r => `<tr>${r.map(v => `<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</table>`;
   const body = `<h1>${esc(t.judul.toUpperCase())}<br><span class="small">${esc(rg.label)}${rh.kosong ? "" : ` · dihitung ${L.fmtTgl(rh.dari, false)} – ${L.fmtTgl(rh.sampai, false)}`}</span></h1>

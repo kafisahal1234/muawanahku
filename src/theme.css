@@ -1,4 +1,4 @@
-/* MuawanahKu — mengikuti Material Design 3 & Apple HIG:
+/* MuawanahQu — mengikuti Material Design 3 & Apple HIG:
    target sentuh min 44–48px, ikon 24px, app bar 56px, nav bar 64px + safe area, teks isi 15px, label min 12px */
 :root{--g:#0B5D3B;--g2:#08482E;--gold:#E2A93B;--bg:#F3F6F4;--ink:#16261D;--mut:#5E7266;--line:#E3EAE5;--card:#fff;
 --h:#0E8F52;--s:#2A6FDB;--i:#B7790A;--a:#D23B2B;--m:#7C4DEB;--nav:64px;--safe:env(safe-area-inset-bottom,0px)}

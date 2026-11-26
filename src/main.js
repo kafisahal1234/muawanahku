@@ -71,13 +71,13 @@ function SideNav({ wali }) {
     : [["home", "Beranda", "home"], ["jadwal", "Jadwal", "calendar"], ["cari", "Cari santri", "search"], ["riwayat", "Riwayat", "clock"], ["akun", "Akun", "user"]];
   const baru = all("pengumuman").filter(p => Date.now() - p.ts < 7 * 864e5).length, aktif = !nav.top;
   return html`<aside class="side" aria-label="Navigasi">
-    <div class="side-brand"><span class="ht-logo"><img src=${LOGO2} alt="" /></span><div><b>Muawanah<i>Ku</i></b><small>Kampung Qur'an Al Muawanah</small></div></div>
+    <div class="side-brand"><span class="ht-logo"><img src=${LOGO2} alt="" /></span><div><b>Muawanah<i>Qu</i></b><small>Kampung Qur'an Al Muawanah</small></div></div>
     <button class="side-user" onClick=${() => nav.setTab("akun")}><${FotoAv} src=${fotoUser(u)} nama=${nama} size=${44} /><span><b>${nama}</b><small>${peran}</small></span></button>
     <nav class="side-nav">${items.map(([k, lab, ic]) => html`<button class=${aktif && nav.tab === k ? "on" : ""} onClick=${() => nav.setTab(k)}><${Icon} n=${ic} s=${21} w=${2.2} /><span>${lab}</span></button>`)}
       <hr />
       <button class=${nav.top && nav.top.screen === "pengumuman" ? "on" : ""} onClick=${() => nav.go("pengumuman")}><${Icon} n="bell" s=${21} w=${2.2} /><span>Pengumuman</span>${baru ? html`<b class="side-badge">${baru}</b>` : null}</button>
       ${aiAda() ? html`<button class=${nav.top && nav.top.screen === "asisten" ? "on" : ""} onClick=${() => nav.go("asisten")}><${Icon} n="chat" s=${21} w=${2.2} /><span>Asisten AI</span></button>` : null}</nav>
-    <small class="side-foot">MuawanahKu ${"1.0.0"}</small></aside>`;
+    <small class="side-foot">MuawanahQu ${"1.0.0"}</small></aside>`;
 }
 function useOnline() {
   const [on, setOn] = useState(typeof navigator === "undefined" || navigator.onLine !== false);

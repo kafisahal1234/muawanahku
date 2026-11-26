@@ -35,7 +35,7 @@ export function RekapHafalanBulan() {
   const unduh = () => unduhPdf(`Perolehan Hafalan ${namaBulan(bulan)}`, () => tabelKePdf({
     judul: "Rekap Perolehan Hafalan", sub: `${namaBulan(bulan)} · ${data.length > 2 ? data.length + " kelompok · " + semuaRows.length + " santri" : data.map(g => g.nama).join(", ")}`,
     catatan: `Target ${L.fmtHal(L.targetHal("bulanan"))} per bulan (${L.targetSemester().toLocaleString("id-ID")} juz per semester). Perolehan = ziyadah yang lulus dalam bulan ini. 15 baris = 1 halaman, 20 halaman = 1 juz.`,
-    oleh: `Dicetak oleh ${me().nama}, ${L.fmtTgl(L.today())} · MuawanahKu`, ttd: ttdUntukPdf((me().roles.includes("musyrif") && !me().roles.some(r => ["guru_tahfidz", "wadir_tahfidz", "mudir"].includes(r))) ? "asrama" : "tahfidz"),
+    oleh: `Dicetak oleh ${me().nama}, ${L.fmtTgl(L.today())} · MuawanahQu`, ttd: ttdUntukPdf((me().roles.includes("musyrif") && !me().roles.some(r => ["guru_tahfidz", "wadir_tahfidz", "mudir"].includes(r))) ? "asrama" : "tahfidz"),
     bagian: data.map(g => ({ judul: `${g.nama} · ${g.rows.length} santri`, kol: ["No", "Nama santri", "Baris", "Halaman", "Juz", "Setara", "Hari setor", "Murojaah", "Tasmi' lulus", "Total hafalan"],
       rows: g.rows.map(({ s, p }, i) => [i + 1, s.nama, p.baris, dk(p.hal, 1), dk(p.juz, 2), L.fmtBaris(p.baris), p.hari, p.muro, p.tasmi.length ? "Juz " + p.tasmi.join(", ") : "—", L.fmtJumlah(L.hafalan(s))]) })),
   }));

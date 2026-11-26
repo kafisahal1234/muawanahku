@@ -1,6 +1,6 @@
-# MuawanahKu
+# MuawanahQu
 
-Aplikasi pondok untuk **Pondok Tahfidz Modern Kampung Qur'an Al Muawanah** (Metro, Lampung): tahfidz, absen halaqah, MOTD, mutaba'ah, KBM mapel, kesantrian (izin & BAP), rapor, rekap berbasis hari aktif, dan portal wali santri.
+Aplikasi pondok untuk **Pondok Tahfidz Modern Kampung Qur'an Al Muawanah** (Metro, Lampung): tahfidz, absen halaqah, tahsin, mutaba'ah, ceklis musyrif, KBM mapel, kesantrian (izin & BAP), rapor, rekap berbasis hari aktif, dan portal wali santri.
 
 > Status: **purwarupa / demo** sebelum dibangun di Base44 (Des 2026, uji coba Jan 2027, penerapan Feb 2027).
 
@@ -31,7 +31,9 @@ python3 test/flow.py # uji alur (perlu playwright + chrome)
 
 Setiap push ke `main` otomatis dibangun dan dipasang oleh `.github/workflows/deploy.yml`.
 Aktifkan sekali: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-Alamatnya: `https://kafisahal1234.github.io/muawanahku/`
+Alamat: `https://login.muawanahqu.com` (domain kustom, diatur di Settings → Pages → Custom domain; sebelumnya `muawanahku.santripay.com`).
+
+Catatan nama: tampilan aplikasi bernama **MuawanahQu**. Kunci penyimpanan lokal (`muawanahku_demo_v1`) dan ID proyek Firebase (`muawanahku-15687`) sengaja tidak diubah agar data dan sesi lama tetap terbaca.
 
 ### Sinkron data antarperangkat
 

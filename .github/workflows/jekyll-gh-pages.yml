@@ -2,7 +2,7 @@
 name: Deploy Jekyll with GitHub Pages dependencies preinstalled
 
 on:
-  # Dinonaktifkan dari push: situs MuawanahKu diterbitkan oleh "Deploy ke GitHub Pages" (deploy.yml) dari folder dist/.
+  # Dinonaktifkan dari push: situs MuawanahQu diterbitkan oleh "Deploy ke GitHub Pages" (deploy.yml) dari folder dist/.
   # Workflow ini menerbitkan isi repo mentah dan bentrok dengan deploy utama (dua artefak github-pages).
   workflow_dispatch:
 

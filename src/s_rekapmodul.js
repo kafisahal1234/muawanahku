@@ -38,7 +38,7 @@ function Bagian({ t, right }) { return html`<div class="rx-sec"><h4>${t}</h4>${r
 function Unduhan({ judul, rg, tabel, ttd }) {
   const [buka, setBuka] = useState(false), nama = `${judul} - ${rg.label}`.replace(/[\/:]/g, "-"), rh = L.rentangHitung(rg);
   const pdf = () => { const t = tabel(); unduhPdf(nama, () => tabelKePdf({ judul, sub: `${rg.label}${rh.kosong ? "" : ` · ${L.fmtTgl(rh.dari, false)} – ${L.fmtTgl(rh.sampai, false)}`}`, catatan: t.catatan,
-    oleh: `Dicetak oleh ${me().nama}, ${L.fmtTgl(L.today())} · MuawanahKu`, bagian: t.bagian, ttd: ttdUntukPdf(ttd) })); };
+    oleh: `Dicetak oleh ${me().nama}, ${L.fmtTgl(L.today())} · MuawanahQu`, bagian: t.bagian, ttd: ttdUntukPdf(ttd) })); };
   const csv = () => { const t = tabel(), q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
     unduh(nama + ".csv", "﻿" + [q(`${judul} · ${rg.label}`), ...t.bagian.flatMap(b => ["", q(b.judul), b.kol.map(q).join(";"), ...b.rows.map(r => r.map(q).join(";"))])].join("\r\n")); };
   return html`<${Btn} kind="ghost" icon="download" onClick=${() => setBuka(true)}>Unduh rekap</${Btn}>

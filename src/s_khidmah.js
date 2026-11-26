@@ -140,7 +140,7 @@ export function RekapKhidmah({ pondok }) {
   const unduh = () => unduhPdf(`Rekap Ceklis Musyrif ${rg.label || L.fmtTgl(L.today())}`, () => tabelKePdf({
     judul: "Rekap Ceklis Harian Musyrif", sub: `${per === "harian" ? L.fmtTgl(L.today()) : rg.label}${p ? " · Pondok " + p : ""} · ${rows.length} wali asrama`,
     catatan: "Persentase = tugas terlaksana dibanding tugas yang berlaku pada hari itu. Sebagian tugas terisi otomatis dari absen halaqah, setoran dan mutaba'ah. Hari wali asrama izin tidak dihitung bila kosong.",
-    oleh: `Dicetak oleh ${me().nama}, ${L.fmtTgl(L.today())} · MuawanahKu`, ttd: ttdUntukPdf("kesantrian"),
+    oleh: `Dicetak oleh ${me().nama}, ${L.fmtTgl(L.today())} · MuawanahQu`, ttd: ttdUntukPdf("kesantrian"),
     bagian: [{ judul: "Per wali asrama", kol: ["No", "Wali asrama", "Asrama", "Pondok", "Terlaksana", "Hari diisi", "Tidak dinilai"],
       rows: rows.map((x, i) => [i + 1, x.g.nama, x.a.nama, x.a.pondok, x.v == null ? "—" : x.v + "%", x.rk ? `${x.rk.hariIsi}/${x.rk.hari}` : x.h.doc ? "Ya" : "Belum", x.rk ? x.rk.dikecualikan : "—"]) }],
   }));

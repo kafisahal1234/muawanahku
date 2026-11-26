@@ -2,7 +2,7 @@
 import { FIREBASE_CONFIG, connectFirestore } from "./cloud.js";
 export const COLS = ["setoran", "absenHalaqah", "motd", "mutabaah", "izin", "bap", "absenKelas", "nilaiMapel", "nilaiTahfidz",
   "jadwal", "izinGuru", "pengumuman", "dataAwal", "santriEdit", "target", "akun", "hapusAkun", "raporCatatan", "kalender", "log", "staffEdit", "asramaEdit", "halaqahEdit", "profil", "ttd", "tahsin", "tahsinAwal", "mutLibur", "khidmah"];
-const LSKEY = "muawanahku_demo_v1";
+const LSKEY = "muawanahku_demo_v1"; // nama lama sengaja dipertahankan (aplikasi kini MuawanahQu) agar data lokal & antrean tidak hilang
 export const S = { ready: false, mode: "local", note: "", data: {}, ver: 0, readonly: false };
 COLS.forEach(c => (S.data[c] = {}));
 const subs = new Set();

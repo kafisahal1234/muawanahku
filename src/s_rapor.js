@@ -1,4 +1,4 @@
-// Rapor persis mengikuti Format_Rapor_MuawanahKu (4 halaman A4: kop, A Tahfidz, B Mapel, C Mutaba'ah, D–E catatan, tanda tangan)
+// Rapor persis mengikuti Format_Rapor_MuawanahQu (4 halaman A4: kop, A Tahfidz, B Mapel, C Mutaba'ah, D–E catatan, tanda tangan)
 import { useState, useEffect, useRef } from "preact/hooks";
 import { unduhPdf, htmlKePdf } from "./pdf.js";
 import { html, nav, useApp, Icon, Card, SubHeader, Btn, Field, Seg, Hint } from "./ui.js";

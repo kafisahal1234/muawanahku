@@ -139,7 +139,7 @@ export function RekapTahsin() {
   const rows = grup.flatMap(g => g.rows), per = [1, 2, 3, 4, 5, 6].map(j => rows.filter(x => !x.t.quran && x.t.jilid === j).length), lulus = rows.filter(x => x.t.quran).length, siap = rows.filter(x => x.t.siapUjian).length;
   const unduh = () => unduhPdf("Rekap Tahsin " + L.fmtTgl(L.today()), () => tabelKePdf({ judul: "Rekap Tahsin (Iqro')", sub: `Per ${L.fmtTgl(L.today())} · ${rows.length} santri`,
     catatan: `Metode Iqro' KH. As'ad Humam, jilid 1–6 (±${L.IQRA_HAL} hal./jilid). Sebaran: ${per.map((n, i) => `Iqro' ${i + 1}: ${n}`).join(", ")}, Al-Qur'an: ${lulus}. Siap ujian: ${siap}.`,
-    oleh: `Dicetak oleh ${me().nama}, ${L.fmtTgl(L.today())} · MuawanahKu`, ttd: ttdUntukPdf("tahfidz"),
+    oleh: `Dicetak oleh ${me().nama}, ${L.fmtTgl(L.today())} · MuawanahQu`, ttd: ttdUntukPdf("tahfidz"),
     bagian: grup.map(g => ({ judul: `${g.h.nama} · ${g.rows.length} santri`, kol: ["No", "Nama santri", "Tingkat", "Halaman", "Status", "Bacaan bulan ini", "Terakhir"],
       rows: g.rows.map(({ s, t, n }, i) => [i + 1, s.nama, t.quran ? "Al-Qur'an" : t.jilid ? `Iqro' ${t.jilid}` : "-", t.quran ? t.ket || "-" : `${t.hal || 0}/${L.IQRA_HAL}`, t.siapUjian ? "Siap ujian" : t.gagal ? "Mengulang" : t.quran ? "Lulus Iqro'" : "Belajar", n.length + "x", n.length ? L.fmtTgl(n[n.length - 1].tanggal) : "-"]) })) }));
   return html`<${SubHeader} title="Rekap Tahsin" sub=${semua ? "Semua halaqah" : hq ? hq.nama : ""} />

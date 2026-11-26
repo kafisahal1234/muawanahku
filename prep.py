@@ -1,4 +1,4 @@
-"""Siapkan data master demo MuawanahKu -> src/data.js"""
+"""Siapkan data master demo MuawanahQu -> src/data.js"""
 import json, re, difflib, base64, io, random
 from PIL import Image
 import openpyxl

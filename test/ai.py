@@ -8,7 +8,7 @@ window.__AI_MOCK = async ({ teks, sistem, berkas, json }) => {
   window.__AI_LOG.push({ teks, sistem, nb: berkas.length, json });
   if (/dokumen nilai mapel/.test(teks)) return { projek_nama: ["Poster Wudhu", "Video"], baris: [{ nama: "Adiyatma W", santri_id: null, projek: [88, 90], pts: 75, pas: 8.5, aspek: [80, 81, 82, 83] }, { nama: "Affan Abdilah", santri_id: null, projek: [70, null], pts: 66, pas: 72, aspek: [] }, { nama: "Orang Lain", projek: [1] }] };
   if (/jadwal pelajaran/.test(teks)) return { jadwal: [{ hari: "Senin", jam: "j1", kelas: "7", mapel: "fiqih", guru: null }, { hari: "Selasa", jam: "j2", kelas: "9A", mapel: "it", guru: "kaafi" }, { hari: "Rabu", jam: "j1", kelas: "8", mapel: "olahraga", guru: null }] };
-  if (/Asisten MuawanahKu/.test(sistem || "")) return "Jawaban asisten: **3 santri** perlu perhatian.\n- Faeyza\n- Fatih";
+  if (/Asisten MuawanahQu/.test(sistem || "")) return "Jawaban asisten: **3 santri** perlu perhatian.\n- Faeyza\n- Fatih";
   await new Promise(r => setTimeout(r, 150));
   if (/data hafalan Al-Qur'an/.test(teks)) return { baris: [
     { nama: "Faeyza Masril", santri_id: "s001", juz_selesai: [30, 29, 1, 2], juz_aktif: 3, halaman_aktif: 5 },

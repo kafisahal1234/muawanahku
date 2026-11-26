@@ -153,4 +153,4 @@ export async function ngobrolAI({ sistem = "", riwayat = [], teks, berkas = [], 
   } catch (e) { console.warn("AI gagal", e); const err = new Error(pesanGalat(e)); err.asli = e; throw err; }
 }
 
-export const SISTEM_DASAR = "Kamu asisten aplikasi MuawanahKu milik Pondok Tahfidz Modern Kampung Qur'an Al Muawanah (Lampung). Jawab dalam Bahasa Indonesia yang baik, santun, dan ringkas. Jangan mengarang data yang tidak diberikan.";
+export const SISTEM_DASAR = "Kamu asisten aplikasi MuawanahQu milik Pondok Tahfidz Modern Kampung Qur'an Al Muawanah (Lampung). Jawab dalam Bahasa Indonesia yang baik, santun, dan ringkas. Jangan mengarang data yang tidak diberikan.";

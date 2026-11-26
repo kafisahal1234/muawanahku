@@ -95,7 +95,7 @@ p{margin:0 0 2.4mm;text-align:justify}.salam{font-style:italic;margin-bottom:1.6
 export function suratDoc(judul, pages) {
   return `<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(judul)}</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet"><style>${CSS}</style></head>
-<body>${pages.map(b => `<section class="pg"><img class="hd" src="${SURAT_HEAD}" alt=""><img class="ft" src="${SURAT_FOOT}" alt=""><div class="bd">${b}</div><div class="auto">Dibuat otomatis oleh sistem MuawanahKu</div></section>`).join("")}
+<body>${pages.map(b => `<section class="pg"><img class="hd" src="${SURAT_HEAD}" alt=""><img class="ft" src="${SURAT_FOOT}" alt=""><div class="bd">${b}</div><div class="auto">Dibuat otomatis oleh sistem MuawanahQu</div></section>`).join("")}
 <script>(function(){function fit(){document.querySelectorAll(".pg").forEach(function(p){var b=p.querySelector(".bd"),max=p.getBoundingClientRect().top+251*96/25.4,z=1;
 b.style.transform="";b.style.left=b.style.right="20mm";while(b.getBoundingClientRect().bottom>max&&z>0.74){z-=0.02;b.style.transformOrigin="top center";b.style.transform="scale("+z+")";b.style.left=b.style.right=(20-85*(1/z-1))+"mm";}});}
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);addEventListener("load",fit);fit();})();</script></body></html>`;
@@ -169,7 +169,7 @@ export function suratPemberitahuan(b) {
 <p>Segala puji bagi Allah Ta'ala. Bersama surat ini kami memberitahukan bahwa ananda telah melakukan pelanggaran tata tertib pondok dengan rincian sebagai berikut:</p>
 <div class="form">${row("Nama santri", `<b>${esc(s.nama)}</b>`)}${row("Kelas / asrama", `${esc(s.kelas)} · ${esc(a.nama)}`)}${row("Tanggal kejadian", tglPanjang(b.tanggal))}
 ${row("Pelanggaran", `<b>${esc(b.pelanggaranNama)}</b> · ${esc(b.tingkat)} · ${b.poin} poin`, "rd")}${row("Tindakan pondok", `<b>${esc(namaTindakan(t))}</b>`, "hl")}${row("Total poin saat ini", `${total} poin · ${riwayat.length} kali BAP`)}</div>
-<p>Kami memohon kerja sama Bapak/Ibu untuk menasihati dan mendampingi ananda agar tidak mengulangi pelanggaran serta kembali bersemangat dalam menghafal Al-Qur'an dan menjaga adab. Rincian kronologi dan bukti dapat dilihat pada akun wali di aplikasi MuawanahKu.</p>
+<p>Kami memohon kerja sama Bapak/Ibu untuk menasihati dan mendampingi ananda agar tidak mengulangi pelanggaran serta kembali bersemangat dalam menghafal Al-Qur'an dan menjaga adab. Rincian kronologi dan bukti dapat dilihat pada akun wali di aplikasi MuawanahQu.</p>
 <p>Demikian pemberitahuan ini kami sampaikan. Atas perhatian dan kerja sama Bapak/Ibu, kami ucapkan jazakumullahu khairan.</p>
 <p class="salam">Wassalamu'alaikum warahmatullahi wabarakatuh</p>
 <div class="tgl">${KOTA}, ${tglPanjang(b.tanggal, false)}</div>

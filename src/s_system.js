@@ -108,7 +108,7 @@ export function AdminHapusAkun() {
 export function Privasi() {
   return html`<${SubHeader} title="Kebijakan Privasi" sub="Berlaku sejak 20 November 2026" />
     <div class="wrap"><${Card}><div class="prose">
-      <p>MuawanahKu adalah aplikasi internal Pondok Tahfidz Modern Kampung Qur'an Al Muawanah untuk mencatat kegiatan belajar santri. Aplikasi ini hanya dipakai pengurus, guru, dan wali santri yang diberi akun oleh pondok.</p>
+      <p>MuawanahQu adalah aplikasi internal Pondok Tahfidz Modern Kampung Qur'an Al Muawanah untuk mencatat kegiatan belajar santri. Aplikasi ini hanya dipakai pengurus, guru, dan wali santri yang diberi akun oleh pondok.</p>
       <h4>Data yang dikumpulkan</h4><ul><li>Data akun: nama, username, dan peran.</li><li>Data santri: nama, kelas, asrama, dan halaqah.</li>
       <li>Catatan pendidikan: hafalan, absensi, nilai, mutaba'ah, perizinan, dan pelanggaran, termasuk foto bukti dan tanda tangan pada BAP.</li><li>Tanda tangan Mudir, Wadir, dan wali asrama yang mereka simpan sendiri, khusus untuk dicetak pada surat, rapor, dan rekap resmi pondok.</li></ul>
       <h4>Tujuan</h4><p>Data dipakai hanya untuk administrasi pendidikan dan pembinaan santri: rekap, rapor, dan informasi kepada wali. Data tidak dipakai untuk iklan, tidak dijual, dan tidak dibagikan kepada pihak luar.</p>
@@ -159,7 +159,7 @@ function KontakAdmin() {
   useApp();
   const m = me(), bisaAtur = !!m && m.roles.some(r => PIMPINAN.includes(r)), st = L.setelan(), no = st.waPondok, ikon = st.waIkon, [ed, setEd] = useState(false), [v, setV] = useState(""), [ik, setIk] = useState(null);
   const siapa = m ? `${m.nama} (${m.roles.map(r => L.ROLE_LABEL[r]).join(", ")})` : nav.user && nav.user.kind === "wali" ? `wali dari ${L.santriAman(nav.user.id).nama}` : "";
-  const teks = `Assalamu'alaikum, Admin Kampung Qur'an Al Muawanah. Saya ${siapa} ingin bertanya tentang aplikasi MuawanahKu: `, link = L.waLink(no, teks);
+  const teks = `Assalamu'alaikum, Admin Kampung Qur'an Al Muawanah. Saya ${siapa} ingin bertanya tentang aplikasi MuawanahQu: `, link = L.waLink(no, teks);
   const buka = () => { setV(no ? "0" + L.waNomor(no).slice(2) : ""); setIk(ikon || null); setEd(true); };
   const belum = () => (bisaAtur ? buka() : toast("Nomor WhatsApp resmi pondok belum diatur. Hubungi kantor pondok.", "err"));
   const pilihIkon = async e => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return; try { setIk(await ikonDariBerkas(f)); } catch (x) { toast(x.message, "err"); } };
@@ -195,8 +195,8 @@ export function Bantuan() {
 
 export function Tentang() {
   return html`<${SubHeader} title="Tentang aplikasi" />
-    <div class="wrap"><${Card}><div class="center" style="padding:8px 0 4px"><img src=${LOGO} alt="Logo MuawanahKu" style="width:72px;height:72px;object-fit:contain" />
-      <h3 style="margin:8px 0 2px;font-size:18px">Muawanah<span style="color:#E2A93B">Ku</span></h3><p class="small" style="margin:0">Versi ${VERSI}</p></div>
+    <div class="wrap"><${Card}><div class="center" style="padding:8px 0 4px"><img src=${LOGO} alt="Logo MuawanahQu" style="width:72px;height:72px;object-fit:contain" />
+      <h3 style="margin:8px 0 2px;font-size:18px">Muawanah<span style="color:#E2A93B">Qu</span></h3><p class="small" style="margin:0">Versi ${VERSI}</p></div>
       <div class="kv mt12"><span>Pemilik</span><b>Kampung Qur'an Al Muawanah</b></div><div class="kv"><span>Pengembang</span><b>Tim IT pondok</b></div>
       <div class="kv"><span>Penyimpanan data</span><b>${S.mode === "db" ? "Tersinkron antarperangkat" : "Perangkat ini"}</b></div></${Card}>
     <p class="fab-note">© 2026 Kampung Qur'an Al Muawanah</p></div>`;

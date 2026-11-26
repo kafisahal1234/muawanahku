@@ -1,4 +1,4 @@
-"""Impor laporan kegiatan Tahfidz/Tahsin 20–21 November 2026 (grup WA) ke data dasar MuawanahKu (src/data.js).
+"""Impor laporan kegiatan Tahfidz/Tahsin 20–21 November 2026 (grup WA) ke data dasar MuawanahQu (src/data.js).
 - Total hafalan tiap santri sesuai laporan (juz + halaman; 1 lembar = 2 halaman; 0,5 juz = 10 halaman)
 - Susunan halaqah & asrama sesuai laporan; ustadz memakai akun yang sudah ada (ugi = Ust. Hanif, habib = Ust. Irul)
 - Status Tahsin awal (Iqro' KH. As'ad Humam, jilid 1–6 → Al-Qur'an) untuk santri yang dilaporkan tingkat Iqro'-nya
