@@ -27,10 +27,10 @@ export function Tahfidz() {
         <${Stat} label="Ziyadah" value=${`${zDone}/${hafal.length}`} />
         <${Stat} label="Murojaah" value=${`${mDone}/${list.length}`} />
         <${Stat} label="Siap tasmi'" value=${siap} /></div>
-        <div class="minis mt8">${L.adaHalaqah() ? L.sesiHari().map(x => html`<${Pill} t=${(sudah(x) ? "✓ " : "") + "Absen " + x} tone=${sudah(x) ? "green" : "muted"} />`) : html`<${Pill} t="Ahad · tidak ada halaqah" tone="muted" />`}${L.hariIni() === "Sabtu" ? html`<${Pill} t="Sabtu: Halaqah Shubuh saja" tone="gold" />` : null}</div></${Card}>
+        <div class="minis mt8">${L.adaHalaqah() ? L.sesiHari().map(x => html`<${Pill} t=${(sudah(x) ? "✓ " : "") + "Absen " + x} tone=${sudah(x) ? "green" : "muted"} />`) : html`<${Pill} t="Ahad · tidak ada halaqah" tone="muted" />`}${L.khususManzil() ? html`<${Pill} t="Sabtu: Shubuh, khusus manzil" tone="gold" />` : null}</div></${Card}>
       <${Card} title="Menu Tahfidz"><div class="tiles">
         <${Tile} icon="checksq" label="Absen Halaqah" color="emerald" onClick=${() => nav.go("absenHalaqah", { sesi: L.sesiNow() })} />
-        <${Tile} icon="bookopen" label="Ziyadah" color="blue" badge=${belum.length || null} onClick=${() => nav.go("setorList", { jenis: "ziyadah" })} />
+        <${Tile} icon="bookopen" label="Ziyadah" color="blue" badge=${(!L.khususManzil() && L.adaHalaqah() && belum.length) || null} onClick=${() => nav.go("setorList", { jenis: "ziyadah" })} />
         <${Tile} icon="repeat" label="Murojaah" color="teal" onClick=${() => nav.go("setorList", { jenis: "murojaah" })} />
         ${tahsin.length ? html`<${Tile} icon="iqro" label="Tahsin (Iqro')" color="emerald" badge=${tBelum || null} onClick=${() => nav.go("tahsinList")} />` : null}
         <${Tile} icon="layers" label="Manzil" color="indigo" badge=${manzil || null} onClick=${() => nav.go("manzilList")} />
@@ -43,11 +43,11 @@ export function Tahfidz() {
         <${Tile} icon="briefcase" label="Izin Guru" color="slate" onClick=${() => nav.go("izinGuru")} />
         <${Tile} icon="edit" label="Riwayat & Koreksi" color="coral" onClick=${() => nav.go("riwayatModul", { modul: "tahfidz" })} />
 </div></${Card}>
-      <${Card} title=${`Belum setor ziyadah · ${belum.length}`} right=${belum.length > 4 ? html`<button class="link" onClick=${() => nav.go("setorList", { jenis: "ziyadah" })}>Lihat semua</button>` : null}>
+      ${L.khususManzil() ? html`<${Card} title="Sabtu · khusus manzil"><p class="small" style="margin:0 0 10px">Hari Sabtu halaqah hanya Shubuh dan khusus setoran manzil. Tidak ada ziyadah dan murojaah.</p><${Btn} icon="layers" onClick=${() => nav.go("manzilList")}>Buka Manzil</${Btn}></${Card}>` : !L.adaHalaqah() ? null : html`<${Card} title=${`Belum setor ziyadah · ${belum.length}`} right=${belum.length > 4 ? html`<button class="link" onClick=${() => nav.go("setorList", { jenis: "ziyadah" })}>Lihat semua</button>` : null}>
         ${belum.length ? html`<div class="list">${belum.slice(0, 4).map(s => { const h = L.hafalan(s), k = L.kunci(s);
           return html`<${Row} name=${s.nama} sub=${L.posLabel(h.aktif, h.baris)} right=${k.kunci ? html`<${Pill} t="Terkunci" tone="gold" />` : html`<${Pill} t="Input" tone="green" />`} onClick=${() => nav.go("ziyadah", { sid: s.id })} />`; })}</div>`
           : html`<${Empty} t="Alhamdulillah, semua santri sudah setor ziyadah hari ini." icon="check" />`}
-      </${Card}></div>`;
+      </${Card}>`}</div>`;
 }
 
 export function AbsenHalaqah({ sesi: s0, tgl: t0, ubah }) {
@@ -81,10 +81,17 @@ function AbsenList({ sesi, a, tgl, ubah }) {
     <div class="sticky-act"><${Btn} onClick=${save} icon="check">Simpan absen ${sesi}</${Btn}></div></div>`;
 }
 
+function TidakAdaSetor({ title, tgl }) {
+  const sabtu = L.khususManzil(tgl);
+  return html`<${SubHeader} title=${title} sub=${L.fmtTgl(tgl)} />
+    <div class="wrap"><${Card}><${Empty} t=${sabtu ? `Hari Sabtu tidak ada ${title.toLowerCase()}. Halaqah Sabtu hanya Shubuh dan khusus setoran manzil.` : `Hari Ahad libur halaqah, tidak ada ${title.toLowerCase()}.`} icon="calendar" />
+      ${sabtu ? html`<${Btn} icon="layers" onClick=${() => nav.go("manzilList")}>Buka Manzil</${Btn}>` : null}</${Card}></div>`;
+}
 export function SetorList({ jenis }) {
   useApp();
   const a = myHalaqah(), list = L.santriHalaqah(a.id), tgl = L.today();
   const title = jenis === "ziyadah" ? "Ziyadah" : "Murojaah";
+  if (L.khususManzil(tgl) || !L.adaHalaqah()) return html`<${TidakAdaSetor} title=${title} tgl=${tgl} />`;
   // santri yang sudah setor (lulus) hari ini pindah ke bagian "Sudah setor" dan tidak bisa diinput ulang; koreksi lewat Riwayat
   const iqra = jenis === "ziyadah" ? list.filter(s => L.santriIqra(s) && !all("setoran").some(r => r.santri === s.id && r.jenis === jenis && r.tanggal === tgl)) : [];
   const data = list.filter(s => !iqra.includes(s)).map(s => { const recs = all("setoran").filter(r => r.santri === s.id && r.jenis === jenis && r.tanggal === tgl).sort((x, y) => x.ts - y.ts); return { s, last: recs[recs.length - 1] }; });
@@ -114,6 +121,7 @@ export function Ziyadah({ sid, edit }) {
   useApp();
   const [kor, setKor] = useState(null);
   const ed = edit ? get("setoran", edit) : null;
+  if (!ed && (L.khususManzil() || !L.adaHalaqah())) return html`<${TidakAdaSetor} title="Ziyadah" tgl=${L.today()} />`;
   const s = L.santriById(sid), h = L.hafalan(s, ed && ed.id), k = ed ? { kunci: false } : L.kunci(s);
   const sisa = h.total - h.baris;
   const [baris, setBaris] = useState(ed ? ed.baris : ""); const [salah, setSalah] = useState(ed ? ed.salah : 0);
@@ -159,6 +167,7 @@ export function Murojaah({ sid, edit }) {
   useApp();
   const [kor, setKor] = useState(null);
   const ed = edit ? get("setoran", edit) : null;
+  if (!ed && (L.khususManzil() || !L.adaHalaqah())) return html`<${TidakAdaSetor} title="Murojaah" tgl=${L.today()} />`;
   const s = L.santriById(sid), h = L.hafalan(s);
   const opsi = [...h.selesai, ...(h.baris > 0 ? [h.aktif] : [])];
   const [juz, setJuz] = useState(ed ? ed.juz : opsi[0] || h.aktif); const [dari, setDari] = useState(ed ? ed.halDari : 1); const [sampai, setSampai] = useState(ed ? ed.halSampai : 5); const [salah, setSalah] = useState(ed ? ed.salah : 0);

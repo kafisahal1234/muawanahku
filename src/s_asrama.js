@@ -51,6 +51,8 @@ function MotdList({ w, pondok, mine, tgl, ubah }) {
 export function Mutabaah({ tgl: t0, sid: s0, ubah }) {
   useApp();
   const a = L.asramaOf(me().id), list = L.santriAsrama(a.id), tgl = t0 || L.today();
+  if (!ubah && L.liburMutabaah(tgl)) return html`<${SubHeader} title="Mutaba'ah" sub=${`Asrama ${a.nama} · ${L.fmtTgl(tgl)}`} />
+    <div class="wrap"><${Card}><${Empty} t="Hari Sabtu dan Ahad libur mutaba'ah. Pengisian berjalan Senin–Jumat, dan hari libur tidak mengurangi nilai santri." icon="calendar" /></${Card}></div>`;
   const sudah = s => !!get("mutabaah", L.mutKey(s.id, tgl)), pertamaBelum = (list.find(s => !sudah(s)) || list[0] || {}).id;
   const [sid, setSid] = useState(s0 || pertamaBelum);
   const nBelum = list.filter(s => !sudah(s)).length;

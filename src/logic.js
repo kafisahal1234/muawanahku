@@ -7,7 +7,7 @@ import { fbSiap, fbMasuk, salahSandi } from "./cloud.js";
 export const pad = n => String(n).padStart(2, "0");
 export const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 export const today = () => ymd(new Date());
-export const HARI_ID = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+export const HARI_ID = ["Ahad", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 export const BULAN = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 export function parseYmd(s) { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); }
 export function fmtTgl(s, withDay = true) { const d = parseYmd(s); return (withDay ? HARI_ID[d.getDay()] + ", " : "") + d.getDate() + " " + BULAN[d.getMonth()] + " " + d.getFullYear(); }
@@ -184,10 +184,14 @@ export function hariAktif(tgl, jenis) {
   const d = parseYmd(tgl).getDay(), lb = liburPada(tgl);
   if (lb.some(l => l.jenis === "pondok")) return false;
   if (jenis === "asrama") return true;
+  if (jenis === "mutabaah") return d >= 1 && d <= 5; // Sabtu & Ahad libur mutaba'ah
   if (lb.some(l => l.jenis === "nasional" || l.jenis === "cuti")) return false;
   if (jenis === "kbm") return d >= 1 && d <= 5 && !lb.some(l => l.jenis === "kbm");
   return d >= 1 && d <= 6;
 }
+// Sabtu: halaqah Shubuh khusus manzil (tanpa ziyadah & murojaah); Ahad libur
+export const khususManzil = (tgl = today()) => parseYmd(tgl).getDay() === 6;
+export const liburMutabaah = (tgl = today()) => !hariAktif(tgl, "mutabaah");
 export function hariRentang(dari, sampai) { const o = []; for (let t = dari; t <= sampai; t = addDays(t, 1)) o.push(t); return o; }
 // rentang hitung: dipotong ke tanggal mulai pakai aplikasi dan hari ini
 export function rentangHitung(rg) { const st = setelan(), t = today(); const dari = rg.dari < st.mulaiPakai ? st.mulaiPakai : rg.dari, sampai = rg.sampai > t ? t : rg.sampai; return { dari, sampai, kosong: dari > sampai }; }
@@ -422,7 +426,7 @@ export function mutAuto(s, tgl) {
 }
 // Mutaba'ah: dihitung terhadap SEMUA hari aktif asrama; hari yang tidak diinput dihitung 0
 export function mutPersen(sid, rg = rgSemester()) {
-  const hari = hariAktifDalam(rg, "asrama"); if (!hari.length) return { ibadah: null, adab: null, hari: 0, isi: 0 };
+  const hari = hariAktifDalam(rg, "mutabaah"); if (!hari.length) return { ibadah: null, adab: null, hari: 0, isi: 0 };
   let ib = 0, ad = 0, isi = 0;
   hari.forEach(t => { const d = get("mutabaah", mutKey(sid, t)); if (d) { isi++; ib += (d.ibadah || []).length; ad += (d.adab || []).length; } });
   return { ibadah: pct(ib, hari.length * DATA.ibadah.length), adab: pct(ad, hari.length * DATA.adab.length), hari: hari.length, isi, kosong: hari.length - isi };
@@ -435,7 +439,7 @@ export function predikatMut(v) {
   return { h: "D", t: "Perlu bimbingan", c: "red" };
 }
 export function mutPerButir(sid, rg = rgSemester()) {
-  const hari = hariAktifDalam(rg, "asrama"), n = hari.length, docs = hari.map(t => get("mutabaah", mutKey(sid, t))).filter(Boolean);
+  const hari = hariAktifDalam(rg, "mutabaah"), n = hari.length, docs = hari.map(t => get("mutabaah", mutKey(sid, t))).filter(Boolean);
   const f = (key, len) => Array.from({ length: len }, (_, i) => (n ? Math.round((docs.filter(d => (d[key] || []).includes(i)).length / n) * 100) : null));
   return { hari: n, isi: docs.length, ibadah: f("ibadah", DATA.ibadah.length), adab: f("adab", DATA.adab.length) };
 }
@@ -447,7 +451,7 @@ export function kinerjaMotd(aid, rg) {
   return { slot: hari.length * WAKTU.length, isi, al, mb, pct: pct(isi, hari.length * WAKTU.length) };
 }
 export function kinerjaMut(aid, rg) {
-  const hari = hariAktifDalam(rg, "asrama"), list = santriAsrama(aid); let isi = 0;
+  const hari = hariAktifDalam(rg, "mutabaah"), list = santriAsrama(aid); let isi = 0;
   hari.forEach(t => list.forEach(s => { if (get("mutabaah", mutKey(s.id, t))) isi++; }));
   return { target: hari.length * list.length, isi, pct: pct(isi, hari.length * list.length) };
 }
