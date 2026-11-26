@@ -1,6 +1,6 @@
 import { DATA } from "./data.js";
 import { LIBUR_NASIONAL, SETELAN_DEFAULT } from "./libur.js";
-import { S, all, get, put, subscribe } from "./store.js";
+import { S, all, get, put, subscribe, ONLINE } from "./store.js";
 import { fbSiap, fbMasuk, salahSandi } from "./cloud.js";
 
 // ---------------- tanggal ----------------
@@ -94,7 +94,10 @@ export const staffAktif = () => STAFF.filter(s => !(akunOv(s.username) || {}).ha
 export const staffDariEmail = e => { const x = String(e || "").trim().toLowerCase(); return x.includes("@") ? STAFF.find(s => ((akunOv(s.username) || {}).email || "") === x) : null; };
 export async function login(username, password) {
   const masuk = (username || "").trim().toLowerCase(), p = password || "";
+  // data akun guru ada di database: tunggu sinkron selesai dulu (maks. 25 detik) agar tidak salah dikira sandi keliru
+  for (let i = 0; i < 100 && ONLINE() && !S.ready; i++) await new Promise(r => setTimeout(r, 250));
   const st = STAFF.find(s => s.username === masuk) || staffDariEmail(masuk);
+  if (!st && ONLINE() && !S.ready) return { err: "Data akun belum termuat. Periksa internet lalu coba lagi." };
   const u = st ? st.username : masuk, ov = akunOv(u) || {};
   if (!st || ov.hapus || ov.nonaktif) return { err: "Username atau kata sandi salah." };
   if (ov.email && fbSiap()) {
