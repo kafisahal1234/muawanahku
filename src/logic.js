@@ -262,7 +262,7 @@ export function tahsinStatus(s) {
     } else if (r.jenis === "ajukan") { if (!st.quran) { st.siapUjian = true; st.gagal = false; }
     } else if (r.jenis === "ujian") {
       if (r.lulus) { st.gagal = false; st.siapUjian = false; if ((r.jilid || st.jilid) >= 6) { st.tingkat = "quran"; st.ket = ""; } else { st.jilid = (r.jilid || st.jilid) + 1; st.hal = 0; } }
-      else { st.gagal = true; st.siapUjian = false; }
+      else { st.gagal = true; st.siapUjian = true; } // belum lulus: tetap terkunci & tetap di antrean ujian ulang
     }
   }
   st.quran = st.tingkat === "quran";
