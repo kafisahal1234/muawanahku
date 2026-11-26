@@ -424,12 +424,46 @@ export function mutAuto(s, tgl) {
   });
   return res;
 }
-// Mutaba'ah: dihitung terhadap SEMUA hari aktif asrama; hari yang tidak diinput dihitung 0
+// ---- Mutaba'ah yang adil ----
+// (A) Rapel: hari aktif yang terlewat boleh diisi menyusul paling lambat RAPEL_HARI hari kemudian (ditandai "menyusul").
+// (B) Hari tidak dinilai: wali asrama izin (dari Izin Guru) atau ditandai manual dengan alasan; hari itu tidak dihitung bila kosong.
+// (C) Santri sedang izin pada hari itu: tidak dihitung bila kosong.
+// Hari yang sudah diisi selalu dihitung. Hari aktif lain yang kosong tetap bernilai 0.
+export const RAPEL_HARI = 7;
+export const mutLiburKey = (aid, tgl) => `${aid}_${tgl}`;
+export const ALASAN_TIDAK_DINILAI = ["Wali asrama sakit", "Wali asrama izin/pulang", "Kegiatan pondok", "Lainnya"];
+export function mutTidakDinilai(aid, tgl) {
+  const m = get("mutLibur", mutLiburKey(aid, tgl)); if (m) return { manual: true, alasan: m.alasan, ket: m.ket || "", oleh: m.oleh, ts: m.ts };
+  const a = asramaById(aid); if (!a || !a.musyrif) return null;
+  const iz = all("izinGuru").find(i => i.guru === a.musyrif && i.tanggal === tgl);
+  return iz ? { otomatis: true, alasan: `Wali asrama ${String(iz.jenis || "izin").toLowerCase()} (Izin Guru)` } : null;
+}
+let _idxIzin = { v: -1, map: null };
+function indeksIzin() {
+  if (_idxIzin.v !== S.ver || !_idxIzin.map) { const m = new Map(), kini = new Date();
+    all("izin").forEach(i => { if (!i.keluar) return; const sampai = i.kembaliAktual ? new Date(i.kembaliAktual) : i.status === "aktif" ? new Date(Math.max(new Date(i.kembali || i.keluar).getTime(), kini.getTime())) : new Date(i.kembali || i.keluar);
+      let l = m.get(i.santri); if (!l) m.set(i.santri, (l = [])); l.push([ymd(new Date(i.keluar)), ymd(sampai)]); });
+    _idxIzin = { v: S.ver, map: m }; }
+  return _idxIzin.map;
+}
+export const izinPadaTgl = (sid, tgl) => (indeksIzin().get(sid) || []).some(([a, b]) => a <= tgl && tgl <= b);
+// alasan sah sebuah hari kosong tidak dihitung untuk santri (null = tetap dihitung)
+export function alasanTidakDinilai(sid, tgl) {
+  const s = santriById(sid); const b = s && mutTidakDinilai(s.asrama, tgl); if (b) return b.alasan;
+  return izinPadaTgl(sid, tgl) ? "Santri sedang izin" : null;
+}
+export function hariMutSantri(sid, rg) {
+  const semua = hariAktifDalam(rg, "mutabaah"), dinilai = semua.filter(t => get("mutabaah", mutKey(sid, t)) || !alasanTidakDinilai(sid, t));
+  return { semua, dinilai };
+}
+// tanggal yang masih boleh diisi menyusul (hari aktif mutaba'ah, sebelum hari ini, dalam batas rapel)
+export function tglRapel(tgl = today()) { const o = []; for (let i = 1; i <= RAPEL_HARI; i++) { const t = addDays(tgl, -i); if (t >= setelan().mulaiPakai && hariAktif(t, "mutabaah")) o.push(t); } return o; }
+export const bisaRapel = tgl => tglRapel().includes(tgl);
 export function mutPersen(sid, rg = rgSemester()) {
-  const hari = hariAktifDalam(rg, "mutabaah"); if (!hari.length) return { ibadah: null, adab: null, hari: 0, isi: 0 };
-  let ib = 0, ad = 0, isi = 0;
-  hari.forEach(t => { const d = get("mutabaah", mutKey(sid, t)); if (d) { isi++; ib += (d.ibadah || []).length; ad += (d.adab || []).length; } });
-  return { ibadah: pct(ib, hari.length * DATA.ibadah.length), adab: pct(ad, hari.length * DATA.adab.length), hari: hari.length, isi, kosong: hari.length - isi };
+  const { semua, dinilai: hari } = hariMutSantri(sid, rg); if (!hari.length) return { ibadah: null, adab: null, hari: 0, isi: 0, kosong: 0, dikecualikan: semua.length, menyusul: 0 };
+  let ib = 0, ad = 0, isi = 0, menyusul = 0;
+  hari.forEach(t => { const d = get("mutabaah", mutKey(sid, t)); if (d) { isi++; if (d.menyusul) menyusul++; ib += (d.ibadah || []).length; ad += (d.adab || []).length; } });
+  return { ibadah: pct(ib, hari.length * DATA.ibadah.length), adab: pct(ad, hari.length * DATA.adab.length), hari: hari.length, isi, kosong: hari.length - isi, dikecualikan: semua.length - hari.length, menyusul };
 }
 export function predikatMut(v) {
   if (v == null || isNaN(v)) return { h: "—", t: "Belum ada data", c: "muted" };
@@ -439,7 +473,7 @@ export function predikatMut(v) {
   return { h: "D", t: "Perlu bimbingan", c: "red" };
 }
 export function mutPerButir(sid, rg = rgSemester()) {
-  const hari = hariAktifDalam(rg, "mutabaah"), n = hari.length, docs = hari.map(t => get("mutabaah", mutKey(sid, t))).filter(Boolean);
+  const hari = hariMutSantri(sid, rg).dinilai, n = hari.length, docs = hari.map(t => get("mutabaah", mutKey(sid, t))).filter(Boolean);
   const f = (key, len) => Array.from({ length: len }, (_, i) => (n ? Math.round((docs.filter(d => (d[key] || []).includes(i)).length / n) * 100) : null));
   return { hari: n, isi: docs.length, ibadah: f("ibadah", DATA.ibadah.length), adab: f("adab", DATA.adab.length) };
 }
@@ -451,9 +485,11 @@ export function kinerjaMotd(aid, rg) {
   return { slot: hari.length * WAKTU.length, isi, al, mb, pct: pct(isi, hari.length * WAKTU.length) };
 }
 export function kinerjaMut(aid, rg) {
-  const hari = hariAktifDalam(rg, "mutabaah"), list = santriAsrama(aid); let isi = 0;
-  hari.forEach(t => list.forEach(s => { if (get("mutabaah", mutKey(s.id, t))) isi++; }));
-  return { target: hari.length * list.length, isi, pct: pct(isi, hari.length * list.length) };
+  const list = santriAsrama(aid); let isi = 0, target = 0, menyusul = 0, dikecualikan = 0;
+  list.forEach(s => { const { semua, dinilai } = hariMutSantri(s.id, rg); target += dinilai.length; dikecualikan += semua.length - dinilai.length;
+    dinilai.forEach(t => { const d = get("mutabaah", mutKey(s.id, t)); if (d) { isi++; if (d.menyusul) menyusul++; } }); });
+  const hariLibur = hariAktifDalam(rg, "mutabaah").filter(t => mutTidakDinilai(aid, t)).length;
+  return { target, isi, pct: pct(isi, target), menyusul, dikecualikan, hariLibur };
 }
 
 // ---------------- scope ----------------

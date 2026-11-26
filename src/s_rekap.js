@@ -69,8 +69,8 @@ function tabel(tab, lk, rg) {
       return [g.nama, g.list.length, sum("ringan"), sum("poinRingan"), sum("sedang"), sum("berat"), sum("poinSB")]; }) },
     rinci: { kol: ["Santri", "Kelompok", "Alpa", "Masbuq", "Ringan", "Sedang", "Berat", "Poin total", "Pelanggaran BAP"], rows: lk.kelPel.flatMap(g => g.list.map(s => { const x = L.pelanggaranDalam(s.id, rg);
       return [s.nama, g.nama, x.alpa, x.masbuq, x.ringan, x.sedang, x.berat, x.poinRingan + x.poinSB, x.bap.map(b => b.pelanggaranNama).join("; ") || "—"]; }).filter(r => r[4] || r[5] || r[6])) } };
-  return { judul: "Rekap Mutaba'ah", ringkas: { kol: ["Asrama", "Wali asrama", "Input terisi", "Ibadah", "Adab"], rows: lk.asr.map(a => { const k = L.kinerjaMut(a.id, rg), ps = L.santriAsrama(a.id).map(s => L.mutPersen(s.id, rg)); return [a.nama, (L.staffById(a.musyrif) || {}).nama, `${k.isi}/${k.target} (${P2(k.pct)})`, P2(rata(ps.map(x => x.ibadah))), P2(rata(ps.map(x => x.adab)))]; }) },
-    rinci: { kol: ["Santri", "Asrama", "Hari aktif", "Hari diinput", "Ibadah", "Adab"], rows: lk.asr.flatMap(a => L.santriAsrama(a.id).map(s => { const k = L.mutPersen(s.id, rg); return [s.nama, a.nama, k.hari, k.isi, P2(k.ibadah), P2(k.adab)]; })) } };
+  return { judul: "Rekap Mutaba'ah", ringkas: { kol: ["Asrama", "Wali asrama", "Input terisi", "Diisi menyusul", "Hari tidak dinilai", "Ibadah", "Adab"], rows: lk.asr.map(a => { const k = L.kinerjaMut(a.id, rg), ps = L.santriAsrama(a.id).map(s => L.mutPersen(s.id, rg)); return [a.nama, (L.staffById(a.musyrif) || {}).nama, `${k.isi}/${k.target} (${P2(k.pct)})`, k.menyusul, k.hariLibur, P2(rata(ps.map(x => x.ibadah))), P2(rata(ps.map(x => x.adab)))]; }) },
+    rinci: { kol: ["Santri", "Asrama", "Hari dinilai", "Hari diinput", "Menyusul", "Tidak dinilai", "Ibadah", "Adab"], rows: lk.asr.flatMap(a => L.santriAsrama(a.id).map(s => { const k = L.mutPersen(s.id, rg); return [s.nama, a.nama, k.hari, k.isi, k.menyusul, k.dikecualikan, P2(k.ibadah), P2(k.adab)]; })) } };
 }
 
 function unduhRekap(tab, lk, rg, fmt) {
@@ -147,7 +147,7 @@ function RekapPelP({ lk, rg }) {
 function RekapMutP({ asr, rg }) {
   return html`${asr.map(a => { const k = L.kinerjaMut(a.id, rg), ps = L.santriAsrama(a.id).map(s => L.mutPersen(s.id, rg)).filter(x => x.ibadah != null);
     const av = f => (ps.length ? Math.round(ps.reduce((x, y) => x + y[f], 0) / ps.length) : null);
-    return html`<${Kartu} title=${a.nama} sub=${`${(L.staffById(a.musyrif) || {}).pendek} · input ${k.isi}/${k.target}`} onClick=${() => nav.go("rekapDetail", { jenis: "mut", aid: a.id, pj: rg })}
+    return html`<${Kartu} title=${a.nama} sub=${`${(L.staffById(a.musyrif) || {}).pendek} · input ${k.isi}/${k.target}${k.menyusul ? ` · ${k.menyusul} menyusul` : ""}${k.hariLibur ? ` · ${k.hariLibur} hari tidak dinilai` : ""}`} onClick=${() => nav.go("rekapDetail", { jenis: "mut", aid: a.id, pj: rg })}
       stats=${[["Ibadah", av("ibadah")], ["Adab", av("adab")], ["Input terisi", k.pct]]} />`; })}`;
 }
 
@@ -165,7 +165,7 @@ export function RekapDetail({ jenis: j0, aid, hid, kelas, mapel, pondok, pj }) {
       return [s, k.pct, `Hadir ${P(k.pct)} (${k.H || 0}/${k.sesi || 0} pertemuan)${pjk.length ? " · " + pjk.map(p => `${p.nama}: ${p.nilai[s.id] ?? "—"}`).join(" · ") : ""}`, nil.length ? "Projek " + Math.round(nil.reduce((a, b) => a + b, 0) / nil.length) : P(k.pct), k.pct ?? -1]; }
     if (jenis === "pelanggaran") { const x = L.pelanggaranDalam(s.id, rg), po = x.poinRingan + x.poinSB;
       return [s, null, `Ringan ${x.ringan} (alpa ${x.alpa} · masbuq ${x.masbuq}) · sedang ${x.sedang} · berat ${x.berat}${x.bap.length ? " · " + x.bap.map(b => b.pelanggaranNama).join(", ") : ""}`, `${po} poin`, -po]; }
-    const k = L.mutPersen(s.id, rg); return [s, k.ibadah == null ? null : Math.round((k.ibadah + k.adab) / 2), `Ibadah ${P(k.ibadah)} · Adab ${P(k.adab)} · diinput ${k.isi}/${k.hari} hari`];
+    const k = L.mutPersen(s.id, rg); return [s, k.ibadah == null ? null : Math.round((k.ibadah + k.adab) / 2), `Ibadah ${P(k.ibadah)} · Adab ${P(k.adab)} · diinput ${k.isi}/${k.hari} hari${k.menyusul ? ` (${k.menyusul} menyusul)` : ""}${k.dikecualikan ? ` · ${k.dikecualikan} hari tidak dinilai` : ""}`];
   }).filter(r => jenis !== "pelanggaran" || r[4] < 0).sort((a, b) => (a[4] != null ? a[4] - b[4] : (a[1] ?? -1) - (b[1] ?? -1)));
   const nada = (jenis, v, teks) => (jenis === "pelanggaran" ? "red" : jenis === "tahfidz" ? "green" : teks && teks.startsWith("Projek") ? "blue" : tone(v));
   return html`<${SubHeader} title=${judul} sub=${`${nm} · ${rg.label}`} />

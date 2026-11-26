@@ -1,6 +1,6 @@
 import { useState } from "preact/hooks";
-import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, Empty, Seg, StatusPick, Section, AbsenItem, Counts, Hint, SearchBox } from "./ui.js";
-import { all, get, put, toast } from "./store.js";
+import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, Empty, Seg, StatusPick, Section, AbsenItem, Counts, Hint, SearchBox, Sheet, Field } from "./ui.js";
+import { all, get, put, del, toast } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
 import { logUbah } from "./s_koreksi.js";
@@ -48,18 +48,50 @@ function MotdList({ w, pondok, mine, tgl, ubah }) {
     <div class="sticky-act"><${Btn} onClick=${save} icon="check">Simpan absen ${label}</${Btn}></div></div>`;
 }
 
+// santri yang masih perlu diisi pada tanggal itu (yang izin / hari tidak dinilai boleh dilewati)
+const perluIsi = (list, tgl) => list.filter(s => !get("mutabaah", L.mutKey(s.id, tgl)) && !L.alasanTidakDinilai(s.id, tgl));
 export function Mutabaah({ tgl: t0, sid: s0, ubah }) {
   useApp();
-  const a = L.asramaOf(me().id), list = L.santriAsrama(a.id), tgl = t0 || L.today();
+  const a = L.asramaOf(me().id), list = L.santriAsrama(a.id), tgl = t0 || L.today(), lampau = tgl < L.today();
+  const [rapel, setRapel] = useState(false);
+  const sudah = s => !!get("mutabaah", L.mutKey(s.id, tgl)), belum = perluIsi(list, tgl);
+  const [sid, setSid] = useState(s0 || (belum[0] || list[0] || {}).id);
+  const rapelBar = !ubah ? html`<${RapelBar} aid=${a.id} list=${list} tgl=${tgl} open=${rapel} setOpen=${setRapel} />` : null;
   if (!ubah && L.liburMutabaah(tgl)) return html`<${SubHeader} title="Mutaba'ah" sub=${`Asrama ${a.nama} · ${L.fmtTgl(tgl)}`} />
-    <div class="wrap"><${Card}><${Empty} t="Hari Sabtu dan Ahad libur mutaba'ah. Pengisian berjalan Senin–Jumat, dan hari libur tidak mengurangi nilai santri." icon="calendar" /></${Card}></div>`;
-  const sudah = s => !!get("mutabaah", L.mutKey(s.id, tgl)), pertamaBelum = (list.find(s => !sudah(s)) || list[0] || {}).id;
-  const [sid, setSid] = useState(s0 || pertamaBelum);
-  const nBelum = list.filter(s => !sudah(s)).length;
-  return html`<${SubHeader} title=${ubah ? "Koreksi Mutaba'ah" : "Mutaba'ah"} sub=${`Asrama ${a.nama} · ${L.fmtTgl(tgl)} · ${list.length - nBelum}/${list.length} sudah diisi`}>
-      <div class="seg small" style="margin-top:12px">${list.map(s => { const done = !!get("mutabaah", L.mutKey(s.id, tgl));
-        return html`<button class=${s.id === sid ? "on" : ""} onClick=${() => setSid(s.id)}>${done ? "✓ " : ""}${s.panggilan || s.nama.split(" ")[0]}</button>`; })}</div></${SubHeader}>
+    <div class="wrap">${rapelBar}<${Card}><${Empty} t="Hari Sabtu dan Ahad libur mutaba'ah. Pengisian berjalan Senin–Jumat, dan hari libur tidak mengurangi nilai santri." icon="calendar" /></${Card}></div>`;
+  if (!ubah && lampau && !L.bisaRapel(tgl)) return html`<${SubHeader} title="Mutaba'ah" sub=${`Asrama ${a.nama} · ${L.fmtTgl(tgl)}`} />
+    <div class="wrap"><${Card}><${Empty} t=${`Batas isi menyusul sudah lewat. Mutaba'ah hanya bisa dirapel paling lambat ${L.RAPEL_HARI} hari.`} icon="calendar" /></${Card}></div>`;
+  const td = L.mutTidakDinilai(a.id, tgl);
+  return html`<${SubHeader} title=${ubah ? "Koreksi Mutaba'ah" : lampau ? "Mutaba'ah · Menyusul" : "Mutaba'ah"} sub=${`Asrama ${a.nama} · ${L.fmtTgl(tgl)} · ${list.filter(sudah).length}/${list.length} sudah diisi`}>
+      <div class="seg small" style="margin-top:12px">${list.map(s => { const done = sudah(s), iz = !done && L.alasanTidakDinilai(s.id, tgl);
+        return html`<button class=${s.id === sid ? "on" : ""} onClick=${() => setSid(s.id)}>${done ? "✓ " : iz ? "– " : ""}${s.panggilan || s.nama.split(" ")[0]}</button>`; })}</div></${SubHeader}>
+    ${!ubah ? html`<div class="wrap mut-atas">${lampau ? html`<${Hint}>Mengisi menyusul untuk ${L.fmtTgl(tgl)}. Data tetap dihitung dan diberi tanda "diisi menyusul".</${Hint}>` : null}
+      ${td ? html`<div class="mut-td"><b>Hari ini tidak dinilai</b><small>${td.alasan}${td.ket ? " · " + td.ket : ""}. Santri yang tidak diisi tidak mengurangi nilai.</small>${td.manual ? html`<button type="button" class="link" onClick=${async () => { if (await del("mutLibur", L.mutLiburKey(a.id, tgl))) toast("Tanda tidak dinilai dibatalkan"); }}>Batalkan</button>` : null}</div>` : null}
+      ${rapelBar}</div>` : null}
     ${sid ? html`<${MutForm} key=${sid + tgl} sid=${sid} tgl=${tgl} list=${list} ubah=${ubah} onNext=${id => setSid(id)} />` : null}`;
+}
+// Rapel (isi menyusul) & tandai hari tidak dinilai
+function RapelBar({ aid, list, tgl, open, setOpen }) {
+  const [tandai, setTandai] = useState(null), [alasan, setAlasan] = useState(L.ALASAN_TIDAK_DINILAI[0]), [ket, setKet] = useState("");
+  const hari = [L.today(), ...L.tglRapel()].filter(t => L.hariAktif(t, "mutabaah"));
+  const info = hari.map(t => ({ t, belum: perluIsi(list, t).length, td: L.mutTidakDinilai(aid, t) }));
+  const kurang = info.filter(x => x.t !== L.today() && x.belum && !x.td);
+  const simpanTanda = async () => {
+    if (alasan === "Lainnya" && !ket.trim()) { toast("Tulis keterangan alasannya", "err"); return; }
+    if (await put("mutLibur", L.mutLiburKey(aid, tandai), { asrama: aid, tanggal: tandai, alasan, ket: ket.trim(), oleh: me().id, ts: Date.now() })) { toast(`${L.fmtShort(tandai)} ditandai tidak dinilai`); setTandai(null); setKet(""); }
+  };
+  return html`<button type="button" class=${"rapel-btn " + (kurang.length ? "ada" : "")} onClick=${() => setOpen(true)}>
+      <${Icon} n="calendar" s=${18} /><span>${kurang.length ? html`<b>${kurang.length} hari belum lengkap</b><small>Isi menyusul paling lambat ${L.RAPEL_HARI} hari</small>` : html`<b>Isi menyusul / hari tidak dinilai</b><small>Semua hari sebelumnya sudah lengkap</small>`}</span><${Icon} n="right" s=${16} /></button>
+    <${Sheet} open=${open} onClose=${() => { setOpen(false); setTandai(null); }} title=${tandai ? "Tandai tidak dinilai" : "Isi menyusul"}>
+      ${tandai ? html`<p class="small">${L.fmtTgl(tandai)}. Santri yang belum diisi pada hari ini tidak akan mengurangi nilai. Yang sudah diisi tetap dihitung.</p>
+        <div class="alasan-pil">${L.ALASAN_TIDAK_DINILAI.map(x => html`<button type="button" class=${x === alasan ? "on" : ""} onClick=${() => setAlasan(x)}>${x}</button>`)}</div>
+        <${Field} label=${alasan === "Lainnya" ? "Keterangan (wajib)" : "Keterangan (boleh kosong)"}><input class="in" value=${ket} onInput=${e => setKet(e.target.value)} placeholder="mis. ziarah ke makam pendiri" /></${Field}>
+        <${Btn} icon="check" onClick=${simpanTanda}>Simpan tanda</${Btn}><div style="height:8px"></div><${Btn} kind="ghost" onClick=${() => setTandai(null)}>Kembali</${Btn}>`
+      : html`<p class="small">Mutaba'ah yang terlewat bisa diisi menyusul paling lambat ${L.RAPEL_HARI} hari. Kalau wali asrama berhalangan, tandai hari itu tidak dinilai supaya santri tidak dirugikan.</p>
+        <div class="list">${info.map(x => html`<div class="rapel-row"><div><b>${L.fmtTgl(x.t)}${x.t === L.today() ? " · hari ini" : ""}</b>
+          <small>${x.td ? "Tidak dinilai · " + x.td.alasan : x.belum ? `${x.belum} santri belum diisi` : "Lengkap"}</small></div>
+          <div class="rapel-act">${x.belum && x.t !== tgl ? html`<button type="button" class="mini-btn" onClick=${() => { setOpen(false); nav.go("mutabaah", { tgl: x.t }); }}>Isi</button>` : null}
+          ${!x.td && x.belum ? html`<button type="button" class="mini-btn ghost" onClick=${() => setTandai(x.t)}>Tidak dinilai</button>` : null}</div></div>`)}</div>`}</${Sheet}>`;
 }
 function MutForm({ sid, list, onNext, tgl, ubah }) {
   useApp();
@@ -69,27 +101,28 @@ function MutForm({ sid, list, onNext, tgl, ubah }) {
   const ibFinal = new Set(ib); Object.entries(auto).forEach(([i, v]) => { if (v === true) ibFinal.add(Number(i)); if (v === false) ibFinal.delete(Number(i)); });
   const tog = (set, setter, i) => { const n = new Set(set); n.has(i) ? n.delete(i) : n.add(i); setter(n); };
   const src = i => (DATA.auto[i] ? (DATA.auto[i][0] === "motd" ? "Dari MOTD" : "Dari absen halaqah") : null);
-  const belumLain = list.filter(x => x.id !== sid && !get("mutabaah", L.mutKey(x.id, tgl)));
+  const belumLain = perluIsi(list, tgl).filter(x => x.id !== sid), lewat = !ex && L.alasanTidakDinilai(sid, tgl), lampau = tgl < L.today();
   const save = async () => {
-    const rec = { santri: sid, tanggal: tgl, ibadah: [...ibFinal], adab: [...ad], guru: (ex && ex.guru) || me().id, ts: ex ? ex.ts : Date.now(), ...(ex ? { diubah: { oleh: me().id, ts: Date.now() } } : {}) };
+    const rec = { santri: sid, tanggal: tgl, ibadah: [...ibFinal], adab: [...ad], guru: (ex && ex.guru) || me().id, ts: ex ? ex.ts : Date.now(), ...(ex ? { diubah: { oleh: me().id, ts: Date.now() } } : {}), ...((ex && ex.menyusul) || (!ex && lampau) ? { menyusul: true } : {}) };
     if (await put("mutabaah", L.mutKey(sid, tgl), rec)) {
       if (ex) { await logUbah("ubah", "mutabaah", L.mutKey(sid, tgl), `Mutaba'ah ${s.nama} ${L.fmtTgl(tgl)}`, ex); toast("Mutaba'ah diperbarui"); nav.back(); return; }
       toast("Mutaba'ah tersimpan");
-      const i = list.findIndex(x => x.id === sid), nx = [...list.slice(i + 1), ...list.slice(0, i)].find(x => !get("mutabaah", L.mutKey(x.id, tgl)));
+      const i = list.findIndex(x => x.id === sid), sisa = new Set(perluIsi(list, tgl).map(x => x.id)), nx = [...list.slice(i + 1), ...list.slice(0, i)].find(x => sisa.has(x.id));
       if (nx) onNext(nx.id);
     }
   };
   if (ex && !ubah) {
     const kurangI = DATA.ibadah.map((t, i) => [t, i]).filter(([, i]) => !ex.ibadah.includes(i)), kurangA = DATA.adab.map((t, i) => [t, i]).filter(([, i]) => !ex.adab.includes(i));
     return html`<div class="wrap">
-      <div class="selesai-card"><span class="sc-ic"><${Icon} n="check" s=${26} c="#fff" w=${3} /></span><div><b>Mutaba'ah ${s.panggilan || s.nama.split(" ")[0]} sudah diisi</b><small>Diisi ${L.staffAman(ex.guru).pendek} pukul ${L.fmtJam(ex.ts)}</small></div></div>
+      <div class="selesai-card"><span class="sc-ic"><${Icon} n="check" s=${26} c="#fff" w=${3} /></span><div><b>Mutaba'ah ${s.panggilan || s.nama.split(" ")[0]} sudah diisi</b><small>Diisi ${L.staffAman(ex.guru).pendek} pukul ${L.fmtJam(ex.ts)}${ex.menyusul ? " · diisi menyusul" : ""}</small></div></div>
       <${Card}><div class="minis"><${Pill} t=${`Ibadah ${ex.ibadah.length}/${DATA.ibadah.length}`} tone="green" /><${Pill} t=${`Adab ${ex.adab.length}/${DATA.adab.length}`} tone="blue" /></div>
         ${kurangI.length + kurangA.length ? html`<div class="grp">Belum dilaksanakan</div><div class="list">${[...kurangI.map(([t]) => ["Ibadah", t]), ...kurangA.map(([t]) => ["Adab", t])].map(([j, t]) => html`<${Row} name=${t} sub=${j} />`)}</div>`
           : html`<p class="small center" style="margin:12px 0 4px">Semua ibadah dan adab terlaksana.</p>`}</${Card}>
-      ${belumLain.length ? html`<${Btn} icon="right" onClick=${() => onNext(belumLain[0].id)}>Isi santri berikutnya · ${belumLain.length} belum</${Btn}>` : html`<p class="small center">Semua santri asrama sudah diisi hari ini.</p>`}
+      ${belumLain.length ? html`<${Btn} icon="right" onClick=${() => onNext(belumLain[0].id)}>Isi santri berikutnya · ${belumLain.length} belum</${Btn}>` : html`<p class="small center">Semua santri asrama sudah diisi${lampau ? " untuk tanggal ini" : " hari ini"}.</p>`}
       <p class="riwayat-hint">Perlu mengubah atau menghapus? <button type="button" class="link" onClick=${() => nav.go("riwayatModul", { modul: "asrama" })}>Buka Riwayat & Koreksi</button></p></div>`;
   }
   return html`<div class="wrap">
+    ${lewat ? html`<div class="mut-td"><b>${s.panggilan || s.nama.split(" ")[0]} boleh dilewati</b><small>${lewat}. Kalau tidak diisi, hari ini tidak mengurangi nilainya.</small>${belumLain.length ? html`<button type="button" class="link" onClick=${() => onNext(belumLain[0].id)}>Lewati</button>` : null}</div>` : null}
     <${Card}><div style="display:flex;justify-content:space-between;align-items:center"><div><b>${s.nama}</b><div class="small">Kelas ${s.kelas}</div></div><${Pill} t=${`${ibFinal.size + ad.size} dari ${DATA.ibadah.length + DATA.adab.length}`} tone="gold" /></div></${Card}>
     <${Card} title="Ibadah" right=${html`<small>${ibFinal.size}/${DATA.ibadah.length}</small>`}>${DATA.ibadah.map((t, i) => {
       const au = auto[i], isAuto = au === true || au === false, on = ibFinal.has(i);

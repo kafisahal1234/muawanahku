@@ -783,3 +783,19 @@ html.pad-on,html.pad-on body{overscroll-behavior:none}
 /* v15: status sambungan database */
 .sync-bar{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 8px);z-index:450;width:calc(100% - 20px);max-width:460px;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 14px;border-radius:14px;background:#7A1E14;color:#fff;font-size:13px;line-height:1.35;box-shadow:0 10px 24px -10px rgba(60,10,5,.6)}
 .sync-bar b{font-weight:800}.sync-bar button{flex:none;min-height:40px;padding:0 14px;border-radius:12px;background:#fff;color:#7A1E14;font-weight:800;font-size:13px}.sync-bar button:disabled{opacity:.6}
+
+/* v16: mutaba'ah adil — rapel & hari tidak dinilai */
+.mut-atas{padding-bottom:0!important}
+.rapel-btn{width:100%;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #DCE7E0;border-radius:14px;padding:10px 12px;margin:0 0 4px;text-align:left;color:#33503F}
+.rapel-btn span{flex:1;display:flex;flex-direction:column}.rapel-btn b{font-size:13.5px;color:#1E3528}.rapel-btn small{font-size:12px;color:var(--mut)}
+.rapel-btn.ada{background:#FFF7E6;border-color:#F2D79B}.rapel-btn.ada b{color:#8A5A00}
+.rapel-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #EEF2EF}
+.rapel-row b{display:block;font-size:13.5px}.rapel-row small{font-size:12px;color:var(--mut)}
+.rapel-act{display:flex;gap:6px;flex:none}
+.mini-btn{min-height:36px;padding:0 12px;border-radius:10px;background:var(--g,#0E8F52);color:#fff;font-weight:800;font-size:12.5px}
+.mini-btn.ghost{background:#EEF4F0;color:#33503F}
+.mut-td{display:flex;flex-direction:column;gap:2px;background:#EEF3FF;border:1px solid #D3DEF7;border-radius:14px;padding:10px 12px;margin:0 0 10px;color:#22345C}
+.mut-td b{font-size:13.5px}.mut-td small{font-size:12.5px;color:#4A5A7A}.mut-td .link{align-self:flex-start;min-height:34px;font-size:13px}
+.alasan-pil{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 12px}
+.alasan-pil button{min-height:38px;padding:0 12px;border-radius:999px;background:#EEF4F0;color:#33503F;font-weight:700;font-size:13px;border:1px solid transparent}
+.alasan-pil button.on{background:#0E8F52;color:#fff}
