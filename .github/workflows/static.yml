@@ -2,11 +2,8 @@
 name: Deploy static content to Pages
 
 on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
+  # Dinonaktifkan dari push: situs MuawanahKu diterbitkan oleh "Deploy ke GitHub Pages" (deploy.yml) dari folder dist/.
+  # Workflow ini menerbitkan isi repo mentah dan bentrok dengan deploy utama (dua artefak github-pages).
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
