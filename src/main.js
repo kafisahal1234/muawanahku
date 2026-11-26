@@ -144,8 +144,7 @@ try {
 } catch (e) { }
 // Rasa aplikasi asli: tanpa zoom cubit/ketuk-ganda, efek sentuh (ripple), service worker di hosting sendiri
 try {
-  ["gesturestart", "gesturechange"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
-  document.addEventListener("touchmove", e => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  // cubit-perbesar (pinch-zoom) diizinkan untuk aksesibilitas; ketuk-ganda tetap tidak memperbesar (touch-action: manipulation)
   document.addEventListener("pointerdown", e => {
     const el = e.target.closest && e.target.closest(".btn,button.row,.menu-row,.sched,.demo-acc,.rk,.pchip");
     if (!el || el.disabled) return;

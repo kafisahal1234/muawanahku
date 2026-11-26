@@ -17,7 +17,7 @@ const J30 = ["An Naas", "Al Falaq", "Al Ikhlas", "Al Lahab", "An Nashr", "Al Kaa
 const J29 = ["Al Mursalaat", "Al Insaan", "Al Qiyaamah", "Al Muddatstsir", "Al Muzzammil", "Al Jinn", "Nuh", "Al Ma'aarij", "Al Haaqqah", "Al Qalam", "Al Mulk"];
 const MAPEL_RAPOR = [["fiqih", "FIQIH"], ["it", "IT (TEKNOLOGI INFORMASI)"], ["karakter", "PENDIDIKAN KARAKTER"], ["bing", "BAHASA INGGRIS"]];
 
-export const RP_CSS = `.rp{font-family:Montserrat,"Plus Jakarta Sans",Arial,sans-serif;color:#2E2F30}
+export const RP_CSS = `.rp{font-family:Montserrat,Arial,sans-serif;color:#2E2F30}
 .rp-page{width:794px;height:1123px;background:#fff;position:relative;overflow:hidden;box-sizing:border-box;padding:183px 85px 133px 96px;margin:0 auto 16px;box-shadow:0 1px 6px rgba(0,0,0,.15)}
 .rp-head{position:absolute;left:35px;top:11px;width:763px;height:auto}.rp-foot{position:absolute;left:14px;bottom:10px;width:785px;height:auto}
 .rp h1{margin:0;text-align:center;font-size:17px;font-weight:700;color:#3D5F78;letter-spacing:.2px}.rp .qsub{text-align:center;font-size:12px;font-style:italic;margin:0 0 10px}

@@ -15,7 +15,7 @@ for src, dst in [("vendor/pdf.min.mjs", "pdf.min.mjs"), ("vendor/pdf.worker.min.
 try:  # Mode Gelap: dibuat ulang otomatis bila tinycss2 tersedia; bila tidak, pakai src/dark.css yang tersimpan
     import subprocess, sys; subprocess.run([sys.executable, "tools/buat_gelap.py"], check=True, capture_output=True)
 except Exception: pass
-css = open("src/theme.css").read() + open("src/skin.css").read() + open("src/dark.css").read() + open("src/dark_manual.css").read()
+css = open("src/theme.css").read() + open("src/skin.css").read() + open("src/dark.css").read() + open("src/dark_manual.css").read() + open("src/polish.css").read()
 js = open("dist/app.js").read().replace("</script", "<\\/script")
 # ikon aplikasi (PWA) dari logo
 import base64, io, json, re
@@ -49,14 +49,14 @@ self.addEventListener("fetch", e => {
 """)
 html = f"""<!DOCTYPE html>
 <html lang="id"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light"><meta name="theme-color" content="#0B5D3B">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="MuawanahQu">
 <meta name="format-detection" content="telephone=no"><meta name="description" content="Aplikasi Pondok Tahfidz Modern Kampung Qur'an Al Muawanah">
 <link rel="manifest" href="manifest.webmanifest?v=3"><link rel="icon" type="image/png" href="icon-192.png?v=3"><link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=3"><link rel="apple-touch-icon-precomposed" href="icon-180.png?v=3"><link rel="shortcut icon" href="icon-192.png?v=3">
 <title>MuawanahQu</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800;6..12,900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Arabic:wght@400;600;700;800&family=Montserrat:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Montserrat:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>{css}</style></head><body><div id="root"></div><script>{js}</script></body></html>"""
 open("dist/index.html", "w").write(html)
 print("ok", len(html) // 1024, "KB")

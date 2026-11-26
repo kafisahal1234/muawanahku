@@ -1,0 +1,35 @@
+/* ===== Poles visual (lapisan terakhir) =====
+   Tidak mengubah tata letak, warna modul, ikon, atau logika. Hanya: tipografi Inter, hierarki ketebalan huruf,
+   angka tabular, cincin fokus, dan detail kecil. Bisa dicabut dengan menghapus file ini dari build.py. */
+:root{--font:"Inter","Noto Sans Arabic",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--fokus:#DDB34C}
+body,button,input,select,textarea{font-family:var(--font);font-optical-sizing:auto}
+body{font-feature-settings:"cv05","cv08";letter-spacing:-.006em;text-rendering:optimizeLegibility}
+/* teks Arab memakai Noto Sans Arabic dengan jarak huruf normal */
+:lang(ar),[lang=ar] *,.ar,.arab{font-family:"Noto Sans Arabic","Inter",sans-serif;letter-spacing:0}
+/* judul sedikit dirapatkan agar tegas, tidak bulat */
+h1,h2,h3,.hero b,.tile-lb,.card-t,.sec-t{letter-spacing:-.012em}
+/* ketebalan inline 800/900 diselaraskan ke 700 (hierarki: 700 judul/angka, 600 label, 400–500 isi) */
+[style*="font-weight:900"],[style*="font-weight: 900"],[style*="font-weight:800"],[style*="font-weight: 800"]{font-weight:700!important}
+/* angka nilai, statistik, jam, dan tabel sejajar (tabular) */
+table,td,th,.badge,.pill,.stat,.kpi,.tile .badge,.hero b,.num,.cnt,.pos b,.bar-v,.mini b,.qv,small b,.loadpill{font-variant-numeric:tabular-nums}
+/* cincin fokus jelas untuk keyboard & pembaca layar, tidak muncul saat disentuh */
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--fokus);outline-offset:2px;border-radius:10px}
+input.in:focus-visible,select.in:focus-visible,textarea.in:focus-visible{outline:none;border-color:#168653;box-shadow:0 0 0 3px rgba(22,134,83,.18)}
+.bnav button:focus-visible,.tile:focus-visible{outline-offset:-2px}
+/* teks pada tombol: 600 lebih tenang daripada 800 */
+.btn{font-weight:600;letter-spacing:-.005em}
+.bnav button{font-weight:500}.bnav button.on{font-weight:600}
+/* tidak ada teks yang dipaksa terlalu kecil di HP */
+small,.small{font-size:max(12px,.8em)}
+@media (prefers-reduced-motion: reduce){*,*:before,*:after{scroll-behavior:auto!important}}
+/* kontras (WCAG AA): lencana merah sedikit lebih pekat; teks hijau tua di Mode Gelap dicerahkan */
+.badge{background:#D42E22}
+html[data-tema=gelap] .link,html[data-tema=gelap] .strip-go,html[data-tema=gelap] .stat:not(.blue):not(.gold):not(.red) b,html[data-tema=gelap] .av{color:#6FD3A0}
+html[data-tema=gelap] .av{background:#1E3A2C}
+/* ornamen titik emas di halaman masuk: tetap ada, tapi di belakang teks & lebih lembut agar tidak mengganggu keterbacaan */
+.lg>*:not(.lg-dot){position:relative;z-index:1}
+.lg-dot{z-index:0;filter:opacity(.6)}
+.lg p{text-shadow:0 1px 2px rgba(0,0,0,.18)}
+/* cubit-perbesar kini diizinkan: cegah iOS otomatis memperbesar saat kolom isian disentuh (butuh ≥16px) */
+@supports (-webkit-touch-callout:none){input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{font-size:max(16px,1em)}}
