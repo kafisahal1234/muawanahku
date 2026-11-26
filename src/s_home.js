@@ -72,7 +72,7 @@ export function Login() {
       <${Seg} items=${[["staff", "Ustadz / Staf"], ["wali", "Wali Santri"]]} value=${mode} onChange=${m => { setMode(m); setErr(""); setU(""); setP(""); }} />
       ${mode === "wali" ? html`<div class="mt12"><${Field} label="Kode akses" hint="Nama panggilan santri + tanggal lahir (tanggal, bulan, tahun). Contoh: fulan010112">
         <input class="in" autocomplete="off" autocapitalize="none" spellcheck="false" value=${u} placeholder="namatanggallahir" onInput=${e => setU(e.target.value)} /></${Field}></div>` : html`
-      <div class="mt12"><${Field} label="Username atau email">
+      <div class="mt12"><${Field} label=${ONLINE() ? "Username" : "Username atau email"}>
         <input class="in" autocomplete="username" autocapitalize="none" value=${u} placeholder="username" onInput=${e => setU(e.target.value)} /></${Field}>
       <${Field} label="Kata sandi"><${PassInput} value=${p} placeholder="kata sandi" onInput=${e => setP(e.target.value)} /></${Field}>
       <div class="lupa-row"><button type="button" class="link" onClick=${() => setLupa(true)}>Lupa kata sandi?</button></div></div>`}
