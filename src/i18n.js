@@ -20,11 +20,14 @@ export function setTema(t) { try { localStorage.setItem("mk_tema", t); } catch (
 export const BAHASA = [["id", "Bahasa Indonesia"], ["en", "English"], ["ar", "العربية"]];
 export const bahasa = () => LS("mk_bahasa", "id");
 const IX = { en: 0, ar: 1 };
+const REX_BLN = /^(, ?)(\d{1,2}) (Jan|Feb|Mar|Apr|Mei|Jun|Jul|Agu|Agt|Sep|Okt|Nov|Des)( \d{4})?$/;
 const REX_TGL = /^(Senin|Selasa|Rabu|Kamis|Jumat|Sabtu|Ahad)(, ?)(\d{1,2}) (Jan|Feb|Mar|Apr|Mei|Jun|Jul|Agu|Agt|Sep|Okt|Nov|Des)( \d{4})?$/;
 function terjemah(teks, i) {
   const k = teks.trim(); if (!k || k.length > 80) return null;
-  const v = KAMUS[k]; if (v) return teks.replace(k, v[i]);
-  const m = REX_TGL.exec(k); if (m) return teks.replace(k, `${HARI[m[1]][i]}${m[2]}${m[3]} ${BULAN[m[4]][i]}${m[5] || ""}`);
+  const iso = x => (i === 1 ? "\u2068" + x + "\u2069" : x); // teks Arab diisolasi agar urutan kalimat tetap kiri-ke-kanan
+  const v = KAMUS[k]; if (v) return teks.replace(k, iso(v[i]));
+  const m = REX_TGL.exec(k); if (m) return teks.replace(k, i === 1 ? `${iso(HARI[m[1]][i] + "،")} ${m[3]} ${iso(BULAN[m[4]][i])}${m[5] || ""}` : `${HARI[m[1]][i]}${m[2]}${m[3]} ${BULAN[m[4]][i]}${m[5] || ""}`);
+  const b = REX_BLN.exec(k); if (b) return teks.replace(k, `${i === 1 ? "، " : b[1]}${b[2]} ${iso(BULAN[b[3]][i])}${b[4] || ""}`);
   return null;
 }
 const ATR = ["placeholder", "aria-label", "title"];
@@ -39,7 +42,7 @@ function prosesNode(n, i) {
   while ((x = w.nextNode())) x.nodeType === 3 ? teksNode(x, i) : atrNode(x, i);
 }
 export function terapkanBahasa() {
-  const b = bahasa(); try { akar().lang = b; akar().dir = "ltr"; // tata letak tidak dibalik untuk bahasa Arab (isi aplikasi sebagian besar berbahasa Indonesia) } catch (e) { }
+  const b = bahasa(); try { akar().lang = b; akar().dir = "ltr"; /* tata letak tidak dibalik untuk bahasa Arab */ } catch (e) { }
   if (b === "id" || typeof MutationObserver === "undefined") return;
   const i = IX[b];
   const mulai = () => {
