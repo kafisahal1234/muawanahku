@@ -80,7 +80,10 @@ export async function sha(t) {
   return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join("");
 }
 export const akunOv = u => (S.data.akun || {})[u] || null;
-export async function cekSandi(u, p, def) { const ov = akunOv(u); return ov && ov.hash ? (await sha(u + ":" + p)) === ov.hash : p === def; }
+// Kata sandi tidak pernah disimpan apa adanya: yang disimpan hanya sidik acak (hash). Akun tanpa hash tidak bisa masuk.
+// st = data akun (memakai st.sandiHash bawaan bila belum ada hash di database) atau string sandi bawaan lama.
+export async function cekSandi(u, p, st) { const ov = akunOv(u), h = ov && ov.hash ? ov.hash : st && typeof st === "object" ? st.sandiHash : null; if (h) return (await sha(u + ":" + p)) === h; return typeof st === "string" && !!st && p === st; }
+export const sandiAcak = () => { const a = "abcdefghjkmnpqrstuvwxyz", b = new Uint32Array(8); crypto.getRandomValues(b); return [...b].map((x, i) => (i < 4 ? a[x % a.length] : String(x % 10))).join(""); };
 // hasil: {kind,id} | {err}
 // Akun guru/pengurus: username + kata sandi. Akun yang dihapus Admin tidak bisa masuk.
 export const staffAktif = () => STAFF.filter(s => !(akunOv(s.username) || {}).hapus);
@@ -99,11 +102,11 @@ export async function login(username, password) {
       if (ov.hash !== h || ov.menungguReset) { const o = { ...ov, hash: h }; delete o.menungguReset; await put("akun", u, o); }
       return { kind: "staff", id: st.id };
     } catch (e) {
-      if (salahSandi(e) && !(ov.menungguReset && (await cekSandi(u, p, st.password)))) return { err: "Username atau kata sandi salah." };
+      if (salahSandi(e) && !(ov.menungguReset && (await cekSandi(u, p, st)))) return { err: "Username atau kata sandi salah." };
       if (salahSandi(e)) return { kind: "staff", id: st.id };
     }
   }
-  if (!(await cekSandi(u, p, st.password))) return { err: "Username atau kata sandi salah." };
+  if (!(await cekSandi(u, p, st))) return { err: "Username atau kata sandi salah." };
   return { kind: "staff", id: st.id };
 }
 // Wali santri: satu kotak kode akses = nama panggilan santri + tanggal lahir (DDMMYYYY), misal adiyatma15082011.

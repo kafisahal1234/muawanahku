@@ -66,7 +66,7 @@ function EditSantri({ e, onClose }) {
 
 export function AkunAdmin() {
   useApp();
-  const [ask, setAsk] = useState(null); const [ed, setEd] = useState(null);
+  const [ask, setAsk] = useState(null); const [ed, setEd] = useState(null); const [baruSandi, setBaruSandi] = useState(null);
   const hapusAkun = async st => { setAsk(null); if (await put("akun", st.username, { ...(L.akunOv(st.username) || {}), hapus: true, oleh: me().id, ts: Date.now() })) { logUbah("hapus", "akun", st.username, `Akun ${st.nama} dihapus`); toast(`Akun ${st.username} dihapus. Tidak bisa masuk lagi.`); } };
   const pulihkan = async st => { const o = { ...(L.akunOv(st.username) || {}) }; delete o.hapus; delete o.nonaktif; if (await put("akun", st.username, o)) { logUbah("ubah", "akun", st.username, `Akun ${st.nama} dipulihkan`); toast("Akun dipulihkan"); } };
   return html`<${SubHeader} title="Guru & Akun" sub=${`${L.staffAktif().length} akun guru dan pengurus aktif`} /><div class="wrap">
@@ -75,16 +75,17 @@ export function AkunAdmin() {
     <div class="mt12"><${Card}><div class="list">${L.STAFF.map(s => { const del0 = (L.akunOv(s.username) || {}).hapus, saya = s.id === me().id, a = L.asramaOf(s.id);
       return html`<div class="row" style="align-items:flex-start;${del0 ? "opacity:.55" : ""}"><button class="row-t" style="text-align:left;display:flex;gap:12px;align-items:flex-start;min-height:44px" onClick=${() => !del0 && setEd({ ...s, asrama: a ? a.id : "" })}>
         <span class="av">${L.initials((s.pendek || s.nama).replace(/^Ust(dzh)?\.\s*/, ""))}</span><span style="min-width:0;flex:1"><b style="display:block;font-size:15px">${s.nama}</b>
-        <small style="display:block;font-size:13px;color:var(--mut)">username <b style="display:inline">${s.username}</b>${del0 ? " · akun dihapus" : ` · sandi ${s.password}`}${a ? ` · asrama ${a.nama}` : ""}</small>
+        <small style="display:block;font-size:13px;color:var(--mut)">username <b style="display:inline">${s.username}</b>${del0 ? " · akun dihapus" : ""}${a ? ` · asrama ${a.nama}` : ""}</small>
         <span class="chips" style="margin-top:6px">${s.roles.map(r => html`<${Pill} t=${L.ROLE_LABEL[r] + (r === "wadir_kesantrian" ? " " + s.pondok : "")} tone="blue" />`)}${s.ajar.length ? html`<${Pill} t=${s.ajar.map(([m, k]) => `${L.mapelById(m).nama.replace("Pendidikan ", "").replace("Bahasa ", "B. ")} ${k}`).join(", ")} tone="muted" />` : null}</span></span></button>
       ${saya ? null : del0 ? html`<button class="link" onClick=${() => pulihkan(s)}>Pulihkan</button>` : html`<button class="icon-btn" aria-label=${"Hapus akun " + s.username} onClick=${() => setAsk(s)}><${Icon} n="trash" s=${20} c="#B3261E" /></button>`}</div>`; })}</div></${Card}></div>
     <${Card} title="Akun wali santri"><p class="small" style="margin:0">Setiap santri punya satu akun wali. Wali masuk dengan satu kotak <b>kode akses</b>: nama panggilan santri + tanggal lahir (tanggal, bulan, tahun), contoh <b>adiyatma15082011</b>. Tanggal lahir diisi di Data Santri. Akun wali otomatis terhapus saat santri dihapus dari Data Santri.</p>
       <div class="mt8"><${Btn} kind="ghost" icon="users" onClick=${() => nav.go("santriAdmin")}>Buka Data Santri</${Btn}></div></${Card}>
-    ${ed ? html`<${EditStaff} e=${ed} onClose=${() => setEd(null)} />` : null}
+    ${ed ? html`<${EditStaff} e=${ed} onClose=${() => setEd(null)} onSandi=${(u, pw) => setBaruSandi({ u, pw })} />` : null}
+    <${Confirm} open=${!!baruSandi} title="Kata sandi awal" text=${baruSandi ? `Username ${baruSandi.u}, kata sandi awal ${baruSandi.pw}. Catat dan sampaikan langsung ke pemilik akun, lalu minta ia menggantinya lewat Akun → Ubah kata sandi. Sandi ini tidak bisa dilihat lagi setelah jendela ditutup.` : ""} yes="Sudah dicatat" onYes=${() => setBaruSandi(null)} onNo=${() => setBaruSandi(null)} />
     <${Confirm} open=${!!ask} danger title="Hapus akun ini?" text=${ask ? `${ask.nama} (${ask.username}) tidak akan bisa masuk lagi. Data yang pernah dicatatnya tetap tersimpan. Admin bisa memulihkannya.` : ""} yes="Hapus akun" onYes=${() => hapusAkun(ask)} onNo=${() => setAsk(null)} /></div>`;
 }
 const PERAN = ["mudir", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian", "guru_tahfidz", "musyrif", "guru_mapel", "admin"];
-function EditStaff({ e, onClose }) {
+function EditStaff({ e, onClose, onSandi }) {
   const [f, setF] = useState({ ...e, ajar: [...(e.ajar || [])], roles: [...(e.roles || [])], asrama: e.asrama || "" }); const [busy, setBusy] = useState(false);
   const set = (k, v) => setF({ ...f, [k]: v });
   const togR = r => set("roles", f.roles.includes(r) ? f.roles.filter(x => x !== r) : [...f.roles, r]);
@@ -99,20 +100,21 @@ function EditStaff({ e, onClose }) {
     setBusy(true);
     const id = e.baru ? uid("g").toLowerCase() : e.id, rename = !e.baru && un !== e.username;
     const d = { nama: f.nama.trim(), pendek: (f.pendek || "").trim() || f.nama.trim().split(",")[0].split(" ").slice(0, 2).join(" "), username: un, roles: f.roles, ajar: f.roles.includes("guru_mapel") ? f.ajar : [], ...(f.roles.includes("wadir_kesantrian") ? { pondok: f.pondok || "29" } : {}),
-      ...(e.baru || rename ? { password: un + "123" } : {}) };
-    let ok = await put("staffEdit", id, { ...((S.data.staffEdit || {})[id] || {}), ...d });
-    if (ok && rename) { const ov = { ...(L.akunOv(e.username) || {}) }; delete ov.hash; await put("akun", un, ov); await del("akun", e.username); }
+    };
+    const pw = e.baru || rename ? L.sandiAcak() : null, lama = { ...((S.data.staffEdit || {})[id] || {}) }; delete lama.password; delete lama.sandiHash;
+    let ok = await put("staffEdit", id, { ...lama, ...d });
+    if (ok && pw) { const ov = { ...(rename ? L.akunOv(e.username) || {} : {}) }; delete ov.email; delete ov.menungguReset; ok = await put("akun", un, { ...ov, hash: await L.sha(un + ":" + pw), diubah: Date.now() }); if (ok && rename) await del("akun", e.username); }
     if (ok && pindah) { const AE = S.data.asramaEdit || {}; await put("asramaEdit", pindah.id, { ...(AE[pindah.id] || {}), musyrif: id }); if (oldA && ganti) await put("asramaEdit", oldA.id, { ...(AE[oldA.id] || {}), musyrif: ganti.id }); }
     setBusy(false);
     if (ok) { logUbah(e.baru ? "tambah" : "ubah", "staffEdit", id, `${e.baru ? "Akun baru" : "Ubah akun"} ${d.nama}${rename ? ` (username ${e.username} → ${un})` : ""}${pindah ? ` · asrama ${pindah.nama}` : ""}`);
-      toast(e.baru ? `Akun dibuat. Username ${un}, sandi awal ${un}123` : rename ? `Disimpan. Username baru ${un}, sandi direset ke ${un}123` : "Data akun disimpan"); onClose(); }
+      toast(e.baru ? "Akun dibuat" : rename ? "Disimpan. Username baru, kata sandi direset" : "Data akun disimpan"); if (pw && onSandi) onSandi(un, pw); onClose(); }
   };
-  const reset = async () => { const ov = { ...(L.akunOv(e.username) || {}) }; delete ov.hash; delete ov.email; delete ov.menungguReset; await put("akun", e.username, ov); await put("staffEdit", e.id, { ...((S.data.staffEdit || {})[e.id] || {}), password: e.username + "123" }); logUbah("ubah", "akun", e.username, `Reset sandi ${e.nama}`); toast(`Sandi direset ke ${e.username}123`); };
+  const reset = async () => { const pw = L.sandiAcak(), ov = { ...(L.akunOv(e.username) || {}) }; delete ov.email; delete ov.menungguReset; if (!(await put("akun", e.username, { ...ov, hash: await L.sha(e.username + ":" + pw), diubah: Date.now() }))) return; const se = { ...((S.data.staffEdit || {})[e.id] || {}) }; if (se.password) { delete se.password; await put("staffEdit", e.id, se); } logUbah("ubah", "akun", e.username, `Reset sandi ${e.nama}`); toast("Kata sandi direset"); if (onSandi) onSandi(e.username, pw); onClose(); };
   return html`<${Sheet} open=${true} title=${e.baru ? "Tambah akun guru" : "Ubah akun guru"} onClose=${onClose}>
     <${Field} label="Nama lengkap dengan gelar"><input class="in" value=${f.nama} placeholder="Ust. Nama Lengkap, S.Pd" onInput=${x => set("nama", x.target.value)} /></${Field}>
     <div class="btn-row"><${Field} label="Nama panggilan"><input class="in" value=${f.pendek} placeholder="Ust. Nama" onInput=${x => set("pendek", x.target.value)} /></${Field}>
       <${Field} label="Username"><input class="in" autocapitalize="none" value=${f.username} onInput=${x => set("username", x.target.value.toLowerCase().replace(/\s/g, ""))} /></${Field}></div>
-    ${!e.baru && un !== e.username ? html`<p class="small" style="margin-top:-6px">Username berubah: kata sandi akan direset ke ${un}123.</p>` : null}
+    ${!e.baru && un !== e.username ? html`<p class="small" style="margin-top:-6px">Username berubah: kata sandi akan direset ke sandi acak baru.</p>` : null}
     <${Field} label="Peran"><div class="chips">${PERAN.map(r => html`<button type="button" class=${"pill " + (f.roles.includes(r) ? "green" : "muted")} style="min-height:36px;padding:0 12px" aria-pressed=${f.roles.includes(r)} onClick=${() => togR(r)}>${f.roles.includes(r) ? "✓ " : ""}${L.ROLE_LABEL[r]}</button>`)}</div></${Field}>
     ${f.roles.includes("wadir_kesantrian") ? html`<${Field} label="Wadir kesantrian untuk"><${Seg} small items=${[["29", "Pondok 29"], ["21", "Pondok 21"]]} value=${f.pondok || "29"} onChange=${v => set("pondok", v)} /></${Field}>` : null}
     ${f.roles.includes("musyrif") ? html`<${Field} label="Asrama binaan (wali asrama)"><select class="in" value=${f.asrama} onChange=${x => set("asrama", x.target.value)}><option value="">— belum ada —</option>

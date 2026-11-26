@@ -51,7 +51,7 @@ export function UbahSandi() {
   useApp();
   const u = L.usernameOf(nav.user);
   const [f, setF] = useState({ lama: "", baru: "", ulang: "" }); const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
-  const def = nav.user.kind === "staff" ? me().password : u + "123";
+  const def = nav.user.kind === "staff" ? me() : u + "123";
   const save = async () => {
     setErr("");
     if (!(await L.cekSandi(u, f.lama, def))) return setErr("Kata sandi lama salah.");

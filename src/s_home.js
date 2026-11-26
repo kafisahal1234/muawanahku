@@ -1,7 +1,7 @@
 import { useState } from "preact/hooks";
 import { html, nav, useApp, Icon, Tile, Card, Stat, Row, Pill, Btn, Empty, Field, Seg, Section, Sheet, SearchBox, Logo, Confirm, PassInput } from "./ui.js";
 import { fbSiap, fbLupa, pesanAuth } from "./cloud.js";
-import { S, all, get, resetAll, toast } from "./store.js";
+import { S, all, get, resetAll, toast, ONLINE } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
 import * as KH from "./s_khidmah.js";
@@ -36,7 +36,7 @@ function LupaSandi({ awal, onClose }) {
       <b>Tautan terkirim ke ${hasil}</b><p>Buka email tersebut (cek juga folder Spam), ketuk tautannya, lalu buat kata sandi baru. Setelah itu masuk di aplikasi dengan kata sandi baru.</p>
       <${Btn} onClick=${onClose}>Mengerti</${Btn}></div>`
     : html`<p class="small" style="margin-top:0">Masukkan username atau email pemulihan. Kami kirim tautan untuk membuat kata sandi baru ke email yang terpasang di akun.</p>
-      <${Field} label="Username atau email"><input class="in" autocapitalize="none" value=${v} placeholder="contoh: kaafi" onInput=${e => setV(e.target.value)} /></${Field}>
+      <${Field} label="Username atau email"><input class="in" autocapitalize="none" value=${v} placeholder="username" onInput=${e => setV(e.target.value)} /></${Field}>
       ${err ? html`<div class="note red"><${Icon} n="alert" s=${18} />${err}</div>` : null}
       <${Btn} disabled=${busy} onClick=${kirim}>${busy ? "Mengirim…" : "Kirim tautan atur ulang"}</${Btn}>
       <p class="small mt8">Wali santri tidak memakai kata sandi: kode akses = nama panggilan + tanggal lahir santri.</p>`}</${Sheet}>`;
@@ -70,21 +70,17 @@ export function Login() {
       ${mode === "wali" ? html`<div class="mt12"><${Field} label="Kode akses" hint="Nama panggilan santri + tanggal lahir (tanggal, bulan, tahun). Contoh: adiyatma15082011">
         <input class="in" autocomplete="off" autocapitalize="none" spellcheck="false" value=${u} placeholder="namatanggallahir" onInput=${e => setU(e.target.value)} /></${Field}></div>` : html`
       <div class="mt12"><${Field} label="Username atau email">
-        <input class="in" autocomplete="username" autocapitalize="none" value=${u} placeholder="contoh: kaafi" onInput=${e => setU(e.target.value)} /></${Field}>
-      <${Field} label="Kata sandi"><${PassInput} value=${p} placeholder="contoh: kaafi123" onInput=${e => setP(e.target.value)} /></${Field}>
+        <input class="in" autocomplete="username" autocapitalize="none" value=${u} placeholder="username" onInput=${e => setU(e.target.value)} /></${Field}>
+      <${Field} label="Kata sandi"><${PassInput} value=${p} placeholder="kata sandi" onInput=${e => setP(e.target.value)} /></${Field}>
       <div class="lupa-row"><button type="button" class="link" onClick=${() => setLupa(true)}>Lupa kata sandi?</button></div></div>`}
       ${err ? html`<div class="note red"><${Icon} n="alert" s=${18} />${err}</div>` : null}
       <${Btn} type="submit" disabled=${busy}>${busy ? "Memeriksa…" : "Masuk"}</${Btn}>
-      <div class="mt8"><${Btn} kind="ghost" icon="users" onClick=${() => setDemo(true)}>Lihat semua akun demo</${Btn}></div></form>
+      ${!ONLINE() ? html`<div class="mt8"><${Btn} kind="ghost" icon="users" onClick=${() => setDemo(true)}>Lihat semua akun demo</${Btn}></div>` : null}</form>
     <p class="mode">MuawanahQu ${VERSI} ${S.mode === "db" ? (S.ready ? "· data tersinkron" : "· menyambungkan database…") : "· data tersimpan di perangkat ini"}${S.cloudErr ? html`<br /><small style="color:#B3261E">Database: ${S.cloudErr}</small>` : null}<br /><button class="link" style="min-height:44px" onClick=${() => setPriv(true)}>Kebijakan Privasi</button></p>
     ${lupa ? html`<${LupaSandi} awal=${u} onClose=${() => setLupa(false)} />` : null}
     <${Sheet} open=${priv} title="Kebijakan Privasi" onClose=${() => setPriv(false)}><${PrivasiIsi} /></${Sheet}>
     <${Sheet} open=${demo} title="Akun demo" onClose=${() => setDemo(false)}>
-      <p class="small" style="margin-top:0">Ketuk akun untuk langsung masuk. Guru: username + sandi (username + 123). Wali: satu kode akses (nama panggilan + tanggal lahir).</p>
-      <${Section} t="Ustadz dan pengurus" />
-      ${L.staffAktif().map(s => html`<button class="demo-acc" onClick=${() => { setDemo(false); masuk(s.username, s.password); }}><span class="av">${L.initials(s.pendek.replace(/^Ust(dzh)?\.\s*/, ""))}</span>
-        <span style="flex:1;min-width:0"><b style="font-size:14px">${s.nama}</b><div class="small">${s.roles.map(r => L.ROLE_LABEL[r] + (r === "wadir_kesantrian" ? " " + s.pondok : "")).join(" · ")}</div>
-        <div style="margin-top:4px"><code>${s.username}</code> <code>${s.password}</code></div></span></button>`)}
+      <p class="small" style="margin-top:0">Mode uji di perangkat ini. Ketuk wali untuk langsung masuk; guru masuk dengan username dan kata sandinya.</p>
       <${Section} t=${`Wali santri (${L.santriList().length} akun)`} /><${SearchBox} value=${q} onInput=${setQ} ph="Cari nama santri" />
       ${walis.map(s => html`<button class="demo-acc" onClick=${() => { setDemo(false); masukWali(L.kodeAkses(s)); }}><span class="av gold">${L.initials(s.nama)}</span>
         <span style="flex:1;min-width:0"><b style="font-size:14px">Wali ${s.nama}</b><div class="small">Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama}</div><div style="margin-top:4px"><code>${L.kodeAkses(s)}</code>${L.lahirSantri(s).contoh ? html` <span class="small">· tgl lahir contoh</span>` : null}</div></span></button>`)}

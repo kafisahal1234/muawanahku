@@ -73,7 +73,7 @@ function PasangEmail({ st, ov, onClose }) {
     setErr(""); const e = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)) return setErr("Format email tidak benar.");
     const lain = L.staffDariEmail(e); if (lain && lain.username !== st.username) return setErr("Email ini sudah dipakai akun lain.");
-    if (!(await L.cekSandi(st.username, pw, st.password))) return setErr("Kata sandi saat ini salah.");
+    if (!(await L.cekSandi(st.username, pw, st))) return setErr("Kata sandi saat ini salah.");
     if (pw.length < 6) return setErr("Kata sandi Anda terlalu pendek untuk email pemulihan. Ubah dulu kata sandi (minimal 8 karakter, huruf dan angka).");
     if (!fbSiap()) return setErr("Butuh koneksi internet.");
     setBusy(true);

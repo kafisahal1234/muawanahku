@@ -20,7 +20,7 @@ function saveLocal() { try { localStorage.setItem(LSKEY, JSON.stringify(S.data))
 
 // Versi online (situs pondok): data hanya dari database. Bila belum tersambung, input disimpan sementara
 // di HP (antrean) dan dikirim otomatis begitu tersambung — tidak pernah diam-diam memakai data lokal/bawaan.
-const ONLINE = () => !!FIREBASE_CONFIG && /^https?:$/.test(location.protocol) && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+export const ONLINE = () => !!FIREBASE_CONFIG && /^https?:$/.test(location.protocol) && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 const OUTBOX = "mk_antrean_v1";
 const bacaAntrean = () => { try { return JSON.parse(localStorage.getItem(OUTBOX) || "[]"); } catch (e) { return []; } };
 const tulisAntrean = l => { try { l.length ? localStorage.setItem(OUTBOX, JSON.stringify(l)) : localStorage.removeItem(OUTBOX); } catch (e) { } };
