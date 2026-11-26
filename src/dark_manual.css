@@ -162,9 +162,11 @@ html body .toast,html body .loadpill,html body .sync-bar {border-radius:10px;box
 /* Kurangi efek dekoratif, pertahankan indikator loading, progress dan status. */
 html body .login .lg .applogo,html body .login form.card,html body .login form.card>*,
 html body .login .lg p,html body .check.on .box,html body .kh-chips button.on,
-html body .bnav button.on i,html body .bnav .fab-tab.on .fab {
+html body .bnav button.on i {
   animation:none!important;opacity:1;transform:none
 }
+/* FAB tetap berada tepat di tengah tab, termasuk saat aktif. */
+html body .bnav .fab-tab.on .fab {animation:none!important;transform:translateX(-50%)}
 html body .login .lg .applogo,html body .splash.sp2 .sp-logo {box-shadow:none!important}
 html body .login .lg .applogo:after,html body .login .lg>.lg-dot,
 html body .sp-glow,html body .sp-star,html body .sp-shine,
