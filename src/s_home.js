@@ -106,7 +106,7 @@ function tilesFor(st) {
     add("bookopen", r.includes("mudir") || r.includes("wadir_tahfidz") ? "Halaqah Saya" : "Tahfidz", "emerald", () => nav.go("tahfidz"), belum || null);
   }
   if (r.includes("musyrif") && a) {
-    add("moon", "MOTD", "indigo", () => nav.go("motd")); add("checksq", "Mutaba'ah", "teal", () => nav.go("mutabaah"));
+    add("checksq", "Mutaba'ah", "teal", () => nav.go("mutabaah"));
     const ids = new Set(L.santriAsrama(a.id).map(s => s.id));
     add("home", "Asrama Saya", "coral", () => nav.go("asramaSaya"), (!r.includes("wadir_kesantrian") && L.izinAktif().filter(i => ids.has(i.santri)).length) || null);
     add("award", "Rapor", "gold", () => nav.go("raporList"));

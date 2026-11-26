@@ -50,7 +50,7 @@ async def main():
         print("absen selesai view:", await pg.locator(".selesai-card").count()); await pg.locator(".sub-h .back").click(); await pg.wait_for_timeout(300)
         await tile(pg, "Manzil"); await pg.screenshot(path="test/f4_manzil.png", full_page=True); await pg.locator(".sub-h .back").click()
         # mutabaah + motd
-        await keUtama(pg); await pg.locator(".bnav button").first.click(); await tile(pg, "MOTD"); await pg.locator(".absen-row").first.locator("button:text-is('A')").click(); await pg.click("text=Simpan absen"); await pg.wait_for_timeout(200)
+        await keUtama(pg); await pg.locator(".bnav button").first.click(); await tile(pg, "Asrama Saya"); await tile(pg, "Absen MOTD"); await pg.locator(".absen-row").first.locator("button:text-is('A')").click(); await pg.click("text=Simpan absen"); await pg.wait_for_timeout(200)
         await keUtama(pg); await pg.locator(".bnav button").first.click(); await tile(pg, "Mutaba'ah"); await pg.screenshot(path="test/f5_mut.png", full_page=True)
         await pg.click("text=Simpan · santri berikutnya"); await pg.wait_for_timeout(200)
         # kurikulum jadwal bentrok

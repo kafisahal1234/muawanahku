@@ -29,7 +29,7 @@ export function Mapel({ mapel }) {
       <${Card} title="Menu"><div class="tiles">
         <${Tile} icon="checksq" label="Absen & Jurnal" color="blue" onClick=${() => nav.go("absenKelasPilih", { mapel })} />
         <${Tile} icon="edit" label="Input Nilai" color="orange" onClick=${() => nav.go("nilaiPilih", { mapel })} />
-        <${Tile} icon="chart" label="Rekap Kelas" color="teal" onClick=${() => nav.go("rekap", { modul: "mapel" })} />
+        <${Tile} icon="chart" label="Rekap Kelas" color="teal" onClick=${() => nav.go("rekapMapel", { modul: "mapel" })} />
         <${Tile} icon="briefcase" label="Izin Guru" color="slate" onClick=${() => nav.go("izinGuru")} />
         <${Tile} icon="clock" label="Riwayat & Koreksi" color="coral" onClick=${() => nav.go("riwayatModul", { modul: "mapel" })} />
 </div></${Card}>

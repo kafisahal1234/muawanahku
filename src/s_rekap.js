@@ -16,7 +16,7 @@ import { ttdUntukPdf } from "./s_ttd.js";
 const tone = v => (v == null ? "muted" : v >= 90 ? "green" : v >= 75 ? "blue" : v >= 60 ? "gold" : "red");
 const P = v => (v == null ? "—" : v + "%");
 
-export function usePeriode(def = "pekanan", izin = null) {
+export function usePeriode(def = "pekanan", izin = null, fokus = null) {
   const [jenis0, setJenis] = useState(def); const [ref, setRef] = useState(L.today());
   const opsi = L.PERIODE.filter(([k]) => !izin || izin.includes(k)), jenis = opsi.some(([k]) => k === jenis0) ? jenis0 : opsi[0][0];
   const rg = L.periodeRange(jenis, ref), geser = ["harian", "pekanan", "bulanan"].includes(jenis);
@@ -24,7 +24,7 @@ export function usePeriode(def = "pekanan", izin = null) {
   const bar = html`<div class="periode">
     <div class="seg small">${opsi.map(([k, t]) => html`<button type="button" class=${k === jenis ? "on" : ""} onClick=${() => { setJenis(k); setRef(L.today()); }}>${t}</button>`)}</div>
     <div class="per-nav">${geser ? html`<button class="icon-btn" aria-label="Sebelumnya" onClick=${() => setRef(L.geserPeriode(jenis, ref, -1))}><${Icon} n="left" s=${20} /></button>` : null}
-      <div class="per-t"><b>${rg.label}</b><small>${rh.kosong ? "Belum ada hari yang dihitung" : `Dihitung ${L.fmtShort(rh.dari)} – ${L.fmtShort(rh.sampai)} · aktif: halaqah ${ha}, KBM ${hk}, asrama ${hs} hari`}</small></div>
+      <div class="per-t"><b>${rg.label}</b><small>${rh.kosong ? "Belum ada hari yang dihitung" : fokus ? `${L.fmtShort(rh.dari)} – ${L.fmtShort(rh.sampai)} · ${{ halaqah: ha, kbm: hk, asrama: hs }[fokus]} hari ${{ halaqah: "halaqah", kbm: "KBM", asrama: "aktif" }[fokus]}` : `Dihitung ${L.fmtShort(rh.dari)} – ${L.fmtShort(rh.sampai)} · aktif: halaqah ${ha}, KBM ${hk}, asrama ${hs} hari`}</small></div>
       ${geser ? html`<button class="icon-btn" aria-label="Berikutnya" disabled=${rg.sampai >= L.today()} onClick=${() => setRef(L.geserPeriode(jenis, ref, 1))}><${Icon} n="right" s=${20} /></button>` : null}</div></div>`;
   return { jenis, rg, bar };
 }
@@ -33,7 +33,7 @@ export function usePeriode(def = "pekanan", izin = null) {
 const P2 = v => (v == null ? "—" : v + "%");
 const rata = xs => { const v = xs.filter(x => x != null); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
 const santriPondok = p => L.santriList().filter(s => L.pondokOfSantri(s) === p);
-function lingkup() {
+export function lingkup() {
   const m = me(), r = m.roles, a = L.asramaOf(m.id), hq = L.halaqahOf(m.id), mudir = r.includes("mudir");
   const urut = (arr, mine) => (mine ? [mine, ...arr.filter(x => x.id !== mine.id)] : arr);
   const hqs = mudir || r.includes("wadir_tahfidz") ? urut(L.HALAQAH, hq) : r.includes("guru_tahfidz") && hq ? [hq] : [];

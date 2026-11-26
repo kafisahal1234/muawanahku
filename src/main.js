@@ -14,6 +14,7 @@ import * as SA from "./s_santri.js";
 import * as HM from "./s_home.js";
 import * as SY from "./s_system.js";
 import * as RK from "./s_rekap.js";
+import * as RM from "./s_rekapmodul.js";
 import * as HQ from "./s_halaqah.js";
 import * as PF from "./s_profil.js";
 import * as KO from "./s_koreksi.js";
@@ -42,13 +43,13 @@ const SCREENS = {
   santri: SA.SantriDetail, raporList: SA.RaporList, raporView: SA.RaporView, motdAll: SA.MotdRekapAll, kinerjaAll: SA.KinerjaAll,
   profil: PF.Profil, keamanan: PF.Keamanan, waliProfil: PF.WaliProfil,
   halaqahAdmin: HQ.HalaqahAdmin, halaqahEdit: HQ.HalaqahEdit,
-  rekap: RK.RekapHub, waliRekap: RK.WaliRekap, rekapDetail: RK.RekapDetail, kalender: RK.Kalender, logUbah: KO.LogPerubahan, riwayatModul: KO.RiwayatModul,
+  rekap: RM.RekapPintu, waliRekap: RK.WaliRekap, rekapDetail: RM.RekapDetailPintu, rekapTahfidz: RM.RekapTahfidz, rekapMapel: RM.RekapMapel, rekapAsrama: RM.RekapAsrama, rekapKesantrian: RM.RekapKesantrian, kalender: RK.Kalender, logUbah: KO.LogPerubahan, riwayatModul: KO.RiwayatModul,
 };
 // rekap lama diarahkan ke rekap berbasis hari aktif
 Object.assign(SCREENS, {
-  rekapHalaqah: () => RK.RekapHub({ tab: "halaqah" }), kinerjaTahfidz: () => RK.RekapHub({ tab: "halaqah" }), kinerjaGuru: () => RK.RekapHub({ tab: "kbm" }),
-  rekapKehadiran: () => RK.RekapHub({ tab: "kbm" }), rekapMotd: () => RK.RekapHub({ tab: "motd" }), motdAll: () => RK.RekapHub({ tab: "motd" }),
-  rekapKelas: ({ kelas }) => RK.RekapDetail({ jenis: "kbm", kelas, guru: me() && !me().roles.some(r => ["mudir", "wadir_kurikulum"].includes(r)) ? me().id : null }),
+  rekapHalaqah: () => html`<${RM.RekapTahfidz} />`, kinerjaTahfidz: () => html`<${RM.RekapTahfidz} />`, kinerjaGuru: () => html`<${RM.RekapMapel} modul="kurikulum" />`,
+  rekapKehadiran: () => html`<${RM.RekapMapel} modul="kurikulum" />`, rekapMotd: () => html`<${RM.RekapAsrama} />`, motdAll: () => html`<${RM.RekapAsrama} />`,
+  rekapKelas: () => html`<${RM.RekapMapel} modul="mapel" />`,
 });
 const STAFF_TABS = { home: HM.Beranda, jadwal: HM.JadwalSaya, cari: HM.CariSantri, riwayat: HM.RiwayatSaya, akun: HM.Akun };
 const WALI_TABS = { home: HM.WaliBeranda, hafalan: HM.WaliHafalan, ananda: HM.WaliAnanda, izin: HM.WaliIzin, akun: HM.Akun };

@@ -526,3 +526,32 @@ export function projekDalam(mapel, kelas, rg) {
     return { ...p, tgl, nilai: (d.projekNilai || {})[p.id] || {}, dinilai: nil.length, rata: nil.length ? Math.round(nil.reduce((a, b) => a + b, 0) / nil.length) : null };
   }).filter(p => !r.kosong && p.tgl && p.tgl >= r.dari && p.tgl <= r.sampai);
 }
+
+// ---------------- Rekap per modul ----------------
+const rata0 = xs => { const v = xs.filter(x => x != null && !isNaN(x)).map(Number); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
+// Tahfidz satu santri dalam periode: kehadiran, ziyadah, murojaah, manzil, tasmi', tahsin
+export function tahfidzDalam(sid, rg) {
+  const r = rentangHitung(rg), kh = kehadiranHalaqah(sid, rg);
+  const o = { kh, zBaris: 0, zHari: 0, zSetor: 0, muro: 0, muroHal: 0, muroNilai: null, manzil: 0, manzilNilai: null, tasmiLulus: [], tasmiUji: 0, tahsin: 0, tahsinHal: 0 };
+  if (r.kosong) return o;
+  const dlm = x => x.tanggal >= r.dari && x.tanggal <= r.sampai, l = setoranSantri(sid).filter(dlm);
+  const z = l.filter(x => x.jenis === "ziyadah" && x.lulus), m = l.filter(x => x.jenis === "murojaah"), n = l.filter(x => x.jenis === "manzil"), t = l.filter(x => x.jenis === "tasmi");
+  o.zBaris = z.reduce((a, x) => a + Math.max(0, (x.sesudah || 0) - (x.sebelum || 0)), 0); o.zSetor = z.length; o.zHari = new Set(z.map(x => x.tanggal)).size;
+  o.muro = m.length; o.muroHal = m.reduce((a, x) => a + Math.max(1, (Number(x.halSampai) || 0) - (Number(x.halDari) || 0) + 1), 0); o.muroNilai = rata0(m.map(x => x.nilai));
+  o.manzil = n.length; o.manzilNilai = rata0(n.map(x => x.nilai));
+  o.tasmiUji = t.length; o.tasmiLulus = t.filter(x => x.lulus).map(x => x.juz);
+  const th = all("tahsin").filter(x => x.santri === sid && dlm(x) && x.jenis === "baca"); o.tahsin = th.length; o.tahsinHal = th.reduce((a, x) => a + (x.dari != null ? Math.max(1, x.sampai - x.dari + 1) : 0), 0);
+  return o;
+}
+// Shalat berjamaah (MOTD) satu santri: dihitung dari waktu yang sudah diabsen
+export function shalatDalam(sid, rg) {
+  const s = santriById(sid), c = { H: 0, M: 0, S: 0, I: 0, A: 0 }; let isi = 0;
+  if (!s) return { ...c, isi, pct: null };
+  hariAktifDalam(rg, "asrama").forEach(t => WAKTU.forEach(([w]) => { const d = get("motd", motdKey(s.asrama, t, w)), v = d && d.status && d.status[sid]; if (v && c[v] != null) { c[v]++; isi++; } }));
+  return { ...c, isi, pct: isi ? Math.round(((c.H + c.M) / isi) * 100) : null };
+}
+export function izinDalam(sid, rg) {
+  const r = rentangHitung(rg); if (r.kosong) return { n: 0, telat: 0, list: [] };
+  const list = all("izin").filter(i => i.santri === sid && i.keluar && ymd(new Date(i.keluar)) >= r.dari && ymd(new Date(i.keluar)) <= r.sampai);
+  return { n: list.length, telat: list.filter(i => i.telat || terlambat(i)).length, list };
+}

@@ -28,7 +28,7 @@ export function Pengelolaan({ ro }) {
       ${!ro ? html`<${Tile} icon="edit" label="Data Awal Hafalan" color="emerald" onClick=${() => nav.go("dataAwal")} />
       <${Tile} icon="target" label="Target Hafalan" color="orange" onClick=${() => nav.go("targetHafalan")} />
       <${Tile} icon="users" label="Kelola Halaqah" color="teal" onClick=${() => nav.go("halaqahAdmin")} />` : null}
-      <${Tile} icon="chart" label="Rekap Tahfidz" color="teal" onClick=${() => nav.go("rekap", { modul: "tahfidz" })} />
+      <${Tile} icon="chart" label="Rekap Tahfidz" color="teal" onClick=${() => nav.go("rekapTahfidz")} />
       <${Tile} icon="calendar" label="Perolehan Bulanan" color="pink" onClick=${() => nav.go("hafalanBulan")} />
       <${Tile} icon="iqro" label="Rekap Tahsin" color="emerald" onClick=${() => nav.go("rekapTahsin")} />
       <${Tile} icon="star" label="Peringkat Santri" color="gold" onClick=${() => nav.go("peringkat")} />

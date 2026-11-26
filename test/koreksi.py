@@ -41,10 +41,9 @@ async def main():
         await keUtama(pg); await pg.locator(".bnav button").nth(4).click(); await pg.wait_for_timeout(200); await pg.click("text=Log perubahan data"); await pg.wait_for_timeout(300); print("log:", [r.split("\n")[0] for r in await pg.locator(".card .row").all_inner_texts()])
         # rekap mutabaah pekanan & harian
         await keUtama(pg); await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile("Asrama Saya"); await tile("Rekap Asrama"); await pg.wait_for_timeout(300)
-        await pg.click(".sub-h .seg button:text-is(\"Mutaba'ah\")"); await pg.wait_for_timeout(200)
-        print("pekanan:", (await pg.locator(".rk").first.inner_text()).replace("\n", " | "))
+        print("pekanan:", (await pg.locator(".rx-hero").first.inner_text()).replace("\n", " | "))
         await pg.click(".periode .seg button:text-is('Hari ini')"); await pg.wait_for_timeout(200)
-        print("harian:", (await pg.locator(".rk").first.inner_text()).replace("\n", " | "))
+        print("harian:", (await pg.locator(".rx-hero").first.inner_text()).replace("\n", " | "))
         await pg.screenshot(path="test/k2_rekap.png")
         await keUtama(pg); await pg.locator(".bnav button").first.click(); await pg.wait_for_timeout(200); await tile("Kalender"); await pg.wait_for_timeout(300); await pg.screenshot(path="test/k3_kal.png", full_page=True)
         print("errors:", errs); await b.close()
