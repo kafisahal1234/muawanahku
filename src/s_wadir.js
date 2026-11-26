@@ -60,8 +60,8 @@ function EditAwal({ sid, onClose }) {
 export function TargetHafalan() {
   useApp();
   const [v, setV] = useState(L.targetSemester());
-  const save = async () => { await put("target", "semester", { juz: Number(v) || 2.5, v2: true }); toast("Target hafalan disimpan"); nav.back(); };
-  const hs = (Number(v) || 2.5) * 20, bl = hs / L.BULAN_AKTIF, pk = bl / L.PEKAN_PER_BULAN, f = x => (Math.round(x * 10) / 10).toLocaleString("id-ID");
+  const save = async () => { await put("target", "semester", { juz: Number(v) || 2, v2: true }); toast("Target hafalan disimpan"); nav.back(); };
+  const hs = (Number(v) || 2) * 20, bl = hs / L.BULAN_AKTIF, pk = bl / L.PEKAN_PER_BULAN, f = x => (Math.round(x * 10) / 10).toLocaleString("id-ID");
   const cs = L.santriList().map(s => L.capaianJuz(s)), ok = cs.filter(c => c.tercapai).length;
   return html`<${SubHeader} title="Target Hafalan" sub="Hafalan baru per semester" /><div class="wrap">
     <${Hint}>Target dihitung dari hafalan BARU sejak awal semester (dari data awal hafalan), bukan total semua hafalan. Berlaku untuk semua santri.</${Hint}>

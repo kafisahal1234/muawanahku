@@ -280,10 +280,10 @@ export function capaianSemester(s) {
   return { baris: n, juzBaru, setor: zi, h };
 }
 // Capaian juz semester ini (hafalan baru sejak data awal semester), dalam satuan juz
-// Target hafalan baru: 2,5 juz/semester (5 bulan aktif × 4 pekan) = 10 hal/bulan = 2,5 hal/pekan ≈ 1 hal tiap 2 hari.
+// Target hafalan baru: 2 juz/semester (5 bulan aktif × 4 pekan) = 8 hal/bulan = 2 hal/pekan.
 // Pengaturan lama (tanpa v2) diabaikan agar aturan baru berlaku.
 export const BULAN_AKTIF = 5, PEKAN_PER_BULAN = 4;
-export const targetSemester = () => { const t = (S.data.target || {}).semester; return (t && t.v2 && Number(t.juz)) || 2.5; };
+export const targetSemester = () => { const t = (S.data.target || {}).semester; return (t && t.v2 && Number(t.juz)) || 2; };
 // target halaman per periode (berdasarkan target semester)
 export function targetHal(jenis) { const halSem = targetSemester() * 20, bln = halSem / BULAN_AKTIF, pk = bln / PEKAN_PER_BULAN;
   return { harian: pk / 5, pekanan: pk, bulanan: bln, mid: halSem / 2, semester: halSem, tahunan: halSem * 2 }[jenis] ?? pk; }

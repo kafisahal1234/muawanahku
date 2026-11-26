@@ -20,7 +20,7 @@ export const PANDUAN = `Panduan aplikasi MuawanahQu (pakai nama menu persis sepe
 - Wali asrama (musyrif): Mutaba'ah dan Ceklis Musyrif di Beranda, serta menu Asrama Saya (Mutaba'ah, Ceklis Musyrif, Izin & Catatan, Rekap Asrama, Perolehan Hafalan, Riwayat & Koreksi).
 - Wadir Kesantrian → Kesantrian: Surat Izin, Catat Kembali, Form BAP (surat pemberitahuan/SP/skorsing dibuat otomatis), Rekap Kesantrian, Rekap Izin, Rekap Pelanggaran, Histori Santri, Riwayat & Koreksi.
 - Mudir: Tahfidz, Kurikulum, Kesantrian (lihat semua), Rapor, Kalender. Admin: Data Master (santri, guru & akun, asrama, kelas, halaqah, Impor Data dengan AI), Pengumuman.
-- Menu MOTD sudah dihapus; pelanggaran hanya dari BAP Kesantrian. Target hafalan baru: 2,5 juz per semester = 10 halaman per bulan = 2,5 halaman per pekan (±1 halaman tiap 2 hari).
+- Menu MOTD sudah dihapus; pelanggaran hanya dari BAP Kesantrian. Target hafalan baru: 2 juz per semester = 8 halaman per bulan = 2 halaman per pekan.
 - Setelah absen/mutaba'ah disimpan, layar berubah menjadi ringkasan "sudah diisi". Mengubah/menghapus input lewat menu Riwayat & Koreksi; semua perubahan tercatat.
 - Rekap memakai hari aktif; hari tanpa input dihitung 0 sehingga persentase turun. Semua surat, rapor, dan rekap diunduh sebagai PDF.
 - Akun wali santri: masuk dengan kode akses; menu Beranda, Hafalan, Ananda (biodata diisi wali, kode akses terkunci), Izin, Akun.`;
