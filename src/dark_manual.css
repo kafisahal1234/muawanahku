@@ -9,3 +9,183 @@ html[data-tema=gelap] .kh-ring b{background:#0C7A47}
 html[data-tema=gelap] .applogo img{filter:drop-shadow(0 4px 12px rgba(0,0,0,.5))}
 /* bahasa Arab: kanan-ke-kiri */
 html[lang=ar] body{font-family:"Noto Sans Arabic","Plus Jakarta Sans",system-ui,sans-serif}
+
+/* =====================================================================
+   Polesan visual MuawanahQu — final cascade, setelah skin dan dark.css.
+   Hanya presentasi: tidak mengubah DOM, rute, role, data, atau alur kerja.
+   Warna status, keterbacaan, safe area, dan mode gelap tetap dipertahankan.
+   ===================================================================== */
+:root {
+  --ui-surface: #FFFFFF;
+  --ui-canvas: #F5F6F5;
+  --ui-neutral: #EFF3F0;
+  --ui-border: #DCE4DF;
+  --ui-muted: #53655B;
+  --ui-accent-soft: #E5F0E9;
+  --ui-accent-text: #0B5D3B;
+  --ui-focus: #0B6B43;
+  --ui-header: #0B5D3B;
+  --ui-summary: #104D35;
+  --ui-summary-tile: #205D44;
+  --ui-shadow: 0 1px 2px rgba(18,42,29,.045);
+}
+html[data-tema=gelap] {
+  --ui-surface: #16211B;
+  --ui-canvas: #101913;
+  --ui-neutral: #202D25;
+  --ui-border: #304238;
+  --ui-muted: #B1C2B7;
+  --ui-accent-soft: #223C2E;
+  --ui-accent-text: #A0E1B8;
+  --ui-focus: #8BD4A8;
+  --ui-header: #0C4932;
+  --ui-summary: #103F2D;
+  --ui-summary-tile: #20513B;
+  --ui-shadow: none;
+}
+/* Tipografi: hierarki jelas, bobot tidak seragam tebal. RTL tetap berlaku. */
+html:not([lang=ar]) body,html:not([lang=ar]) button,
+html:not([lang=ar]) input,html:not([lang=ar]) select,html:not([lang=ar]) textarea {
+  font-family: "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+body {font-size:15px;line-height:1.5}
+html body,html body .app,html body .login {background:var(--ui-canvas)}
+html body .ht-hi b,html body .sub-t h1,html body .card-h h3 {font-weight:700;letter-spacing:-.015em}
+html body .card-h h3 {font-size:15px;line-height:1.4}
+html body .row-t b,html body .mr-t,html body .strip-t b {font-weight:600}
+html body .tile-lb,html body .pin span {font-weight:600;line-height:1.35}
+html body .sec h4,html body .rx-sec h4 {
+  font-size:13px;text-transform:none;letter-spacing:0;font-weight:700;color:var(--ui-muted)
+}
+html body .stat b,html body .rx-mi b,html body .rx-k b {font-weight:700;font-variant-numeric:tabular-nums}
+html body .stat span,html body .stat small,html body .row-t small {font-weight:500}
+
+/* Kepala halaman: identitas pondok tetap ada, bukan ornamen di setiap layar. */
+html body:before {background:var(--ui-header)}
+html body .ht,html body .hero,html body .sub-h,html body .appbar,
+html body .login .lg,html body .splash,html body .splash.sp2 {
+  background:var(--ui-header)!important;box-shadow:none!important
+}
+html body .ht,html body .hero {border-radius:0 0 16px 16px}
+html body .sub-h,html body .appbar {border-radius:0;border-bottom:1px solid rgba(255,255,255,.15)}
+html body .ht:before {opacity:.12;animation:none}
+html body .ht:after,html body .hero:before,html body .hero:after,
+html body .sub-h:after,html body .hero-card:after,html body .bn-it:before,
+html body .bn-it:after,html body .login .lg:after,html body .prof-head:before {
+  display:none!important;animation:none!important
+}
+html body .ht-btn,html body .sub-h .back,html body .bell {
+  width:48px;height:48px;border-radius:12px;
+  background:rgba(255,255,255,.10);box-shadow:none;border:0
+}
+html body .ht-btn:active,html body .sub-h .back:active,html body .bell:active {background:rgba(255,255,255,.19)}
+html body .ht-logo,html body .logo {box-shadow:none}
+html body .applogo img {filter:none!important}
+
+/* Permukaan: satu sistem radius dan garis, tanpa warna acak menurut urutan. */
+html body .card,html body .group,html body .menu-box,html body .strip,
+html body .up-cta,html body .asisten-cta,html body .rx-hero,html body .rx-grp,
+html body .rx-s,html body .rx-list,html body .ai-card {
+  border-radius:12px;border:1px solid var(--ui-border)!important;
+  box-shadow:var(--ui-shadow)!important;background:var(--ui-surface)!important
+}
+html body .wrap>.card:nth-of-type(n) {background:var(--ui-surface)!important}
+html body .card-h h3:before,html body .sec h4:before {display:none!important}
+html body .hc {background:var(--ui-surface);border-radius:14px;box-shadow:var(--ui-shadow);border:1px solid var(--ui-border)}
+html body .sum,html body .hf,html body .hero-card,html body .kh-hero,html body .prof-head {
+  background:var(--ui-summary)!important;border-radius:12px;box-shadow:none!important
+}
+html body .sum .card,html body .hc-in .card {background:transparent!important;border:0!important;box-shadow:none!important}
+html body .sum .stat {background:var(--ui-summary-tile)!important;border:1px solid rgba(255,255,255,.12)!important}
+html body .sum .stat b {color:#fff!important}
+html body .sum .stat.red b {color:#FFB3A8!important}
+html body .sum .stat.gold b {color:#F7CF6E!important}
+html body .sum .stat span,html body .sum .stat small {color:#E3F2E9!important}
+html body .hf:after,html body .sum:before {display:none}
+html body .stat,html body .rx-mi,html body .rx-k>div {
+  background:var(--ui-neutral)!important;border:1px solid var(--ui-border)!important;
+  border-radius:8px;box-shadow:none!important
+}
+html body .sum .stat {background:var(--ui-summary-tile)!important;border-color:rgba(255,255,255,.12)!important}
+html body .strip,html body .bn-it {border-radius:12px}
+html body .bn-t b {font-weight:700}
+html body .bn-ic {border-radius:12px;box-shadow:none}
+html body .tile-ic,html body .pin-ic,html body .mr-ic,html body .strip-ic {
+  border-radius:12px;box-shadow:none!important
+}
+html body .tile-ic,html body .pin-ic {width:52px;height:52px}
+html body .tile-ic svg,html body .pin-ic svg {filter:none!important}
+html body .tiles {row-gap:14px}
+html body .tile {min-height:48px}
+html body .mr-ic {border-radius:9px}
+html body .row,html body .menu-row {min-height:56px}
+html body .menu-row:not(:last-child):after,html body .list .row:not(:last-child):after {background:var(--ui-border)}
+
+/* Kontrol konsisten, tetapi arti tombol dan warna status tidak berubah. */
+html body .btn,html body .ai-btn {border-radius:10px;font-weight:700;box-shadow:none!important}
+html body .btn {min-height:48px}
+html body .btn.primary {background:var(--g)!important}
+html body .btn.primary:active {background:var(--g2)!important}
+html body .btn.ghost {background:var(--ui-accent-soft)!important;color:var(--ui-accent-text)!important;border:1px solid var(--ui-border)}
+html body .btn.outline {background:var(--ui-surface);color:var(--ui-accent-text);border-color:var(--ui-border)}
+html body .icon-btn {width:48px;height:48px;border-radius:10px}
+html body input.in,html body select.in,html body textarea.in,
+html body .search,html body .cari-fitur {
+  border-radius:10px;background:var(--ui-surface);border:1px solid var(--ui-border);box-shadow:none
+}
+html body .search:focus-within,html body .cari-fitur:focus-within,
+html body input.in:focus,html body select.in:focus,html body textarea.in:focus {
+  border-color:var(--ui-focus);box-shadow:0 0 0 2px var(--ui-focus)
+}
+html body button:focus-visible,html body [role=button]:focus-visible {outline:2px solid var(--ui-focus);outline-offset:3px}
+html body .seg {background:var(--ui-neutral)!important;border-radius:10px}
+html body .seg button {border-radius:7px;font-weight:600}
+html body .sub-h .seg {background:rgba(0,0,0,.17)!important}
+html body .sub-h .seg button.on {color:#0B5D3B!important;background:#fff!important}
+html body .stpick button.on,html body .check.on .box,html body button.pill,
+html body .pchip.on {box-shadow:none!important;transform:none}
+html body .pill,html body .rx-pill {font-weight:600}
+
+/* Navigasi tetap menggunakan tab/FAB asli; hanya styling diperhalus. */
+html body .bnav {background:var(--ui-surface)!important;border-top:1px solid var(--ui-border)!important;box-shadow:none!important}
+html body .bnav button {color:var(--ui-muted)!important;font-weight:500}
+html body .bnav button.on {color:var(--ui-accent-text)!important;font-weight:700}
+html body .bnav button.on i {background:var(--ui-accent-soft)!important;transform:none}
+html body .bnav .fab-tab .fab {
+  box-shadow:0 0 0 4px var(--ui-surface),0 2px 5px rgba(0,0,0,.12)!important;
+  background:var(--g)!important
+}
+html body .side:before {opacity:.08}
+html body .sheet,html body .dialog {border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.10)}
+html body .sheet:not(.dialog) {border-bottom-left-radius:0;border-bottom-right-radius:0}
+html body .toast,html body .loadpill,html body .sync-bar {border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+/* Kurangi efek dekoratif, pertahankan indikator loading, progress dan status. */
+html body .login .lg .applogo,html body .login form.card,html body .login form.card>*,
+html body .login .lg p,html body .check.on .box,html body .kh-chips button.on,
+html body .bnav button.on i,html body .bnav .fab-tab.on .fab {
+  animation:none!important;opacity:1;transform:none
+}
+html body .login .lg .applogo,html body .splash.sp2 .sp-logo {box-shadow:none!important}
+html body .login .lg .applogo:after,html body .login .lg>.lg-dot,
+html body .sp-glow,html body .sp-star,html body .sp-shine,
+html body .sp-c2,html body .sp-orbit:after,html body .konfeti {display:none!important}
+html body .splash.sp2 .sp-logo {animation:none;opacity:1;transform:none}
+html body .sp-c1 {filter:none}
+html body .sp-t span {animation:none;opacity:1;transform:none}
+html body .splash.sp2 small,html body .sp-waktu {animation:none;opacity:1;transform:none}
+html body .btn:active,html body .tile:active .tile-ic,html body .pin:active .pin-ic {transform:none;filter:brightness(.96)}
+html body .scr.dir-fwd,html body .scr.dir-back,html body .scr.dir-tab {animation-duration:.18s}
+html body .ok-burst span {background:var(--g);box-shadow:none}
+@keyframes okPop {
+  0% {transform:scale(.94);opacity:0}
+  20%,75% {transform:none;opacity:1;box-shadow:none}
+  100% {transform:none;opacity:0;box-shadow:none}
+}
+@media (prefers-reduced-motion:reduce) {
+  html body .scr,html body .splash,html body .splash.sp2 {animation:none!important}
+  html body .splash,html body .splash.sp2 {display:none!important}
+}
+/* Jaga penataan sheet desktop dan logo RTL yang sudah ada. */
+@media (min-width:1024px) and (hover:hover) and (pointer:fine) {
+  html body .sheet:not(.dialog) {border-radius:16px}
+}
