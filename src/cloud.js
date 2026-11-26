@@ -16,7 +16,38 @@ export const FIREBASE_CONFIG = { apiKey: "…", authDomain: "muawanahku.firebase
 export const RECAPTCHA_SITE_KEY = "6Lf_niouAAAAAKFfLbbhqqlEmbb_8rvdO5eSYM4K";
 export const APPCHECK_TOKEN = "72009629-81FB-43D2-A284-B1A3E565E378";
 export const V = "13.4.0", imp = new Function("u", "return import(u)");
-let APP = null;
+let APP = null, FS = null, DB = null, AUTH = null;
+// ---- Sesi masuk (mk_sesi/{uid}) ----
+// Aturan database hanya membuka data pondok untuk perangkat yang punya sesi sah: dibuat saat ustadz/wali masuk dan
+// diperiksa di server (sidik kata sandi / kode akses). Penulisan sesi menunggu konfirmasi server, bukan antrean HP.
+const batasWaktu = (p, ms, pesan) => Promise.race([p, new Promise((_, r) => setTimeout(() => r(Object.assign(new Error(pesan), { code: "timeout" })), ms))]);
+const uidKu = () => (AUTH && AUTH.currentUser ? AUTH.currentUser.uid : null);
+async function pastikanAuth() {
+  for (let i = 0; i < 40 && AUTH && !AUTH.currentUser; i++) await new Promise(r => setTimeout(r, 250));
+  if (!uidKu()) throw Object.assign(new Error("Belum tersambung ke database pondok. Periksa internet lalu coba lagi."), { code: "offline" });
+}
+export async function bacaSesi() {
+  if (!DB) return null; await pastikanAuth();
+  const ref = FS.doc(DB, "mk_sesi", uidKu());
+  try { const s = await batasWaktu(FS.getDocFromServer(ref), 9000, "timeout"); return s.exists() ? s.data() : null; }
+  catch (e) { if (/permission/i.test(String(e && e.code))) return null; try { const s = await FS.getDocFromCache(ref); return s.exists() ? s.data() : null; } catch (e2) { return null; } }
+}
+export async function tulisSesi(data) {
+  if (!DB) throw Object.assign(new Error("Belum tersambung ke database pondok."), { code: "offline" });
+  await pastikanAuth();
+  await batasWaktu(FS.setDoc(FS.doc(DB, "mk_sesi", uidKu()), { ...data, ts: Date.now() }), 15000, "Koneksi lambat. Coba lagi saat sinyal lebih baik.");
+}
+export async function hapusSesi() { try { if (DB && uidKu()) await batasWaktu(FS.deleteDoc(FS.doc(DB, "mk_sesi", uidKu())), 6000, "timeout"); } catch (e) { } }
+// Daftar kode akses wali di server (mk_kodeWali/{kode} = {santri}); diselaraskan dari akun staf
+export async function selaraskanKodeWali(peta) {
+  if (!DB) return 0;
+  const snap = await FS.getDocsFromServer(FS.collection(DB, "mk_kodeWali")), ada = {};
+  snap.docs.forEach(x => { ada[x.id] = (x.data() || {}).santri; });
+  let n = 0;
+  for (const [k, sid] of Object.entries(peta)) if (ada[k] !== sid) { await FS.setDoc(FS.doc(DB, "mk_kodeWali", k), { santri: sid }); n++; }
+  for (const k of Object.keys(ada)) if (!(k in peta)) { await FS.deleteDoc(FS.doc(DB, "mk_kodeWali", k)); n++; }
+  return n;
+}
 export const firebaseApp = () => APP;
 // Firestore tidak menerima array di dalam array (misal ajar: [["it","9A"]]): dibungkus saat simpan, dibuka saat baca
 const enc = v => (Array.isArray(v) ? v.map(x => (Array.isArray(x) ? { _arr: enc(x) } : enc(x))) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, enc(x)])) : v);
@@ -26,7 +57,7 @@ export async function connectFirestore(cfg) {
   const [{ initializeApp }, fs, au] = await Promise.all([
     imp(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`), imp(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`), imp(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`)]);
   const app = initializeApp(cfg);
-  if (RECAPTCHA_SITE_KEY) {
+  if (RECAPTCHA_SITE_KEY && !(typeof self !== "undefined" && self.__MQ_EMU)) {
     // Token debug App Check (didaftarkan di Firebase → App Check → Apps → Kelola token debug) agar AI Logic menerima permintaan
     if (APPCHECK_TOKEN) self.FIREBASE_APPCHECK_DEBUG_TOKEN = APPCHECK_TOKEN;
     try { const ac = await imp(`https://www.gstatic.com/firebasejs/${V}/firebase-app-check.js`);
@@ -34,6 +65,8 @@ export async function connectFirestore(cfg) {
     catch (e) { console.warn("App Check gagal dimuat", e); }
   }
   const auth = au.getAuth(app);
+  const EMU = typeof self !== "undefined" && self.__MQ_EMU; // hanya untuk uji otomatis dengan Firebase Emulator
+  if (EMU) au.connectAuthEmulator(auth, "http://" + EMU.auth, { disableWarnings: true });
   try { await Promise.race([auth.authStateReady(), new Promise(r => setTimeout(r, 4000))]); } catch (e) { }
   if (!auth.currentUser) {
     const masuk = () => au.signInAnonymously(auth);
@@ -45,8 +78,9 @@ export async function connectFirestore(cfg) {
       addEventListener("online", ulang); setTimeout(ulang, 8000);
     }
   }
-  const d = fs.initializeFirestore(app, { localCache: fs.persistentLocalCache() });
-  APP = app;
+  const d = fs.initializeFirestore(app, EMU ? {} : { localCache: fs.persistentLocalCache() });
+  if (EMU) fs.connectFirestoreEmulator(d, EMU.fsHost, EMU.fsPort);
+  APP = app; FS = fs; DB = d; AUTH = auth;
   return {
     collection: name => ({
       // saat offline, tulisan diantre di perangkat dan dikirim otomatis begitu online; jangan menunggu server terlalu lama

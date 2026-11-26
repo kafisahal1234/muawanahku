@@ -1,0 +1,75 @@
+rules_version = '2';
+// Aturan database MuawanahQu.
+// Prinsip: tidak ada yang bisa membaca/menulis data pondok tanpa "sesi" yang sah.
+// Sesi dibuat aplikasi saat masuk (mk_sesi/{uid}) dan hanya diterima bila:
+//   - ustadz/staf: sidik kata sandi (hash) cocok dengan mk_akun/{username} dan akun tidak dihapus/nonaktif;
+//   - wali: kode akses terdaftar di mk_kodeWali/{kode} (diisi otomatis oleh aplikasi dari data santri).
+// Sidik kata sandi (mk_akun) dan daftar kode wali tidak bisa dibaca pengunjung maupun wali.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function sesi() { return get(/databases/$(database)/documents/mk_sesi/$(request.auth.uid)).data; }
+    function adaSesi() { return request.auth != null && exists(/databases/$(database)/documents/mk_sesi/$(request.auth.uid)); }
+    function akun(u) { return get(/databases/$(database)/documents/mk_akun/$(u)).data; }
+    function akunSah(u, h) { let a = akun(u); return a.hash == h && a.get('hapus', false) != true && a.get('nonaktif', false) != true; }
+    function staf() { return adaSesi() && sesi().jenis == 'staff' && akunSah(sesi().u, sesi().h); }
+    function wali() { return adaSesi() && sesi().jenis == 'wali' && exists(/databases/$(database)/documents/mk_kodeWali/$(sesi().kode)); }
+    function masuk() { return staf() || wali(); }
+    function santriWali() { return get(/databases/$(database)/documents/mk_kodeWali/$(sesi().kode)).data.santri; }
+    function admin() {
+      let p = get(/databases/$(database)/documents/mk_staffEdit/$(sesi().sid)).data;
+      return staf() && p.username == sesi().u && ('admin' in p.roles);
+    }
+
+    // Sesi milik perangkat ini sendiri
+    match /mk_sesi/{uid} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid && (
+        (request.resource.data.jenis == 'staff' && request.resource.data.u is string && akunSah(request.resource.data.u, request.resource.data.h))
+        || (request.resource.data.jenis == 'wali' && request.resource.data.kode is string
+            && exists(/databases/$(database)/documents/mk_kodeWali/$(request.resource.data.kode)))
+      );
+    }
+
+    // Akun & sidik kata sandi: hanya staf yang membaca; Admin mengelola semua, staf mengganti sandinya sendiri
+    match /mk_akun/{u} {
+      allow read: if staf();
+      allow write: if admin() || (staf() && u == sesi().u);
+    }
+    // Profil & jabatan guru: jabatan hanya bisa diubah Admin
+    match /mk_staffEdit/{id} {
+      allow read: if masuk();
+      allow create, delete: if admin();
+      allow update: if admin() || (staf() && id == sesi().sid && request.resource.data.get('roles', null) == resource.data.get('roles', null));
+    }
+    // Daftar kode akses wali: diisi aplikasi dari akun staf
+    match /mk_kodeWali/{kode} {
+      allow read, write: if staf();
+    }
+    // Biodata & foto: wali hanya untuk santrinya sendiri
+    match /mk_santriEdit/{id} {
+      allow read: if masuk();
+      allow write: if staf() || (wali() && id == santriWali());
+    }
+    match /mk_profil/{id} {
+      allow read: if masuk();
+      allow write: if staf() || (wali() && id == 's_' + santriWali());
+    }
+    // Catatan perubahan & permintaan hapus akun
+    match /mk_log/{id} {
+      allow read: if masuk();
+      allow create: if masuk();
+      allow update, delete: if staf();
+    }
+    match /mk_hapusAkun/{id} {
+      allow read: if staf();
+      allow create: if masuk();
+      allow update, delete: if admin();
+    }
+    // Semua data pondok lainnya: dibaca yang sudah masuk, diubah hanya oleh staf
+    // (koleksi khusus di atas dikecualikan agar aturannya tidak dilonggarkan oleh blok umum ini)
+    match /{col}/{id} {
+      allow read: if !(col in ['mk_sesi', 'mk_akun', 'mk_kodeWali', 'mk_hapusAkun']) && masuk();
+      allow write: if !(col in ['mk_sesi', 'mk_akun', 'mk_kodeWali', 'mk_hapusAkun', 'mk_staffEdit', 'mk_santriEdit', 'mk_profil', 'mk_log']) && staf();
+    }
+  }
+}

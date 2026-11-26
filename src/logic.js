@@ -1,6 +1,6 @@
 import { DATA } from "./data.js";
 import { LIBUR_NASIONAL, SETELAN_DEFAULT } from "./libur.js";
-import { S, all, get, put, subscribe, ONLINE } from "./store.js";
+import { S, all, get, put, subscribe, ONLINE, masukSesi, keluarSesi, perbaruiSesi, dengarUlang } from "./store.js";
 import { fbSiap, fbMasuk, salahSandi } from "./cloud.js";
 
 // ---------------- tanggal ----------------
@@ -92,8 +92,25 @@ export const staffAktif = () => STAFF.filter(s => !(akunOv(s.username) || {}).ha
 // Bisa masuk dengan username atau email pemulihan. Bila akun memasang email, sandi diperiksa ke Firebase (agar reset lewat email berlaku);
 // saat tidak tersambung internet, dipakai salinan sandi di perangkat.
 export const staffDariEmail = e => { const x = String(e || "").trim().toLowerCase(); return x.includes("@") ? STAFF.find(s => ((akunOv(s.username) || {}).email || "") === x) : null; };
+// Versi online: sandi diperiksa server lewat sesi (lihat firestore.rules); data pondok baru dimuat setelah sesi diterima.
+const pesanMasuk = e => (/permission/i.test(String(e && (e.code || e.message))) ? null : (e && e.message) || "Gagal tersambung. Coba lagi.");
+async function loginOnline(masuk, p) {
+  if (masuk.includes("@")) return { err: "Masuk memakai username, bukan email." };
+  const h = await sha(masuk + ":" + p);
+  try { await masukSesi({ jenis: "staff", u: masuk, h }); }
+  catch (e) { const m = pesanMasuk(e); return { err: m || "Username atau kata sandi salah." }; }
+  // pemeriksaan kedua di perangkat (juga melindungi selama aturan database lama masih terbuka)
+  const st = STAFF.find(s => s.username === masuk), ov = akunOv(masuk) || {};
+  if (!st || ov.hapus || ov.nonaktif || !(await cekSandi(masuk, p, st))) { await keluarSesi(); return { err: "Username atau kata sandi salah." }; }
+  try { await perbaruiSesi({ sid: st.id }); } catch (e) { }
+  // akun bawaan (admin) perlu sidik sandi & profil di database agar dikenali aturan server
+  if (!(ov.hash) && st.sandiHash === h) { await put("akun", masuk, { ...ov, hash: h }); }
+  if (st.id === "admin" && !(get("staffEdit", "admin"))) await put("staffEdit", "admin", { nama: st.nama, pendek: st.pendek, roles: st.roles, ajar: [], username: st.username });
+  return { kind: "staff", id: st.id };
+}
 export async function login(username, password) {
   const masuk = (username || "").trim().toLowerCase(), p = password || "";
+  if (ONLINE()) return loginOnline(masuk, p);
   // data akun guru ada di database: tunggu sinkron selesai dulu (maks. 25 detik) agar tidak salah dikira sandi keliru
   for (let i = 0; i < 100 && ONLINE() && !S.ready; i++) await new Promise(r => setTimeout(r, 250));
   const st = STAFF.find(s => s.username === masuk) || staffDariEmail(masuk);
@@ -132,8 +149,15 @@ const kodeFormatLama = k => /\d{8}$/.test(k || "");
 export const kodeAkses = s => (s.kode && !kodeFormatLama(s.kode) ? s.kode : kodeHitung(s));
 const kodeLama = s => { if (kodeFormatLama(s.kode)) return s.kode; const [y, m, d] = lahirSantri(s).tgl.split("-"); return `${s.wali}${d}${m}${y}`; };
 const normKode = k => (k || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-export function loginWali(kode) {
+export async function loginWali(kode) {
   const k = normKode(kode); if (!k) return { err: "Isi kode akses." };
+  if (ONLINE()) {
+    try { await masukSesi({ jenis: "wali", kode: k }); }
+    catch (e) { const m = pesanMasuk(e); return { err: m || "Kode akses tidak dikenal. Periksa nama panggilan dan tanggal lahir santri." }; }
+    const sa = santriList().find(s => kodeAkses(s) === k) || santriList().find(s => normKode(kodeLama(s)) === k);
+    if (!sa) { await keluarSesi(); return { err: "Kode akses tidak dikenal. Periksa nama panggilan dan tanggal lahir santri." }; }
+    return { kind: "wali", id: sa.id };
+  }
   const sa = santriList().find(s => kodeAkses(s) === k) || santriList().find(s => normKode(kodeLama(s)) === k);
   return sa ? { kind: "wali", id: sa.id } : { err: "Kode akses tidak dikenal. Periksa nama panggilan dan tanggal lahir santri." };
 }
@@ -598,3 +622,10 @@ export function izinDalam(sid, rg) {
   const list = all("izin").filter(i => i.santri === sid && i.keluar && ymd(new Date(i.keluar)) >= r.dari && ymd(new Date(i.keluar)) <= r.sampai);
   return { n: list.length, telat: list.filter(i => i.telat || terlambat(i)).length, list };
 }
+
+// Sandi akun sendiri diganti: perbarui sesi agar tetap sah di server
+export function mulaiGantiSandi(u) { if (S.sesi && S.sesi.u === u) S.jedaSesi = Date.now(); }
+export async function sesiSandiBaru(u, h) { if (!(S.sesi && S.sesi.u === u)) return; S.jedaSesi = Date.now(); for (let i = 0; i < 6; i++) { try { await perbaruiSesi({ h }); dengarUlang(); return; } catch (e) { await new Promise(r => setTimeout(r, 1200)); } } }
+export async function keluarAkun() { try { await keluarSesi(); } catch (e) { } }
+// Peta kode akses wali → id santri (kode baru + kode lama yang masih diterima), untuk didaftarkan ke server
+export function petaKodeWali() { const o = {}; santriList().forEach(s => { const a = kodeAkses(s), b = normKode(kodeLama(s)); if (a) o[a] = s.id; if (b && !(b in o)) o[b] = s.id; }); return o; }

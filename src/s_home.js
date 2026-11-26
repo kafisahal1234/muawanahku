@@ -27,6 +27,7 @@ function LupaSandi({ awal, onClose }) {
   const [v, setV] = useState(awal || ""); const [busy, setBusy] = useState(false); const [hasil, setHasil] = useState(null); const [err, setErr] = useState("");
   const kirim = async () => {
     setErr(""); const x = v.trim().toLowerCase(); if (!x) return setErr("Isi username atau email.");
+    if (ONLINE()) return setErr("Demi keamanan, kata sandi direset oleh Admin pondok. Hubungi Admin; sandi akan dikembalikan ke nama panggilan + 123, lalu ganti sendiri di Akun → Keamanan.");
     const st = L.STAFF.find(s => s.username === x) || L.staffDariEmail(x), ov = st ? L.akunOv(st.username) || {} : {};
     if (!st || ov.hapus) return setErr("Akun tidak ditemukan. Periksa username atau email.");
     if (!ov.email) return setErr("Akun ini belum memasang email pemulihan. Minta Admin pondok melakukan reset sandi, lalu pasang email di Akun → Keamanan.");
@@ -58,10 +59,10 @@ export function Login() {
     if (r.err) return gagal(r.err);
     LOCK.fails = 0; setErr(""); nav.setUser(r, { splash: true });
   };
-  const masukWali = (kk = u) => {
+  const masukWali = async (kk = u) => {
     if (!kk.trim()) { setErr("Isi kode akses."); return; }
     if (kunciCek()) return;
-    const r = L.loginWali(kk); if (r.err) return gagal(r.err);
+    setBusy(true); const r = await L.loginWali(kk); setBusy(false); if (r.err) return gagal(r.err);
     LOCK.fails = 0; setErr(""); nav.setUser(r, { splash: true });
   };
   const walis = L.santriList().filter(s => s.nama.toLowerCase().includes(q.toLowerCase()) || s.wali.includes(q.toLowerCase())).slice(0, 40);
@@ -252,7 +253,7 @@ export function Akun() {
         html`<button class=${"menu-row pilih " + (tema === k ? "on" : "")} onClick=${() => { setTema(k); setTemaS(k); setPilih(null); }}><span class="mr-ic indigo"><${Icon} n=${ic} s=${20} /></span><span class="mr-t">${t}<small>${sub}</small></span>${tema === k ? html`<${Icon} n="check" s=${20} c="#0E8F52" />` : null}</button>`)
       : BAHASA.map(([k, t]) => html`<button class=${"menu-row pilih " + (bahasa() === k ? "on" : "")} onClick=${() => { if (k !== bahasa()) setBahasa(k); else setPilih(null); }}><span class="mr-ic teal"><${Icon} n="globe" s=${20} /></span><span class="mr-t" dir=${k === "ar" ? "rtl" : "ltr"}>${t}<small>${{ id: "Tampilan aplikasi dalam Bahasa Indonesia", en: "Menus and buttons in English", ar: "القوائم والأزرار باللغة العربية" }[k]}</small></span>${bahasa() === k ? html`<${Icon} n="check" s=${20} c="#0E8F52" />` : null}</button>`)}
       ${pilih === "bahasa" ? html`<p class="small" style="margin:10px 4px 0">Menu, tombol dan judul ikut berganti bahasa. Data santri, rekap rinci, rapor dan surat resmi tetap berbahasa Indonesia.</p>` : null}</${Sheet}>
-    <${Confirm} open=${ask} danger title="Keluar dari akun?" text=${st ? "Anda perlu memasukkan username dan kata sandi lagi untuk masuk." : "Anda perlu memasukkan kode akses lagi untuk masuk."} yes="Keluar" onYes=${() => { setAsk(false); nav.setUser(null); }} onNo=${() => setAsk(false)} /></div>`;
+    <${Confirm} open=${ask} danger title="Keluar dari akun?" text=${st ? "Anda perlu memasukkan username dan kata sandi lagi untuk masuk." : "Anda perlu memasukkan kode akses lagi untuk masuk."} yes="Keluar" onYes=${async () => { setAsk(false); await L.keluarAkun(); nav.setUser(null); }} onNo=${() => setAsk(false)} /></div>`;
 }
 
 // ---------------- wali ----------------

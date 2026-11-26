@@ -66,7 +66,7 @@ export function UbahSandi() {
       catch (e) { setBusy(false); return setErr(salahSandi(e) && ov.menungguReset ? "Sandi di email pemulihan belum diatur. Buka email dari Firebase dan atur sandi lewat tautannya, atau pakai Lupa kata sandi." : pesanAuth(e)); }
     }
     const o = { ...ov, hash: await L.sha(u + ":" + f.baru), diubah: Date.now() }; delete o.menungguReset;
-    const ok = await put("akun", u, o);
+    L.mulaiGantiSandi(u); const ok = await put("akun", u, o); if (ok) await L.sesiSandiBaru(u, o.hash);
     setBusy(false); if (ok) { toast("Kata sandi berhasil diubah"); nav.back(); }
   };
   const inp = (k, lab, ac) => html`<${Field} label=${lab}><${PassInput} autocomplete=${ac} label=${lab.toLowerCase()} value=${f[k]} onInput=${e => setF({ ...f, [k]: e.target.value })} /></${Field}>`;

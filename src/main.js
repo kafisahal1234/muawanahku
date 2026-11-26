@@ -1,7 +1,8 @@
 import { render, Component } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { html, nav, useApp, Icon, ToastHost } from "./ui.js";
-import { S, initStore, sambungUlang } from "./store.js";
+import { S, initStore, sambungUlang, toast } from "./store.js";
+import { selaraskanKodeWali } from "./cloud.js";
 import * as L from "./logic.js";
 import * as T from "./s_tahfidz.js";
 import * as A from "./s_asrama.js";
@@ -110,11 +111,22 @@ function Splash({ nama }) {
 }
 function App() {
   useApp(); const online = useOnline();
+  // Daftarkan kode akses wali ke server (dipakai aturan database untuk sesi wali); hanya dari akun staf, saat data santri berubah
+  useEffect(() => { if (!(S.ready && S.cloud && S.sesi && S.sesi.jenis === "staff")) return; const tm = setTimeout(() => {
+    const peta = L.petaKodeWali(), sig = JSON.stringify(peta); if (sig === App._kw) return; App._kw = sig;
+    selaraskanKodeWali(peta).catch(e => { App._kw = ""; console.warn("Kode wali belum terdaftar", e); }); }, 2500); return () => clearTimeout(tm); }, [S.ver]);
   useEffect(() => { initStore(); try { const u = JSON.parse(localStorage.getItem("mk_user") || sessionStorage.getItem("mk_user") || "null"); if (u) nav.setUser(u, { splash: true, kembali: true }); } catch (e) { } }, []);
   const u = nav.user;
+  // Database terkunci per sesi: pengguna lama tanpa sesi / sesi yang tidak lagi sah diminta masuk ulang
+  const sesiBeda = u && S.sesi && ((u.kind === "staff") !== (S.sesi.jenis === "staff") || (S.sesi.sid && u.kind === "staff" && S.sesi.sid !== u.id));
+  if (u && (S.perluMasuk || S.sesiHabis || sesiBeda)) {
+    const habis = S.sesiHabis; nav.setUser(null); L.keluarAkun();
+    toast(habis ? "Sesi berakhir (kata sandi diubah atau akun dinonaktifkan). Silakan masuk lagi." : "Demi keamanan data pondok, silakan masuk sekali lagi.");
+    return null;
+  }
   if (!u) return html`<div class="app nonav"><${HM.Login} /><${ToastHost} /></div>`;
   const hilang = (u.kind === "staff" && (!L.staffById(u.id) || (L.akunOv(L.staffAman(u.id).username) || {}).hapus)) || (u.kind === "wali" && !L.santriById(u.id));
-  if (hilang && S.ready) { nav.setUser(null); return null; }
+  if (hilang && S.ready) { nav.setUser(null); L.keluarAkun(); return null; }
   if (hilang) return html`<div class="app nonav"><div class="loadpill" role="status">Memuat data…</div></div>`;
   const wali = u.kind === "wali", top = nav.top;
   const Screen = top ? SCREENS[top.screen] : (wali ? WALI_TABS : STAFF_TABS)[nav.tab];
