@@ -66,3 +66,4 @@ html[data-tema=gelap] .card,html[data-tema=gelap] .strip{box-shadow:0 1px 0 rgba
 html[data-tema=gelap] .hc{box-shadow:0 18px 36px -18px rgba(0,0,0,.75)}
 html[data-tema=gelap] .empty{border-color:#26352C!important;background:#18241E}
 html[data-tema=gelap] .empty>svg{background:#1F2E26;box-shadow:none}
+html[data-tema=gelap] .badge{background:#D42E22}
