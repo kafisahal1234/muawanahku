@@ -9,4 +9,3 @@ html[data-tema=gelap] .kh-ring b{background:#0C7A47}
 html[data-tema=gelap] .applogo img{filter:drop-shadow(0 4px 12px rgba(0,0,0,.5))}
 /* bahasa Arab: kanan-ke-kiri */
 html[lang=ar] body{font-family:"Noto Sans Arabic","Plus Jakarta Sans",system-ui,sans-serif}
-html[dir=rtl] .ic-right,html[dir=rtl] .ic-left,html[dir=rtl] .ic-back,html[dir=rtl] .ic-chev,html[dir=rtl] .ic-arrow{transform:scaleX(-1)}

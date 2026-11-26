@@ -39,7 +39,7 @@ function prosesNode(n, i) {
   while ((x = w.nextNode())) x.nodeType === 3 ? teksNode(x, i) : atrNode(x, i);
 }
 export function terapkanBahasa() {
-  const b = bahasa(); try { akar().lang = b; akar().dir = b === "ar" ? "rtl" : "ltr"; } catch (e) { }
+  const b = bahasa(); try { akar().lang = b; akar().dir = "ltr"; // tata letak tidak dibalik untuk bahasa Arab (isi aplikasi sebagian besar berbahasa Indonesia) } catch (e) { }
   if (b === "id" || typeof MutationObserver === "undefined") return;
   const i = IX[b];
   const mulai = () => {
