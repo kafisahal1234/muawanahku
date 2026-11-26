@@ -131,18 +131,9 @@ export function SubHeader({ title, sub, right, children }) {
 }
 // Angka yang "menghitung naik" saat pertama tampil (mengikuti pengaturan kurangi gerakan)
 const KURANGI = (() => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return true; } })();
-const angkaKe = (p, e) => { const dec = (p.split(",")[1] || "").length, n = Number(p.replace(",", ".")) * e, t = dec ? n.toFixed(dec).replace(".", ",") : String(Math.round(n)); return p.length > 1 && p[0] === "0" && !dec ? t.padStart(p.length, "0") : t; };
-export function Angka({ v }) {
-  const s = String(v ?? ""); const [d, setD] = useState(s); const awal = useRef(true);
-  useEffect(() => {
-    if (!awal.current) { setD(s); return; } awal.current = false;
-    const parts = s.split(/(\d+(?:,\d+)?)/); if (KURANGI || parts.length < 2 || s.length > 24) return;
-    const t0 = performance.now(); let raf;
-    const step = now => { const k = Math.min(1, (now - t0) / 750), e = 1 - Math.pow(1 - k, 3); setD(parts.map((p, i) => (i % 2 ? angkaKe(p, e) : p)).join("")); if (k < 1) raf = requestAnimationFrame(step); };
-    raf = requestAnimationFrame(step); return () => cancelAnimationFrame(raf);
-  }, [s]);
-  return html`${d}`;
-}
+// const angkaKe = (p, e) => { const dec = (p.split(",")[1] || "").length, n = Number(p.replace(",", ".")) * e, t = dec ? n.toFixed(dec).replace(".", ",") : String(Math.round(n)); return p.length > 1 && p[0] === "0" && !dec ? t.padStart(p.length, "0") : t; };
+// Angka ditampilkan langsung (animasi hitung dimatikan: membuat tata letak bergetar di HP)
+export function Angka({ v }) { return html`${String(v ?? "")}`; }
 export function Stat({ label, value, sub, tone }) { return html`<div class=${"stat " + (tone || "")}><span>${label}</span><b>${typeof value === "string" || typeof value === "number" ? html`<${Angka} v=${value} />` : value}</b>${sub ? html`<small>${sub}</small>` : null}</div>`; }
 export function Avatar({ name, tone }) {
   const t = (name || "?").replace(/^(Ust\.|Ustdzh\.)\s*/, "").replace(/^(M\.?|Muhammad|Muhamad)\s+/i, "").split(/\s+/).slice(0, 2).map(w => w[0]).join("").toUpperCase();
