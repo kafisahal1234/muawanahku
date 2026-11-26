@@ -94,7 +94,7 @@ export function KoreksiSheet({ item, onClose, onHapus }) {
 // Kumpulkan entri riwayat milik guru (atau semua bila pengawas & mode semua)
 export function kumpulRiwayat(id, semua, cols, cocok = () => true) {
   const ev = [], mine = r => (semua || r.guru === id || r.oleh === id) && cocok(r);
-  const C = cols || ["setoran", "tahsin", "absenHalaqah", "mutabaah", "absenKelas", "izin", "bap", "nilaiMapel", "pengumuman", "izinGuru", "motd"];
+  const C = cols || ["setoran", "tahsin", "absenHalaqah", "mutabaah", "absenKelas", "izin", "bap", "nilaiMapel", "pengumuman", "izinGuru"];
   C.filter(c => c !== "motd").forEach(col => all(col).filter(mine).forEach(r => ev.push({ col, list: [r], ts: (r.diubah && r.diubah.ts) || r.ts || 0 })));
   const g = {}; if (C.includes("motd")) all("motd").filter(mine).forEach(r => { const k = `${r.pondok}_${r.tanggal}_${r.waktu}`; (g[k] = g[k] || []).push(r); });
   Object.values(g).forEach(list => ev.push({ col: "motd", list, ts: Math.max(...list.map(x => x.ts || 0)) }));
@@ -137,7 +137,7 @@ export function SudahAda({ col, recs, teks, ket }) {
 // Riwayat & koreksi per modul (Tahfidz, Asrama, Mapel, Kesantrian, Izin guru)
 export const MODUL = {
   tahfidz: { judul: "Tahfidz", cols: ["setoran", "tahsin", "absenHalaqah"], pengawas: ["wadir_tahfidz"] },
-  asrama: { judul: "MOTD & Mutaba'ah", cols: ["motd", "mutabaah"], pengawas: ["wadir_kesantrian"] },
+  asrama: { judul: "Mutaba'ah", cols: ["mutabaah"], pengawas: ["wadir_kesantrian"] },
   mapel: { judul: "Mapel", cols: ["absenKelas", "nilaiMapel"], pengawas: ["wadir_kurikulum"] },
   kesantrian: { judul: "Kesantrian", cols: ["izin", "bap"], pengawas: ["wadir_kesantrian"] },
   guru: { judul: "Izin Guru", cols: ["izinGuru"], pengawas: ["wadir_kurikulum"] },

@@ -17,10 +17,11 @@ export const PANDUAN = `Panduan aplikasi MuawanahKu (pakai nama menu persis sepe
 - Wadir Tahfidz → Pengelolaan Tahfidz: Data Awal Hafalan, Target Hafalan, Kelola Halaqah, Rekap Tahfidz, Perolehan Bulanan, Rekap Tahsin, Peringkat Santri, Rekap Tasmi', Koreksi Input Tahfidz.
 - Wadir Kurikulum → Kurikulum: Jam Pelajaran, Jadwal Mengajar, Mapel & Pengampu, Rekap KBM (kinerja guru: pertemuan terlaksana & jurnal, kehadiran kelas, unduh PDF), Rekap Nilai, Izin Guru, Koreksi Input Mapel. Juga Kalender di Beranda.
 - Guru mapel → Beranda → Mapel <nama>: Absen & Jurnal, Input Nilai (Projek bisa banyak, PTS, PAS, Aspek), Rekap Kelas, Izin Guru, Riwayat & Koreksi. KBM Senin–Jumat, Jam 1 10.15–11.45, Jam 2 13.00–14.30. Nilai akhir = 10% hadir + 30% projek + 25% PTS + 35% PAS, KKM 70.
-- Wali asrama (musyrif): MOTD dan Mutaba'ah di Beranda, serta menu Asrama Saya (Absen MOTD, Mutaba'ah, Izin & Catatan, Rekap Asrama, Perolehan Hafalan, Riwayat & Koreksi).
+- Wali asrama (musyrif): Mutaba'ah dan Ceklis Musyrif di Beranda, serta menu Asrama Saya (Mutaba'ah, Ceklis Musyrif, Izin & Catatan, Rekap Asrama, Perolehan Hafalan, Riwayat & Koreksi).
 - Wadir Kesantrian → Kesantrian: Surat Izin, Catat Kembali, Form BAP (surat pemberitahuan/SP/skorsing dibuat otomatis), Rekap Kesantrian, Rekap Izin, Rekap Pelanggaran, Histori Santri, Riwayat & Koreksi.
 - Mudir: Tahfidz, Kurikulum, Kesantrian (lihat semua), Rapor, Kalender. Admin: Data Master (santri, guru & akun, asrama, kelas, halaqah, Impor Data dengan AI), Pengumuman.
-- Setelah absen/MOTD/mutaba'ah disimpan, layar berubah menjadi ringkasan "sudah diisi". Mengubah/menghapus input lewat menu Riwayat & Koreksi; semua perubahan tercatat.
+- Menu MOTD sudah dihapus; pelanggaran hanya dari BAP Kesantrian. Target hafalan baru: 2,5 juz per semester = 10 halaman per bulan = 2,5 halaman per pekan (±1 halaman tiap 2 hari).
+- Setelah absen/mutaba'ah disimpan, layar berubah menjadi ringkasan "sudah diisi". Mengubah/menghapus input lewat menu Riwayat & Koreksi; semua perubahan tercatat.
 - Rekap memakai hari aktif; hari tanpa input dihitung 0 sehingga persentase turun. Semua surat, rapor, dan rekap diunduh sebagai PDF.
 - Akun wali santri: masuk dengan kode akses; menu Beranda, Hafalan, Ananda (biodata diisi wali, kode akses terkunci), Izin, Akun.`;
 
@@ -75,10 +76,10 @@ function blokAsrama(asr, r) {
   if (!asr.length) return "";
   const baris = asr.map(a => {
     const g = L.staffAman(a.musyrif), list = L.santriAsrama(a.id), ids = new Set(list.map(s => s.id));
-    const m1 = L.kinerjaMotd(a.id, r.pk), m2 = L.kinerjaMotd(a.id, r.bl), u1 = L.kinerjaMut(a.id, r.pk), u2 = L.kinerjaMut(a.id, r.bl);
-    const motdHariIni = L.WAKTU.filter(([w]) => get("motd", L.motdKey(a.id, r.t, w))).length, mutHariIni = list.filter(s => get("mutabaah", L.mutKey(s.id, r.t))).length;
+    const u1 = L.kinerjaMut(a.id, r.pk), u2 = L.kinerjaMut(a.id, r.bl);
+    const mutHariIni = list.filter(s => get("mutabaah", L.mutKey(s.id, r.t))).length;
     const iz = L.izinAktif().filter(i => ids.has(i.santri)).length;
-    return `Asrama ${a.nama} (pondok ${a.pondok}, wali asrama ${g.nama}) | ${list.length} santri | MOTD pekan ini ${m1.isi}/${m1.slot} waktu (${pct(m1.pct)}), alpa ${m1.al}, masbuq ${m1.mb} | MOTD bulan ini ${pct(m2.pct)}, alpa ${m2.al}, masbuq ${m2.mb} | mutaba'ah pekan ini ${u1.isi}/${u1.target} (${pct(u1.pct)}${u1.menyusul ? `, ${u1.menyusul} menyusul` : ""}${u1.hariLibur ? `, ${u1.hariLibur} hari tidak dinilai` : ""}) | bulan ini ${pct(u2.pct)} | hari ini MOTD ${motdHariIni}/${L.WAKTU.length} waktu, mutaba'ah ${mutHariIni}/${list.length} | sedang izin ${iz}`;
+    return `Asrama ${a.nama} (pondok ${a.pondok}, wali asrama ${g.nama}) | ${list.length} santri | mutaba'ah pekan ini ${u1.isi}/${u1.target} (${pct(u1.pct)}${u1.menyusul ? `, ${u1.menyusul} menyusul` : ""}${u1.hariLibur ? `, ${u1.hariLibur} hari tidak dinilai` : ""}) | bulan ini ${pct(u2.pct)} | hari ini mutaba'ah ${mutHariIni}/${list.length} | sedang izin ${iz}`;
   });
   return `KINERJA ASRAMA & WALI ASRAMA:\n${baris.join("\n")}`;
 }

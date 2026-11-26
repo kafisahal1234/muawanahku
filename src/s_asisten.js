@@ -41,7 +41,7 @@ function saranPeran() {
   if (r.includes("wadir_tahfidz")) s.push("Halaqah mana yang absennya paling rendah bulan ini?", "Siapa santri yang ziyadah bulan ini paling sedikit?");
   if (r.includes("wadir_kesantrian")) s.push("Santri mana yang terlambat kembali dari izin?", "Rangkum pelanggaran bulan ini");
   if (r.includes("guru_tahfidz")) s.push("Siapa santri halaqah saya yang belum setor hari ini?", "Rangkum perolehan hafalan halaqah saya bulan ini");
-  if (r.includes("musyrif")) s.push("Bagaimana MOTD dan mutaba'ah asrama saya pekan ini?", "Siapa santri asrama saya yang sering alpa atau masbuq?");
+  if (r.includes("musyrif")) s.push("Bagaimana mutaba'ah asrama saya pekan ini?", "Siapa santri asrama saya yang ibadahnya paling perlu dibina?");
   if (r.includes("guru_mapel")) s.push("Nilai kelas saya yang belum lengkap apa saja?");
   s.push("Bantu buatkan pengumuman untuk wali santri", "Bagaimana cara mengoreksi input yang salah?");
   return [...new Set(s)].slice(0, 6);

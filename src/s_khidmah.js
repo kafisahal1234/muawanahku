@@ -1,4 +1,4 @@
-// Khidmah Harian: ceklis harian musyrif / wali asrama (ringkasan dari "Ceklis Harian Musyrif", 58 poin → 16 butir)
+// Ceklis Musyrif: ceklis harian musyrif / wali asrama (ringkasan dari "Ceklis Harian Musyrif", 58 poin → 16 butir)
 import { useState } from "preact/hooks";
 import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, Empty, Seg, Hint } from "./ui.js";
 import { all, get, put, toast } from "./store.js";
@@ -24,7 +24,7 @@ export const KHIDMAH = [
     { id: "literasi", t: "Mendampingi program literasi", ket: "Musyrif membaca buku atau murajaah pribadi", hari: t => sesiAda(t, "Dhuha") || sesiAda(t, "Malam") },
     { id: "malam", t: "Wirid Al-Mulk & sharing session bersama santri", ket: "Bercerita, ngobrol, mendengar keluh kesah santri", hari: t => sesiAda(t, "Malam") }] },
   { id: "shalat", judul: "Shalat berjamaah", ic: "moon", butir: [
-    { id: "santri", t: "Santri hadir shalat berjamaah dengan tertib", sub: () => ["Shubuh", "Dhuhur", "Ashar", "Maghrib", "Isya"], auto: "motd" },
+    { id: "santri", t: "Santri hadir shalat berjamaah dengan tertib", sub: () => ["Shubuh", "Dhuhur", "Ashar", "Maghrib", "Isya"] },
     { id: "takbir", t: "Takbiratul ihram bersama imam", sub: () => ["Dhuhur", "Ashar", "Maghrib", "Isya"] }] },
   { id: "malam", judul: "Sore & malam", ic: "home", butir: [
     { id: "bersih2", t: "Kebersihan & piket sore dikontrol" },
@@ -84,7 +84,7 @@ export function Khidmah({ tgl: t0, gid: g0 }) {
   const boleh = milik && (tgl === L.today() || tgl === L.addDays(L.today(), -1));
   const h = hasilKhidmah(gid, tgl);
   const [cek, setCek] = useState(() => new Set(h.cek));
-  if (!L.hariAktif(tgl, "asrama")) return html`<${SubHeader} title="Khidmah Harian" sub=${L.fmtTgl(tgl)} /><div class="wrap"><${Card}><${Empty} t="Hari ini libur pondok. Tidak ada ceklis khidmah." icon="calendar" /></${Card}></div>`;
+  if (!L.hariAktif(tgl, "asrama")) return html`<${SubHeader} title="Ceklis Musyrif" sub=${L.fmtTgl(tgl)} /><div class="wrap"><${Card}><${Empty} t="Hari ini libur pondok. Tidak ada ceklis musyrif." icon="calendar" /></${Card}></div>`;
   const selesai = new Set(h.units.filter(u => h.au[u.id] === true || (!u.b.wajibAuto && cek.has(u.id))).map(u => u.id));
   const pct = h.units.length ? Math.round((selesai.size / h.units.length) * 100) : 0;
   const simpan = async n => {
@@ -94,10 +94,10 @@ export function Khidmah({ tgl: t0, gid: g0 }) {
   const tog = id => { if (!boleh) return; const n = new Set(cek); n.has(id) ? n.delete(id) : n.add(id); setCek(n); simpan(n); };
   const semuaButir = (b, ids) => { if (!boleh) return; const n = new Set(cek), on = ids.every(i => selesai.has(i)); ids.forEach(i => { if (h.au[i] !== true) on ? n.delete(i) : n.add(i); }); setCek(n); simpan(n); };
   const grup = KHIDMAH.map(gr => ({ gr, units: h.units.filter(u => u.g.id === gr.id) })).filter(x => x.units.length);
-  return html`<${SubHeader} title="Khidmah Harian" sub=${`${milik ? "" : g.pendek + " · "}${a ? "Asrama " + a.nama + " · " : ""}${L.fmtTgl(tgl)}`} />
+  return html`<${SubHeader} title="Ceklis Musyrif" sub=${`${milik ? "" : g.pendek + " · "}${a ? "Asrama " + a.nama + " · " : ""}${L.fmtTgl(tgl)}`} />
     <div class="wrap">
       <div class="kh-hero"><div class="kh-ring" style=${`--p:${pct}`}><b>${pct}%</b></div><div><b>${selesai.size} dari ${h.units.length} terlaksana</b>
-        <small>${pct >= 100 ? "MasyaAllah, khidmah hari ini lengkap." : boleh ? "Centang setiap tugas begitu selesai. Tersimpan otomatis." : milik ? "Hanya hari ini dan kemarin yang bisa diisi." : "Hanya melihat."}</small></div></div>
+        <small>${pct >= 100 ? "MasyaAllah, ceklis hari ini lengkap." : boleh ? "Centang setiap tugas begitu selesai. Tersimpan otomatis." : milik ? "Hanya hari ini dan kemarin yang bisa diisi." : "Hanya melihat."}</small></div></div>
       ${grup.map(({ gr, units }) => { const ok = units.filter(u => selesai.has(u.id)).length;
         const butir = [...new Set(units.map(u => u.b))];
         return html`<${Card} title=${gr.judul} right=${html`<small>${ok}/${units.length}</small>`}>${butir.map(b => {
@@ -121,9 +121,9 @@ export function KhidmahRiwayat({ gid: g0 }) {
   const gid = g0 || me().id, g = L.staffAman(gid), [per, setPer] = useState("pekanan"), rg = L.periodeRange(per), rk = rekapKhidmah(gid, rg);
   const hari = Array.from({ length: 14 }, (_, i) => L.addDays(L.today(), -i)).filter(t => L.hariAktif(t, "asrama") && t >= L.setelan().mulaiPakai);
   const lemah = Object.values(rk.perButir).filter(o => o.n).map(o => ({ ...o, p: Math.round((o.ok / o.n) * 100) })).sort((x, y) => x.p - y.p).slice(0, 4);
-  return html`<${SubHeader} title="Riwayat Khidmah" sub=${g.nama}><${Seg} small items=${L.PERIODE.filter(([k]) => ["pekanan", "bulanan", "semester"].includes(k))} value=${per} onChange=${setPer} /></${SubHeader}>
+  return html`<${SubHeader} title="Riwayat Ceklis" sub=${g.nama}><${Seg} small items=${L.PERIODE.filter(([k]) => ["pekanan", "bulanan", "semester"].includes(k))} value=${per} onChange=${setPer} /></${SubHeader}>
     <div class="wrap">
-      <${Card}><div class="stats"><${Stat} label="Khidmah" value=${rk.pct == null ? "—" : rk.pct + "%"} tone=${nada(rk.pct) === "red" ? "red" : ""} sub=${rg.label || ""} /><${Stat} label="Hari diisi" value=${`${rk.hariIsi}/${rk.hari}`} /><${Stat} label="Tidak dinilai" value=${rk.dikecualikan} sub="izin" /></div></${Card}>
+      <${Card}><div class="stats"><${Stat} label="Terlaksana" value=${rk.pct == null ? "—" : rk.pct + "%"} tone=${nada(rk.pct) === "red" ? "red" : ""} sub=${rg.label || ""} /><${Stat} label="Hari diisi" value=${`${rk.hariIsi}/${rk.hari}`} /><${Stat} label="Tidak dinilai" value=${rk.dikecualikan} sub="izin" /></div></${Card}>
       ${lemah.length ? html`<${Card} title="Perlu ditingkatkan"><div class="list">${lemah.map(o => html`<${Row} icon=${html`<${Icon} n="alert" s=${18} />`} name=${o.t} right=${html`<${Pill} t=${o.p + "%"} tone=${nada(o.p)} />`} />`)}</div></${Card}>` : null}
       <${Card} title="14 hari terakhir"><div class="list">${hari.map(t => { const h = hasilKhidmah(gid, t);
         return html`<${Row} icon=${html`<${Icon} n="cal2" s=${18} />`} name=${L.fmtTgl(t)} sub=${h.doc ? `${h.selesai.size}/${h.units.length} terlaksana${h.doc.menyusul ? " · menyusul" : ""}` : h.selesai.size ? `${h.selesai.size}/${h.units.length} dari data otomatis` : "Belum diisi"}
@@ -137,18 +137,18 @@ export function RekapKhidmah({ pondok }) {
   const rows = musyrifList(p).map(({ a, g }) => ({ a, g, rk: per === "harian" ? null : rekapKhidmah(g.id, rg), h: hasilKhidmah(g.id, L.today()) }))
     .map(x => ({ ...x, v: x.rk ? x.rk.pct : x.h.pct })).sort((x, y) => (x.v ?? -1) - (y.v ?? -1));
   const rata = rows.filter(x => x.v != null), avg = rata.length ? Math.round(rata.reduce((n, x) => n + x.v, 0) / rata.length) : null;
-  const unduh = () => unduhPdf(`Rekap Khidmah Musyrif ${rg.label || L.fmtTgl(L.today())}`, () => tabelKePdf({
-    judul: "Rekap Khidmah Harian Musyrif", sub: `${per === "harian" ? L.fmtTgl(L.today()) : rg.label}${p ? " · Pondok " + p : ""} · ${rows.length} wali asrama`,
-    catatan: "Persentase = tugas terlaksana dibanding tugas yang berlaku pada hari itu. Sebagian tugas terisi otomatis dari absen halaqah, MOTD, setoran dan mutaba'ah. Hari wali asrama izin tidak dihitung bila kosong.",
+  const unduh = () => unduhPdf(`Rekap Ceklis Musyrif ${rg.label || L.fmtTgl(L.today())}`, () => tabelKePdf({
+    judul: "Rekap Ceklis Harian Musyrif", sub: `${per === "harian" ? L.fmtTgl(L.today()) : rg.label}${p ? " · Pondok " + p : ""} · ${rows.length} wali asrama`,
+    catatan: "Persentase = tugas terlaksana dibanding tugas yang berlaku pada hari itu. Sebagian tugas terisi otomatis dari absen halaqah, setoran dan mutaba'ah. Hari wali asrama izin tidak dihitung bila kosong.",
     oleh: `Dicetak oleh ${me().nama}, ${L.fmtTgl(L.today())} · MuawanahKu`, ttd: ttdUntukPdf("kesantrian"),
-    bagian: [{ judul: "Per wali asrama", kol: ["No", "Wali asrama", "Asrama", "Pondok", "Khidmah", "Hari diisi", "Tidak dinilai"],
+    bagian: [{ judul: "Per wali asrama", kol: ["No", "Wali asrama", "Asrama", "Pondok", "Terlaksana", "Hari diisi", "Tidak dinilai"],
       rows: rows.map((x, i) => [i + 1, x.g.nama, x.a.nama, x.a.pondok, x.v == null ? "—" : x.v + "%", x.rk ? `${x.rk.hariIsi}/${x.rk.hari}` : x.h.doc ? "Ya" : "Belum", x.rk ? x.rk.dikecualikan : "—"]) }],
   }));
-  return html`<${SubHeader} title="Khidmah Musyrif" sub=${`Ceklis harian wali asrama${p ? " · Pondok " + p : ""}`}><${Seg} small items=${L.PERIODE.filter(([k]) => ["harian", "pekanan", "bulanan", "semester"].includes(k))} value=${per} onChange=${setPer} /></${SubHeader}>
+  return html`<${SubHeader} title="Rekap Ceklis Musyrif" sub=${`Ceklis harian wali asrama${p ? " · Pondok " + p : ""}`}><${Seg} small items=${L.PERIODE.filter(([k]) => ["harian", "pekanan", "bulanan", "semester"].includes(k))} value=${per} onChange=${setPer} /></${SubHeader}>
     <div class="wrap">
       <${Card}><div class="stats"><${Stat} label="Rata-rata" value=${avg == null ? "—" : avg + "%"} /><${Stat} label="Wali asrama" value=${rows.length} /><${Stat} label=${per === "harian" ? "Sudah mengisi" : "Di bawah 75%"} value=${per === "harian" ? `${rows.filter(x => x.h.doc).length}/${rows.length}` : rows.filter(x => x.v != null && x.v < 75).length} tone="gold" /></div></${Card}>
       <${Card}><div class="list">${rows.map(x => html`<${Row} name=${x.g.nama} sub=${`Asrama ${x.a.nama} · Pondok ${x.a.pondok}${x.rk ? ` · diisi ${x.rk.hariIsi}/${x.rk.hari} hari` : x.h.doc ? ` · ${x.h.selesai.size}/${x.h.units.length} tugas` : " · belum mengisi hari ini"}`}
         right=${html`<${Pill} t=${x.v == null ? "—" : x.v + "%"} tone=${nada(x.v)} />`} onClick=${() => nav.go(per === "harian" ? "khidmah" : "khidmahRiwayat", { gid: x.g.id })} />`)}</div></${Card}>
-      <${Hint}>Sebagian tugas terisi otomatis dari data aplikasi (absen halaqah, MOTD, setoran, mutaba'ah), jadi tidak bisa dicentang tanpa bukti.</${Hint}>
+      <${Hint}>Sebagian tugas terisi otomatis dari data aplikasi (absen halaqah, setoran, mutaba'ah), jadi tidak bisa dicentang tanpa bukti.</${Hint}>
       <div class="sticky-act"><${Btn} icon="download" onClick=${unduh}>Unduh PDF</${Btn}></div></div>`;
 }

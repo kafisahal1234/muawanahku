@@ -6,6 +6,7 @@ import * as L from "./logic.js";
 import { logUbah } from "./s_koreksi.js";
 import { AbsenSelesai } from "./common.js";
 import { me } from "./common.js";
+import * as KH from "./s_khidmah.js";
 
 const waktuNow = () => { const h = new Date().getHours(); return h < 5 ? "tahajud" : h < 7 ? "subuh" : h < 8 ? "apel" : h < 11 ? "dhuha" : h < 15 ? "dzuhur" : h < 17 ? "ashar" : h < 19 ? "maghrib" : "isya"; };
 
@@ -100,7 +101,7 @@ function MutForm({ sid, list, onNext, tgl, ubah }) {
   const [ad, setAd] = useState(() => new Set(ex ? ex.adab : []));
   const ibFinal = new Set(ib); Object.entries(auto).forEach(([i, v]) => { if (v === true) ibFinal.add(Number(i)); if (v === false) ibFinal.delete(Number(i)); });
   const tog = (set, setter, i) => { const n = new Set(set); n.has(i) ? n.delete(i) : n.add(i); setter(n); };
-  const src = i => (DATA.auto[i] ? (DATA.auto[i][0] === "motd" ? "Dari MOTD" : "Dari absen halaqah") : null);
+  const src = i => (DATA.auto[i] && DATA.auto[i][0] !== "motd" ? "Dari absen halaqah" : null);
   const belumLain = perluIsi(list, tgl).filter(x => x.id !== sid), lewat = !ex && L.alasanTidakDinilai(sid, tgl), lampau = tgl < L.today();
   const save = async () => {
     const rec = { santri: sid, tanggal: tgl, ibadah: [...ibFinal], adab: [...ad], guru: (ex && ex.guru) || me().id, ts: ex ? ex.ts : Date.now(), ...(ex ? { diubah: { oleh: me().id, ts: Date.now() } } : {}), ...((ex && ex.menyusul) || (!ex && lampau) ? { menyusul: true } : {}) };
@@ -144,7 +145,7 @@ export function IzinCatatan({ aid }) {
     <${Section} t="Perizinan" /><${Card}>${iz.length ? html`<div class="list">${iz.map(i => html`<${Row} name=${L.santriAman(i.santri).nama} sub=${`${i.jenis} · ${L.fmtDT(i.keluar)} → ${L.fmtDT(i.kembali)}`}
         right=${i.status === "aktif" ? html`<${Pill} t=${L.terlambat(i) ? "Terlambat" : "Sedang izin"} tone=${L.terlambat(i) ? "red" : "gold"} />` : html`<${Pill} t="Kembali" />`} />`)}</div>` : html`<${Empty} t="Belum ada izin." />`}</${Card}>
     <${Section} t="Pelanggaran (BAP)" /><${Card}>${bap.length ? html`<div class="list">${bap.map(b => html`<${Row} name=${L.santriAman(b.santri).nama} sub=${`${b.pelanggaranNama} · ${L.fmtTgl(b.tanggal)}`} right=${html`<${Pill} t=${b.poin + " poin"} tone="red" />`} onClick=${() => nav.go("bapView", { id: b.id })} />`)}</div>` : html`<${Empty} t="Belum ada BAP." />`}</${Card}>
-    <${Section} t="Catatan MOTD" /><${Card}>${motd.length ? html`<div class="list">${motd.map(c => html`<${Row} name=${L.santriAman(c.santri).nama} sub=${`${c.st === "A" ? "Alpa" : "Masbuq"} ${L.WAKTU.find(x => x[0] === c.waktu)[1]} · ${L.fmtShort(c.tanggal)}`} right=${html`<${Pill} t=${c.poin + " poin"} tone=${c.st === "A" ? "red" : "purple"} />`} />`)}</div>` : html`<${Empty} t="Belum ada alpa atau masbuq." />`}</${Card}></div>`;
+    ${L.MOTD_AKTIF ? html`<${Section} t="Catatan MOTD" /><${Card}>${motd.length ? html`<div class="list">${motd.map(c => html`<${Row} name=${L.santriAman(c.santri).nama} sub=${`${c.st === "A" ? "Alpa" : "Masbuq"} ${L.WAKTU.find(x => x[0] === c.waktu)[1]} · ${L.fmtShort(c.tanggal)}`} right=${html`<${Pill} t=${c.poin + " poin"} tone=${c.st === "A" ? "red" : "purple"} />`} />`)}</div>` : html`<${Empty} t="Belum ada alpa atau masbuq." />`}</${Card}>` : null}</div>`;
 }
 
 // Menu Asrama Saya (wali asrama): izin & catatan, rekap asrama, perolehan hafalan, riwayat koreksi
@@ -155,11 +156,10 @@ export function AsramaSaya() {
   const izin = L.izinAktif().filter(i => ids.has(i.santri)).length, mut = list.filter(s => get("mutabaah", L.mutKey(s.id, tgl))).length;
   const motdIsi = L.WAKTU.filter(([k]) => get("motd", L.motdKey(a.id, tgl, k))).length;
   return html`<${SubHeader} title="Asrama Saya" sub=${`Asrama ${a.nama} · Pondok ${a.pondok} · ${list.length} santri`} />
-    <div class="wrap"><${Card}><div class="stats"><${Stat} label="MOTD hari ini" value=${`${motdIsi}/${L.WAKTU.length}`} /><${Stat} label="Mutaba'ah" value=${`${mut}/${list.length}`} tone=${mut < list.length ? "gold" : ""} /><${Stat} label="Sedang izin" value=${izin} tone=${izin ? "blue" : ""} /></div></${Card}>
+    <div class="wrap"><${Card}><div class="stats"><${Stat} label="Ceklis hari ini" value=${(() => { const k = KH.hasilKhidmah(m.id, tgl); return k.pct == null ? "—" : k.pct + "%"; })()} /><${Stat} label="Mutaba'ah" value=${`${mut}/${list.length}`} tone=${mut < list.length ? "gold" : ""} /><${Stat} label="Sedang izin" value=${izin} tone=${izin ? "blue" : ""} /></div></${Card}>
       <${Card} title="Menu Asrama"><div class="tiles">
-        <${Tile} icon="moon" label="Absen MOTD" color="indigo" onClick=${() => nav.go("motd")} />
         <${Tile} icon="checksq" label="Mutaba'ah" color="teal" onClick=${() => nav.go("mutabaah")} />
-        <${Tile} icon="clipboard" label="Khidmah Harian" color="emerald" onClick=${() => nav.go("khidmah")} />
+        <${Tile} icon="clipboard" label="Ceklis Musyrif" color="emerald" onClick=${() => nav.go("khidmah")} />
         ${!m.roles.includes("wadir_kesantrian") ? html`<${Tile} icon="door" label="Izin & Catatan" color="coral" badge=${izin || null} onClick=${() => nav.go("izinCatatan")} />` : null}
         <${Tile} icon="chart" label="Rekap Asrama" color="purple" onClick=${() => nav.go("rekapAsrama")} />
         <${Tile} icon="calendar" label="Perolehan Hafalan" color="pink" onClick=${() => nav.go("hafalanBulan")} />

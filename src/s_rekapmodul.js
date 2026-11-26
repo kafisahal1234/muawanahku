@@ -62,13 +62,13 @@ const itemTahfidz = (r, n, kin) => [
   ["Tasmi' lulus", `${r.tasmi} juz`, r.tasmiUji ? `${r.tasmiUji} kali ujian` : "belum ada ujian", null, "emas"],
   ["Manzil", `${r.manzil}×`, "setoran pekanan", null, "ungu"],
   kin ? ["Absen guru", `${kin.isi}/${kin.sesi}`, "sesi terisi", kin.pct, nada(kin.pct)] : null];
-function SantriTahfidz({ d }) {
+function SantriTahfidz({ d, tg }) {
   const [urut, setUrut] = useState("ziyadah");
   const f = { ziyadah: o => -(o.x.zBaris + o.x.tahsin), hadir: o => -(o.x.kh.pct ?? -1), murojaah: o => -o.x.muroHal, nama: () => 0 }[urut];
   const rows = [...d].sort((a, b) => f(a) - f(b) || a.s.nama.localeCompare(b.s.nama));
   return html`<${Urut} opsi=${[["ziyadah", "Ziyadah"], ["hadir", "Kehadiran"], ["murojaah", "Murojaah"], ["nama", "Nama"]]} nilai=${urut} set=${setUrut} />
     ${rows.map(({ s, x, iq }, i) => html`<${BarisSantri} no=${i + 1} s=${s} ket=${`Kelas ${s.kelas} · ${L.namaHalaqah(s)}`}
-      utama=${iq ? `Tahsin ${x.tahsin}×` : x.zBaris ? hal(x.zBaris) : "Belum ziyadah"} utamaNada=${iq ? "biru" : x.zBaris ? "hijau" : "mut"}
+      utama=${iq ? `Tahsin ${x.tahsin}×` : x.zBaris ? `${hal(x.zBaris)}${x.zBaris >= tg ? " ✓" : ""}` : "Belum ziyadah"} utamaNada=${iq ? "biru" : nadaTarget(x.zBaris, tg)}
       tanda=${[...x.tasmiLulus.map(j => `Tasmi' Juz ${j} lulus`), x.kh.A ? `Alpa ${x.kh.A}×` : null].filter(Boolean)}
       kolom=${[["Hadir", P(x.kh.pct), nada(x.kh.pct)], iq ? ["Tahsin", `${x.tahsinHal} hal`] : ["Hari setor", `${x.zHari} hari`], ["Murojaah", `${x.muroHal} hal`], ["Manzil", x.manzil ? `${x.manzil}× · ${x.manzilNilai ?? "—"}` : "—"]]} />`)}`;
 }
@@ -79,16 +79,19 @@ function tabelTahfidz(hqs, rg) {
     ...hqs.map(h => ({ judul: `${h.nama} · per santri`, kol: ["Santri", "Kelas", "H", "S", "I", "A", "Kehadiran", "Ziyadah", "Hari setor", "Murojaah (hal)", "Manzil", "Tasmi' lulus", "Tahsin"],
       rows: dataTahfidz(L.santriHalaqah(h.id), rg).map(({ s, x, iq }) => [s.nama, s.kelas, x.kh.H, x.kh.S, x.kh.I, x.kh.A, P(x.kh.pct), hal(x.zBaris), x.zHari, x.muroHal, x.manzil, x.tasmiLulus.length ? "Juz " + x.tasmiLulus.join(", ") : "—", iq ? `${x.tahsin}× (${x.tahsinHal} hal)` : "—"]) }))] };
 }
+// target ziyadah per santri untuk periode yang dipilih (baris)
+const tgtBaris = jenis => Math.round(L.targetHal(jenis) * 15);
+const nadaTarget = (baris, tg) => (!tg ? (baris ? "hijau" : "mut") : baris >= tg ? "hijau" : baris >= tg / 2 ? "emas" : baris ? "merah" : "mut");
 export function RekapTahfidz({ hid }) {
   useApp();
   const lk = lingkup(), hqs = hid ? [L.halaqahById(hid)] : lk.hqs, p = usePeriode("pekanan", null, "halaqah");
   if (!hqs.length || !hqs[0]) return kosong("Rekap Tahfidz", "Akun ini belum memegang halaqah.");
   const satu = hqs.length === 1, semua = hqs.flatMap(h => L.santriHalaqah(h.id)), d = dataTahfidz(semua, p.rg), r = ringkasTahfidz(d);
-  const kin = satu ? L.kinerjaHalaqah(hqs[0].id, p.rg) : null;
+  const kin = satu ? L.kinerjaHalaqah(hqs[0].id, p.rg) : null, tg = tgtBaris(p.jenis), capai = d.filter(o => !o.iq && o.x.zBaris >= tg).length, nonIq = d.filter(o => !o.iq).length;
   return html`<${SubHeader} title=${satu ? "Rekap " + hqs[0].nama : "Rekap Tahfidz"} sub=${satu ? `${(L.staffById(hqs[0].guru) || {}).pendek || ""} · ${semua.length} santri` : `${hqs.length} halaqah · ${semua.length} santri`} />
     <div class="wrap">${p.bar}
-      <div class="rx-hero"><${Metrik} items=${itemTahfidz(r, semua.length, kin)} /></div>
-      ${satu ? html`<${Bagian} t="Per santri" /><${SantriTahfidz} d=${d} />`
+      <div class="rx-hero"><div class="rx-target"><${Icon} n="target" s=${18} /><span>Target ziyadah ${p.rg.label ? "periode ini" : ""}: <b>${L.fmtHal(L.targetHal(p.jenis))}</b> per santri</span><em>${capai}/${nonIq} tercapai</em></div><${Metrik} items=${itemTahfidz(r, semua.length, kin)} /></div>
+      ${satu ? html`<${Bagian} t="Per santri" /><${SantriTahfidz} d=${d} tg=${tg} />`
         : html`<${Bagian} t="Per halaqah" />${hqs.map(h => { const dd = dataTahfidz(L.santriHalaqah(h.id), p.rg), rr = ringkasTahfidz(dd), k = L.kinerjaHalaqah(h.id, p.rg);
           return html`<${Grup} judul=${h.nama} sub=${`${(L.staffById(h.guru) || {}).pendek || "—"} · ${dd.length} santri · absen ${k.isi}/${k.sesi} sesi`} onClick=${() => nav.go("rekapTahfidz", { hid: h.id })}
             items=${[["Hadir", P(rr.kh), null, rr.kh, nada(rr.kh)], ["Ziyadah", hal(rr.baris), `${rr.zSantri} santri`, null, "hijau"], ["Murojaah", `${rr.muroHal} hal`, null, null, "biru"], ["Tasmi'", `${rr.tasmi} juz`, null, null, "emas"]]} />`; })}`}
@@ -144,42 +147,42 @@ function tabelMapel(pairs, rg) {
         rows: dataKelas(mp, k, rg).d.map(o => [o.s.nama, o.kh.H || 0, o.kh.S || 0, o.kh.I || 0, o.kh.A || 0, o.kh.sesi || 0, P(o.kh.pct), o.pj ?? "—"]) }))] };
 }
 
-// ================= ASRAMA (MOTD & mutaba'ah) =================
-const dataAsrama = (list, rg) => list.map(s => { const sh = L.shalatDalam(s.id, rg), m = L.mutPersen(s.id, rg); return { s, sh, m, mut: m.ibadah == null ? null : Math.round((m.ibadah + m.adab) / 2) }; });
-function itemAsrama(d, motd, mut) {
-  const sh = rata(d.map(o => o.sh.pct)), ib = rata(d.map(o => o.m.ibadah)), ad = rata(d.map(o => o.m.adab));
-  return [["Shalat berjamaah", P(sh), `alpa ${jml(d, o => o.sh.A)} · masbuq ${jml(d, o => o.sh.M)}`, sh, nada(sh)], ["Ibadah", P(ib), "mutaba'ah", ib, nada(ib)], ["Adab", P(ad), "mutaba'ah", ad, nada(ad)],
-    motd ? ["Absen MOTD", `${motd.isi}/${motd.slot}`, "waktu terisi", motd.pct, nada(motd.pct)] : null, mut ? ["Mutaba'ah diisi", `${mut.isi}/${mut.target}`, mut.menyusul ? `${mut.menyusul} menyusul` : "santri × hari", mut.pct, nada(mut.pct)] : null];
+// ================= ASRAMA (mutaba'ah ibadah & adab) =================
+const dataAsrama = (list, rg) => list.map(s => { const m = L.mutPersen(s.id, rg); return { s, m, mut: m.ibadah == null ? null : Math.round((m.ibadah + m.adab) / 2) }; });
+function itemAsrama(d, mut) {
+  const ib = rata(d.map(o => o.m.ibadah)), ad = rata(d.map(o => o.m.adab));
+  return [["Ibadah", P(ib), "rata-rata santri", ib, nada(ib)], ["Adab", P(ad), "rata-rata santri", ad, nada(ad)],
+    mut ? ["Mutaba'ah diisi", `${mut.isi}/${mut.target}`, "santri × hari dinilai", mut.pct, nada(mut.pct)] : null,
+    mut ? ["Diisi menyusul", String(mut.menyusul), mut.hariLibur ? `${mut.hariLibur} hari tidak dinilai` : "tidak ada hari tidak dinilai", null, "emas"] : null];
 }
 export function RekapAsrama({ aid }) {
   useApp();
-  const lk = lingkup(), asr = aid ? [L.asramaById(aid)] : lk.asr, p = usePeriode("pekanan", null, "asrama"), [urut, setUrut] = useState("shalat");
+  const lk = lingkup(), asr = aid ? [L.asramaById(aid)] : lk.asr, p = usePeriode("pekanan", null, "asrama"), [urut, setUrut] = useState("mut");
   if (!asr.length || !asr[0]) return kosong("Rekap Asrama", "Akun ini belum memegang asrama.");
-  const satu = asr.length === 1, semua = asr.flatMap(a => L.santriAsrama(a.id)), d = dataAsrama(semua, p.rg);
-  const motd = satu ? L.kinerjaMotd(asr[0].id, p.rg) : null, mut = satu ? L.kinerjaMut(asr[0].id, p.rg) : null;
-  const f = { shalat: o => o.sh.pct ?? 101, mut: o => o.mut ?? 101, nama: () => 0 }[urut], rows = [...d].sort((a, b) => f(a) - f(b) || a.s.nama.localeCompare(b.s.nama));
+  const satu = asr.length === 1, semua = asr.flatMap(a => L.santriAsrama(a.id)), d = dataAsrama(semua, p.rg), mut = satu ? L.kinerjaMut(asr[0].id, p.rg) : null;
+  const f = { mut: o => o.mut ?? 101, ibadah: o => o.m.ibadah ?? 101, adab: o => o.m.adab ?? 101, nama: () => 0 }[urut], rows = [...d].sort((a, b) => f(a) - f(b) || a.s.nama.localeCompare(b.s.nama));
   return html`<${SubHeader} title=${satu ? "Rekap Asrama " + asr[0].nama : "Rekap Asrama"} sub=${satu ? `${(L.staffById(asr[0].musyrif) || {}).pendek || ""} · ${semua.length} santri` : `${asr.length} asrama · ${semua.length} santri`} />
     <div class="wrap">${p.bar}
-      <div class="rx-hero"><${Metrik} items=${itemAsrama(d, motd, mut)} /></div>
-      ${satu ? html`<${Bagian} t="Per santri" /><${Urut} opsi=${[["shalat", "Shalat terendah"], ["mut", "Mutaba'ah terendah"], ["nama", "Nama"]]} nilai=${urut} set=${setUrut} />
-        ${rows.map((o, i) => html`<${BarisSantri} no=${i + 1} s=${o.s} ket=${`Kelas ${o.s.kelas}${L.sedangIzin(o.s.id) ? " · sedang izin" : ""}`} utama=${P(o.sh.pct)} utamaNada=${nada(o.sh.pct)}
-          kolom=${[["Alpa", o.sh.A, o.sh.A ? "merah" : ""], ["Masbuq", o.sh.M, o.sh.M ? "emas" : ""], ["Ibadah", P(o.m.ibadah), nada(o.m.ibadah)], ["Adab", P(o.m.adab), nada(o.m.adab)]]} />`)}`
-        : html`<${Bagian} t="Per asrama" />${asr.map(a => { const dd = dataAsrama(L.santriAsrama(a.id), p.rg), km = L.kinerjaMotd(a.id, p.rg), ku = L.kinerjaMut(a.id, p.rg), sh = rata(dd.map(o => o.sh.pct));
+      <div class="rx-hero"><${Metrik} items=${itemAsrama(d, mut)} /></div>
+      ${satu ? html`<${Bagian} t="Per santri" /><${Urut} opsi=${[["mut", "Terendah"], ["ibadah", "Ibadah"], ["adab", "Adab"], ["nama", "Nama"]]} nilai=${urut} set=${setUrut} />
+        ${rows.map((o, i) => html`<${BarisSantri} no=${i + 1} s=${o.s} ket=${`Kelas ${o.s.kelas}${L.sedangIzin(o.s.id) ? " · sedang izin" : ""}`} utama=${o.mut == null ? "Belum ada data" : L.predikatMut(o.mut).h + " · " + o.mut + "%"} utamaNada=${nada(o.mut)}
+          kolom=${[["Ibadah", P(o.m.ibadah), nada(o.m.ibadah)], ["Adab", P(o.m.adab), nada(o.m.adab)], ["Diisi", `${o.m.isi}/${o.m.hari}`], ["Menyusul", o.m.menyusul || 0]]} />`)}`
+        : html`<${Bagian} t="Per asrama" />${asr.map(a => { const dd = dataAsrama(L.santriAsrama(a.id), p.rg), ku = L.kinerjaMut(a.id, p.rg), ib = rata(dd.map(o => o.m.ibadah)), ad = rata(dd.map(o => o.m.adab));
           return html`<${Grup} judul=${"Asrama " + a.nama} sub=${`${(L.staffById(a.musyrif) || {}).pendek || "—"} · Pondok ${a.pondok} · ${dd.length} santri`} onClick=${() => nav.go("rekapAsrama", { aid: a.id })}
-            items=${[["Shalat", P(sh), null, sh, nada(sh)], ["Ibadah", P(rata(dd.map(o => o.m.ibadah))), null, rata(dd.map(o => o.m.ibadah)), nada(rata(dd.map(o => o.m.ibadah)))], ["Absen MOTD", P(km.pct), null, km.pct, nada(km.pct)], ["Mutaba'ah diisi", P(ku.pct), null, ku.pct, nada(ku.pct)]]} />`; })}`}
-      <${Hint}>Shalat berjamaah dihitung dari waktu yang sudah diabsen MOTD (masbuq tetap dihitung hadir). Mutaba'ah dihitung Senin–Jumat; hari yang terlewat bisa diisi menyusul paling lambat 7 hari.</${Hint}>
-      <${Unduhan} judul=${satu ? "Rekap Asrama " + asr[0].nama : "Rekap Asrama"} rg=${p.rg} ttd="asrama" tabel=${() => ({ catatan: "Shalat berjamaah dihitung dari waktu yang sudah diabsen MOTD (masbuq dihitung hadir). Mutaba'ah dihitung pada hari Senin–Jumat.",
-        bagian: [{ judul: "Per asrama", kol: ["Asrama", "Wali asrama", "Santri", "Absen MOTD", "Shalat berjamaah", "Mutaba'ah diisi", "Ibadah", "Adab"], rows: asr.map(a => { const dd = dataAsrama(L.santriAsrama(a.id), p.rg), km = L.kinerjaMotd(a.id, p.rg), ku = L.kinerjaMut(a.id, p.rg);
-          return [a.nama, (L.staffById(a.musyrif) || {}).nama || "—", dd.length, `${km.isi}/${km.slot}`, P(rata(dd.map(o => o.sh.pct))), `${ku.isi}/${ku.target}`, P(rata(dd.map(o => o.m.ibadah))), P(rata(dd.map(o => o.m.adab)))]; }) },
-          ...asr.map(a => ({ judul: `Asrama ${a.nama} · per santri`, kol: ["Santri", "Kelas", "Shalat hadir", "Alpa", "Masbuq", "Sakit/Izin", "Ibadah", "Adab", "Hari mutaba'ah"],
-            rows: dataAsrama(L.santriAsrama(a.id), p.rg).map(o => [o.s.nama, o.s.kelas, P(o.sh.pct), o.sh.A, o.sh.M, o.sh.S + o.sh.I, P(o.m.ibadah), P(o.m.adab), `${o.m.isi}/${o.m.hari}`]) }))] })} /></div>`;
+            items=${[["Ibadah", P(ib), null, ib, nada(ib)], ["Adab", P(ad), null, ad, nada(ad)], ["Diisi", P(ku.pct), null, ku.pct, nada(ku.pct)], ["Menyusul", String(ku.menyusul), null, null, "emas"]]} />`; })}`}
+      <${Hint}>Mutaba'ah dihitung Senin–Jumat. Hari yang terlewat bisa diisi menyusul paling lambat 7 hari. Hari wali asrama berhalangan atau santri izin tidak mengurangi nilai.</${Hint}>
+      <${Unduhan} judul=${satu ? "Rekap Asrama " + asr[0].nama : "Rekap Asrama"} rg=${p.rg} ttd="asrama" tabel=${() => ({ catatan: "Mutaba'ah dihitung Senin–Jumat. Hari kosong tanpa alasan dihitung 0; hari wali asrama berhalangan atau santri izin tidak dihitung.",
+        bagian: [{ judul: "Per asrama", kol: ["Asrama", "Wali asrama", "Santri", "Mutaba'ah diisi", "Menyusul", "Hari tidak dinilai", "Ibadah", "Adab"], rows: asr.map(a => { const dd = dataAsrama(L.santriAsrama(a.id), p.rg), ku = L.kinerjaMut(a.id, p.rg);
+          return [a.nama, (L.staffById(a.musyrif) || {}).nama || "—", dd.length, `${ku.isi}/${ku.target}`, ku.menyusul, ku.hariLibur, P(rata(dd.map(o => o.m.ibadah))), P(rata(dd.map(o => o.m.adab)))]; }) },
+          ...asr.map(a => ({ judul: `Asrama ${a.nama} · per santri`, kol: ["Santri", "Kelas", "Ibadah", "Adab", "Predikat", "Hari diisi", "Menyusul", "Tidak dinilai"],
+            rows: dataAsrama(L.santriAsrama(a.id), p.rg).map(o => [o.s.nama, o.s.kelas, P(o.m.ibadah), P(o.m.adab), o.mut == null ? "—" : L.predikatMut(o.mut).h, `${o.m.isi}/${o.m.hari}`, o.m.menyusul, o.m.dikecualikan]) }))] })} /></div>`;
 }
 
 // ================= KESANTRIAN (izin & pelanggaran) =================
 const dataKes = (list, rg) => list.map(s => { const pl = L.pelanggaranDalam(s.id, rg), iz = L.izinDalam(s.id, rg); return { s, pl, iz, poin: pl.poinRingan + pl.poinSB }; });
 function itemKes(d) {
   return [["Izin keluar", `${jml(d, o => o.iz.n)}`, `${d.filter(o => o.iz.n).length} santri`, null, "biru"], ["Terlambat kembali", `${jml(d, o => o.iz.telat)}`, "dari izin", null, jml(d, o => o.iz.telat) ? "merah" : "hijau"],
-    ["Pelanggaran ringan", `${jml(d, o => o.pl.ringan)}`, `alpa ${jml(d, o => o.pl.alpa)} · masbuq ${jml(d, o => o.pl.masbuq)}`, null, "emas"], ["Sedang / berat", `${jml(d, o => o.pl.sedang)} / ${jml(d, o => o.pl.berat)}`, "dari BAP", null, "merah"],
+    ["Pelanggaran ringan", `${jml(d, o => o.pl.ringan)}`, "dari BAP", null, "emas"], ["Sedang / berat", `${jml(d, o => o.pl.sedang)} / ${jml(d, o => o.pl.berat)}`, "dari BAP", null, "merah"],
     ["Total poin", `${jml(d, o => o.poin)}`, `${d.filter(o => o.poin).length} santri`, null, "merah"]];
 }
 export function RekapKesantrian({ pondok, aid }) {
@@ -201,17 +204,17 @@ export function RekapKesantrian({ pondok, aid }) {
           tanda=${o.pl.bap.map(b => b.pelanggaranNama)}
           kolom=${[["Izin", o.iz.n + (o.iz.telat ? ` (${o.iz.telat} telat)` : ""), o.iz.telat ? "merah" : ""], ["Ringan", o.pl.ringan, o.pl.ringan ? "emas" : ""], ["Sedang", o.pl.sedang, o.pl.sedang ? "merah" : ""], ["Berat", o.pl.berat, o.pl.berat ? "merah" : ""]]} />`)
         : html`<${Card}><${Empty} t="Alhamdulillah, tidak ada izin maupun pelanggaran pada periode ini." icon="check" /></${Card}>`}
-      <${Hint}>Pelanggaran ringan berasal dari MOTD (alpa/masbuq) dan sifatnya teguran. Sedang dan berat berasal dari BAP Kesantrian.</${Hint}>
-      <${Unduhan} judul=${judul} rg=${p.rg} ttd="kesantrian" tabel=${() => ({ catatan: "Pelanggaran ringan dari MOTD (alpa/masbuq). Sedang dan berat dari BAP Kesantrian.",
+      <${Hint}>Semua pelanggaran (ringan, sedang, berat) berasal dari BAP Kesantrian. Izin dihitung dari tanggal keluar.</${Hint}>
+      <${Unduhan} judul=${judul} rg=${p.rg} ttd="kesantrian" tabel=${() => ({ catatan: "Semua pelanggaran berasal dari BAP Kesantrian.",
         bagian: [{ judul: "Per asrama", kol: ["Asrama", "Pondok", "Santri", "Izin", "Terlambat", "Ringan", "Sedang", "Berat", "Total poin"], rows: asr.map(a => { const dd = dataKes(L.santriAsrama(a.id), p.rg);
           return [a.nama, a.pondok, dd.length, jml(dd, o => o.iz.n), jml(dd, o => o.iz.telat), jml(dd, o => o.pl.ringan), jml(dd, o => o.pl.sedang), jml(dd, o => o.pl.berat), jml(dd, o => o.poin)]; }) },
-          { judul: "Santri yang tercatat", kol: ["Santri", "Kelas", "Asrama", "Izin", "Terlambat", "Alpa", "Masbuq", "Sedang", "Berat", "Poin", "Pelanggaran BAP"],
-            rows: ada.map(o => [o.s.nama, o.s.kelas, L.asramaAman(o.s.asrama).nama, o.iz.n, o.iz.telat, o.pl.alpa, o.pl.masbuq, o.pl.sedang, o.pl.berat, o.poin, o.pl.bap.map(b => b.pelanggaranNama).join("; ") || "—"]) }] })} /></div>`;
+          { judul: "Santri yang tercatat", kol: ["Santri", "Kelas", "Asrama", "Izin", "Terlambat", "Ringan", "Sedang", "Berat", "Poin", "Pelanggaran BAP"],
+            rows: ada.map(o => [o.s.nama, o.s.kelas, L.asramaAman(o.s.asrama).nama, o.iz.n, o.iz.telat, o.pl.ringan, o.pl.sedang, o.pl.berat, o.poin, o.pl.bap.map(b => b.pelanggaranNama).join("; ") || "—"]) }] })} /></div>`;
 }
 
 // Pintu masuk lama nav.go("rekap", { modul }) → rekap modul yang sesuai
 export function RekapPintu({ modul, tab }) {
-  const m = modul || { tahfidz: "tahfidz", halaqah: "tahfidz", mapel: "mapel", kbm: "kurikulum", mut: "asrama", motd: "asrama", pelanggaran: "kesantrian" }[tab] || "tahfidz";
+  const m = modul || { tahfidz: "tahfidz", halaqah: "tahfidz", mapel: "mapel", kbm: "kurikulum", mut: "asrama", pelanggaran: "kesantrian" }[tab] || "tahfidz";
   if (m === "tahfidz") return html`<${RekapTahfidz} />`;
   if (m === "mapel" || m === "kurikulum") return html`<${RekapMapel} modul=${m} />`;
   if (m === "asrama") return html`<${RekapAsrama} />`;

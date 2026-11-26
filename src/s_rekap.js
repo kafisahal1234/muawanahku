@@ -189,8 +189,8 @@ export function Kalender() {
   return html`<${SubHeader} title="Kalender Akademik" sub=${`Tahun pelajaran ${st.tp}`} />
     <div class="wrap">
     <${Card} title="Hari aktif">
-      <div class="kv"><span>KBM mapel</span><b>Senin – Jumat</b></div><div class="kv"><span>Halaqah</span><b>Senin – Sabtu (Sabtu Shubuh)</b></div>
-      <div class="kv"><span>MOTD & mutaba'ah</span><b>Setiap hari di pondok</b></div><div class="kv"><span>Tidak dihitung</span><b>Ahad, libur nasional, libur pondok</b></div></${Card}>
+      <div class="kv"><span>KBM mapel</span><b>Senin – Jumat</b></div><div class="kv"><span>Halaqah</span><b>Senin – Sabtu (Sabtu Shubuh, khusus manzil)</b></div>
+      <div class="kv"><span>Mutaba'ah</span><b>Senin – Jumat</b></div><div class="kv"><span>Tidak dihitung</span><b>Ahad, libur nasional, libur pondok</b></div></${Card}>
     <${Card} title="Semester & mulai pakai" right=${bisa && !f ? html`<button class="link" onClick=${() => setF({ ...st })}>Ubah</button>` : null}>
       ${f ? html`<div class="btn-row">${fld("ganjilMulai", "Ganjil mulai")}${fld("ganjilMid", "Akhir mid ganjil")}</div><div class="btn-row">${fld("ganjilSelesai", "Ganjil selesai")}${fld("genapMulai", "Genap mulai")}</div>
           <div class="btn-row">${fld("genapMid", "Akhir mid genap")}${fld("genapSelesai", "Genap selesai")}</div>${fld("mulaiPakai", "Mulai pakai aplikasi")}

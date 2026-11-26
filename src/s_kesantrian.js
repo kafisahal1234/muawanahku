@@ -34,7 +34,7 @@ export function Kesantrian({ pondok }) {
       <${Tile} icon="moon" label="Rekap Asrama" color="indigo" onClick=${() => nav.go("rekapAsrama")} />
       <${Tile} icon="calendar" label="Rekap Izin" color="teal" onClick=${() => nav.go("rekapIzin", { pondok: p })} />
       <${Tile} icon="alert" label="Rekap Pelanggaran" color="pink" onClick=${() => nav.go("rekapPelanggaran", { pondok: p })} />
-      <${Tile} icon="clipboard" label="Khidmah Musyrif" color="emerald" onClick=${() => nav.go("rekapKhidmah", { pondok: p || "all" })} />
+      <${Tile} icon="clipboard" label="Rekap Ceklis Musyrif" color="emerald" onClick=${() => nav.go("rekapKhidmah", { pondok: p || "all" })} />
 </div></${Card}>
     <${Card} title="Santri sedang izin" right=${html`<${Pill} t=${iz.length + " santri"} tone="gold" />`}>${iz.length ? html`<div class="list">${iz.map(i => { const s = L.santriAman(i.santri);
       return html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${i.jenis} · kembali ${L.fmtDT(i.kembali)}`} right=${html`<${Pill} t=${L.terlambat(i) ? "Terlambat" : i.jenis === "Keluar" ? "Keluar" : i.jenis === "Skorsing" ? "Skorsing" : "Di rumah"} tone=${L.terlambat(i) || i.jenis === "Skorsing" ? "red" : "gold"} />`} onClick=${() => nav.go("izinView", { id: i.id })} />`; })}</div>`
@@ -170,7 +170,7 @@ Jawab JSON: {"kronologi":"","pelanggaran_id":null}` });
       ${s ? html`<p class="small mt8">${L.asramaAman(s.asrama).nama} · total poin saat ini ${ps.total}</p>` : null}</${Card}>
     <${Card} title="Kejadian"><div class="btn-row"><${Field} label="Tanggal"><input type="date" class="in" value=${f.tanggal} onInput=${e => set("tanggal", e.target.value)} /></${Field}>
       <${Field} label="Tempat"><input class="in" value=${f.tempat} placeholder="Misal: kamar 3" onInput=${e => set("tempat", e.target.value)} /></${Field}></div>
-      <${Field} label="Jenis pelanggaran" hint="BAP untuk pelanggaran sedang sampai berat. Pelanggaran ringan (alpa/masbuq) dicatat lewat MOTD."><select class="in" value=${f.pel} onChange=${e => set("pel", e.target.value)}><option value="">Pilih pelanggaran</option>
+      <${Field} label="Jenis pelanggaran" hint="Catat pelanggaran ringan, sedang, maupun berat di sini."><select class="in" value=${f.pel} onChange=${e => set("pel", e.target.value)}><option value="">Pilih pelanggaran</option>
         ${DATA.pelanggaran.filter(x => x.tingkat !== "Ringan").map(x => html`<option value=${x.id}>${x.nama} · ${x.tingkat} · ${x.poin} poin</option>`)}</select></${Field}>
       <${Field} label="Kronologi"><textarea class="in" value=${f.kronologi} onInput=${e => set("kronologi", e.target.value)} placeholder="Ceritakan singkat kejadiannya"></textarea></${Field}>
       <${AiBtn} kecil label=${f.pel ? "Rapikan kronologi" : "Rapikan & sarankan jenis pelanggaran"} busy=${aiBusy} onClick=${() => (f.kronologi.trim().length > 10 ? rapikan() : toast("Tulis kronologinya dulu", "err"))} />
@@ -225,7 +225,7 @@ export function RekapPelanggaran({ pondok }) {
   useApp();
   const rows = L.santriList().filter(s => !pondok || L.pondokOfSantri(s) === pondok).map(s => ({ s, p: L.poinSantri(s.id) })).filter(x => x.p.total).sort((a, b) => b.p.total - a.p.total);
   const bap = all("bap").filter(b => inPondok(pondok, b.santri)).sort((a, b) => b.ts - a.ts).slice(0, 15);
-  return html`<${SubHeader} title="Rekap Pelanggaran" sub="BAP dan catatan MOTD otomatis" /><div class="wrap">
+  return html`<${SubHeader} title="Rekap Pelanggaran" sub="Dari BAP Kesantrian" /><div class="wrap">
     <${Section} t="Poin tertinggi" /><${Card}>${rows.length ? html`<div class="list">${rows.map(({ s, p }) => html`<${Row} name=${s.nama} sub=${`BAP ${p.bap} poin · MOTD ${p.motd} poin`} right=${html`<${Pill} t=${p.total + " poin"} tone="red" />`} onClick=${() => nav.go("santri", { sid: s.id, tab: "catatan" })} />`)}</div>` : html`<${Empty} t="Belum ada pelanggaran tercatat." icon="check" />`}</${Card}>
     <${Section} t="BAP terbaru" /><${Card}>${bap.length ? html`<div class="list">${bap.map(b => html`<${Row} name=${L.santriAman(b.santri).nama} sub=${`${b.pelanggaranNama} · ${L.fmtTgl(b.tanggal)}`} right=${html`<${Pill} t=${b.poin + " poin"} tone="red" />`} onClick=${() => nav.go("bapView", { id: b.id })} />`)}</div>` : html`<${Empty} t="Belum ada BAP." />`}</${Card}></div>`;
 }

@@ -280,7 +280,14 @@ export function capaianSemester(s) {
   return { baris: n, juzBaru, setor: zi, h };
 }
 // Capaian juz semester ini (hafalan baru sejak data awal semester), dalam satuan juz
-export const targetSemester = () => Number(((S.data.target || {}).semester || {}).juz) || 2;
+// Target hafalan baru: 2,5 juz/semester (5 bulan aktif × 4 pekan) = 10 hal/bulan = 2,5 hal/pekan ≈ 1 hal tiap 2 hari.
+// Pengaturan lama (tanpa v2) diabaikan agar aturan baru berlaku.
+export const BULAN_AKTIF = 5, PEKAN_PER_BULAN = 4;
+export const targetSemester = () => { const t = (S.data.target || {}).semester; return (t && t.v2 && Number(t.juz)) || 2.5; };
+// target halaman per periode (berdasarkan target semester)
+export function targetHal(jenis) { const halSem = targetSemester() * 20, bln = halSem / BULAN_AKTIF, pk = bln / PEKAN_PER_BULAN;
+  return { harian: pk / 5, pekanan: pk, bulanan: bln, mid: halSem / 2, semester: halSem, tahunan: halSem * 2 }[jenis] ?? pk; }
+export const fmtHal = h => { const r = Math.round(h * 10) / 10; return r >= 20 ? `${(r / 20).toLocaleString("id-ID", { maximumFractionDigits: 2 })} juz` : `${r.toLocaleString("id-ID")} hal`; };
 export function capaianJuz(s) {
   const aw = dataAwal(s), h = hafalan(s), prog = (sel, akt, br) => j => (sel.includes(j) ? 1 : j === akt ? Math.min(1, (br || 0) / juzLines(j)) : 0);
   const a = prog(aw.selesai || [], aw.aktif, aw.baris), b = prog(h.selesai, h.khatam ? null : h.aktif, h.baris);
@@ -367,7 +374,10 @@ export const WAKTU = [["tahajud", "Tahajud"], ["subuh", "Shubuh"], ["apel", "Ape
 export const JAMAAH = ["subuh", "dzuhur", "ashar", "maghrib", "isya"];
 export const motdKey = (aid, tgl, w) => `${aid}_${tgl}_${w}`;
 export function poinMotd(waktu, st) { if (st === "A") return JAMAAH.includes(waktu) ? 3 : 2; if (st === "M") return 1; return 0; }
+// MOTD dinonaktifkan (menu dihapus): data lama tidak lagi dihitung sebagai pelanggaran/poin
+export const MOTD_AKTIF = false;
 export function motdCatatan(sid) {
+  if (!MOTD_AKTIF) return [];
   const out = [];
   all("motd").forEach(d => { const v = d.status && d.status[sid]; if (v === "A" || v === "M") out.push({ tanggal: d.tanggal, waktu: d.waktu, st: v, poin: poinMotd(d.waktu, v), ts: d.ts }); });
   return out.sort((a, b) => (b.tanggal + b.waktu).localeCompare(a.tanggal + a.waktu));
@@ -419,7 +429,7 @@ export function mutAuto(s, tgl) {
   // butir yang terisi otomatis dari MOTD/absen halaqah
   const res = {};
   Object.entries(DATA.auto).forEach(([idx, [src, key]]) => {
-    if (src === "motd") { const d = get("motd", motdKey(s.asrama, tgl, key)); res[idx] = d ? (d.status[s.id] === "H" || d.status[s.id] === "M") : null; }
+    if (src === "motd") { if (!MOTD_AKTIF) return; const d = get("motd", motdKey(s.asrama, tgl, key)); res[idx] = d ? (d.status[s.id] === "H" || d.status[s.id] === "M") : null; }
     else { const d = get("absenHalaqah", halaqahKey(s.halaqah, tgl, key)); res[idx] = d ? d.status[s.id] === "H" : null; }
   });
   return res;

@@ -30,10 +30,11 @@ export function RekapHafalanBulan() {
   const grup = kelompok();
   if (!grup.length) return html`<${SubHeader} title="Perolehan Hafalan" /><div class="wrap"><${Card}><${Empty} t="Akun ini belum memegang halaqah atau asrama." icon="bookopen" /></${Card}></div>`;
   const data = grup.map(g => ({ ...g, rows: g.list.map(s => ({ s, p: perolehanBulan(s.id, bulan) })).sort((x, y) => y.p.baris - x.p.baris) }));
+  const tgB = Math.round(L.targetHal("bulanan") * 15), tgT = L.fmtHal(L.targetHal("bulanan"));
   const semuaRows = data.flatMap(g => g.rows), tot = semuaRows.reduce((n, x) => n + x.p.baris, 0), aktif = semuaRows.filter(x => x.p.baris > 0).length;
   const unduh = () => unduhPdf(`Perolehan Hafalan ${namaBulan(bulan)}`, () => tabelKePdf({
     judul: "Rekap Perolehan Hafalan", sub: `${namaBulan(bulan)} · ${data.length > 2 ? data.length + " kelompok · " + semuaRows.length + " santri" : data.map(g => g.nama).join(", ")}`,
-    catatan: "Perolehan = ziyadah yang lulus dalam bulan ini. 15 baris = 1 halaman, 20 halaman = 1 juz (300 baris).",
+    catatan: `Target ${L.fmtHal(L.targetHal("bulanan"))} per bulan (${L.targetSemester().toLocaleString("id-ID")} juz per semester). Perolehan = ziyadah yang lulus dalam bulan ini. 15 baris = 1 halaman, 20 halaman = 1 juz.`,
     oleh: `Dicetak oleh ${me().nama}, ${L.fmtTgl(L.today())} · MuawanahKu`, ttd: ttdUntukPdf((me().roles.includes("musyrif") && !me().roles.some(r => ["guru_tahfidz", "wadir_tahfidz", "mudir"].includes(r))) ? "asrama" : "tahfidz"),
     bagian: data.map(g => ({ judul: `${g.nama} · ${g.rows.length} santri`, kol: ["No", "Nama santri", "Baris", "Halaman", "Juz", "Setara", "Hari setor", "Murojaah", "Tasmi' lulus", "Total hafalan"],
       rows: g.rows.map(({ s, p }, i) => [i + 1, s.nama, p.baris, dk(p.hal, 1), dk(p.juz, 2), L.fmtBaris(p.baris), p.hari, p.muro, p.tasmi.length ? "Juz " + p.tasmi.join(", ") : "—", L.fmtJumlah(L.hafalan(s))]) })),
@@ -41,10 +42,10 @@ export function RekapHafalanBulan() {
   return html`<${SubHeader} title="Perolehan Hafalan" sub="Rekap per bulan · baris, halaman, juz">
       <select class="in rk-bulan" value=${bulan} onChange=${e => setBulan(e.target.value)} aria-label="Pilih bulan">${bulanList.map(b => html`<option value=${b}>${namaBulan(b)}</option>`)}</select></${SubHeader}>
     <div class="wrap">
-      <${Card}><div class="stats"><${Stat} label="Total baris" value=${tot} /><${Stat} label="Setara" value=${tot ? L.fmtBaris(tot) : "—"} tone="blue" /><${Stat} label="Santri setor" value=${`${aktif}/${semuaRows.length}`} tone="gold" /></div></${Card}>
+      <${Card}><div class="stats"><${Stat} label="Total baris" value=${tot} /><${Stat} label="Setara" value=${tot ? L.fmtBaris(tot) : "—"} tone="blue" /><${Stat} label=${`Capai target ${tgT}`} value=${`${semuaRows.filter(x => x.p.baris >= tgB).length}/${semuaRows.length}`} tone="gold" /></div></${Card}>
       ${data.map(g => html`<${Card} title=${g.nama} right=${html`<small>${g.rows.length} santri</small>`}><div class="list">${g.rows.map(({ s, p }) => html`<${Row} name=${s.nama}
           sub=${p.baris ? `${p.baris} baris · ${dk(p.hal, 1)} hal · ${dk(p.juz, 2)} juz · ${p.hari} hari setor` : "Belum ada ziyadah bulan ini"}
-          right=${html`<${Pill} t=${p.baris ? L.fmtBaris(p.baris) : "0"} tone=${p.baris >= 300 ? "green" : p.baris ? "blue" : "muted"} />`} onClick=${() => nav.go("santri", { sid: s.id })} />`)}</div></${Card}>`)}
-      <${Hint}>Perolehan dihitung dari ziyadah yang lulus pada ${namaBulan(bulan)}. 15 baris = 1 halaman, 20 halaman = 1 juz.</${Hint}>
+          right=${html`<${Pill} t=${p.baris ? L.fmtBaris(p.baris) + (p.baris >= tgB ? " ✓" : "") : "0"} tone=${p.baris >= tgB ? "green" : p.baris >= tgB / 2 ? "gold" : p.baris ? "red" : "muted"} />`} onClick=${() => nav.go("santri", { sid: s.id })} />`)}</div></${Card}>`)}
+      <${Hint}>Target ${tgT} per bulan (${L.targetSemester().toLocaleString("id-ID")} juz per semester, ${L.BULAN_AKTIF} bulan aktif). Perolehan dihitung dari ziyadah yang lulus pada ${namaBulan(bulan)}. 15 baris = 1 halaman, 20 halaman = 1 juz.</${Hint}>
       <div class="sticky-act"><${Btn} icon="download" onClick=${unduh}>Unduh PDF ${namaBulan(bulan)}</${Btn}></div></div>`;
 }

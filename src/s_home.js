@@ -97,9 +97,11 @@ function tilesFor(st) {
   if (r.includes("mudir")) {
     add("bookopen", "Tahfidz", "emerald", () => nav.go("pengelolaan", { ro: true })); add("calendar", "Kurikulum", "orange", () => nav.go("kurikulum", { ro: true }));
     add("shield", "Kesantrian", "coral", () => nav.go("kesantrian", { pondok: "all" })); add("award", "Rapor", "gold", () => nav.go("raporList"));
+    add("clipboard", "Ceklis Musyrif", "emerald", () => nav.go("rekapKhidmah", { pondok: "all" }));
   }
   if (r.includes("wadir_tahfidz")) { add("sliders", "Pengelolaan Tahfidz", "emerald", () => nav.go("pengelolaan")); add("award", "Rapor", "gold", () => nav.go("raporList")); }
   if (r.includes("wadir_kurikulum")) add("calendar", "Kurikulum", "orange", () => nav.go("kurikulum"));
+  if (r.includes("wadir_kesantrian") && !r.includes("mudir")) add("clipboard", "Rekap Ceklis Musyrif", "emerald", () => nav.go("rekapKhidmah", { pondok: st.pondok }));
   if (r.includes("wadir_kesantrian")) add("shield", "Kesantrian", "coral", () => nav.go("kesantrian"), L.izinAktif().filter(i => L.pondokOfSantri(L.santriById(i.santri)) === st.pondok).length || null);
   if (r.includes("admin")) add("grid", "Data Master", "slate", () => nav.go("dataMaster"));
   if (r.includes("guru_tahfidz") && hq) {
@@ -108,7 +110,7 @@ function tilesFor(st) {
   }
   if (r.includes("musyrif") && a) {
     add("checksq", "Mutaba'ah", "teal", () => nav.go("mutabaah"));
-    add("clipboard", "Khidmah Harian", "emerald", () => nav.go("khidmah"), (() => { const k = KH.hasilKhidmah(st.id, L.today()); return L.hariAktif(L.today(), "asrama") && k.pct < 100 ? k.units.length - k.selesai.size : null; })());
+    add("clipboard", "Ceklis Musyrif", "emerald", () => nav.go("khidmah"), (() => { const k = KH.hasilKhidmah(st.id, L.today()); return L.hariAktif(L.today(), "asrama") && k.pct < 100 ? k.units.length - k.selesai.size : null; })());
     const ids = new Set(L.santriAsrama(a.id).map(s => s.id));
     add("home", "Asrama Saya", "coral", () => nav.go("asramaSaya"), (!r.includes("wadir_kesantrian") && L.izinAktif().filter(i => ids.has(i.santri)).length) || null);
     add("award", "Rapor", "gold", () => nav.go("raporList"));
@@ -123,7 +125,7 @@ function Summary({ st }) {
   if (r.includes("mudir")) {
     const docs = all("absenHalaqah").filter(d => d.tanggal === tgl); let h = 0, n = 0; docs.forEach(d => Object.values(d.status).forEach(v => { n++; if (v === "H") h++; }));
     const avg = L.santriList().reduce((x, s) => x + L.hafalan(s).jumlah, 0) / L.santriList().length;
-    const wk = L.weekStart(tgl), pel = all("bap").filter(b => b.tanggal >= wk).length + all("motd").filter(d => d.tanggal >= wk).reduce((x, d) => x + Object.values(d.status).filter(v => v === "A" || v === "M").length, 0);
+    const wk = L.weekStart(tgl), pel = all("bap").filter(b => b.tanggal >= wk).length;
     return html`<${Card} title="Ringkasan pondok" right=${html`<small>${L.fmtShort(tgl)}</small>`}><div class="stats"><${Stat} label="Hadir halaqah" value=${n ? Math.round((h / n) * 100) + "%" : "—"} sub="hari ini" /><${Stat} label="Rata hafalan" value=${avg.toFixed(1)} sub="juz" /><${Stat} label="Pelanggaran" value=${pel} sub="pekan ini" tone=${pel ? "red" : ""} /></div></${Card}>`;
   }
   if (r.includes("wadir_tahfidz")) {

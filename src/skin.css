@@ -847,3 +847,5 @@ html.pad-on,html.pad-on body{overscroll-behavior:none}
 .kh-chips button.auto.on{background:#E3F3EA;color:#0B6B3F;border-color:#9FD3B6}
 .kh-chips button:disabled:not(.on){opacity:.6}
 .check.auto:not(.on) .box{background:#F1F4F2!important;border:2px dashed #B8C7BE!important}
+.rx-target{display:flex;align-items:center;gap:8px;background:#FFF7E6;border:1px solid #F2D79B;border-radius:12px;padding:8px 10px;margin:0 0 10px;color:#6B4A00;font-size:12.5px;font-weight:600}
+.rx-target span{flex:1}.rx-target b{color:#8A5A00;font-weight:900}.rx-target em{flex:none;font-style:normal;font-weight:800;color:#0B7A45}

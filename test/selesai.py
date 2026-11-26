@@ -61,21 +61,17 @@ async def main():
         # ---- Asrama Saya: MOTD + Mutabaah
         await tile(pg, "Asrama Saya"); notes.append(("asrama tiles", [x.split("\n")[0] for x in await pg.locator(".tile").all_inner_texts()]))
         await pg.screenshot(path=f"{O}/d3_asrama.png")
-        await tile(pg, "Absen MOTD")
-        mb = pg.locator(".sticky-act button").first; notes.append(("motd btn", await mb.inner_text()))
-        await mb.click(); await pg.wait_for_timeout(800)
-        notes.append(("motd selesai", await pg.locator(".selesai-card").count())); await pg.screenshot(path=f"{O}/d4_motd_selesai.png")
-        await pg.go_back(); await pg.wait_for_timeout(500)
+        notes.append(("no MOTD tile", await pg.locator(".tile:has-text('MOTD')").count()))
         await tile(pg, "Mutaba'ah"); await pg.locator(".sticky-act button").first.click(); await pg.wait_for_timeout(800)
         notes.append(("mut after save sub", (await pg.locator(".sub-h small, .sub-t p, .sub-t small").first.inner_text())[:80]))
         await pg.go_back(); await pg.wait_for_timeout(500)
         await tile(pg, "Rekap Asrama"); notes.append(("rekap asrama", await h1(pg), await pg.locator(".rk-tabs button").all_inner_texts())); await pg.go_back(); await pg.wait_for_timeout(500)
         # ---- Riwayat & Koreksi -> ubah MOTD
         await tile(pg, "Riwayat & Koreksi"); await pg.wait_for_timeout(300)
-        r = pg.locator(".row:has-text('MOTD')").first
+        r = pg.locator(".row:has-text(\"Mutaba'ah\")").first
         if await r.count():
             await r.click(); await pg.wait_for_timeout(300); await pg.locator(".sheet button:has-text('Ubah')").click(); await pg.wait_for_timeout(700)
-            notes.append(("koreksi motd title", await h1(pg), await pg.locator(".selesai-card").count()))
+            notes.append(("koreksi mut title", await h1(pg), await pg.locator(".selesai-card").count()))
             await pg.locator(".sticky-act button").first.click(); await pg.wait_for_timeout(800); notes.append(("after koreksi back to", await h1(pg)))
         else: notes.append(("riwayat rows", await pg.locator(".row").all_inner_texts()))
         # ---- Profil: foto tetap ada setelah ubah nama; foto bisa diperbesar

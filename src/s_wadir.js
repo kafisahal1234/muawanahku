@@ -60,11 +60,13 @@ function EditAwal({ sid, onClose }) {
 export function TargetHafalan() {
   useApp();
   const [v, setV] = useState(L.targetSemester());
-  const save = async () => { await put("target", "semester", { juz: Number(v) || 1 }); toast("Target hafalan disimpan"); nav.back(); };
+  const save = async () => { await put("target", "semester", { juz: Number(v) || 2.5, v2: true }); toast("Target hafalan disimpan"); nav.back(); };
+  const hs = (Number(v) || 2.5) * 20, bl = hs / L.BULAN_AKTIF, pk = bl / L.PEKAN_PER_BULAN, f = x => (Math.round(x * 10) / 10).toLocaleString("id-ID");
   const cs = L.santriList().map(s => L.capaianJuz(s)), ok = cs.filter(c => c.tercapai).length;
   return html`<${SubHeader} title="Target Hafalan" sub="Hafalan baru per semester" /><div class="wrap">
     <${Hint}>Target dihitung dari hafalan BARU sejak awal semester (dari data awal hafalan), bukan total semua hafalan. Berlaku untuk semua santri.</${Hint}>
-    <${Card}><${Field} label="Target hafalan baru per semester (juz)"><${Stepper} value=${v} onChange=${setV} min=${1} max=${10} label="target juz per semester" /></${Field}>
+    <${Card}><${Field} label="Target hafalan baru per semester (juz)"><${Stepper} value=${v} onChange=${x => setV(Math.round(x * 2) / 2)} min=${0.5} max=${10} step=${0.5} label="target juz per semester" /></${Field}>
+      <div class="kv"><span>Per bulan (${L.BULAN_AKTIF} bulan aktif)</span><b>${f(bl)} halaman</b></div><div class="kv"><span>Per pekan</span><b>${f(pk)} halaman</b></div><div class="kv"><span>Per hari halaqah</span><b>±1 halaman tiap ${f(5 / pk)} hari</b></div>
       <div class="stats two"><${Stat} label="Sudah mencapai" value=${ok} sub="santri" /><${Stat} label="Rata capaian" value=${(cs.reduce((x, c) => x + c.juz, 0) / Math.max(1, cs.length)).toFixed(2)} sub="juz baru" /></div></${Card}>
     <${Btn} onClick=${save} icon="check">Simpan target</${Btn}></div>`;
 }
