@@ -1,3 +1,4 @@
+import { TIM_IT } from "./libur.js";
 // Fitur sistem standar Google Play & App Store: kata sandi, hapus akun, privasi, bantuan, tentang, unduhan
 import { useState, useEffect } from "preact/hooks";
 import { html, nav, useApp, Icon, Card, SubHeader, Row, Pill, Btn, Empty, Field, Confirm, Hint, Section, PassInput, Sheet } from "./ui.js";
@@ -119,12 +120,12 @@ export function Privasi() {
       <h4>Izin perangkat</h4><p>Aplikasi hanya meminta akses kamera atau galeri saat Anda mengunggah foto (bukti, profil, tanda tangan, atau lampiran Asisten AI), dan mikrofon hanya saat Anda menekan tombol bicara di Asisten AI. Tidak ada akses lokasi atau kontak.</p>
       <h4>Keamanan dan penyimpanan</h4><p>Setiap akun dilindungi kata sandi dan dibatasi sesuai perannya. Kata sandi yang diubah disimpan dalam bentuk acak (hash), bukan teks asli. Data disimpan selama santri belajar di pondok dan sesuai ketentuan arsip pondok.</p>
       <h4>Hak Anda</h4><ul><li>Melihat data sesuai peran Anda.</li><li>Meminta perbaikan data melalui Admin pondok.</li><li>Akun dibuat dan dihapus oleh Admin pondok. Akun wali otomatis terhapus saat data santri dihapus. Untuk penghapusan akun atau data, hubungi Admin pondok.</li></ul>
-      <h4>Kontak</h4><p>Pertanyaan tentang privasi dapat disampaikan kepada Admin resmi pondok melalui WhatsApp di menu Akun → Bantuan, atau langsung ke kantor pondok.</p>
+      <h4>Kontak</h4><p>Pertanyaan tentang privasi dapat disampaikan kepada Tim IT Pondok melalui WhatsApp di menu Akun → Bantuan, atau langsung ke kantor pondok.</p>
       <p class="small">Draf kebijakan ini perlu ditinjau pondok sebelum aplikasi diterbitkan.</p></div></${Card}></div>`;
 }
 
 const FAQ = [
-  ["Lupa kata sandi?", "Hubungi Admin resmi pondok lewat tombol WhatsApp di atas. Admin akan mengatur ulang kata sandi akun Anda."],
+  ["Lupa kata sandi?", "Minta Admin pondok mengatur ulang kata sandi (kembali ke nama panggilan + 123), lalu ganti sendiri di Akun → Keamanan. Bila ada kendala, chat Tim IT Pondok lewat tombol WhatsApp di atas."],
   ["Bagaimana menyimpan tanda tangan?", "Mudir, Wadir, dan wali asrama: buka Akun → Tanda Tangan. Tulis langsung di layar (layar penuh, bisa dimiringkan) atau foto tanda tangan di kertas putih; latar kertas dihapus otomatis. Tanda tangan langsung terpasang di surat, rapor, dan rekap PDF."],
   ["Kenapa ziyadah santri terkunci?", "Ziyadah terkunci bila santri belum lulus tasmi' juz yang selesai, belum lulus manzil pekan lalu, atau sudah setor ziyadah hari ini."],
   ["Bagaimana menghitung nilai setoran?", "Nilai dimulai dari 100 dan berkurang 3 untuk setiap kesalahan. KKM 70. Di bawah 70, setoran diulang hari itu juga."],
@@ -160,27 +161,27 @@ function KontakAdmin() {
   useApp();
   const m = me(), bisaAtur = !!m && m.roles.some(r => PIMPINAN.includes(r)), st = L.setelan(), no = st.waPondok, ikon = st.waIkon, [ed, setEd] = useState(false), [v, setV] = useState(""), [ik, setIk] = useState(null);
   const siapa = m ? `${m.nama} (${m.roles.map(r => L.ROLE_LABEL[r]).join(", ")})` : nav.user && nav.user.kind === "wali" ? `wali dari ${L.santriAman(nav.user.id).nama}` : "";
-  const teks = `Assalamu'alaikum, Admin Kampung Qur'an Al Muawanah. Saya ${siapa} ingin bertanya tentang aplikasi MuawanahQu: `, link = L.waLink(no, teks);
+  const teks = `Assalamu'alaikum, ${TIM_IT.label} MuawanahQu. Saya ${siapa} ingin bertanya tentang aplikasi MuawanahQu: `, link = L.waLink(no, teks);
   const buka = () => { setV(no ? "0" + L.waNomor(no).slice(2) : ""); setIk(ikon || null); setEd(true); };
-  const belum = () => (bisaAtur ? buka() : toast("Nomor WhatsApp resmi pondok belum diatur. Hubungi kantor pondok.", "err"));
+  const belum = () => (bisaAtur ? buka() : toast("Nomor WhatsApp Tim IT Pondok belum diatur. Hubungi kantor pondok.", "err"));
   const pilihIkon = async e => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return; try { setIk(await ikonDariBerkas(f)); } catch (x) { toast(x.message, "err"); } };
   const simpan = async () => {
     if (v.trim() && !L.waNomor(v)) return toast("Nomor belum benar. Contoh: 0812 3456 7890", "err");
     const lama = (S.data.kalender || {}).setelan || {};
-    if (await put("kalender", "setelan", { ...lama, waPondok: L.waNomor(v), waIkon: ik || "" })) { toast(v.trim() ? "Kontak WhatsApp pondok tersimpan" : "Nomor WhatsApp pondok dikosongkan"); setEd(false); }
+    if (await put("kalender", "setelan", { ...lama, waPondok: L.waNomor(v), waIkon: ik || "" })) { toast(v.trim() ? "Kontak WhatsApp Tim IT tersimpan" : "Nomor WhatsApp Tim IT dikosongkan"); setEd(false); }
   };
   const ic = html`<span class=${"wa-ic" + (ikon ? " resmi" : "")} aria-hidden="true">${ikon ? html`<img src=${ikon} alt="" />` : html`<${Icon} n="chat" s=${24} c="#fff" w=${2.2} />`}</span>`;
-  const kepala = html`${ic}<span class="wa-t"><b>Admin Resmi Pondok</b><small>${no ? nomorTampil(no) : "Nomor WhatsApp belum diatur"}</small></span><${Icon} n="right" s=${20} />`;
+  const kepala = html`${ic}<span class="wa-t"><b>${TIM_IT.label}</b><small>${TIM_IT.nama}${no ? " · " + nomorTampil(no) : " · nomor WhatsApp belum diatur"}</small></span><${Icon} n="right" s=${20} />`;
   return html`<div class="card wa-card">
-    ${no ? html`<a class="wa-h" href=${link} target="_blank" rel="noopener" aria-label="Chat WhatsApp Admin resmi pondok" onClick=${e => bukaWa(e, no, teks)}>${kepala}</a>`
+    ${no ? html`<a class="wa-h" href=${link} target="_blank" rel="noopener" aria-label="Chat WhatsApp Tim IT Pondok" onClick=${e => bukaWa(e, no, teks)}>${kepala}</a>`
       : html`<button type="button" class="wa-h" onClick=${belum}>${kepala}</button>`}
-    ${no ? html`<a class="wa-btn" href=${link} target="_blank" rel="noopener" onClick=${e => bukaWa(e, no, teks)}>${ikon ? html`<img src=${ikon} alt="" />` : null}Chat WhatsApp Admin</a>
-        <p class="small" style="margin:8px 0 0">Membuka aplikasi WhatsApp dengan pesan pembuka. Jam layanan mengikuti jam kerja kantor pondok.</p>`
-      : html`<p class="small" style="margin:10px 0 0">${bisaAtur ? "Ketuk untuk mengisi nomor WhatsApp resmi pondok. Setelah diisi, tombol chat langsung aktif di semua akun." : "Nomor WhatsApp resmi pondok belum diatur Admin. Silakan datang ke kantor pondok pada jam kerja."}</p>`}
-    ${bisaAtur && no ? html`<button type="button" class="link" style="min-height:40px;margin-top:4px" onClick=${buka}>Ubah kontak WhatsApp pondok</button>` : null}
-    <${Sheet} open=${ed} title="Kontak WhatsApp resmi pondok" onClose=${() => setEd(false)}>
-      <${Field} label="Nomor WhatsApp admin pondok"><input class="in" type="tel" inputmode="tel" placeholder="0812 3456 7890" value=${v} onInput=${e => setV(e.target.value)} /></${Field}>
-      <p class="small" style="margin:0 0 14px">Tampil di menu Bantuan semua akun (ustadz dan wali). Pakai nomor resmi pondok, bukan nomor pribadi.</p>
+    ${no ? html`<a class="wa-btn" href=${link} target="_blank" rel="noopener" onClick=${e => bukaWa(e, no, teks)}>${ikon ? html`<img src=${ikon} alt="" />` : null}Chat WhatsApp Tim IT</a>
+        <p class="small" style="margin:8px 0 0">Untuk pertanyaan & kendala aplikasi. Membuka WhatsApp dengan pesan pembuka.</p>`
+      : html`<p class="small" style="margin:10px 0 0">${bisaAtur ? "Ketuk untuk mengisi nomor WhatsApp Tim IT. Setelah diisi, tombol chat langsung aktif di semua akun." : "Nomor WhatsApp Tim IT belum diatur. Silakan datang ke kantor pondok pada jam kerja."}</p>`}
+    ${bisaAtur && no ? html`<button type="button" class="link" style="min-height:40px;margin-top:4px" onClick=${buka}>Ubah nomor WhatsApp Tim IT</button>` : null}
+    <${Sheet} open=${ed} title="Kontak WhatsApp Tim IT Pondok" onClose=${() => setEd(false)}>
+      <${Field} label="Nomor WhatsApp Tim IT (pembuat & pengelola aplikasi)"><input class="in" type="tel" inputmode="tel" placeholder="0812 3456 7890" value=${v} onInput=${e => setV(e.target.value)} /></${Field}>
+      <p class="small" style="margin:0 0 14px">Tampil di menu Bantuan semua akun (ustadz dan wali) sebagai kontak untuk pertanyaan & kendala aplikasi.</p>
       <${Field} label="Ikon tombol (logo resmi WhatsApp)"><div class="wa-ik-up">${ik ? html`<img src=${ik} alt="Ikon terpilih" />` : html`<span class="wa-ic"><${Icon} n="chat" s=${22} c="#fff" /></span>`}
         <label class="btn ghost" style="flex:1;margin:0">${ik ? "Ganti ikon" : "Unggah ikon"}<input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" hidden onChange=${pilihIkon} /></label>
         ${ik ? html`<button type="button" class="link" style="min-height:40px;color:#A8261C" onClick=${() => setIk(null)}>Hapus</button>` : null}</div></${Field}>
@@ -189,16 +190,16 @@ function KontakAdmin() {
 }
 export function Bantuan() {
   const [o, setO] = useState(-1);
-  return html`<${SubHeader} title="Bantuan" sub="Kontak admin & pertanyaan yang sering diajukan" />
+  return html`<${SubHeader} title="Bantuan" sub="Kontak Tim IT & pertanyaan yang sering diajukan" />
     <div class="wrap"><${KontakAdmin} /><${Section} t="Pertanyaan yang sering diajukan" /><${Card}>${FAQ.map(([q, a], i) => html`<button class="menu-row" aria-expanded=${o === i} onClick=${() => setO(o === i ? -1 : i)}><span><b style="font-weight:600">${q}</b>${o === i ? html`<p class="small" style="margin:6px 0 4px;line-height:1.5">${a}</p>` : null}</span><${Icon} n=${o === i ? "down" : "right"} s=${18} /></button>`)}</${Card}>
-    <${Card} title="Butuh bantuan lain?"><p class="small" style="margin:0">Hubungi Admin resmi pondok lewat tombol WhatsApp di atas, atau datang ke kantor pondok pada jam kerja.</p></${Card}></div>`;
+    <${Card} title="Butuh bantuan lain?"><p class="small" style="margin:0">Chat Tim IT Pondok lewat tombol WhatsApp di atas untuk kendala aplikasi. Urusan akun (reset sandi, data santri) ditangani Admin pondok.</p></${Card}></div>`;
 }
 
 export function Tentang() {
   return html`<${SubHeader} title="Tentang aplikasi" />
     <div class="wrap"><${Card}><div class="center" style="padding:8px 0 4px"><img src=${APP_LOGO} alt="Logo MuawanahQu" style="width:96px;height:72px;object-fit:contain" />
       <h3 style="margin:8px 0 2px;font-size:18px">Muawanah<span style="color:#E2A93B">Qu</span></h3><p class="small" style="margin:0">Versi ${VERSI}</p></div>
-      <div class="kv mt12"><span>Pemilik</span><b>Kampung Qur'an Al Muawanah</b></div><div class="kv"><span>Pengembang</span><b>Tim IT pondok</b></div>
+      <div class="kv mt12"><span>Pemilik</span><b>Kampung Qur'an Al Muawanah</b></div><div class="kv"><span>Dikembangkan oleh</span><b style="text-align:right">${TIM_IT.label}<br /><span style="font-weight:500">${TIM_IT.nama}</span></b></div>
       <div class="kv"><span>Penyimpanan data</span><b>${S.mode === "db" ? "Tersinkron antarperangkat" : "Perangkat ini"}</b></div></${Card}>
     <p class="fab-note">© 2026 Kampung Qur'an Al Muawanah</p></div>`;
 }

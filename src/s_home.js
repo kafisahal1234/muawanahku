@@ -1,3 +1,4 @@
+import { TIM_IT } from "./libur.js";
 import { useState } from "preact/hooks";
 import { html, nav, useApp, Icon, Tile, Card, Stat, Row, Pill, Btn, Empty, Field, Seg, Section, Sheet, SearchBox, Logo, Confirm, PassInput } from "./ui.js";
 import { fbSiap, fbLupa, pesanAuth } from "./cloud.js";
@@ -78,7 +79,7 @@ export function Login() {
       ${err ? html`<div class="note red"><${Icon} n="alert" s=${18} />${err}</div>` : null}
       <${Btn} type="submit" disabled=${busy}>${busy ? "Memeriksa…" : "Masuk"}</${Btn}>
       ${!ONLINE() ? html`<div class="mt8"><${Btn} kind="ghost" icon="users" onClick=${() => setDemo(true)}>Lihat semua akun demo</${Btn}></div>` : null}</form>
-    <p class="mode">MuawanahQu ${VERSI} ${S.mode === "db" ? (S.ready ? "· data tersinkron" : "· menyambungkan database…") : "· data tersimpan di perangkat ini"}${S.cloudErr ? html`<br /><small style="color:#B3261E">Database: ${S.cloudErr}</small>` : null}<br /><button class="link" style="min-height:44px" onClick=${() => setPriv(true)}>Kebijakan Privasi</button></p>
+    <p class="mode">MuawanahQu ${VERSI} ${S.mode === "db" ? (S.ready ? "· data tersinkron" : "· menyambungkan database…") : "· data tersimpan di perangkat ini"}${S.cloudErr ? html`<br /><small style="color:#B3261E">Database: ${S.cloudErr}</small>` : null}<br /><span class="mode-it">${TIM_IT.label} · ${TIM_IT.nama}</span><br /><button class="link" style="min-height:44px" onClick=${() => setPriv(true)}>Kebijakan Privasi</button></p>
     ${lupa ? html`<${LupaSandi} awal=${u} onClose=${() => setLupa(false)} />` : null}
     <${Sheet} open=${priv} title="Kebijakan Privasi" onClose=${() => setPriv(false)}><${PrivasiIsi} /></${Sheet}>
     <${Sheet} open=${demo} title="Akun demo" onClose=${() => setDemo(false)}>
