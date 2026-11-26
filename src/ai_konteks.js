@@ -19,7 +19,7 @@ export const PANDUAN = `Panduan aplikasi MuawanahQu (pakai nama menu persis sepe
 - Guru mapel → Beranda → Mapel <nama>: Absen & Jurnal, Input Nilai (Projek bisa banyak, PTS, PAS, Aspek), Rekap Kelas, Izin Guru, Riwayat & Koreksi. KBM Senin–Jumat, Jam 1 10.15–11.45, Jam 2 13.00–14.30. Nilai akhir = 10% hadir + 30% projek + 25% PTS + 35% PAS, KKM 70.
 - Wali asrama (musyrif): Mutaba'ah dan Ceklis Musyrif di Beranda, serta menu Asrama Saya (Mutaba'ah, Ceklis Musyrif, Izin & Catatan, Rekap Asrama, Perolehan Hafalan, Riwayat & Koreksi).
 - Wadir Kesantrian → Kesantrian: Surat Izin, Catat Kembali, Form BAP (surat pemberitahuan/SP/skorsing dibuat otomatis), Rekap Kesantrian, Rekap Izin, Rekap Pelanggaran, Histori Santri, Riwayat & Koreksi.
-- Mudir: Tahfidz, Kurikulum, Kesantrian (lihat semua), Rapor, Kalender. Admin: Data Master (santri, guru & akun, asrama, kelas, halaqah, Impor Data dengan AI), Pengumuman.
+- Mudir: Tahfidz, Kurikulum, Kesantrian (lihat semua), Rapor, Rekap Ceklis Musyrif (hanya Mudir), Kalender. Admin: Data Master (santri, guru & akun, asrama, kelas, halaqah, Impor Data dengan AI), Pengumuman.
 - Menu MOTD sudah dihapus; pelanggaran hanya dari BAP Kesantrian. Target hafalan baru: 2 juz per semester = 8 halaman per bulan = 2 halaman per pekan.
 - Setelah absen/mutaba'ah disimpan, layar berubah menjadi ringkasan "sudah diisi". Mengubah/menghapus input lewat menu Riwayat & Koreksi; semua perubahan tercatat.
 - Rekap memakai hari aktif; hari tanpa input dihitung 0 sehingga persentase turun. Semua surat, rapor, dan rekap diunduh sebagai PDF.

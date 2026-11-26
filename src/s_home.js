@@ -99,7 +99,6 @@ function tilesFor(st) {
   }
   if (r.includes("wadir_tahfidz")) { add("sliders", "Pengelolaan Tahfidz", "emerald", () => nav.go("pengelolaan")); add("award", "Rapor", "gold", () => nav.go("raporList")); }
   if (r.includes("wadir_kurikulum")) add("calendar", "Kurikulum", "orange", () => nav.go("kurikulum"));
-  if (r.includes("wadir_kesantrian") && !r.includes("mudir")) add("clipboard", "Rekap Ceklis Musyrif", "emerald", () => nav.go("rekapKhidmah", { pondok: st.pondok }));
   if (r.includes("wadir_kesantrian")) add("shield", "Kesantrian", "coral", () => nav.go("kesantrian"), L.izinAktif().filter(i => L.pondokOfSantri(L.santriById(i.santri)) === st.pondok).length || null);
   if (r.includes("admin")) add("grid", "Data Master", "slate", () => nav.go("dataMaster"));
   if (r.includes("guru_tahfidz") && hq) {
