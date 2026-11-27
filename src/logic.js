@@ -275,17 +275,19 @@ export function tahsinStatus(s) {
   const aw = tahsinAwal(s), rec = tahsinRiwayat(s.id);
   if (!aw && !rec.length) return null;
   const st = { tingkat: (aw && aw.tingkat) || "iqra", jilid: aw ? aw.jilid || null : 1, hal: (aw && aw.hal) || 0, siapUjian: !!(aw && aw.ujian), ket: (aw && aw.ket) || "", gagal: false, terakhir: null };
+  let lantai = 0; // jilid terendah setelah lulus ujian: bacaan jilid lama yang tercatat sesudahnya tidak menurunkan posisi
   for (const r of rec) {
     if (aw && aw.ts && r.ts && r.ts < aw.ts && aw.awalSem) continue; // posisi impor terbaru sudah mencakup catatan sebelumnya
     st.terakhir = r;
     if (r.jenis === "baca") {
       if (r.tingkat === "quran") { st.tingkat = "quran"; if (r.posisi) st.ket = r.posisi; continue; }
+      if (r.jilid && r.jilid < lantai) continue;
       st.tingkat = "iqra"; st.jilid = r.jilid || st.jilid;
       if (r.nilai !== "U") st.hal = Math.max(r.jilid === st.jilid ? st.hal : 0, Number(r.sampai) || 0);
       if (r.siap || st.hal >= IQRA_HAL) st.siapUjian = true;
     } else if (r.jenis === "ajukan") { if (!st.quran) { st.siapUjian = true; st.gagal = false; }
     } else if (r.jenis === "ujian") {
-      if (r.lulus) { st.gagal = false; st.siapUjian = false; if ((r.jilid || st.jilid) >= 6) { st.tingkat = "quran"; st.ket = ""; } else { st.jilid = (r.jilid || st.jilid) + 1; st.hal = 0; } }
+      if (r.lulus) { st.gagal = false; st.siapUjian = false; lantai = Math.max(lantai, (r.jilid || st.jilid) + 1); if ((r.jilid || st.jilid) >= 6) { st.tingkat = "quran"; st.ket = ""; } else { st.jilid = (r.jilid || st.jilid) + 1; st.hal = 0; } }
       else { st.gagal = true; st.siapUjian = true; } // belum lulus: tetap terkunci & tetap di antrean ujian ulang
     }
   }
