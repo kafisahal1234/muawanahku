@@ -117,45 +117,49 @@ export function PesanWali() {
 }
 
 // ---------- Kontak ustadz untuk wali santri ----------
-// Nomor diisi Admin di Data Master → Guru & Akun (kolom No. WhatsApp). Wali hanya melihat ustadz yang terkait dengan ananda.
+// Hanya pimpinan & pembina langsung: Wali Asrama, para Wadir, Mudir, Admin pondok — diurutkan menurut tupoksi.
+// Guru mapel & guru halaqah TIDAK ditampilkan walau nomornya terisi di biodata.
+export const TUPOKSI = [
+  { k: "musyrif", t: "Wali Asrama", d: "Keseharian ananda di asrama, kesehatan, kunjungan & kabar harian" },
+  { k: "wadir_kesantrian", t: "Wadir Kesantrian", d: "Perizinan pulang/keluar, kedisiplinan & tata tertib santri" },
+  { k: "wadir_tahfidz", t: "Wadir Tahfidz", d: "Hafalan Al-Qur'an, tahsin/Iqro', ujian & tasmi'" },
+  { k: "wadir_kurikulum", t: "Wadir Kurikulum", d: "Pelajaran sekolah, nilai & rapor" },
+  { k: "mudir", t: "Mudir", d: "Pimpinan pondok — kebijakan & hal yang belum terselesaikan" },
+  { k: "admin", t: "Admin Pondok", d: "Administrasi, data santri, akun & kode akses aplikasi" },
+];
+export const PERAN_KONTAK = TUPOKSI.map(x => x.k);
 export function kontakUntukSantri(s) {
   if (!s) return [];
-  const p = L.pondokOfSantri(s), daftar = new Map();
-  const tambah = (st, peran, urut) => { if (!st) return; const x = daftar.get(st.id) || { st, peran: [], urut }; if (!x.peran.includes(peran)) x.peran.push(peran); x.urut = Math.min(x.urut, urut); daftar.set(st.id, x); };
-  const a = L.asramaById(s.asrama), h = L.halaqahSantri(s);
-  if (a) tambah(L.staffById(a.musyrif), `Wali asrama ${a.nama}`, 1);
-  if (h) tambah(L.staffById(h.guru), "Guru halaqah (tahfidz)", 2);
-  L.STAFF.forEach(st => (st.ajar || []).filter(([, k]) => k === s.kelas).forEach(([m]) => tambah(st, `Guru ${L.mapelById(m).nama}`, 3)));
-  L.STAFF.forEach(st => {
-    const r = st.roles || [];
-    if (r.includes("wadir_kesantrian") && (!st.pondok || st.pondok === p)) tambah(st, `Wadir Kesantrian Pondok ${p}`, 4);
-    if (r.includes("wadir_tahfidz")) tambah(st, "Wadir Tahfidz", 5);
-    if (r.includes("wadir_kurikulum")) tambah(st, "Wadir Kurikulum", 6);
-    if (r.includes("mudir")) tambah(st, "Mudir", 7);
-    if (r.includes("admin")) tambah(st, "Admin pondok", 8);
+  const p = L.pondokOfSantri(s), a = L.asramaById(s.asrama), aktif = st => st && !(L.akunOv(st.username) || {}).hapus;
+  return TUPOKSI.map(tp => {
+    let orang = [];
+    if (tp.k === "musyrif") orang = a ? [L.staffById(a.musyrif)] : [];
+    else orang = L.STAFF.filter(st => (st.roles || []).includes(tp.k) && (tp.k !== "wadir_kesantrian" || !st.pondok || st.pondok === p));
+    const judul = tp.k === "musyrif" && a ? `Wali Asrama ${a.nama}` : tp.k === "wadir_kesantrian" ? `Wadir Kesantrian Pondok ${p}` : tp.t;
+    return { ...tp, judul, orang: orang.filter(aktif) };
   });
-  return [...daftar.values()].filter(x => !(L.akunOv(x.st.username) || {}).hapus).sort((x, y) => x.urut - y.urut);
 }
 const pesanKeUstadz = (st, s) => `Assalamu'alaikum ${st.pendek || st.nama}, saya Ayah/Bunda dari ananda *${s.nama}* (Kelas ${s.kelas}, Asrama ${L.asramaAman(s.asrama).nama}). `;
-const bisaDihubungi = x => !!L.waNomor(x.st.hp) && x.st.tampilWali !== false;
+const bisaDihubungi = st => !!L.waNomor(st.hp) && st.tampilWali !== false;
+const barisKontak = (st, s, sub, pill) => html`<${Row} name=${st.pendek || st.nama} sub=${sub} icon=${html`<${Icon} n="chat" s=${18} />`} right=${html`<${Pill} t=${pill} tone="green" />`} onClick=${() => bukaWaWali(st.hp, pesanKeUstadz(st, s))} />`;
 
 export function KontakUstadz() {
   useApp();
   const s = nav.user && nav.user.kind === "wali" ? L.santriById(nav.user.id) : null;
   if (!s) return html`<${SubHeader} title="Kontak ustadz" /><div class="wrap"><${Empty} t="Halaman ini untuk wali santri." /></div>`;
-  const semua = kontakUntukSantri(s), ada = semua.filter(bisaDihubungi);
-  return html`<${SubHeader} title="Kontak ustadz" sub=${`Ustadz yang membina ananda ${s.nama}`} />
+  const grup = kontakUntukSantri(s).map(g => ({ ...g, orang: g.orang.filter(bisaDihubungi) })).filter(g => g.orang.length);
+  return html`<${SubHeader} title="Kontak ustadz" sub=${`Hubungi sesuai keperluan · ananda ${s.nama}`} />
     <div class="wrap">
-      ${ada.length ? html`<${Card}><div class="list">${ada.map(x => html`<${Row} name=${x.st.pendek || x.st.nama} sub=${x.peran.join(" · ")} icon=${html`<${Icon} n="chat" s=${18} />`}
-          right=${html`<${Pill} t="WhatsApp" tone="green" />`} onClick=${() => bukaWaWali(x.st.hp, pesanKeUstadz(x.st, s))} />`)}</div></${Card}>
-        <p class="small" style="margin:4px 4px 0">Ketuk nama untuk membuka WhatsApp dengan salam pembuka. Mohon menghubungi pada jam yang wajar; untuk hal mendesak hubungi Wali Asrama.</p>`
+      ${grup.length ? html`${grup.map(g => html`<${Card} title=${g.judul}><p class="small" style="margin:-4px 0 6px">${g.d}</p><div class="list">${g.orang.map(st => barisKontak(st, s, st.nama !== st.pendek ? st.nama : g.judul, "WhatsApp"))}</div></${Card}>`)}
+        <p class="small" style="margin:4px 4px 0">Ketuk nama untuk membuka WhatsApp dengan salam pembuka. Mohon menghubungi sesuai keperluan dan pada jam yang wajar; untuk hal sehari-hari hubungi Wali Asrama terlebih dahulu.</p>`
         : html`<${Card}><${Empty} t="Nomor WhatsApp ustadz belum diisi oleh pondok." icon="chat" /></${Card}>`}
     </div>`;
 }
-// Ringkas di Beranda wali: dua kontak utama (wali asrama & guru halaqah)
+// Ringkas di Beranda wali: Wali Asrama lebih dulu (kontak pertama untuk urusan harian)
 export function KontakUtamaWali({ s }) {
-  const ada = kontakUntukSantri(s).filter(bisaDihubungi);
-  if (!ada.length) return null;
-  return html`<${Card} title="Kontak ustadz" right=${ada.length > 2 ? html`<button class="link" onClick=${() => nav.go("kontakUstadz")}>Semua (${ada.length})</button>` : null}><div class="list">
-    ${ada.slice(0, 2).map(x => html`<${Row} name=${x.st.pendek || x.st.nama} sub=${x.peran[0]} icon=${html`<${Icon} n="chat" s=${18} />`} right=${html`<${Pill} t="Chat" tone="green" />`} onClick=${() => bukaWaWali(x.st.hp, pesanKeUstadz(x.st, s))} />`)}</div></${Card}>`;
+  const grup = kontakUntukSantri(s).map(g => ({ ...g, orang: g.orang.filter(bisaDihubungi) })).filter(g => g.orang.length);
+  if (!grup.length) return null;
+  const total = grup.reduce((n, g) => n + g.orang.length, 0), utama = grup[0];
+  return html`<${Card} title="Kontak ustadz" right=${html`<button class="link" onClick=${() => nav.go("kontakUstadz")}>Semua (${total})</button>`}><div class="list">
+    ${utama.orang.slice(0, 1).map(st => barisKontak(st, s, `${utama.judul} · ${utama.d.split(",")[0]}`, "Chat"))}</div></${Card}>`;
 }
