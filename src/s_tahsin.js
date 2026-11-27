@@ -86,7 +86,7 @@ function AturTahsin({ s, t, onClose }) {
     ${adaCatatan ? html`<p class="small" style="margin:0 0 10px">Posisi ini menjadi titik awal; catatan bacaan & ujian yang sudah ada tetap dihitung sesudahnya.</p>` : null}
     <${Seg} items=${[["iqra", "Masih Iqro'"], ["quran", "Lulus · Al-Qur'an"]]} value=${ting} onChange=${setTing} />
     ${ting === "iqra" ? html`<${Field} label="Jilid"><div class="iq-pilih">${[1, 2, 3, 4, 5, 6].map(n => html`<button type="button" class=${jilid === n ? "on" : ""} onClick=${() => setJilid(n)}>Iqro' ${n}</button>`)}</div></${Field}>
-      <${Field} label="Halaman terakhir"><${Stepper} value=${hal} onChange=${setHal} min=${0} max=${L.IQRA_HAL} label="Halaman terakhir" /></${Field}>
+      <${Field} label="Halaman terakhir"><${Stepper} value=${hal} onChange=${setHal} min=${0} max=${40} label="Halaman terakhir" /></${Field}>
       <label class="iq-chk"><input type="checkbox" checked=${ujian} onChange=${e => setUjian(e.target.checked)} /> Sudah selesai jilid ini, menunggu ujian</label>`
       : html`<${Field} label="Posisi bacaan Al-Qur'an (boleh kosong)"><input class="in" placeholder="Contoh: Juz 30 · Al-Fajr" value=${ket} onInput=${e => setKet(e.target.value)} /></${Field}>`}
     <div class="btn-stack mt12"><${Btn} icon="check" onClick=${simpan}>Simpan posisi</${Btn}>
@@ -106,13 +106,6 @@ export function Tahsin({ sid, edit }) {
   const [sampai, setSampai] = useState(ed && ed.sampai != null ? ed.sampai : Math.min(L.IQRA_HAL, ((t && t.hal) || 0) + 1));
   const [nilai, setNilai] = useState(ed ? ed.nilai || "L" : "L"), [posisi, setPosisi] = useState(ed ? ed.posisi || "" : (t && t.ket) || ""), [cat, setCat] = useState(ed ? ed.catatan || "" : "");
   const [lulus, setLulus] = useState(ed && ed.jenis === "ujian" ? !!ed.lulus : true), [skor, setSkor] = useState(ed && ed.skor != null ? ed.skor : ""), [atur, setAtur] = useState(false);
-  // Ujian kenaikan jilid mencakup SELURUH jilid: halaman diuji secara acak; dinilai bacaan, makhraj, dan pemahaman konsep
-  const acakHal = () => { const p = new Set(); while (p.size < 4) p.add(1 + Math.floor(Math.random() * L.IQRA_HAL)); return [...p].sort((a, b) => a - b); };
-  const [halUji, setHalUji] = useState(ed && ed.halUji ? ed.halUji : acakHal());
-  const [asp, setAsp] = useState(ed && ed.aspek ? ed.aspek : { bacaan: "", makhraj: "", konsep: "" });
-  const nAsp = ["bacaan", "makhraj", "konsep"].map(k => asp[k]).filter(v => v !== "" && v != null).map(Number);
-  const rataAsp = nAsp.length === 3 ? Math.round(nAsp.reduce((a, b) => a + b, 0) / 3) : null;
-  const setA = (k, v) => { const n = { ...asp, [k]: v }; setAsp(n); const vs = ["bacaan", "makhraj", "konsep"].map(x => n[x]); if (vs.every(x => x !== "" && x != null)) { const r = Math.round(vs.map(Number).reduce((a, b) => a + b, 0) / 3); setSkor(r); setLulus(r >= 70); } };
   if (!s || !t) return html`<${SubHeader} title="Tahsin" /><div class="wrap"><${Card}><${Empty} t="Santri belum tercatat di Tahsin." icon="bookopen" /></${Card}></div>`;
   const quran = t.quran, sudah = !ed && bacaHariIni(s.id, tgl), uT = ujianTerakhir(s.id);
   const terkunci = !ed && !uji && !quran && t.jilid && t.siapUjian;
@@ -123,7 +116,7 @@ export function Tahsin({ sid, edit }) {
   const simpan = async () => {
     if (!quran && !t.jilid) return toast("Atur dulu tingkat Iqro' santri ini.", "err");
     let rec;
-    if (mode === "ujian") { if (!uji) return toast("Ujian kenaikan jilid hanya oleh Wadir Tahfidz.", "err"); rec = { jenis: "ujian", tingkat: "iqra", jilid: t.jilid, lulus, skor: skor === "" ? null : Number(skor), nilai: lulus ? "L" : "U", catatan: cat.trim(), penguji: me().id, halUji, aspek: asp }; }
+    if (mode === "ujian") { if (!uji) return toast("Ujian kenaikan jilid hanya oleh Wadir Tahfidz.", "err"); rec = { jenis: "ujian", tingkat: "iqra", jilid: t.jilid, lulus, skor: skor === "" ? null : Number(skor), nilai: lulus ? "L" : "U", catatan: cat.trim(), penguji: me().id }; }
     else if (quran) rec = { jenis: "baca", tingkat: "quran", posisi: posisi.trim(), nilai, catatan: cat.trim() };
     else { if (Number(sampai) < Number(dari)) return toast("Halaman sampai tidak boleh lebih kecil dari halaman awal.", "err"); rec = { jenis: "baca", tingkat: "iqra", jilid: t.jilid, dari: Number(dari), sampai: Number(sampai), nilai, catatan: cat.trim(), siap: Number(sampai) >= L.IQRA_HAL && nilai !== "U" }; }
     const hq = L.halaqahSantri(s);
@@ -141,16 +134,11 @@ export function Tahsin({ sid, edit }) {
       ${sudah ? html`<div class="note mt8"><${Icon} n="check" s=${18} />Sudah ada catatan hari ini (${sudah.jenis === "ujian" ? "ujian" : sudah.tingkat === "quran" ? "Al-Qur'an" : `hal. ${sudah.dari}–${sudah.sampai}`}). Menyimpan lagi menambah catatan baru; untuk memperbaiki pakai Riwayat & Koreksi.</div>` : null}
       ${uji && !quran && t.jilid && !ed ? html`<${Seg} items=${[["baca", "Bacaan harian"], ["ujian", `Ujian Iqro' ${t.jilid}`]]} value=${mode} onChange=${setMode} />` : null}
       ${mode === "ujian" ? html`<${Card} title=${`Ujian kenaikan Iqro' ${t.jilid}`}>
-          <p class="small" style="margin:0 0 10px">Ujian mencakup seluruh Iqro' ${t.jilid}, bukan hanya halaman terakhir. Uji halaman acak, lalu nilai bacaan, makhraj, dan pemahaman konsep.</p>
-          <div class="kv" style="align-items:center"><span>Halaman yang diuji (acak)</span><b>${halUji.join(", ")}</b></div>
-          <button type="button" class="link" style="min-height:40px;margin:2px 0 8px" onClick=${() => setHalUji(acakHal())}>Acak ulang halaman</button>
-          <div class="iq-dua" style="grid-template-columns:repeat(3,1fr)">${[["bacaan", "Kelancaran bacaan"], ["makhraj", "Makhraj & sifat huruf"], ["konsep", "Pemahaman konsep"]].map(([k, lb]) => html`<${Field} label=${lb}><input class="in" type="number" inputmode="numeric" min="0" max="100" placeholder="0–100" value=${asp[k]} onInput=${e => setA(k, e.target.value)} /></${Field}>`)}</div>
-          ${rataAsp != null ? html`<p class="small" style="margin:0 0 10px">Rata-rata <b>${rataAsp}</b> · KKM 70 → otomatis ${rataAsp >= 70 ? "Lulus" : "Belum lulus"} (penguji tetap bisa mengubah).</p>` : null}
           <div class="iq-pilih dua"><button type="button" class=${lulus ? "on" : ""} onClick=${() => setLulus(true)}>Lulus${t.jilid >= 6 ? " · ke Al-Qur'an" : ` · ke Iqro' ${t.jilid + 1}`}</button><button type="button" class=${!lulus ? "on merah" : ""} onClick=${() => setLulus(false)}>Belum lulus</button></div>
-          <${Field} label="Nilai akhir ujian (otomatis dari rata-rata, boleh diubah)"><input class="in" type="number" inputmode="numeric" min="0" max="100" value=${skor} onInput=${e => setSkor(e.target.value)} placeholder="0–100" /></${Field}></${Card}>`
+          <${Field} label="Nilai ujian (boleh kosong)"><input class="in" type="number" inputmode="numeric" min="0" max="100" value=${skor} onInput=${e => setSkor(e.target.value)} placeholder="0–100" /></${Field}></${Card}>`
         : quran ? html`<${Card} title="Bacaan Al-Qur'an"><${Field} label="Posisi bacaan"><input class="in" placeholder="Contoh: Juz 30 · Al-Fajr ayat 1–15" value=${posisi} onInput=${e => setPosisi(e.target.value)} /></${Field}></${Card}>`
-        : html`<${Card} title=${`Bacaan Iqro' ${t.jilid || "?"}`}><div class="iq-dua"><${Field} label="Dari halaman"><${Stepper} value=${dari} onChange=${setDari} min=${1} max=${L.IQRA_HAL} label="Dari halaman" /></${Field}>
-            <${Field} label="Sampai halaman"><${Stepper} value=${sampai} onChange=${setSampai} min=${1} max=${L.IQRA_HAL} label="Sampai halaman" /></${Field}></div>
+        : html`<${Card} title=${`Bacaan Iqro' ${t.jilid || "?"}`}><div class="iq-dua"><${Field} label="Dari halaman"><${Stepper} value=${dari} onChange=${setDari} min=${1} max=${40} label="Dari halaman" /></${Field}>
+            <${Field} label="Sampai halaman"><${Stepper} value=${sampai} onChange=${setSampai} min=${1} max=${40} label="Sampai halaman" /></${Field}></div>
             ${Number(sampai) >= L.IQRA_HAL ? html`<p class="small" style="margin:6px 0 0;color:#8A5A00;font-weight:700">Sampai halaman terakhir jilid: input Iqro' santri ini terkunci dan otomatis masuk daftar ujian Wadir Tahfidz.</p>` : null}</${Card}>`}
       ${mode !== "ujian" ? html`<${Card} title="Penilaian"><div class="iq-pilih tiga">${Object.entries(L.TAHSIN_NILAI).map(([k, v]) => html`<button type="button" class=${(nilai === k ? "on " : "") + (k === "U" ? "merah" : k === "KL" ? "emas" : "")} onClick=${() => setNilai(k)}>${v}</button>`)}</div>
           ${nilai === "U" ? html`<p class="small" style="margin:8px 0 0">"Ulang": halaman ini belum dihitung maju, dibaca lagi di pertemuan berikutnya.</p>` : null}</${Card}>` : null}
