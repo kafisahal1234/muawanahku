@@ -55,7 +55,7 @@ export async function htmlKeDocx(docHtml, pilihHalaman = ".rp-page") {
       if (tag === "br") { out.push(new TextRun({ text: "", break: 1 })); return; }
       if (tag === "img") return;
       const st = n.getAttribute("style") || "";
-      const g2 = { ...g, bold: g.bold || tag === "b" || tag === "strong" || n.classList.contains("qb") || n.classList.contains("qv"), italic: g.italic || tag === "i" || tag === "em", underline: g.underline || /underline/.test(st) };
+      const g2 = { ...g, bold: g.bold || tag === "b" || tag === "strong" || n.classList.contains("qb") || n.classList.contains("qv") || n.classList.contains("qk") || n.classList.contains("qtot"), italic: g.italic || tag === "i" || tag === "em", underline: g.underline || /underline/.test(st) };
       if (n.classList.contains("qv")) g2.color = "0B5D3B"; if (n.classList.contains("qred")) g2.color = "E2564E";
       n.childNodes.forEach(c => jalan(c, g2));
     };
@@ -146,11 +146,12 @@ export async function htmlKeDocx(docHtml, pilihHalaman = ".rp-page") {
       if (el.nodeType !== 1) return;
       const tag = el.tagName.toLowerCase(), c = el.classList, st = el.getAttribute("style") || "";
       if (tag === "img" || tag === "style" || tag === "script") return;
-      if (tag === "h1") return out.push(par(el, { align: AlignmentType.CENTER, after: 20, gaya: { size: hp(17), bold: true, color: "3D5F78" } }));
+      if (tag === "h1") return out.push(par(el, { align: AlignmentType.CENTER, after: 20, gaya: { size: hp(18), bold: true, color: "3D5F78" } }));
       if (tag === "table") { out.push(tabel(el, lebarTotal)); out.push(kosong(4)); return; }
-      if (c.contains("qsub")) return out.push(par(el, { align: AlignmentType.CENTER, after: 120, gaya: { size: hp(12), italic: true } }));
+      if (c.contains("qsub")) return out.push(par(el, { align: AlignmentType.CENTER, after: 40, gaya: { size: hp(12.5), bold: true, color: "0C9954" } }));
+      if (c.contains("qgaris")) return out.push(new Paragraph({ spacing: { before: 60, after: 140 }, border: { top: { style: BorderStyle.SINGLE, size: 12, color: "3D5F78", space: 1 }, bottom: { style: BorderStyle.SINGLE, size: 6, color: "E5AC4C", space: 1 } }, children: [new TextRun({ text: "", size: 2 })] }));
       if (c.contains("qsec")) return out.push(par(el, { before: 160, after: 60, border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "E5AC4C", space: 1 } }, gaya: { size: hp(14), bold: true, color: "0C9954" } }));
-      if (c.contains("qnote")) return out.push(par(el, { after: 60, gaya: { size: hp(10.6), italic: true } }));
+      if (c.contains("qnote")) return out.push(par(el, { before: 40, after: 60, gaya: { size: hp(10.6), italic: true } }));
       if (c.contains("qlbl")) return out.push(par(el, { before: 100, after: 40, gaya: { size: hp(12), bold: true, color: "3D5F78" } }));
       if (c.contains("qbox")) { out.push(kotak(el, lebarTotal)); out.push(kosong(4)); return; }
       if (c.contains("qstats")) { out.push(statistik(el, lebarTotal)); out.push(kosong(6)); return; }

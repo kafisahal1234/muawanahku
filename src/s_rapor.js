@@ -20,12 +20,13 @@ const MAPEL_RAPOR = [["fiqih", "FIQIH"], ["it", "IT (TEKNOLOGI INFORMASI)"], ["k
 export const RP_CSS = `.rp{font-family:Montserrat,Arial,sans-serif;color:#2E2F30}
 .rp-page{width:794px;height:1123px;background:#fff;position:relative;overflow:hidden;box-sizing:border-box;padding:183px 85px 133px 96px;margin:0 auto 16px;box-shadow:0 1px 6px rgba(0,0,0,.15)}
 .rp-head{position:absolute;left:35px;top:11px;width:763px;height:auto}.rp-foot{position:absolute;left:14px;bottom:10px;width:785px;height:auto}
-.rp h1{margin:0;text-align:center;font-size:17px;font-weight:700;color:#3D5F78;letter-spacing:.2px}.rp .qsub{text-align:center;font-size:12px;font-style:italic;margin:0 0 10px}
+.rp h1{margin:0;text-align:center;font-size:18px;font-weight:800;color:#3D5F78;letter-spacing:.8px}.rp .qsub{text-align:center;font-size:12.5px;font-weight:700;color:#0C9954;letter-spacing:.3px;margin:3px 0 0}
+.rp .qgaris{border-top:2px solid #3D5F78;border-bottom:1px solid #E5AC4C;height:2px;margin:6px 0 7px}.rp .qid td b{font-weight:700}.rp .qnote{margin-top:4px!important}
 .rp .qsec{font-size:14px;font-weight:700;color:#0C9954;border-bottom:1px solid #E5AC4C;padding-bottom:2px;margin:12px 0 5px}
 .rp .qnote{font-size:10.6px;font-style:italic;margin:0 0 5px}.rp .qlbl{font-size:12px;font-weight:700;color:#3D5F78;margin:8px 0 4px}
 .rp table{border-collapse:collapse;width:100%;table-layout:fixed}.rp td,.rp th{border:1px solid #BFC8D0;padding:1.7px 4.7px;font-size:11.3px;line-height:1.2;vertical-align:middle;height:21px}.rp th{height:18px}
 .rp th{background:#3D5F78;color:#fff;font-weight:700;text-align:center}.rp .qh2 th{background:#DCE8F0;color:#3D5F78}.rp .qh2 th.qj29{background:#FBEFD9}
-.rp .qc{text-align:center}.rp .qb{font-weight:700}.rp .qs{font-size:10px}.rp .qtight td{height:19px}.rp .qket td,.rp .qket th{font-size:10px;height:15px}.rp .qn30{background:#DCE8F0}.rp .qn29{background:#FBEFD9}.rp .qjx{background:#E3F2EA}.rp .qtot{background:#EEF2F5;font-weight:700}
+.rp .qc{text-align:center}.rp .qb{font-weight:700}.rp .qs{font-size:10px}.rp .qtight td{height:18px}.rp .qket td,.rp .qket th{font-size:10px;height:15px}.rp .qn30{background:#DCE8F0}.rp .qn29{background:#FBEFD9}.rp .qjx{background:#E3F2EA}.rp .qtot{background:#EEF2F5;font-weight:700}
 .rp .qz{background:#F4F7F9}.rp .qv{font-weight:700;color:#0B5D3B}.rp .qred{color:#E2564E}
 .rp .qid td{border:none;font-size:12px;padding:1px 3px;height:auto}.rp .qid td.qk{font-weight:700}
 .rp .qbox{border:1px solid #BFC8D0;min-height:93px;padding:6px 8px;font-size:12px;white-space:pre-wrap}
@@ -37,6 +38,8 @@ export const RP_CSS = `.rp{font-family:Montserrat,Arial,sans-serif;color:#2E2F30
 
 // tanda tangan tersimpan (Akun → Tanda Tangan) ditempel otomatis di atas nama
 const mdr = () => L.mudirStaff() || L.staffAman("syamsul");
+// nama di bawah tanda tangan: tanpa sapaan (Ust./Ustadz/Ustadzah), cukup nama + gelar
+const namaTtd = n => String(n || "").replace(/^\s*(ustadzah|ustadz|ustazah|ustaz|ustz?\.?|ust\.?)\s+/i, "").trim();
 const ttdImg = id => { const t = L.ttdOf(id); return t ? `<img class="qttd-img" src="${t}" alt="">` : ""; };
 function nilaiJuz(d, j) {
   if (!d) return null;
@@ -52,7 +55,7 @@ export function raporHTML(sid, periode) {
   const head = `<img class="rp-head" src="${RP_HEAD}" alt="">`, foot = `<img class="rp-foot" src="${RP_FOOT}" alt="">`;
   // ---------- halaman 1: identitas & tahfidz ----------
   const idr = [["Nama Santri", s.nama, "Halaqah", (L.guruHalaqah(s) || mus).pendek], ["NIS", s.nis || "—", "Asrama", a.nama], ["Kelas", s.kelas, "Semester", periode === "mid" ? "Ganjil (Tengah Semester)" : "Ganjil"], ["Wali Asrama", mus.nama, "Tahun Pelajaran", "2026/2027"]];
-  const ident = `<table class="qid"><colgroup><col style="width:97px"><col style="width:200px"><col style="width:120px"><col></colgroup>${idr.map(r => `<tr><td class="qk">${r[0]}</td><td>: ${esc(r[1])}</td><td class="qk">${r[2]}</td><td>: ${esc(r[3])}</td></tr>`).join("")}</table>`;
+  const ident = `<table class="qid"><colgroup><col style="width:97px"><col style="width:200px"><col style="width:120px"><col></colgroup>${idr.map(r => `<tr><td class="qk">${r[0]}</td><td>: <b>${esc(r[1])}</b></td><td class="qk">${r[2]}</td><td>: <b>${esc(r[3])}</b></td></tr>`).join("")}</table>`;
   const v30 = n => d(nt["30:" + n]), v29 = n => d(nt["29:" + n]);
   const left = J30.map((nm, i) => [114 - i, nm]), right = J29.map((nm, i) => [77 - i, nm]);
   const blocks = [left.slice(0, 13), left.slice(13, 25), left.slice(25), right];
@@ -67,11 +70,11 @@ export function raporHTML(sid, periode) {
   const tSum = `<table><colgroup><col style="width:150px"><col style="width:150px"><col style="width:150px"><col></colgroup>
     <tr><td class="qtot">Jumlah nilai</td><td class="qc qb">${all.length ? jml : ""}</td><td class="qtot">Rata-rata</td><td class="qc qb">${rata ?? ""}</td></tr>
     <tr><td class="qtot">Predikat</td><td class="qc qb">${rata == null ? "" : L.predikat(rata).h + " · " + L.predikat(rata).t}</td><td class="qtot">Total hafalan</td><td class="qc qb">${esc(L.fmtJumlah(h))}</td></tr>
+    <tr><td class="qtot">Kehadiran halaqah</td><td class="qc qb">${kh.pct == null ? "—" : kh.pct + "%"}</td><td class="qtot">Predikat kehadiran</td><td class="qc qb">${kh.pct == null ? "—" : L.predikatMut(kh.pct).h + " · " + L.predikatMut(kh.pct).t}</td></tr>
     <tr><td class="qtot">Tasmi' yang telah lulus</td><td colspan="3">${tasmi.length ? "Juz " + tasmi.join(", ") : "—"}</td></tr></table>`;
-  const tHadir = `<table><colgroup><col style="width:150px"><col><col><col><col></colgroup><tr><td class="qtot">Kehadiran halaqah</td>${[["Hadir", kh.H], ["Sakit", kh.S], ["Izin", kh.I], ["Alpa", kh.A]].map(([l, v]) => `<td class="qc">${l}: ${v} sesi</td>`).join("")}</tr></table>`;
-  const p1 = `<div class="rp-page">${head}<h1>LAPORAN HASIL BELAJAR SANTRI</h1><p class="qsub">Pondok Tahfidz Modern Kampung Qur'an Al Muawanah</p>${ident}
-    <div class="qsec">A. PERKEMBANGAN TAHFIDZ AL-QUR'AN</div><p class="qnote">Nilai ujian tahfidz ${periode === "mid" ? "tengah semester" : "semester"}. Juz 30 dan Juz 29 dinilai per surah, juz lainnya dinilai per juz.</p>
-    ${tJuz}<div class="qlbl">Juz lainnya (dinilai per juz)</div>${tLain}<div style="height:8px"></div>${tSum}<div style="height:6px"></div>${tHadir}${foot}</div>`;
+  const p1 = `<div class="rp-page">${head}<h1>LAPORAN HASIL BELAJAR SANTRI</h1><p class="qsub">PONDOK TAHFIDZ MODERN KAMPUNG QUR'AN AL MUAWANAH</p><div class="qgaris"></div>${ident}
+    <div class="qsec">A. PERKEMBANGAN TAHFIDZ AL-QUR'AN</div>
+    ${tJuz}<div class="qlbl">Juz lainnya (dinilai per juz)</div>${tLain}<p class="qnote">Nilai ujian tahfidz ${periode === "mid" ? "tengah semester" : "semester"}. Juz 30 dan Juz 29 dinilai per surah, juz lainnya dinilai per juz.</p><div style="height:6px"></div>${tSum}${foot}</div>`;
   // ---------- halaman 2: mapel ----------
   // Bahasa Inggris memakai istilah Inggris; urutan tampil: Reading & Listening, Speaking, Writing, Attitude, Attendance, Final Score
   const mp = id => { const m = L.mapelById(id), nm = get("nilaiMapel", L.nilaiKey(id, s.kelas)) || {}, asp = ((nm.aspek || {})[sid]) || {}, ak = (L.nilaiAkhir(sid, id) || {}).akhir;
@@ -84,15 +87,17 @@ export function raporHTML(sid, periode) {
       <tr>${ids.map(id => `<th colspan="3">${MAPEL_RAPOR.find(x => x[0] === id)[1]}</th>`).join("")}</tr><tr class="qh2">${P.map(p => `<th>${p.lab[0]}</th><th>${p.lab[1]}</th><th>${p.lab[2]}</th>`).join("")}</tr>${body}
       <tr>${P.map(p => `<td class="qtot">${p.lab[3]}</td><td class="qtot qc">${p.ak ?? ""}</td><td class="qtot qc">${p.ak == null ? "" : L.predikat(p.ak).h}</td>`).join("")}</tr></table>`; };
   const aks = MAPEL_RAPOR.map(([id]) => (L.nilaiAkhir(sid, id) || {}).akhir).filter(x => x != null), jak = aks.reduce((x, y) => x + y, 0);
-  const p2 = `<div class="rp-page">${head}<div class="qsec" style="margin-top:0">B. PENILAIAN MATA PELAJARAN</div><p class="qnote">Nilai per aspek diisi guru mapel. Kehadiran dihitung otomatis dari absen kelas. Nilai projek, PTS, dan PAS tidak ditampilkan terpisah karena sudah dihitung dalam nilai akhir. Nilai akhir = 10% kehadiran + 30% projek + 25% PTS + 35% PAS. KKM 70.</p>
+  const p2 = `<div class="rp-page">${head}<div class="qsec" style="margin-top:0">B. PENILAIAN MATA PELAJARAN</div>
     ${pair(["fiqih", "it"])}<div style="height:16px"></div>${pair(["karakter", "bing"])}<div style="height:16px"></div>
-    <table><colgroup><col style="width:173px"><col style="width:67px"><col style="width:66px"><col style="width:173px"><col></colgroup><tr><td class="qtot">Jumlah nilai akhir</td><td class="qc qb">${aks.length ? jak : ""}</td><td></td><td class="qtot">Rata-rata</td><td class="qc qb">${aks.length ? Math.round(jak / aks.length) : ""}</td></tr></table>${foot}</div>`;
+    <table><colgroup><col style="width:173px"><col style="width:67px"><col style="width:66px"><col style="width:173px"><col></colgroup><tr><td class="qtot">Jumlah nilai akhir</td><td class="qc qb">${aks.length ? jak : ""}</td><td></td><td class="qtot">Rata-rata</td><td class="qc qb">${aks.length ? Math.round(jak / aks.length) : ""}</td></tr></table>
+    <p class="qnote">Nilai per aspek diisi guru mapel; kehadiran dihitung otomatis dari absen kelas. Nilai akhir = 10% kehadiran + 30% projek + 25% PTS + 35% PAS (projek, PTS, dan PAS sudah termasuk di nilai akhir). KKM 70.</p>${foot}</div>`;
   // ---------- halaman 3: mutaba'ah ----------
   const mt = (items, pcts) => { const half = Math.ceil(items.length / 2); let b = "";
     for (let r = 0; r < half; r++) b += `<tr class="${r % 2 ? "qz" : ""}">` + [r, r + half].map(i => items[i] ? `<td class="qc qs">${i + 1}</td><td class="qs">${esc(items[i])}</td><td class="qc qv">${pcts[i] == null ? "" : L.predikatMut(pcts[i]).h}</td>` : "<td></td><td></td><td></td>").join("") + "</tr>";
     return `<table><colgroup>${"<col style='width:27px'><col style='width:240px'><col style='width:39px'>".repeat(2)}</colgroup><tr>${"<th>No</th><th>Poin</th><th>Nilai</th>".repeat(2)}</tr>${b}</table>`; };
-  const p3 = `<div class="rp-page">${head}<div class="qsec" style="margin-top:0">C. MUTABA'AH IBADAH DAN ADAB</div><p class="qnote">Nilai (A–D) dihitung otomatis dari persentase pelaksanaan pada hari yang mutaba'ahnya terisi${mb.isi ? ` (${mb.isi} hari terisi)` : ""}.</p>
-    <div class="qlbl" style="margin-top:2px">Ibadah</div>${mt(DATA.ibadah, mb.ibadah)}<div class="qlbl" style="margin-top:14px">Adab</div>${mt(DATA.adab, mb.adab)}${foot}</div>`;
+  const p3 = `<div class="rp-page">${head}<div class="qsec" style="margin-top:0">C. MUTABA'AH IBADAH DAN ADAB</div>
+    <div class="qlbl" style="margin-top:2px">Ibadah</div>${mt(DATA.ibadah.map(x => x.replace(/ atau /, " & ")), mb.ibadah)}<div class="qlbl" style="margin-top:14px">Adab</div>${mt(DATA.adab, mb.adab)}
+    <p class="qnote">Nilai (A–D) dihitung otomatis dari persentase pelaksanaan pada hari yang mutaba'ahnya terisi${mb.isi ? ` (${mb.isi} hari terisi)` : ""}. Puasa sunnah hanya dinilai pada hari Senin dan Kamis.</p>${foot}</div>`;
   // ---------- halaman 4: catatan & tanda tangan ----------
   const tgl = new Date(), tg = `${tgl.getDate()} ${["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][tgl.getMonth()]} ${tgl.getFullYear()}`;
   const ket = [["A", "Istimewa", "90 – 100", "90 – 100%"], ["B", "Baik", "80 – 89", "75 – 89%"], ["C", "Cukup", "70 – 79", "60 – 74%"], ["D", "Perlu bimbingan", "di bawah 70", "di bawah 60%"]];
@@ -101,8 +106,8 @@ export function raporHTML(sid, periode) {
     <div class="qlbl" style="margin-top:16px">Keterangan predikat</div><table class="qket"><colgroup><col style="width:73px"><col style="width:166px"><col style="width:187px"><col></colgroup><tr><th>Predikat</th><th>Arti</th><th>Nilai (Tahfidz dan Mapel)</th><th>Capaian Mutaba'ah dan Adab</th></tr>
     ${ket.map((r, i) => `<tr>${r.map((v, j) => `<td class="qc ${j === 0 ? "qb" : ""} ${i === 3 && j === 0 ? "qred" : ""}">${v}</td>`).join("")}</tr>`).join("")}</table>
     <div class="qttd" style="margin-top:32px"><div></div><div>Metro, ${tg}</div></div>
-    <div class="qttd"><div>Orang Tua / Wali<div class="qg"></div><b>(…………………………………)</b></div><div>Wali Asrama / Wali Halaqah<div class="qg">${ttdImg(mus && mus.id)}</div><b>(${esc(mus.nama)})</b></div></div>
-    <div class="qttd" style="margin-top:14px"><div>Mengetahui,<br>Mudir<div class="qg">${ttdImg(mdr().id)}</div><b style="text-decoration:underline">${esc(mdr().nama.replace(/^Ust\.\s*/, ""))}</b></div></div>${foot}</div>`;
+    <div class="qttd"><div>Orang Tua / Wali<div class="qg"></div><b>______________________________</b></div><div>Wali Asrama / Wali Halaqah<div class="qg">${ttdImg(mus && mus.id)}</div><b style="text-decoration:underline">${esc(namaTtd(mus.nama))}</b></div></div>
+    <div class="qttd" style="margin-top:14px"><div>Mengetahui,<br>Mudir<div class="qg">${ttdImg(mdr().id)}</div><b style="text-decoration:underline">${esc(namaTtd(mdr().nama))}</b></div></div>${foot}</div>`;
   return p1 + p2 + p3 + p4;
 }
 
@@ -114,26 +119,26 @@ export function raporMidHTML(sid) {
   const cat = (get("raporCatatan", `${sid}_mid`) || {}).teks || "";
   const head = `<img class="rp-head" src="${RP_HEAD}" alt="">`, foot = `<img class="rp-foot" src="${RP_FOOT}" alt="">`;
   const idr = [["Nama Santri", s.nama, "Halaqah", (L.guruHalaqah(s) || mus).pendek], ["NIS", s.nis || "—", "Asrama", a.nama], ["Kelas", s.kelas, "Semester", "Ganjil (Tengah Semester)"], ["Wali Asrama", mus.nama, "Tahun Pelajaran", "2026/2027"]];
-  const ident = `<table class="qid"><colgroup><col style="width:97px"><col style="width:200px"><col style="width:120px"><col></colgroup>${idr.map(r => `<tr><td class="qk">${r[0]}</td><td>: ${esc(r[1])}</td><td class="qk">${r[2]}</td><td>: ${esc(r[3])}</td></tr>`).join("")}</table>`;
+  const ident = `<table class="qid"><colgroup><col style="width:97px"><col style="width:200px"><col style="width:120px"><col></colgroup>${idr.map(r => `<tr><td class="qk">${r[0]}</td><td>: <b>${esc(r[1])}</b></td><td class="qk">${r[2]}</td><td>: <b>${esc(r[3])}</b></td></tr>`).join("")}</table>`;
   const uj = Object.values(nt).filter(x => x !== "" && x != null).map(Number), ujR = uj.length ? Math.round(uj.reduce((x, y) => x + y, 0) / uj.length) : null;
     const A = `<div class="qstats"><div class="qstat"><span>Capaian hafalan mid semester</span><b>${esc(L.fmtBaris(cp.baris))}</b><small>${L.capaianJuz(s).juz.toLocaleString("id-ID")} dari target ${L.targetSemester()} juz/semester · ${cp.setor}× setor</small></div>
     <div class="qstat"><span>Total seluruh hafalan</span><b>${esc(L.fmtJumlah(h))}</b><small>${h.khatam ? "Khatam 30 juz" : "Selesai semester ini: " + (cp.juzBaru.length ? "Juz " + cp.juzBaru.join(", ") : "—")}</small></div>
     <div class="qstat"><span>Posisi hafalan sekarang</span><b>${h.khatam ? "Khatam" : "Juz " + h.aktif}</b><small>${h.khatam ? "" : esc(L.posLabel(h.aktif, h.baris).replace(/^Juz \d+ · /, ""))}</small></div></div>
     <table><colgroup><col style="width:150px"><col style="width:150px"><col style="width:130px"><col></colgroup><tr><td class="qtot">Nilai ujian tahfidz</td><td>${ujR == null ? "—" : `<b>${ujR}</b> · ${L.predikat(ujR).h} (${L.predikat(ujR).t})`}</td>
-    <td class="qtot">Kehadiran halaqah</td><td>${kh.sesi ? `H ${kh.H} · S ${kh.S} · I ${kh.I} · A ${kh.A} dari ${kh.sesi} sesi` : "—"}</td></tr></table>`;
+    <td class="qtot">Kehadiran halaqah</td><td>${kh.pct == null ? "—" : `<b>${kh.pct}%</b> · ${L.predikatMut(kh.pct).h} (${L.predikatMut(kh.pct).t})`}</td></tr></table>`;
   const mrows = MAPEL_RAPOR.map(([id, nm], i) => { const n = L.nilaiAkhir(sid, id) || {}, v = n.pts === "" ? null : n.pts;
     return `<tr class="${i % 2 ? "qz" : ""}"><td class="qc">${i + 1}</td><td>${id === "it" ? "Teknologi Informasi (IT)" : esc(L.mapelById(id).nama)}</td><td class="qc">${n.hadir == null ? "—" : n.hadir + "%"}</td><td class="qc qv">${v ?? "—"}</td><td class="qc">${v == null ? "—" : L.predikat(Number(v)).h + " · " + L.predikat(Number(v)).t}</td></tr>`; }).join("");
   const B = `<table><colgroup><col style="width:34px"><col><col style="width:100px"><col style="width:120px"><col style="width:150px"></colgroup><tr><th>No</th><th>Mata Pelajaran</th><th>Kehadiran</th><th>Nilai PTS</th><th>Predikat</th></tr>${mrows}</table>`;
   const mr = (nm, v) => { const p = L.predikatMut(v); return `<td class="qtot">${nm}</td><td class="qc qv">${v == null ? "—" : v + "%"}</td><td class="qc">${v == null ? "—" : p.h + " · " + p.t}</td>`; };
   const C = `<table><colgroup><col style="width:130px"><col style="width:70px"><col style="width:105px"><col style="width:130px"><col style="width:70px"><col></colgroup><tr><th>Aspek</th><th>Capaian</th><th>Predikat</th><th>Aspek</th><th>Capaian</th><th>Predikat</th></tr><tr>${mr(`Ibadah (${DATA.ibadah.length} butir)`, mp.ibadah)}${mr(`Adab (${DATA.adab.length} butir)`, mp.adab)}</tr></table>`;
   const tgl = new Date(), tg = `${tgl.getDate()} ${["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][tgl.getMonth()]} ${tgl.getFullYear()}`;
-  return `<div class="rp-page rp-mid">${head}<h1>LAPORAN TENGAH SEMESTER</h1><p class="qsub">Pondok Tahfidz Modern Kampung Qur'an Al Muawanah</p>${ident}
+  return `<div class="rp-page rp-mid">${head}<h1>LAPORAN TENGAH SEMESTER</h1><p class="qsub">PONDOK TAHFIDZ MODERN KAMPUNG QUR'AN AL MUAWANAH</p><div class="qgaris"></div>${ident}
     <div class="qsec">A. CAPAIAN TAHFIDZ AL-QUR'AN</div>${A}
-    <div class="qsec">B. MATA PELAJARAN</div><p class="qnote">Nilai tengah semester (PTS). Nilai akhir lengkap per aspek ada di rapor akhir semester. KKM 70.</p>${B}
-    <div class="qsec">C. MUTABA'AH IBADAH DAN ADAB</div><p class="qnote">Persentase dari ${mp.hari} hari aktif, ${mp.isi || 0} hari diinput (hari tanpa input dihitung 0): A 90–100% · B 75–89% · C 60–74% · D di bawah 60%.</p>${C}
+    <div class="qsec">B. MATA PELAJARAN</div>${B}<p class="qnote">Nilai tengah semester (PTS). Nilai akhir lengkap per aspek ada di rapor akhir semester. KKM 70.</p>
+    <div class="qsec">C. MUTABA'AH IBADAH DAN ADAB</div>${C}<p class="qnote">Persentase dari hari yang mutaba'ahnya terisi (${mp.isi || 0} hari). A 90–100% · B 75–89% · C 60–74% · D di bawah 60%.</p>
     <div class="qsec">D. CATATAN WALI ASRAMA</div><div class="qbox" style="min-height:50px">${esc(cat)}</div>
     <div class="qttd3" style="margin-top:12px"><div></div><div></div><div>Metro, ${tg}</div></div>
-    <div class="qttd3" style="margin-top:2px"><div>Orang Tua / Wali<div class="qg"></div><b>(…………………………)</b></div><div>Wali Asrama<div class="qg">${ttdImg(mus && mus.id)}</div><b>(${esc(mus.nama)})</b></div><div>Mengetahui, Mudir<div class="qg">${ttdImg(mdr().id)}</div><b style="text-decoration:underline">${esc(mdr().nama.replace(/^Ust\.\s*/, ""))}</b></div></div>${foot}</div>`;
+    <div class="qttd3" style="margin-top:2px"><div>Orang Tua / Wali<div class="qg"></div><b>_________________________</b></div><div>Wali Asrama<div class="qg">${ttdImg(mus && mus.id)}</div><b style="text-decoration:underline">${esc(namaTtd(mus.nama))}</b></div><div>Mengetahui, Mudir<div class="qg">${ttdImg(mdr().id)}</div><b style="text-decoration:underline">${esc(namaTtd(mdr().nama))}</b></div></div>${foot}</div>`;
 }
 
 export function raporDoc(sid, periode) {

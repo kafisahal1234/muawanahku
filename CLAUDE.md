@@ -18,6 +18,7 @@ PYTHONPATH=test/pwseed python3 test/rekap_layar.py    # tangkapan layar rekap  �
 PYTHONPATH=test/pwseed python3 test/wali_layar.py     # tangkapan layar wali   → test/out/wali/
 PYTHONPATH=test/pwseed python3 test/laporan_ziyadah.py
 PYTHONPATH=test/pwseed python3 test/puasa_sunnah.py     # butir puasa hanya Senin & Kamis
+PYTHONPATH=test/pwseed python3 test/rapor_layar.py      # rapor: gambar + PDF + Word → test/out/rapor/
 cd test/aturan && npm install && npm test             # uji firestore.rules di emulator (harus "gagal 0")
 ```
 
@@ -69,7 +70,7 @@ Preact + htm, dibundel esbuild; CSS = `theme.css + skin.css + dark.css + dark_ma
 
 **Wali**: bahasa orang tua (tanpa "baris/sesi/H S I A"), kontak ustadz hanya lewat menu Akun → Hubungi ustadz (Wali Asrama, para Wadir, Mudir, Admin — guru mapel tidak tampil). Halaman detail santri tetap bertab.
 
-**Dokumen**: rapor & surat memakai kop/kaki pondok (`src/rapor_assets.js`, `src/surat_assets.js`). Rapor bisa PDF dan Word (Word tanpa proteksi, cukup page break per halaman).
+**Dokumen**: rapor & surat memakai kop/kaki pondok (`src/rapor_assets.js`, `src/surat_assets.js`). Rapor bisa PDF dan Word (Word tanpa proteksi, cukup page break per halaman). Rapor: nilai identitas tebal, keterangan di bawah tabel, kehadiran halaqah hanya persen, nama tanda tangan bergaris bawah tanpa kurung & tanpa "Ust." (`namaTtd`).
 
 ## Cara kerja dengan pengguna
 - Permintaan revisi teks/format = ubah teks saja, bukan sistem.
