@@ -1,5 +1,4 @@
-// Di HP, yang menggulir adalah kotak .app (bukan halaman/dokumen), supaya bagian paling atas layar
-// tidak ikut tergulir ke bawah bilah status (iOS memberi efek buram di sana) dan bisa "tarik untuk memperbarui".
+// Elemen yang menggulir (halaman). Dipakai navigasi (kembali ke atas), asisten, dan "tarik untuk memperbarui".
 export function gulirEl() {
   const a = document.querySelector(".app");
   try { if (a && getComputedStyle(a).overflowY === "auto") return a; } catch (e) { }

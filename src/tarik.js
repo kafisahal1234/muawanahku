@@ -69,7 +69,7 @@ export function pasangTarik() {
   document.addEventListener("touchstart", e => {
     if (sibuk || e.touches.length !== 1) return;
     const g = gulirEl(), t = e.target;
-    aktif = !!g && g.classList && g.classList.contains("app") && !g.classList.contains("nonav") && g.scrollTop <= 0 && !!isi() && !(t.closest && t.closest(DILEWATI));
+    aktif = !!g && g.scrollTop <= 0 && !document.querySelector(".app.nonav") && !!isi() && !(t.closest && t.closest(DILEWATI));
     if (aktif) siapkan();
     terkunci = false; tarik = 0; y0 = e.touches[0].clientY; x0 = e.touches[0].clientX;
   }, { passive: true });
