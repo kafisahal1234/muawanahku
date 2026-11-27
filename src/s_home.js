@@ -100,6 +100,7 @@ function tilesFor(st) {
     add("shield", "Kesantrian", "coral", () => nav.go("kesantrian", { pondok: "all" })); add("award", "Rapor", "gold", () => nav.go("raporList"));
     add("clipboard", "Ceklis Musyrif", "emerald", () => nav.go("rekapKhidmah", { pondok: "all" }));
   }
+  if (r.includes("mudir") || r.includes("admin")) add("chat", "Pesan ke Wali", "green", () => nav.go("pesanWali"));
   if (r.includes("wadir_tahfidz")) add("award", "Ujian Iqro'", "gold", () => nav.go("ujianIqra"), TSH.siapUjianSemua().length || null);
   if (r.includes("wadir_tahfidz")) { add("sliders", "Pengelolaan Tahfidz", "emerald", () => nav.go("pengelolaan")); add("award", "Rapor", "gold", () => nav.go("raporList")); }
   if (r.includes("wadir_kurikulum")) add("calendar", "Kurikulum", "orange", () => nav.go("kurikulum"));

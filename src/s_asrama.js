@@ -162,6 +162,7 @@ export function AsramaSaya() {
         <${Tile} icon="clipboard" label="Ceklis Musyrif" color="emerald" onClick=${() => nav.go("khidmah")} />
         ${!m.roles.includes("wadir_kesantrian") ? html`<${Tile} icon="door" label="Izin & Catatan" color="coral" badge=${izin || null} onClick=${() => nav.go("izinCatatan")} />` : null}
         <${Tile} icon="chart" label="Rekap Asrama" color="purple" onClick=${() => nav.go("rekapAsrama")} />
+        <${Tile} icon="chat" label="Pesan ke Wali" color="green" onClick=${() => nav.go("pesanWali")} />
         <${Tile} icon="calendar" label="Perolehan Hafalan" color="pink" onClick=${() => nav.go("hafalanBulan")} />
         <${Tile} icon="edit" label="Riwayat & Koreksi" color="slate" onClick=${() => nav.go("riwayatModul", { modul: "asrama" })} /></div></${Card}></div>`;
 }

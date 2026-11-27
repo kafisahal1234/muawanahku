@@ -9,6 +9,7 @@ import { useDownloads, unduh } from "./s_system.js";
 import { AiBtn, useAIRun } from "./s_ai.js";
 import { tanyaAI, SISTEM_DASAR } from "./ai.js";
 import { TombolKoreksi } from "./s_koreksi.js";
+import { TombolKabarIzin, TombolKabarBap } from "./s_wa.js";
 import { logUbah, hapusData } from "./s_koreksi.js";
 import { TINDAKAN, tindakanById, namaTindakan, saranTindakan, suratUntukBap, buatSurat, nomorIzin, nomorBap, selesaiSkorsing } from "./surat.js";
 
@@ -31,6 +32,7 @@ export function Kesantrian({ pondok }) {
       <${Tile} icon="edit" label="Riwayat & Koreksi" color="slate" onClick=${() => nav.go("riwayatModul", { modul: "kesantrian" })} />
       <${Tile} icon="user" label="Histori Santri" color="blue" onClick=${() => nav.go("histori", { pondok: p })} />
       <${Tile} icon="chart" label="Rekap Kesantrian" color="purple" onClick=${() => nav.go("rekapKesantrian", { pondok: p })} />
+      <${Tile} icon="chat" label="Pesan ke Wali" color="green" onClick=${() => nav.go("pesanWali")} />
       <${Tile} icon="moon" label="Rekap Asrama" color="indigo" onClick=${() => nav.go("rekapAsrama")} />
       <${Tile} icon="calendar" label="Rekap Izin" color="teal" onClick=${() => nav.go("rekapIzin", { pondok: p })} />
       <${Tile} icon="alert" label="Rekap Pelanggaran" color="pink" onClick=${() => nav.go("rekapPelanggaran", { pondok: p })} />
@@ -89,6 +91,7 @@ export function IzinView({ id }) {
       <div class="kv"><span>${i.jenis === "Keluar" ? "Pendamping" : "Penjemput"}</span><b>${i.penjemput || "—"}</b></div>${s.hpWali ? html`<div class="kv"><span>No. HP wali</span><b>${s.hpWali}</b></div>` : null}<div class="kv"><span>Dicatat oleh</span><b>${(L.staffById(i.oleh) || { nama: '—' }).nama}</b></div>
       ${i.status !== "aktif" ? html`<div class="kv"><span>Kembali pada</span><b>${L.fmtDT(i.kembaliAktual)} ${i.telat ? "· terlambat" : ""}</b></div>` : null}</div>
     <div class="mt12"><${Btn} kind="outline" icon="file" onClick=${() => sk && i.bap ? nav.go("surat", { jenis: "skorsing", id: i.bap }) : nav.go("surat", { jenis: "izin", id: i.id })}>${sk ? "Lihat surat skorsing" : "Lihat & cetak surat izin"}</${Btn}></div>
+    ${nav.user && nav.user.kind === "staff" ? html`<${TombolKabarIzin} i=${i} />` : null}
     <${TombolKoreksi} col="izin" rec=${i} label=${sk ? "Ubah / hapus skorsing" : "Ubah / hapus izin ini"} /></div>`;
 }
 
@@ -201,6 +204,7 @@ export function BapView({ id }) {
       ${b.foto ? html`<img class="photo" src=${b.foto} alt="Foto bukti" />` : null}
       <div class="btn-row mt12">${[["Santri", b.ttdSantri], ["Petugas", b.ttdPetugas]].map(([l, v]) => html`<div class="center"><div style="height:70px;border-bottom:1px solid #9AB0A5">${v ? html`<img src=${v} alt=${"Tanda tangan " + l} style="height:70px" />` : null}</div><small class="small">${l}</small></div>`)}</div>
       <p class="small mt8">Dicatat oleh ${(L.staffById(b.oleh) || { nama: '—' }).nama}${b.diubah ? ` · dikoreksi ${L.staffAman(b.diubah.oleh).pendek}` : ""}</p></div>
+    ${!wali ? html`<${TombolKabarBap} b=${b} />` : null}
     <${TombolKoreksi} col="bap" rec=${b} label="Ubah / hapus BAP ini" /></div>`;
 }
 
