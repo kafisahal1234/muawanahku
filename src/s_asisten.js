@@ -1,6 +1,7 @@
 // Asisten AI bergaya Gemini: percakapan berlanjut, jawaban mengalir, lampiran foto/berkas, salin/bagikan/ulangi,
 // dan riwayat percakapan tersimpan di perangkat (per akun). Data yang dibaca AI dibatasi sesuai hak akses akun.
 import { useState, useRef, useEffect } from "preact/hooks";
+import { dekatBawah } from "./gulir.js";
 import { html, nav, useApp, Icon, SubHeader, Sheet, Confirm, SearchBox } from "./ui.js";
 import { toast, uid } from "./store.js";
 import * as L from "./logic.js";
@@ -110,7 +111,7 @@ export function Asisten() {
   useEffect(() => { try { cid ? sessionStorage.setItem(sesiKey(), cid) : sessionStorage.removeItem(sesiKey()); } catch (e) { } }, [cid]);
   useEffect(() => { siapkanAI(); }, []);
   useEffect(() => { if (akhir.current && ikuti.current) akhir.current.scrollIntoView({ behavior: busy ? "auto" : "smooth", block: "end" }); }, [msgs, busy]);
-  useEffect(() => { const f = () => { ikuti.current = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 160; }; addEventListener("scroll", f, { passive: true }); return () => { removeEventListener("scroll", f); if (rec.current) try { rec.current.stop(); } catch (e) { } }; }, []);
+  useEffect(() => { const f = () => { ikuti.current = dekatBawah(160); }; document.addEventListener("scroll", f, { passive: true, capture: true }); return () => { document.removeEventListener("scroll", f, true); if (rec.current) try { rec.current.stop(); } catch (e) { } }; }, []);
   const tinggi = el => { if (!el) return; el.style.height = "auto"; el.style.height = Math.min(140, el.scrollHeight) + "px"; };
   useEffect(() => tinggi(inp.current), [q]);
 

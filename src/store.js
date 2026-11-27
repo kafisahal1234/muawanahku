@@ -6,6 +6,7 @@ const LSKEY = "muawanahku_demo_v1"; // nama lama sengaja dipertahankan (aplikasi
 export const S = { ready: false, mode: "local", note: "", data: {}, ver: 0, readonly: false };
 COLS.forEach(c => (S.data[c] = {}));
 const subs = new Set();
+export function segarkanTampilan() { emit(); }
 export function subscribe(fn) { subs.add(fn); return () => subs.delete(fn); }
 function emit() { S.ver++; subs.forEach(f => { try { f(S.ver); } catch (e) { console.error(e); } }); }
 let db = null;

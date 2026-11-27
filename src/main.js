@@ -1,4 +1,5 @@
 import { render, Component } from "preact";
+import { pasangTarik } from "./tarik.js";
 import { useEffect, useState } from "preact/hooks";
 import { html, nav, useApp, Icon, ToastHost } from "./ui.js";
 import { S, initStore, sambungUlang, toast } from "./store.js";
@@ -169,5 +170,5 @@ try {
   }, { passive: true });
   if ("serviceWorker" in navigator && location.protocol === "https:" && window.top === window && !/claude|anthropic/.test(location.hostname)) navigator.serviceWorker.register("sw.js").catch(() => {});
 } catch (e) { }
-terapkanTema(); terapkanBahasa();
+terapkanTema(); terapkanBahasa(); try { pasangTarik(); } catch (e) { }
 render(html`<${App} />`, document.getElementById("root"));

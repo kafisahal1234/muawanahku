@@ -275,3 +275,18 @@ html[data-tema=gelap] .ku-card{background:var(--card);border-color:var(--line);b
 html[data-tema=gelap] .ku-org{border-color:var(--line)}html[data-tema=gelap] .ku-ic{background:#1f3a2b;color:#8fe0b4}
 html[data-tema=gelap] .ku-foto{box-shadow:0 0 0 2px var(--card),0 0 0 4px rgba(226,169,59,.7)}
 .menu-row .foto-av,.row .foto-av{flex:0 0 auto!important}
+/* ===== v3.2: di HP yang menggulir kotak .app, bukan halaman — bagian paling atas tidak lagi buram, + tarik untuk memperbarui ===== */
+@media (max-width:1023px),(hover:none),(pointer:coarse){
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+  .app{position:fixed;top:0;bottom:0;left:0;right:0;margin:0 auto;min-height:0!important;height:auto;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:none}
+  html.pad-on .app{overflow:hidden}
+}
+body:before{background:var(--g)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.appbar{background:var(--g)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.ptr{position:fixed;left:0;right:0;margin:0 auto;max-width:480px;top:env(safe-area-inset-top,0px);height:var(--t,0px);background:var(--g);z-index:30;pointer-events:none;opacity:0;overflow:hidden}
+.ptr-sp{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;color:#fff;display:flex}
+.ptr.tanpa-pita{top:0;height:0;background:none;overflow:visible;z-index:31}
+.ptr.tanpa-pita .ptr-sp{position:fixed;top:var(--y);left:50%}
+.ptr-sp svg{fill:currentColor}
+.ptr.putar .ptr-sp{animation:ptrPutar .8s steps(8) infinite}
+@keyframes ptrPutar{to{transform:rotate(360deg)}}

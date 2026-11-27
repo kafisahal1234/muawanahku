@@ -1,4 +1,5 @@
 import { h } from "preact";
+import { keAtas } from "./gulir.js";
 import { createPortal } from "preact/compat";
 import { useState, useEffect, useRef } from "preact/hooks";
 import htm from "htm";
@@ -32,18 +33,18 @@ try {
   window.addEventListener("popstate", () => {
     if (ignore) { ignore = false; return; }
     if (live > 0) live--;
-    if (N.stack.length) pindah("back", () => { N.dir = "back"; N.stack.pop(); nemit(); window.scrollTo(0, 0); });
+    if (N.stack.length) pindah("back", () => { N.dir = "back"; N.stack.pop(); nemit(); keAtas(); });
     else if (N.user && N.tab !== "home") pindah("tab", () => { N.dir = "back"; N.tab = "home"; nemit(); });
   });
 } catch (e) { }
 export const nav = {
   get user() { return N.user; }, get tab() { return N.tab; }, get dir() { return N.dir; }, get splash() { return N.splash; }, get kembali() { return N.kembali; }, endSplash() { N.splash = false; nemit(); }, get top() { return N.stack[N.stack.length - 1]; }, get depth() { return N.stack.length; },
   setUser(u, opt = {}) { unwind(); N.user = u; N.stack = []; N.tab = "home"; N.dir = "tab"; N.splash = !!(u && opt.splash); N.kembali = !!opt.kembali; try { if (u) localStorage.setItem("mk_user", JSON.stringify(u)); else { localStorage.removeItem("mk_user"); sessionStorage.removeItem("mk_user"); } } catch (e) { } nemit(); },
-  go(screen, params = {}) { pindah("fwd", () => { N.dir = "fwd"; N.stack.push({ screen, params }); try { history.pushState({ mk: N.stack.length }, ""); live++; } catch (e) { } nemit(); window.scrollTo(0, 0); }); },
-  replace(screen, params = {}) { pindah("fwd", () => { N.dir = "fwd"; N.stack[N.stack.length - 1] = { screen, params }; nemit(); window.scrollTo(0, 0); }); },
-  back() { if (live > 0) { try { history.back(); return; } catch (e) { } } pindah("back", () => { N.dir = "back"; N.stack.pop(); nemit(); window.scrollTo(0, 0); }); },
-  home() { pindah("back", () => { unwind(); N.dir = "back"; N.stack = []; N.tab = "home"; nemit(); window.scrollTo(0, 0); }); },
-  setTab(t) { if (t === N.tab && !N.stack.length) { window.scrollTo({ top: 0, behavior: "smooth" }); return; } pindah("tab", () => { unwind(); N.dir = "tab"; N.stack = []; N.tab = t; nemit(); window.scrollTo(0, 0); }); },
+  go(screen, params = {}) { pindah("fwd", () => { N.dir = "fwd"; N.stack.push({ screen, params }); try { history.pushState({ mk: N.stack.length }, ""); live++; } catch (e) { } nemit(); keAtas(); }); },
+  replace(screen, params = {}) { pindah("fwd", () => { N.dir = "fwd"; N.stack[N.stack.length - 1] = { screen, params }; nemit(); keAtas(); }); },
+  back() { if (live > 0) { try { history.back(); return; } catch (e) { } } pindah("back", () => { N.dir = "back"; N.stack.pop(); nemit(); keAtas(); }); },
+  home() { pindah("back", () => { unwind(); N.dir = "back"; N.stack = []; N.tab = "home"; nemit(); keAtas(); }); },
+  setTab(t) { if (t === N.tab && !N.stack.length) { keAtas(true); return; } pindah("tab", () => { unwind(); N.dir = "tab"; N.stack = []; N.tab = t; nemit(); keAtas(); }); },
 };
 export function useApp() {
   const [, set] = useState(0);
