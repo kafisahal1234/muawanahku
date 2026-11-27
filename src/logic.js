@@ -527,11 +527,21 @@ export function hariMutSantri(sid, rg) {
 // tanggal yang masih boleh diisi menyusul (hari aktif mutaba'ah, sebelum hari ini, dalam batas rapel)
 export function tglRapel(tgl = today()) { const o = []; for (let i = 1; i <= RAPEL_HARI; i++) { const t = addDays(tgl, -i); if (t >= setelan().mulaiPakai && hariAktif(t, "mutabaah")) o.push(t); } return o; }
 export const bisaRapel = tgl => tglRapel().includes(tgl);
+// Butir ibadah yang berlaku pada tanggal itu. "Puasa sunnah" hanya muncul hari Senin (Puasa sunnah Senin)
+// dan Kamis (Puasa sunnah Kamis); hari lain tidak dinilai. Indeks butir tetap sama dengan DATA.ibadah.
+export const IB_PUASA = DATA.ibadah.findIndex(t => /^puasa sunnah/i.test(t));
+export function ibadahHari(tgl) {
+  const wd = parseYmd(tgl).getDay();
+  return DATA.ibadah.map((t, i) => [t, i]).filter(([, i]) => i !== IB_PUASA || wd === 1 || wd === 4)
+    .map(([t, i]) => [i === IB_PUASA ? (wd === 1 ? "Puasa sunnah Senin" : "Puasa sunnah Kamis") : t, i]);
+}
+export const ibadahBerlaku = (tgl, i) => i !== IB_PUASA || [1, 4].includes(parseYmd(tgl).getDay());
 export function mutPersen(sid, rg = rgSemester()) {
   const { semua, dinilai: hari } = hariMutSantri(sid, rg); if (!hari.length) return { ibadah: null, adab: null, hari: 0, isi: 0, kosong: 0, dikecualikan: semua.length, menyusul: 0 };
   let ib = 0, ad = 0, isi = 0, menyusul = 0;
-  hari.forEach(t => { const d = get("mutabaah", mutKey(sid, t)); if (d) { isi++; if (d.menyusul) menyusul++; ib += (d.ibadah || []).length; ad += (d.adab || []).length; } });
-  return { ibadah: isi ? pct(ib, isi * DATA.ibadah.length) : null, adab: isi ? pct(ad, isi * DATA.adab.length) : null, hari: hari.length, isi, kosong: hari.length - isi, dikecualikan: semua.length - hari.length, menyusul };
+  let nIb = 0;
+  hari.forEach(t => { const d = get("mutabaah", mutKey(sid, t)); if (d) { isi++; if (d.menyusul) menyusul++; nIb += ibadahHari(t).length; ib += (d.ibadah || []).filter(i => ibadahBerlaku(t, i)).length; ad += (d.adab || []).length; } });
+  return { ibadah: isi ? pct(ib, nIb) : null, adab: isi ? pct(ad, isi * DATA.adab.length) : null, hari: hari.length, isi, kosong: hari.length - isi, dikecualikan: semua.length - hari.length, menyusul };
 }
 export function predikatMut(v) {
   if (v == null || isNaN(v)) return { h: "—", t: "Belum ada data", c: "muted" };
@@ -542,8 +552,10 @@ export function predikatMut(v) {
 }
 export function mutPerButir(sid, rg = rgSemester()) {
   // nilai dihitung dari hari yang mutaba'ahnya terisi saja (hari kosong tidak menurunkan nilai)
-  const hari = hariMutSantri(sid, rg).dinilai, docs = hari.map(t => get("mutabaah", mutKey(sid, t))).filter(Boolean), n = docs.length;
-  const f = (key, len) => Array.from({ length: len }, (_, i) => (n ? Math.round((docs.filter(d => (d[key] || []).includes(i)).length / n) * 100) : null));
+  const hari = hariMutSantri(sid, rg).dinilai, docs = hari.map(t => [t, get("mutabaah", mutKey(sid, t))]).filter(([, d]) => d), n = docs.length;
+  // tiap butir dibagi jumlah hari butir itu berlaku (puasa sunnah: hanya Senin & Kamis)
+  const f = (key, len) => Array.from({ length: len }, (_, i) => { const ds = key === "ibadah" ? docs.filter(([t]) => ibadahBerlaku(t, i)) : docs;
+    return ds.length ? Math.round((ds.filter(([, d]) => (d[key] || []).includes(i)).length / ds.length) * 100) : null; });
   return { hari: hari.length, isi: docs.length, ibadah: f("ibadah", DATA.ibadah.length), adab: f("adab", DATA.adab.length) };
 }
 // MOTD: waktu yang diabsen / (hari aktif × 8 waktu)

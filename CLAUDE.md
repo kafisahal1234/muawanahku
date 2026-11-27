@@ -17,6 +17,7 @@ PYTHONPATH=test/pwseed python3 test/sweep.py          # semua layar semua akun g
 PYTHONPATH=test/pwseed python3 test/rekap_layar.py    # tangkapan layar rekap  → test/out/rekap/
 PYTHONPATH=test/pwseed python3 test/wali_layar.py     # tangkapan layar wali   → test/out/wali/
 PYTHONPATH=test/pwseed python3 test/laporan_ziyadah.py
+PYTHONPATH=test/pwseed python3 test/puasa_sunnah.py     # butir puasa hanya Senin & Kamis
 cd test/aturan && npm install && npm test             # uji firestore.rules di emulator (harus "gagal 0")
 ```
 
@@ -60,7 +61,7 @@ Preact + htm, dibundel esbuild; CSS = `theme.css + skin.css + dark.css + dark_ma
 
 **Tahfidz**: 15 baris = 1 halaman, 20 halaman = 1 juz; target 2 juz/semester. Urutan: Juz 30, 29, lalu 1, 2, … Santri Iqro' → Tahsin; ujian kenaikan jilid hanya Wadir Tahfidz (Lulus / Belum lulus).
 
-**Jadwal**: KBM Senin–Jumat; halaqah Senin–Sabtu (Sabtu hanya Shubuh, manzil); mutaba'ah libur Sabtu & Ahad. Pakai "Ahad", bukan "Minggu".
+**Jadwal**: KBM Senin–Jumat; halaqah Senin–Sabtu (Sabtu hanya Shubuh, manzil); mutaba'ah libur Sabtu & Ahad; butir "Puasa sunnah" hanya muncul & dinilai Senin (Puasa sunnah Senin) dan Kamis (Puasa sunnah Kamis) — `L.ibadahHari(tgl)`. Pakai "Ahad", bukan "Minggu".
 
 **Rekap**: hanya **Bulanan, Tengah semester, Semester**. Satu halaman per rekap, tiap aspek kartu sendiri (angka besar + daftar berperingkat + bar), kehadiran **selalu persen**, **tanpa link** ke halaman lain, sederhana per peran. Data kosong = "Belum ada data".
 

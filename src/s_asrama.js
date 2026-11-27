@@ -99,7 +99,8 @@ function MutForm({ sid, list, onNext, tgl, ubah }) {
   const s = L.santriById(sid), ex = get("mutabaah", L.mutKey(sid, tgl)), auto = L.mutAuto(s, tgl);
   const [ib, setIb] = useState(() => new Set(ex ? ex.ibadah : []));
   const [ad, setAd] = useState(() => new Set(ex ? ex.adab : []));
-  const ibFinal = new Set(ib); Object.entries(auto).forEach(([i, v]) => { if (v === true) ibFinal.add(Number(i)); if (v === false) ibFinal.delete(Number(i)); });
+  const ibHari = L.ibadahHari(tgl), ibFinal = new Set(ib); Object.entries(auto).forEach(([i, v]) => { if (v === true) ibFinal.add(Number(i)); if (v === false) ibFinal.delete(Number(i)); });
+  [...ibFinal].forEach(i => { if (!L.ibadahBerlaku(tgl, i)) ibFinal.delete(i); });
   const tog = (set, setter, i) => { const n = new Set(set); n.has(i) ? n.delete(i) : n.add(i); setter(n); };
   const src = i => (DATA.auto[i] && DATA.auto[i][0] !== "motd" ? "Dari absen halaqah" : null);
   const belumLain = perluIsi(list, tgl).filter(x => x.id !== sid), lewat = !ex && L.alasanTidakDinilai(sid, tgl), lampau = tgl < L.today();
@@ -113,10 +114,10 @@ function MutForm({ sid, list, onNext, tgl, ubah }) {
     }
   };
   if (ex && !ubah) {
-    const kurangI = DATA.ibadah.map((t, i) => [t, i]).filter(([, i]) => !ex.ibadah.includes(i)), kurangA = DATA.adab.map((t, i) => [t, i]).filter(([, i]) => !ex.adab.includes(i));
+    const kurangI = ibHari.filter(([, i]) => !ex.ibadah.includes(i)), kurangA = DATA.adab.map((t, i) => [t, i]).filter(([, i]) => !ex.adab.includes(i));
     return html`<div class="wrap">
       <div class="selesai-card"><span class="sc-ic"><${Icon} n="check" s=${26} c="#fff" w=${3} /></span><div><b>Mutaba'ah ${s.panggilan || s.nama.split(" ")[0]} sudah diisi</b><small>Diisi ${L.staffAman(ex.guru).pendek} pukul ${L.fmtJam(ex.ts)}${ex.menyusul ? " · diisi menyusul" : ""}</small></div></div>
-      <${Card}><div class="minis"><${Pill} t=${`Ibadah ${ex.ibadah.length}/${DATA.ibadah.length}`} tone="green" /><${Pill} t=${`Adab ${ex.adab.length}/${DATA.adab.length}`} tone="blue" /></div>
+      <${Card}><div class="minis"><${Pill} t=${`Ibadah ${ex.ibadah.filter(i => L.ibadahBerlaku(tgl, i)).length}/${ibHari.length}`} tone="green" /><${Pill} t=${`Adab ${ex.adab.length}/${DATA.adab.length}`} tone="blue" /></div>
         ${kurangI.length + kurangA.length ? html`<div class="grp">Belum dilaksanakan</div><div class="list">${[...kurangI.map(([t]) => ["Ibadah", t]), ...kurangA.map(([t]) => ["Adab", t])].map(([j, t]) => html`<${Row} name=${t} sub=${j} />`)}</div>`
           : html`<p class="small center" style="margin:12px 0 4px">Semua ibadah dan adab terlaksana.</p>`}</${Card}>
       ${belumLain.length ? html`<${Btn} icon="right" onClick=${() => onNext(belumLain[0].id)}>Isi santri berikutnya · ${belumLain.length} belum</${Btn}>` : html`<p class="small center">Semua santri asrama sudah diisi${lampau ? " untuk tanggal ini" : " hari ini"}.</p>`}
@@ -124,8 +125,8 @@ function MutForm({ sid, list, onNext, tgl, ubah }) {
   }
   return html`<div class="wrap">
     ${lewat ? html`<div class="mut-td"><b>${s.panggilan || s.nama.split(" ")[0]} boleh dilewati</b><small>${lewat}. Kalau tidak diisi, hari ini tidak mengurangi nilainya.</small>${belumLain.length ? html`<button type="button" class="link" onClick=${() => onNext(belumLain[0].id)}>Lewati</button>` : null}</div>` : null}
-    <${Card}><div style="display:flex;justify-content:space-between;align-items:center"><div><b>${s.nama}</b><div class="small">Kelas ${s.kelas}</div></div><${Pill} t=${`${ibFinal.size + ad.size} dari ${DATA.ibadah.length + DATA.adab.length}`} tone="gold" /></div></${Card}>
-    <${Card} title="Ibadah" right=${html`<small>${ibFinal.size}/${DATA.ibadah.length}</small>`}>${DATA.ibadah.map((t, i) => {
+    <${Card}><div style="display:flex;justify-content:space-between;align-items:center"><div><b>${s.nama}</b><div class="small">Kelas ${s.kelas}</div></div><${Pill} t=${`${ibFinal.size + ad.size} dari ${ibHari.length + DATA.adab.length}`} tone="gold" /></div></${Card}>
+    <${Card} title="Ibadah" right=${html`<small>${ibFinal.size}/${ibHari.length}</small>`}>${ibHari.map(([t, i]) => {
       const au = auto[i], isAuto = au === true || au === false, on = ibFinal.has(i);
       return html`<button class=${"check " + (on ? "on " : "") + (isAuto ? "auto" : "")} aria-pressed=${on} disabled=${isAuto} onClick=${() => tog(ib, setIb, i)}>
         <span class="box">${on ? html`<${Icon} n="check" s=${16} c="#fff" w=${3} />` : null}</span><span>${t}</span>${src(i) ? html`<em>${isAuto ? src(i) : "Belum diabsen"}</em>` : null}</button>`; })}</${Card}>
