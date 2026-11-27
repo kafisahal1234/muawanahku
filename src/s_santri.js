@@ -74,7 +74,7 @@ export function RaporList() {
   const [scope, setScope] = useState(a && !lihatSemua ? a.id : (a ? a.id : "all")); const [q, setQ] = useState("");
   const list = (scope === "all" ? L.santriList() : L.santriAsrama(scope)).filter(s => s.nama.toLowerCase().includes(q.toLowerCase()));
   return html`<${SubHeader} title="Rapor" sub="Semester ganjil 2026/2027 · tersusun otomatis">${lihatSemua ? html`<${Seg} small items=${[...(a ? [[a.id, "Asrama saya"]] : []), ["all", "Semua santri"]]} value=${scope} onChange=${setScope} />` : null}</${SubHeader}>
-    <div class="wrap"><${SearchBox} value=${q} onInput=${setQ} /><${Card}><div class="list">${list.map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama}`} onClick=${() => nav.go("raporView", { sid: s.id })} />`)}</div></${Card}></div>`;
+    <div class="wrap"><${SearchBox} value=${q} onInput=${setQ} />${L.kelompokPondok(list, s => L.pondokOfSantri(s)).filter(g => g.isi.length).map(g => html`<${Card} title=${`${g.nama} · ${g.ket} (${g.isi.length})`}><div class="list">${g.isi.map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama}`} onClick=${() => nav.go("raporView", { sid: s.id })} />`)}</div></${Card}>`)}</div>`;
 }
 
 export { RaporView } from "./s_rapor.js";

@@ -33,7 +33,10 @@ export function SantriAdmin({ asrama, kelas }) {
     <div class="wrap"><${SearchBox} value=${q} onInput=${setQ} />
     <button class="up-cta" onClick=${() => nav.go("impor")}><span class="up-ic"><${Icon} n="upload" s=${22} /></span><span><b>Impor / lengkapi dari dokumen</b><small>Tgl lahir, NIS, orang tua · dibaca AI</small></span><${Icon} n="chev" s=${18} /></button>
     <${Btn} kind="ghost" icon="plus" onClick=${() => setEd({ baru: true, nama: "", kelas: "7", asrama: asrama || "a1" })}>Tambah santri</${Btn}>
-    <div class="mt12"><${Card}><div class="list">${list.map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama} · akun wali: ${s.wali}`} onClick=${() => setEd({ ...s })} />`)}</div></${Card}></div>
+    <div class="mt12">${L.kelompokPondok(list, s => L.pondokOfSantri(s)).filter(g => g.isi.length).map(g => html`<${Section} t=${`${g.nama} · ${g.ket} (${g.isi.length})`} />
+      ${L.ASRAMA.filter(a => g.isi.some(s => s.asrama === a.id)).map(a => { const ls = g.isi.filter(s => s.asrama === a.id); return html`<${Card} title=${`Asrama ${a.nama} (${ls.length})`}><div class="list">${ls.map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas}${s.panggilan ? " · " + s.panggilan : ""}${s.hpWali ? " · WA ✓" : ""}`} onClick=${() => setEd({ ...s })} />`)}</div></${Card}>`; })}
+      ${g.isi.some(s => !L.ASRAMA.some(a => a.id === s.asrama)) ? html`<${Card} title="Tanpa asrama"><div class="list">${g.isi.filter(s => !L.ASRAMA.some(a => a.id === s.asrama)).map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas}`} onClick=${() => setEd({ ...s })} />`)}</div></${Card}>` : null}`)}
+      ${!list.length ? html`<${Card}><${Empty} t="Tidak ada santri yang cocok." /></${Card}>` : null}</div>
     ${ed ? html`<${EditSantri} e=${ed} onClose=${() => setEd(null)} />` : null}</div>`;
 }
 function EditSantri({ e, onClose }) {
@@ -83,12 +86,12 @@ export function AkunAdmin() {
   return html`<${SubHeader} title="Guru & Akun" sub=${`${L.staffAktif().length} akun guru dan pengurus aktif`} /><div class="wrap">
     <${Hint}>Ketuk akun untuk mengubah nama, username, peran, mapel yang diajar, atau asrama binaan. Akun hanya dibuat dan dihapus oleh Admin.</${Hint}>
     <${Btn} kind="ghost" icon="plus" onClick=${() => setEd({ baru: true, nama: "", pendek: "", username: "", roles: ["guru_mapel"], ajar: [], pondok: "29" })}>Tambah akun guru</${Btn}>
-    <div class="mt12"><${Card}><div class="list">${L.STAFF.map(s => { const del0 = (L.akunOv(s.username) || {}).hapus, saya = s.id === me().id, a = L.asramaOf(s.id);
+    <div class="mt12">${L.kelompokPondok(L.STAFF, s => { const p = L.pondokStaff(s); return p.length === 1 ? p[0] : "lain"; }).filter(g => g.isi.length).map(g => html`<${Section} t=${`${g.nama}${g.ket ? " · " + g.ket : ""} (${g.isi.length})`} /><${Card}><div class="list">${g.isi.map(s => { const del0 = (L.akunOv(s.username) || {}).hapus, saya = s.id === me().id, a = L.asramaOf(s.id);
       return html`<div class="row" style="align-items:flex-start;${del0 ? "opacity:.55" : ""}"><button class="row-t" style="text-align:left;display:flex;gap:12px;align-items:flex-start;min-height:44px" onClick=${() => !del0 && setEd({ ...s, asrama: a ? a.id : "" })}>
         <span class="av">${L.initials((s.pendek || s.nama).replace(/^Ust(dzh)?\.\s*/, ""))}</span><span style="min-width:0;flex:1"><b style="display:block;font-size:15px">${s.nama}</b>
         <small style="display:block;font-size:13px;color:var(--mut)">username <b style="display:inline">${s.username}</b>${del0 ? " · akun dihapus" : ""}${a ? ` · asrama ${a.nama}` : ""}</small>
         <span class="chips" style="margin-top:6px">${s.roles.map(r => html`<${Pill} t=${L.ROLE_LABEL[r] + (r === "wadir_kesantrian" ? " " + s.pondok : "")} tone="blue" />`)}${s.ajar.length ? html`<${Pill} t=${s.ajar.map(([m, k]) => `${L.mapelById(m).nama.replace("Pendidikan ", "").replace("Bahasa ", "B. ")} ${k}`).join(", ")} tone="muted" />` : null}</span></span></button>
-      ${saya ? null : del0 ? html`<button class="link" onClick=${() => pulihkan(s)}>Pulihkan</button>` : html`<button class="icon-btn" aria-label=${"Hapus akun " + s.username} onClick=${() => setAsk(s)}><${Icon} n="trash" s=${20} c="#B3261E" /></button>`}</div>`; })}</div></${Card}></div>
+      ${saya ? null : del0 ? html`<button class="link" onClick=${() => pulihkan(s)}>Pulihkan</button>` : html`<button class="icon-btn" aria-label=${"Hapus akun " + s.username} onClick=${() => setAsk(s)}><${Icon} n="trash" s=${20} c="#B3261E" /></button>`}</div>`; })}</div></${Card}>`)}</div>
     <${Card} title="Akun wali santri"><p class="small" style="margin:0">Setiap santri punya satu akun wali. Wali masuk dengan satu kotak <b>kode akses</b>: nama panggilan santri + tanggal lahir (tanggal, bulan, tahun), contoh <b>fulan010112</b> (Fulan, lahir 1 Januari 2012). Kode dibuat otomatis, huruf kecil semua. Tanggal lahir diisi di Data Santri. Akun wali otomatis terhapus saat santri dihapus dari Data Santri.</p>
       <div class="mt8"><${Btn} kind="ghost" icon="users" onClick=${() => nav.go("santriAdmin")}>Buka Data Santri</${Btn}></div></${Card}>
     ${ed ? html`<${EditStaff} e=${ed} onClose=${() => setEd(null)} onSandi=${(u, pw) => setBaruSandi({ u, pw })} />` : null}
@@ -105,13 +108,13 @@ function EditStaff({ e, onClose, onSandi }) {
   const dupe = L.STAFF.some(s => s.username === un && s.id !== e.id) || L.santriList().some(s => s.wali === un);
   const oldA = e.baru ? null : L.asramaOf(e.id), newA = f.roles.includes("musyrif") ? f.asrama : "";
   const sandiBaru = String(f.sandi || ""), bawaan = L.sandiReset({ ...f, pendek: (f.pendek || "").trim() || f.nama });
-  const err = !f.nama.trim() ? "Nama wajib diisi." : sandiBaru && sandiBaru.length < 6 ? "Kata sandi minimal 6 karakter." : !/^[a-z0-9]{3,20}$/.test(un) ? "Username 3–20 huruf kecil/angka tanpa spasi." : dupe ? "Username sudah dipakai." : !f.roles.length ? "Pilih minimal satu peran."
+  const err = !f.nama.trim() ? "Nama wajib diisi." : f.hp && String(f.hp).trim() && !L.waNomor(f.hp) ? "Nomor WhatsApp belum benar. Contoh: 0812 3456 7890" : sandiBaru && sandiBaru.length < 6 ? "Kata sandi minimal 6 karakter." : !/^[a-z0-9]{3,20}$/.test(un) ? "Username 3–20 huruf kecil/angka tanpa spasi." : dupe ? "Username sudah dipakai." : !f.roles.length ? "Pilih minimal satu peran."
     : saya && e.roles.includes("admin") && !f.roles.includes("admin") ? "Anda tidak bisa mencabut peran Admin dari akun sendiri." : oldA && newA !== oldA.id && !newA ? `${oldA.nama} akan tanpa wali asrama. Pilih asrama pengganti, atau tetapkan guru lain untuk ${oldA.nama} dulu.` : "";
   const pindah = newA && (!oldA || newA !== oldA.id) ? L.asramaById(newA) : null, ganti = pindah ? L.staffById(pindah.musyrif) : null;
   const save = async () => {
     setBusy(true);
     const id = e.baru ? uid("g").toLowerCase() : e.id, rename = !e.baru && un !== e.username;
-    const d = { nama: f.nama.trim(), pendek: (f.pendek || "").trim() || f.nama.trim().split(",")[0].split(" ").slice(0, 2).join(" "), username: un, roles: f.roles, ajar: f.roles.includes("guru_mapel") ? f.ajar : [], ...(f.roles.includes("wadir_kesantrian") ? { pondok: f.pondok || "29" } : {}),
+    const d = { nama: f.nama.trim(), pendek: (f.pendek || "").trim() || f.nama.trim().split(",")[0].split(" ").slice(0, 2).join(" "), username: un, roles: f.roles, hp: L.waNomor(f.hp) ? L.waNomor(f.hp) : "", tampilWali: f.tampilWali !== false, ajar: f.roles.includes("guru_mapel") ? f.ajar : [], ...(f.roles.includes("wadir_kesantrian") ? { pondok: f.pondok || "29" } : {}),
     };
     const pw = sandiBaru || (e.baru || rename ? L.sandiReset(d) : null), lama = { ...((S.data.staffEdit || {})[id] || {}) }; delete lama.password; delete lama.sandiHash;
     let ok = await put("staffEdit", id, { ...lama, ...d });
@@ -126,6 +129,8 @@ function EditStaff({ e, onClose, onSandi }) {
     <${Field} label="Nama lengkap dengan gelar"><input class="in" value=${f.nama} placeholder="Ust. Nama Lengkap, S.Pd" onInput=${x => set("nama", x.target.value)} /></${Field}>
     <div class="btn-row"><${Field} label="Nama panggilan"><input class="in" value=${f.pendek} placeholder="Ust. Nama" onInput=${x => set("pendek", x.target.value)} /></${Field}>
       <${Field} label="Username"><input class="in" autocapitalize="none" value=${f.username} onInput=${x => set("username", x.target.value.toLowerCase().replace(/\s/g, ""))} /></${Field}></div>
+    <${Field} label="No. WhatsApp" hint="Tampil sebagai kontak di akun wali santri yang terkait (wali asrama, guru halaqah, guru mapel, pimpinan)."><input class="in" type="tel" inputmode="tel" placeholder="0812 3456 7890" value=${f.hp ? (String(f.hp).startsWith("62") ? "0" + String(f.hp).slice(2) : f.hp) : ""} onInput=${x => set("hp", x.target.value)} /></${Field}>
+    <label class="cek-row" style="display:flex;gap:10px;align-items:center;margin:-4px 0 12px;font-size:14px"><input type="checkbox" checked=${f.tampilWali !== false} onChange=${x => set("tampilWali", x.target.checked)} /> Tampilkan nomor ini di akun wali</label>
     <${Field} label=${e.baru ? "Kata sandi" : "Kata sandi baru"} hint=${e.baru ? `Kosongkan untuk memakai sandi bawaan: ${bawaan}` : un !== e.username ? `Username berubah: bila dikosongkan, sandi menjadi ${bawaan}` : "Kosongkan bila tidak diganti"}><${PassInput} value=${f.sandi || ""} autocomplete="new-password" placeholder=${e.baru ? bawaan : "tidak diganti"} onInput=${x => set("sandi", x.target.value)} /></${Field}>
     <${Field} label="Peran"><div class="chips">${PERAN.map(r => html`<button type="button" class=${"pill " + (f.roles.includes(r) ? "green" : "muted")} style="min-height:36px;padding:0 12px" aria-pressed=${f.roles.includes(r)} onClick=${() => togR(r)}>${f.roles.includes(r) ? "✓ " : ""}${L.ROLE_LABEL[r]}</button>`)}</div></${Field}>
     ${f.roles.includes("wadir_kesantrian") ? html`<${Field} label="Wadir kesantrian untuk"><${Seg} small items=${[["29", "Pondok 29"], ["21", "Pondok 21"]]} value=${f.pondok || "29"} onChange=${v => set("pondok", v)} /></${Field}>` : null}
@@ -148,8 +153,8 @@ export function AsramaAdmin({ halaqah }) {
 
 export function KelasAdmin() {
   useApp();
-  return html`<${SubHeader} title="Kelas" sub="Semester ganjil 2026/2027" /><div class="wrap"><${Card}><div class="list">
-    ${L.KELAS.map(k => html`<${Row} name=${k.nama} sub=${`Pondok ${k.pondok} · ${L.santriKelas(k.id).length} santri`} icon=${html`<${Icon} n="grid" s=${18} />`} onClick=${() => nav.go("santriAdmin", { kelas: k.id })} />`)}</div></${Card}></div>`;
+  return html`<${SubHeader} title="Kelas" sub="Semester ganjil 2026/2027" /><div class="wrap">${L.kelompokPondok(L.KELAS, k => k.pondok).map(g => html`<${Card} title=${g.nama}><div class="list">
+    ${g.isi.map(k => html`<${Row} name=${k.nama} sub=${`${L.santriKelas(k.id).length} santri`} icon=${html`<${Icon} n="grid" s=${18} />`} onClick=${() => nav.go("santriAdmin", { kelas: k.id })} />`)}</div></${Card}>`)}</div>`;
 }
 
 export function Pengumuman() {

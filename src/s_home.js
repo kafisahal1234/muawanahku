@@ -7,6 +7,7 @@ import { DATA } from "./data.js";
 import * as L from "./logic.js";
 import * as KH from "./s_khidmah.js";
 import * as TSH from "./s_tahsin.js";
+import * as WA from "./s_wa.js";
 import { kumpulRiwayat, entriRiwayat, KoreksiSheet } from "./s_koreksi.js";
 import { me, FotoAv, FotoLihat, fotoUser } from "./common.js";
 import { HafalanCard, RiwayatSetoran, KehadiranCard, CatatanCard } from "./s_santri.js";
@@ -218,7 +219,7 @@ export function CariSantri() {
   useApp();
   const [q, setQ] = useState(""); const list = L.santriScope(nav.user).filter(s => s.nama.toLowerCase().includes(q.toLowerCase()));
   return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Cari Santri</h1><p>${list.length} santri sesuai akses Anda</p></div></div></div>
-    <div class="wrap"><${SearchBox} value=${q} onInput=${setQ} /><${Card}><div class="list">${list.slice(0, 80).map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama}`} onClick=${() => nav.go("santri", { sid: s.id })} />`)}</div></${Card}></div>`;
+    <div class="wrap"><${SearchBox} value=${q} onInput=${setQ} />${L.kelompokPondok(list.slice(0, 120), s => L.pondokOfSantri(s)).filter(g => g.isi.length).map(g => html`<${Card} title=${`${g.nama} · ${g.ket} (${g.isi.length})`}><div class="list">${g.isi.map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama}`} onClick=${() => nav.go("santri", { sid: s.id })} />`)}</div></${Card}>`)}</div>`;
 }
 
 export function RiwayatSaya() {
@@ -244,7 +245,7 @@ export function Akun() {
       <div class="acc-head"><${FotoLihat} src=${fotoUser(u)} nama=${st ? st.pendek : sa.nama} size=${58} />
         <span class="acc-t"><b>${st ? st.nama : "Wali " + sa.nama}</b><small>${st ? st.roles.map(r => L.ROLE_LABEL[r]).join(" · ") : `Kelas ${sa.kelas} · ${L.asramaAman(sa.asrama).nama}`}</small></span></div>
       ${st ? html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil", pr ? "Biodata & foto profil" : "Lengkapi biodata & foto profil", () => nav.go("profil"), "green")}${item("lock", "Keamanan", "Username & kata sandi", () => nav.go("keamanan"), "blue")}${st.roles.some(r => L.TTD_ROLES.includes(r)) ? item("pen", "Tanda Tangan", get("ttd", st.id) ? "Tersimpan · otomatis di rapor & surat" : "Belum ada · tulis di layar atau foto dari kertas", () => nav.go("tandaTangan"), "purple") : null}</div>`
-        : html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil Ananda", fotoUser(u) ? "Biodata & foto profil" : "Biodata · tambahkan foto profil", () => nav.go("waliProfil"), "green")}</div>`}
+        : html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil Ananda", fotoUser(u) ? "Biodata & foto profil" : "Biodata · tambahkan foto profil", () => nav.go("waliProfil"), "green")}${item("chat", "Kontak ustadz", "Wali asrama, guru, pimpinan pondok", () => nav.go("kontakUstadz"), "teal")}</div>`}
       <div class="group mt8">${item("clipboard", "Log perubahan data", st ? "Koreksi & penghapusan oleh akun ini" : "Perubahan biodata ananda", () => nav.go("logUbah"), "gold")}</div>
       <${Section} t="Tampilan & bahasa" /><div class="group">${item(tema === "gelap" ? "moon" : "sun", "Tema", { terang: "Mode terang", gelap: "Mode gelap", sistem: "Ikuti pengaturan HP" }[tema], () => setPilih("tema"), "indigo")}${item("globe", "Bahasa", (BAHASA.find(x => x[0] === bahasa()) || BAHASA[0])[1], () => setPilih("bahasa"), "teal")}</div>
       <${Section} t="Informasi" /><div class="group">${item("bookopen", "Bantuan", null, () => nav.go("bantuan"), "teal")}${item("shield", "Kebijakan Privasi", null, () => nav.go("privasi"), "purple")}${item("settings", "Tentang aplikasi", VERSI, () => nav.go("tentang"), "slate")}</div>
@@ -315,6 +316,7 @@ export function WaliBeranda() {
   return html`<${HomeTop} cls="hc-hf" nama=${"Wali " + (s.panggilan || s.nama.split(" ")[0])} sub=${`${s.nama} · Kelas ${s.kelas} · ${a.nama}`} bell=${newPeng()} foto=${fotoUser(nav.user)}>
       <${KartuHafalan} h=${h} c=${c} t=${L.tahsinStatus(s)} /></${HomeTop}>
     <div class="wrap"><button class="strip" onClick=${() => nav.go("waliRekap")}><span class="strip-ic" style=${`background:${WARNA.teal[2]}`}><${Ikon} n="grafik" warna="teal" s=${28} /></span><span class="strip-t"><b>Rekap Ananda</b><small>Hafalan, kehadiran, izin, pelanggaran per periode</small></span><span class="strip-go">Buka <${Icon} n="right" s=${16} w=${2.4} /></span></button>
+    <${WA.KontakUtamaWali} s=${s} />
     ${(() => { const rg = L.periodeRange("bulanan"), kh = L.kehadiranHalaqah(s.id, rg), mp = L.mutPersen(s.id, rg), po = L.poinSantri(s.id);
       return html`<${Card} title="Bulan ini" right=${html`<small>${rg.label}</small>`}><div class="stats"><${Stat} label="Hadir halaqah" value=${kh.pct == null ? "—" : kh.pct + "%"} /><${Stat} label="Mutaba'ah" value=${mp.ibadah == null ? "—" : Math.round((mp.ibadah + mp.adab) / 2) + "%"} /><${Stat} label="Poin catatan" value=${po.total} tone=${po.total ? "gold" : ""} /></div></${Card}>`; })()}
     <${KartuAI} judul="Ringkasan untuk Ayah/Bunda" tombol="Buat ringkasan perkembangan" ket="AI merangkum perkembangan ananda dari data pondok dalam bahasa yang mudah dipahami." buat=${() => ringkasWali(s)} />

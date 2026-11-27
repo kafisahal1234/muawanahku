@@ -105,7 +105,7 @@ export function PesanWali() {
   const n = Object.keys(terkirim).filter(x => list.some(s => s.id === x)).length;
   return html`<${SubHeader} title="Pesan ke wali" sub="Satu pesan untuk semua wali, dikirim satu per satu lewat WhatsApp" />
     <div class="wrap">
-      <${Card}><${Field} label="Kirim ke"><select class="in" value=${grup} onChange=${e => { setGrup(e.target.value); setTerkirim({}); }}>${pilihan.map(([v, l]) => html`<option value=${v}>${l}</option>`)}</select></${Field}>
+      <${Card}><${Field} label="Kirim ke"><select class="in" value=${grup} onChange=${e => { setGrup(e.target.value); setTerkirim({}); }}>${L.kelompokPondok(pilihan, ([v]) => (v[0] === "a" ? L.pondokAsrama(v.slice(2)) : L.pondokHalaqah(L.HALAQAH.find(h => h.id === v.slice(2))))).filter(g => g.isi.length).map(g => html`<optgroup label=${g.nama}>${g.isi.map(([v, l]) => html`<option value=${v}>${l}</option>`)}</optgroup>`)}</select></${Field}>
         <${Seg} small items=${[["rapor", "Undangan rapor"], ["libur", "Info libur"], ["bebas", "Pesan bebas"]]} value=${jenis} onChange=${gantiJenis} />
         <${Field} label="Isi pesan (salam & nama santri ditambahkan otomatis)"><textarea class="in" style="min-height:120px" value=${isi} placeholder="Tulis pesan untuk wali…" onInput=${e => setIsi(e.target.value)}></textarea></${Field}>
         <p class="small" style="margin:0">Ketuk <b>Kirim</b> pada tiap nama: WhatsApp terbuka dengan pesan siap kirim, lalu kembali ke sini untuk nama berikutnya. ${n ? html`<b>${n} dari ${adaNo.length}</b> sudah dibuka.` : ""}</p></${Card}>
@@ -114,4 +114,48 @@ export function PesanWali() {
         : html`<${Empty} t="Belum ada nomor WA wali di kelompok ini." icon="chat" />`}</${Card}>
       ${tanpa.length ? html`<${Card} title=${`Belum ada nomor WA (${tanpa.length})`}><p class="small" style="margin:0 0 8px">Nomor diisi Admin di Data Master → Santri, atau lewat impor pesan pendataan.</p><div class="list">${tanpa.map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas}`} />`)}</div></${Card}>` : null}
     </div>`;
+}
+
+// ---------- Kontak ustadz untuk wali santri ----------
+// Nomor diisi Admin di Data Master → Guru & Akun (kolom No. WhatsApp). Wali hanya melihat ustadz yang terkait dengan ananda.
+export function kontakUntukSantri(s) {
+  if (!s) return [];
+  const p = L.pondokOfSantri(s), daftar = new Map();
+  const tambah = (st, peran, urut) => { if (!st) return; const x = daftar.get(st.id) || { st, peran: [], urut }; if (!x.peran.includes(peran)) x.peran.push(peran); x.urut = Math.min(x.urut, urut); daftar.set(st.id, x); };
+  const a = L.asramaById(s.asrama), h = L.halaqahSantri(s);
+  if (a) tambah(L.staffById(a.musyrif), `Wali asrama ${a.nama}`, 1);
+  if (h) tambah(L.staffById(h.guru), "Guru halaqah (tahfidz)", 2);
+  L.STAFF.forEach(st => (st.ajar || []).filter(([, k]) => k === s.kelas).forEach(([m]) => tambah(st, `Guru ${L.mapelById(m).nama}`, 3)));
+  L.STAFF.forEach(st => {
+    const r = st.roles || [];
+    if (r.includes("wadir_kesantrian") && (!st.pondok || st.pondok === p)) tambah(st, `Wadir Kesantrian Pondok ${p}`, 4);
+    if (r.includes("wadir_tahfidz")) tambah(st, "Wadir Tahfidz", 5);
+    if (r.includes("wadir_kurikulum")) tambah(st, "Wadir Kurikulum", 6);
+    if (r.includes("mudir")) tambah(st, "Mudir", 7);
+    if (r.includes("admin")) tambah(st, "Admin pondok", 8);
+  });
+  return [...daftar.values()].filter(x => !(L.akunOv(x.st.username) || {}).hapus).sort((x, y) => x.urut - y.urut);
+}
+const pesanKeUstadz = (st, s) => `Assalamu'alaikum ${st.pendek || st.nama}, saya Ayah/Bunda dari ananda *${s.nama}* (Kelas ${s.kelas}, Asrama ${L.asramaAman(s.asrama).nama}). `;
+const bisaDihubungi = x => !!L.waNomor(x.st.hp) && x.st.tampilWali !== false;
+
+export function KontakUstadz() {
+  useApp();
+  const s = nav.user && nav.user.kind === "wali" ? L.santriById(nav.user.id) : null;
+  if (!s) return html`<${SubHeader} title="Kontak ustadz" /><div class="wrap"><${Empty} t="Halaman ini untuk wali santri." /></div>`;
+  const semua = kontakUntukSantri(s), ada = semua.filter(bisaDihubungi);
+  return html`<${SubHeader} title="Kontak ustadz" sub=${`Ustadz yang membina ananda ${s.nama}`} />
+    <div class="wrap">
+      ${ada.length ? html`<${Card}><div class="list">${ada.map(x => html`<${Row} name=${x.st.pendek || x.st.nama} sub=${x.peran.join(" · ")} icon=${html`<${Icon} n="chat" s=${18} />`}
+          right=${html`<${Pill} t="WhatsApp" tone="green" />`} onClick=${() => bukaWaWali(x.st.hp, pesanKeUstadz(x.st, s))} />`)}</div></${Card}>
+        <p class="small" style="margin:4px 4px 0">Ketuk nama untuk membuka WhatsApp dengan salam pembuka. Mohon menghubungi pada jam yang wajar; untuk hal mendesak hubungi Wali Asrama.</p>`
+        : html`<${Card}><${Empty} t="Nomor WhatsApp ustadz belum diisi oleh pondok." icon="chat" /></${Card}>`}
+    </div>`;
+}
+// Ringkas di Beranda wali: dua kontak utama (wali asrama & guru halaqah)
+export function KontakUtamaWali({ s }) {
+  const ada = kontakUntukSantri(s).filter(bisaDihubungi);
+  if (!ada.length) return null;
+  return html`<${Card} title="Kontak ustadz" right=${ada.length > 2 ? html`<button class="link" onClick=${() => nav.go("kontakUstadz")}>Semua (${ada.length})</button>` : null}><div class="list">
+    ${ada.slice(0, 2).map(x => html`<${Row} name=${x.st.pendek || x.st.nama} sub=${x.peran[0]} icon=${html`<${Icon} n="chat" s=${18} />`} right=${html`<${Pill} t="Chat" tone="green" />`} onClick=${() => bukaWaWali(x.st.hp, pesanKeUstadz(x.st, s))} />`)}</div></${Card}>`;
 }

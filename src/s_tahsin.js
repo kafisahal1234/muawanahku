@@ -172,7 +172,7 @@ export function UjianIqra() {
   useApp();
   const [q, setQ] = useState("");
   if (!bolehUji()) return html`<${SubHeader} title="Ujian Iqro'" /><div class="wrap"><${Card}><${Empty} t="Ujian kenaikan jilid hanya untuk Wadir Tahfidz." icon="lock" /></${Card}></div>`;
-  const siap = siapUjianSemua(), grup = L.HALAQAH.map(h => ({ h, rows: siap.filter(x => x.s.halaqah === h.id) })).filter(g => g.rows.length);
+  const siap = siapUjianSemua(), grup = L.PONDOK.flatMap(p => L.HALAQAH.filter(h => L.pondokHalaqah(h) === p.id)).concat(L.HALAQAH.filter(h => !L.PONDOK.some(p => p.id === L.pondokHalaqah(h)))).map(h => ({ h, rows: siap.filter(x => x.s.halaqah === h.id) })).filter(g => g.rows.length);
   const tanpa = siap.filter(x => !L.HALAQAH.some(h => h.id === x.s.halaqah));
   const hasil = all("tahsin").filter(r => r.jenis === "ujian").sort((a, b) => b.ts - a.ts).slice(0, 30);
   const semuaIq = q.trim().length >= 2 ? L.santriList().filter(s => s.nama.toLowerCase().includes(q.trim().toLowerCase())).map(s => ({ s, t: L.tahsinStatus(s) })).filter(x => x.t && !x.t.quran).slice(0, 20) : [];
@@ -180,7 +180,7 @@ export function UjianIqra() {
   return html`<${SubHeader} title="Ujian Iqro'" sub=${`${siap.length} santri menunggu ujian kenaikan jilid`} />
     <div class="wrap">
       <${Hint}>Santri yang bacaannya sampai halaman akhir jilid otomatis masuk daftar ini dan input Iqro'-nya terkunci di akun musyrif. Lulus: naik jilid dan kunci terbuka. Belum lulus: tetap terkunci dan tetap di daftar untuk ujian ulang.</${Hint}>
-      ${siap.length ? [...grup.map(g => html`<${Card} title=${`${g.h.nama} (${g.rows.length})`}><div class="list">${g.rows.map(baris)}</div></${Card}>`), tanpa.length ? html`<${Card} title="Tanpa halaqah"><div class="list">${tanpa.map(baris)}</div></${Card}>` : null]
+      ${siap.length ? [...grup.map(g => html`<${Card} title=${`${L.pondokHalaqah(g.h) ? "Pondok " + L.pondokHalaqah(g.h) + " · " : ""}${g.h.nama} (${g.rows.length})`}><div class="list">${g.rows.map(baris)}</div></${Card}>`), tanpa.length ? html`<${Card} title="Tanpa halaqah"><div class="list">${tanpa.map(baris)}</div></${Card}>` : null]
         : html`<${Card}><${Empty} t="Belum ada santri yang diajukan ujian." icon="check" /></${Card}>`}
       <${Card} title="Uji santri lain"><input class="in" placeholder="Cari nama santri Iqro'" value=${q} onInput=${e => setQ(e.target.value)} />
         ${semuaIq.length ? html`<div class="list mt8">${semuaIq.map(({ s, t }) => html`<${Row} name=${s.nama} sub=${`${t.label} · ${L.namaHalaqah(s)}`} onClick=${() => nav.go("tahsin", { sid: s.id, ujian: true })} />`)}</div>` : null}</${Card}>

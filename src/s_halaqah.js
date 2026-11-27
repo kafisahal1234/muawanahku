@@ -16,9 +16,9 @@ export function HalaqahAdmin() {
   return html`<${SubHeader} title="Halaqah" sub=${`${L.HALAQAH.length} halaqah · ${L.santriList().length} santri`} /><div class="wrap">
     <${Hint}>Bawaan: santri ikut halaqah wali asramanya. Guru tahfidz yang tidak memegang asrama (misal Ust. Hidayat) dibuatkan halaqah sendiri lalu mengambil santri dari asrama mana pun.</${Hint}>
     ${boleh ? html`<${Btn} kind="ghost" icon="plus" onClick=${() => setBaru(true)}>Buat halaqah untuk guru tanpa asrama</${Btn}>` : null}
-    <div class="mt12"><${Card}><div class="list">${L.HALAQAH.map(h => { const g = L.staffById(h.guru) || {}, l = L.santriHalaqah(h.id), asr = new Set(l.map(s => s.asrama)), punyaAsrama = !!L.asramaOf(h.guru);
+    <div class="mt12">${L.kelompokPondok(L.HALAQAH, h => L.pondokHalaqah(h)).filter(gp => gp.isi.length).map(gp => html`<${Card} title=${`${gp.nama} (${gp.isi.length} halaqah)`}><div class="list">${gp.isi.map(h => { const g = L.staffById(h.guru) || {}, l = L.santriHalaqah(h.id), asr = new Set(l.map(s => s.asrama)), punyaAsrama = !!L.asramaOf(h.guru);
       return html`<${Row} name=${h.nama} sub=${`${g.nama || "—"} · ${l.length} santri dari ${asr.size} asrama`} icon=${html`<${Icon} n="bookopen" s=${18} />`}
-        right=${html`<${Pill} t=${punyaAsrama ? "Asrama" : "Lintas asrama"} tone=${punyaAsrama ? "muted" : "gold"} />`} onClick=${() => nav.go("halaqahEdit", { hid: h.id })} />`; })}</div></${Card}></div>
+        right=${html`<${Pill} t=${punyaAsrama ? "Asrama" : "Lintas asrama"} tone=${punyaAsrama ? "muted" : "gold"} />`} onClick=${() => nav.go("halaqahEdit", { hid: h.id })} />`; })}</div></${Card}>`)}</div>
     ${baru ? html`<${BaruHalaqah} onClose=${() => setBaru(false)} />` : null}</div>`;
 }
 

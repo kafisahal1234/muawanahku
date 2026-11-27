@@ -631,3 +631,23 @@ export async function sesiSandiBaru(u, h) { if (!(S.sesi && S.sesi.u === u)) ret
 export async function keluarAkun() { try { await keluarSesi(); } catch (e) { } }
 // Peta kode akses wali → id santri (kode baru + kode lama yang masih diterima), untuk didaftarkan ke server
 export function petaKodeWali() { const o = {}; santriList().forEach(s => { const a = kodeAkses(s), b = normKode(kodeLama(s)); if (a) o[a] = s.id; if (b && !(b in o)) o[b] = s.id; }); return o; }
+
+// ---------- Dua pondok: 29 (kelas 7–8) & 21 (kelas 9) — dipakai untuk mengelompokkan tampilan ----------
+export const PONDOK = (() => { const ids = [...new Set(DATA.kelas.map(k => k.pondok))]; return ids.map(id => { const ks = DATA.kelas.filter(k => k.pondok === id).map(k => k.id); return { id, nama: `Pondok ${id}`, ket: `Kelas ${ks.join(", ")}` }; }); })();
+export const pondokAsrama = id => { const a = asramaById(id); return a ? a.pondok : null; };
+export const pondokHalaqah = h => (h && h.pondok) || (h && h.guru && asramaOf(h.guru) ? asramaOf(h.guru).pondok : null);
+// pondok tempat seorang guru bertugas (asrama, halaqah, kelas yang diajar, atau pondok Wadir Kesantrian)
+export function pondokStaff(st) {
+  const p = new Set(); if (!st) return [];
+  const a = asramaOf(st.id); if (a) p.add(a.pondok);
+  const h = halaqahOf(st.id); if (h && h.pondok) p.add(h.pondok);
+  (st.ajar || []).forEach(([, k]) => { const kk = DATA.kelas.find(x => x.id === k); if (kk) p.add(kk.pondok); });
+  if (st.pondok && st.roles && st.roles.includes("wadir_kesantrian")) p.add(st.pondok);
+  return [...p];
+}
+// kelompokkan daftar per pondok (urutan Pondok 29 lalu 21); kunci "lain" untuk yang tidak terikat satu pondok
+export function kelompokPondok(list, pondokDari) {
+  const g = PONDOK.map(p => ({ ...p, isi: list.filter(x => pondokDari(x) === p.id) }));
+  const lain = list.filter(x => !PONDOK.some(p => p.id === pondokDari(x)));
+  return lain.length ? [...g, { id: "lain", nama: "Pimpinan & lintas pondok", ket: "", isi: lain }] : g;
+}
