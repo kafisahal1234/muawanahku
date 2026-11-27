@@ -7,6 +7,7 @@ import { unduhPdf, tabelKePdf } from "./pdf.js";
 import { unduh } from "./s_system.js";
 import { ttdUntukPdf } from "./s_ttd.js";
 import { usePeriode, lingkup } from "./s_rekap.js";
+import { unduhLaporanZiyadah } from "./s_hafalanbulan.js";
 
 const P = v => (v == null ? "—" : v + "%");
 const nada = v => (v == null ? "mut" : v >= 90 ? "hijau" : v >= 75 ? "biru" : v >= 60 ? "emas" : "merah");
@@ -16,26 +17,31 @@ const hal = baris => { if (!baris) return "0"; const h = baris / 15; return h >=
 const pendek = n => String(n || "").split(" ").slice(0, 3).join(" ");
 
 // ---------- komponen tampilan ----------
-// angka utama: [label, nilai, keterangan, persen-untuk-bar|null, nada]
-function Metrik({ items }) {
-  return html`<div class="rx-m">${items.filter(Boolean).map(([lab, val, ket, bar, t]) => html`<div class=${"rx-mi " + (t || "")}>
-    <span>${lab}</span><b><${Angka} v=${val} /></b>${bar != null ? html`<i class="rx-bar"><i style=${`width:${Math.max(0, Math.min(100, bar))}%`}></i></i>` : null}${ket ? html`<small>${ket}</small>` : null}</div>`)}</div>`;
-}
-function Grup({ judul, sub, items, onClick }) {
-  return html`<button type="button" class="rx-grp" onClick=${onClick}><div class="rx-grp-h"><div><b>${judul}</b>${sub ? html`<small>${sub}</small>` : null}</div><span class="rx-lihat">Rincian <${Icon} n="right" s=${16} /></span></div>
-    <${Metrik} items=${items} /></button>`;
-}
-// baris santri: nomor, nama, nilai utama, dan 4 angka kecil berlabel
-function BarisSantri({ no, s, ket, utama, utamaNada, kolom, tanda }) {
-  return html`<button type="button" class="rx-s" onClick=${() => nav.go("santri", { sid: s.id })}>
-    <div class="rx-s-h"><em>${no}</em><div class="rx-s-n"><b>${s.nama}</b><small>${ket}</small></div>${utama != null ? html`<span class=${"rx-pill " + (utamaNada || "")}>${utama}</span>` : null}</div>
-    ${tanda && tanda.length ? html`<div class="rx-tanda">${tanda.map(t => html`<span>${t}</span>`)}</div>` : null}
-    <div class="rx-k">${kolom.map(([lab, val, t]) => html`<div class=${t || ""}><span>${lab}</span><b>${val}</b></div>`)}</div></button>`;
-}
-function Urut({ opsi, nilai, set }) { return html`<div class="rx-urut"><span>Urutkan</span><div class="seg small">${opsi.map(([k, t]) => html`<button type="button" class=${k === nilai ? "on" : ""} onClick=${() => set(k)}>${t}</button>`)}</div></div>`; }
-function Bagian({ t, right }) { return html`<div class="rx-sec"><h4>${t}</h4>${right || null}</div>`; }
 
-function Unduhan({ judul, rg, tabel, ttd }) {
+// ---------- tampilan baru: satu aspek = satu kartu (tanpa tab, tanpa kotak campur) ----------
+// rows: [{ nama, sub, nilai (angka untuk urut/bar), v (teks), pct (true bila persen), go }]
+const NADA_BAR = { hijau: "#1BA46A", biru: "#2E7BD8", emas: "#E09A1F", merah: "#D9483B", ungu: "#7E57C2", mut: "#C9D6CE" };
+export function Panel({ ic, warna = "hijau", judul, besar, besarNada, ket, rows: rows0, persen, kosongT, catatan, batas = 0 }) {
+  const rows = rows0 || [], ada = rows.filter(r => r.nilai != null), kosong = rows.filter(r => r.nilai == null);
+  const maks = persen ? 100 : Math.max(1, ...ada.map(r => r.nilai));
+  const urut = [...ada].sort((a, b) => b.nilai - a.nilai || String(a.nama).localeCompare(String(b.nama))).concat(kosong);
+  const [semua, setSemua] = useState(false), tampil = batas && !semua ? urut.slice(0, batas) : urut;
+  return html`<section class="rp-card">
+    <header class="rp-h"><span class=${"rp-ic " + warna}><${Icon} n=${ic} s=${18} /></span>
+      <div class="rp-ht"><b>${judul}</b>${ket ? html`<small>${ket}</small>` : null}</div>
+      <div class=${"rp-big " + (besar == null ? "nd" : besarNada || "")}>${besar == null ? "Belum ada data" : besar}</div></header>
+    ${rows0 == null ? null : rows.length && (persen ? ada.length : ada.some(r => r.nilai > 0)) ? html`<div class="rp-rows">${tampil.map((r, i) => { const t = r.nilai == null ? "mut" : persen ? nada(r.nilai) : r.nada || warna, w = r.nilai == null ? 0 : Math.max(r.nilai ? 3 : 0, Math.min(100, (r.nilai / maks) * 100));
+        const isi = html`<em>${r.nilai == null ? "–" : i + 1}</em><span class="rp-n"><span class="rp-nt"><b>${r.nama}</b><span class=${"rp-v " + t}>${r.nilai == null ? "Belum ada data" : r.v}</span></span>
+          ${r.sub ? html`<small>${r.sub}</small>` : null}<span class="rp-bar"><i style=${`width:${w}%;background:${NADA_BAR[t] || NADA_BAR.hijau}`}></i></span></span>`;
+        return html`<div class="rp-row">${isi}</div>`; })}</div>
+      ${batas && urut.length > batas ? html`<button type="button" class="rp-more" onClick=${() => setSemua(!semua)}>${semua ? "Ringkas" : `Lihat semua (${urut.length})`}</button>` : null}`
+      : html`<p class="rp-kosong">${kosongT || "Belum ada data pada periode ini."}</p>`}
+    ${catatan ? html`<p class="rp-cat">${catatan}</p>` : null}</section>`;
+}
+const pct = (a, b) => (b ? Math.round((a / b) * 100) : null);
+const halV = baris => (baris ? hal(baris) : "0");
+
+function Unduhan({ judul, rg, tabel, ttd, ekstra = [] }) {
   const [buka, setBuka] = useState(false), nama = `${judul} - ${rg.label}`.replace(/[\/:]/g, "-"), rh = L.rentangHitung(rg);
   const pdf = () => { const t = tabel(); unduhPdf(nama, () => tabelKePdf({ judul, sub: `${rg.label}${rh.kosong ? "" : ` · ${L.fmtTgl(rh.dari, false)} – ${L.fmtTgl(rh.sampai, false)}`}`, catatan: t.catatan,
     oleh: `Dicetak oleh ${me().nama}, ${L.fmtTgl(L.today())} · MuawanahQu`, bagian: t.bagian, ttd: ttdUntukPdf(ttd) })); };
@@ -44,6 +50,7 @@ function Unduhan({ judul, rg, tabel, ttd }) {
   return html`<${Btn} kind="ghost" icon="download" onClick=${() => setBuka(true)}>Unduh rekap</${Btn}>
     <${Sheet} open=${buka} title="Unduh rekap" onClose=${() => setBuka(false)}>
       <p class="small" style="margin-top:0">${judul} · ${rg.label}</p>
+      ${ekstra.map(x => html`<button class="menu-row" onClick=${() => { setBuka(false); x.fn(); }}><${Icon} n="award" s=${22} c="#B07A12" /><span>${x.judul}<br /><small class="small">${x.ket}</small></span><${Icon} n="right" s=${18} /></button>`)}
       <button class="menu-row" onClick=${() => { setBuka(false); pdf(); }}><${Icon} n="file" s=${22} c="#0B6B43" /><span>Dokumen PDF<br /><small class="small">Siap dicetak atau dikirim, dengan kop pondok</small></span><${Icon} n="right" s=${18} /></button>
       <button class="menu-row" onClick=${() => { setBuka(false); csv(); }}><${Icon} n="grid" s=${22} c="#1F56B5" /><span>Tabel Excel (CSV)<br /><small class="small">Bisa dibuka di Excel / Google Sheets</small></span><${Icon} n="right" s=${18} /></button></${Sheet}>`;
 }
@@ -55,29 +62,12 @@ function ringkasTahfidz(d) {
   return { kh: rata(d.map(o => o.x.kh.pct)), baris: jml(d, o => o.x.zBaris), zSantri: d.filter(o => o.x.zSetor).length, muroHal: jml(d, o => o.x.muroHal), muro: jml(d, o => o.x.muro),
     manzil: jml(d, o => o.x.manzil), tasmi: jml(d, o => o.x.tasmiLulus.length), tasmiUji: jml(d, o => o.x.tasmiUji), tahsin: jml(d, o => o.x.tahsin) };
 }
-const itemTahfidz = (r, n, kin) => [
-  ["Kehadiran santri", P(r.kh), "rata-rata halaqah", r.kh, nada(r.kh)],
-  ["Ziyadah", hal(r.baris), `${r.zSantri}/${n} santri setor`, null, "hijau"],
-  ["Murojaah", `${r.muroHal} hal`, `${r.muro} kali setor`, null, "biru"],
-  ["Tasmi' lulus", `${r.tasmi} juz`, r.tasmiUji ? `${r.tasmiUji} kali ujian` : "belum ada ujian", null, "emas"],
-  ["Manzil", `${r.manzil}×`, "setoran pekanan", null, "ungu"],
-  kin ? ["Absen guru", `${kin.isi}/${kin.sesi}`, "sesi terisi", kin.pct, nada(kin.pct)] : null];
-function SantriTahfidz({ d, tg }) {
-  const [urut, setUrut] = useState("ziyadah");
-  const f = { ziyadah: o => -(o.x.zBaris + o.x.tahsin), hadir: o => -(o.x.kh.pct ?? -1), murojaah: o => -o.x.muroHal, nama: () => 0 }[urut];
-  const rows = [...d].sort((a, b) => f(a) - f(b) || a.s.nama.localeCompare(b.s.nama));
-  return html`<${Urut} opsi=${[["ziyadah", "Ziyadah"], ["hadir", "Kehadiran"], ["murojaah", "Murojaah"], ["nama", "Nama"]]} nilai=${urut} set=${setUrut} />
-    ${rows.map(({ s, x, iq }, i) => html`<${BarisSantri} no=${i + 1} s=${s} ket=${`Kelas ${s.kelas} · ${L.namaHalaqah(s)}`}
-      utama=${iq ? `Tahsin ${x.tahsin}×` : x.zBaris ? `${hal(x.zBaris)}${x.zBaris >= tg ? " ✓" : ""}` : "Belum ziyadah"} utamaNada=${iq ? "biru" : nadaTarget(x.zBaris, tg)}
-      tanda=${[...x.tasmiLulus.map(j => `Tasmi' Juz ${j} lulus`), x.kh.A ? `Alpa ${x.kh.A}×` : null].filter(Boolean)}
-      kolom=${[["Hadir", P(x.kh.pct), nada(x.kh.pct)], iq ? ["Tahsin", `${x.tahsinHal} hal`] : ["Hari setor", `${x.zHari} hari`], ["Murojaah", `${x.muroHal} hal`], ["Manzil", x.manzil ? `${x.manzil}× · ${x.manzilNilai ?? "—"}` : "—"]]} />`)}`;
-}
 function tabelTahfidz(hqs, rg) {
   return { catatan: "Ziyadah = hafalan baru yang lulus (15 baris = 1 halaman, 20 halaman = 1 juz). Kehadiran = sesi hadir dibagi sesi halaqah aktif; sesi yang tidak diabsen dihitung 0.",
-    bagian: [{ judul: "Per halaqah", kol: ["Halaqah", "Guru", "Santri", "Absen guru", "Kehadiran", "Ziyadah", "Murojaah (hal)", "Manzil", "Tasmi' lulus"],
-      rows: hqs.map(h => { const d = dataTahfidz(L.santriHalaqah(h.id), rg), r = ringkasTahfidz(d), k = L.kinerjaHalaqah(h.id, rg); return [h.nama, (L.staffById(h.guru) || {}).nama || "—", d.length, `${k.isi}/${k.sesi}`, P(r.kh), hal(r.baris), r.muroHal, r.manzil, r.tasmi]; }) },
-    ...hqs.map(h => ({ judul: `${h.nama} · per santri`, kol: ["Santri", "Kelas", "H", "S", "I", "A", "Kehadiran", "Ziyadah", "Hari setor", "Murojaah (hal)", "Manzil", "Tasmi' lulus", "Tahsin"],
-      rows: dataTahfidz(L.santriHalaqah(h.id), rg).map(({ s, x, iq }) => [s.nama, s.kelas, x.kh.H, x.kh.S, x.kh.I, x.kh.A, P(x.kh.pct), hal(x.zBaris), x.zHari, x.muroHal, x.manzil, x.tasmiLulus.length ? "Juz " + x.tasmiLulus.join(", ") : "—", iq ? `${x.tahsin}× (${x.tahsinHal} hal)` : "—"]) }))] };
+    bagian: [{ judul: "Per halaqah", kol: ["Halaqah", "Guru", "Santri", "Absen guru terisi", "Kehadiran", "Ziyadah", "Murojaah (hal)", "Manzil", "Tasmi' lulus"],
+      rows: hqs.map(h => { const d = dataTahfidz(L.santriHalaqah(h.id), rg), r = ringkasTahfidz(d), k = L.kinerjaHalaqah(h.id, rg); return [h.nama, (L.staffById(h.guru) || {}).nama || "—", d.length, P(k.pct), P(r.kh), hal(r.baris), r.muroHal, r.manzil, r.tasmi]; }) },
+    ...hqs.map(h => ({ judul: `${h.nama} · per santri`, kol: ["Santri", "Kelas", "Kehadiran", "Ziyadah", "Hari setor", "Murojaah (hal)", "Manzil", "Tasmi' lulus", "Tahsin"],
+      rows: dataTahfidz(L.santriHalaqah(h.id), rg).map(({ s, x, iq }) => [s.nama, s.kelas, P(x.kh.pct), hal(x.zBaris), x.zHari, x.muroHal, x.manzil, x.tasmiLulus.length ? "Juz " + x.tasmiLulus.join(", ") : "—", iq ? `${x.tahsin}× (${x.tahsinHal} hal)` : "—"]) }))] };
 }
 // target ziyadah per santri untuk periode yang dipilih (baris)
 const tgtBaris = jenis => Math.round(L.targetHal(jenis) * 15);
@@ -87,16 +77,36 @@ export function RekapTahfidz({ hid }) {
   const lk = lingkup(), hqs = hid ? [L.halaqahById(hid)] : lk.hqs, p = usePeriode("bulanan", null, "halaqah");
   if (!hqs.length || !hqs[0]) return kosong("Rekap Tahfidz", "Akun ini belum memegang halaqah.");
   const satu = hqs.length === 1, semua = hqs.flatMap(h => L.santriHalaqah(h.id)), d = dataTahfidz(semua, p.rg), r = ringkasTahfidz(d);
-  const kin = satu ? L.kinerjaHalaqah(hqs[0].id, p.rg) : null, tg = tgtBaris(p.jenis), capai = d.filter(o => !o.iq && o.x.zBaris >= tg).length, nonIq = d.filter(o => !o.iq).length;
-  return html`<${SubHeader} title=${satu ? "Rekap " + hqs[0].nama : "Rekap Tahfidz"} sub=${satu ? `${(L.staffById(hqs[0].guru) || {}).pendek || ""} · ${semua.length} santri` : `${hqs.length} halaqah · ${semua.length} santri`} />
-    <div class="wrap">${p.bar}
-      <div class="rx-hero"><div class="rx-target"><${Icon} n="target" s=${18} /><span>Target ziyadah ${p.rg.label ? "periode ini" : ""}: <b>${L.fmtHal(L.targetHal(p.jenis))}</b> per santri</span><em>${capai}/${nonIq} tercapai</em></div><${Metrik} items=${itemTahfidz(r, semua.length, kin)} /></div>
-      ${satu ? html`<${Bagian} t="Per santri" /><${SantriTahfidz} d=${d} tg=${tg} />`
-        : html`<${Bagian} t="Per halaqah" />${hqs.map(h => { const dd = dataTahfidz(L.santriHalaqah(h.id), p.rg), rr = ringkasTahfidz(dd), k = L.kinerjaHalaqah(h.id, p.rg);
-          return html`<${Grup} judul=${h.nama} sub=${`${(L.staffById(h.guru) || {}).pendek || "—"} · ${dd.length} santri · absen ${k.isi}/${k.sesi} sesi`} onClick=${() => nav.go("rekapTahfidz", { hid: h.id })}
-            items=${[["Hadir", P(rr.kh), null, rr.kh, nada(rr.kh)], ["Ziyadah", hal(rr.baris), `${rr.zSantri} santri`, null, "hijau"], ["Murojaah", `${rr.muroHal} hal`, null, null, "biru"], ["Tasmi'", `${rr.tasmi} juz`, null, null, "emas"]]} />`; })}`}
-      <${Hint}>Ziyadah = hafalan baru yang lulus. 15 baris = 1 halaman, 20 halaman = 1 juz. Kehadiran = sesi hadir dibagi sesi halaqah aktif; sesi yang belum diabsen dihitung 0.</${Hint}>
-      <${Unduhan} judul=${satu ? "Rekap " + hqs[0].nama : "Rekap Tahfidz"} rg=${p.rg} tabel=${() => tabelTahfidz(hqs, p.rg)} ttd="tahfidz" /></div>`;
+  const tg = tgtBaris(p.jenis), quran = d.filter(o => !o.iq), iqro = d.filter(o => o.iq), capai = quran.filter(o => o.x.zBaris >= tg).length;
+  const judul = satu ? "Rekap " + hqs[0].nama : "Rekap Tahfidz";
+  // baris per halaqah (banyak halaqah) atau per santri (satu halaqah)
+  const perH = f => hqs.map(h => { const dd = dataTahfidz(L.santriHalaqah(h.id), p.rg), k = L.kinerjaHalaqah(h.id, p.rg); return { h, dd, k, ...f(dd, k, h) }; });
+  const subS = o => `Kelas ${o.s.kelas}`, subH = (h, dd) => `${(L.staffById(h.guru) || {}).pendek || "—"} · ${dd.length} santri`;
+  const kin = satu ? L.kinerjaHalaqah(hqs[0].id, p.rg) : null, kinAll = hqs.map(h => L.kinerjaHalaqah(h.id, p.rg)), absenGuru = pct(jml(kinAll, k => k.isi), jml(kinAll, k => k.sesi));
+  const tasmiRows = d.filter(o => o.x.tasmiLulus.length), perJuz = Object.entries(tasmiRows.reduce((m, o) => { o.x.tasmiLulus.forEach(j => { m[j] = (m[j] || 0) + 1; }); return m; }, {})).sort((a, b) => b[0] - a[0]);
+  return html`<${SubHeader} title=${judul} sub=${satu ? `${(L.staffById(hqs[0].guru) || {}).pendek || ""} · ${semua.length} santri` : `${hqs.length} halaqah · ${semua.length} santri`} />
+    <div class="wrap rp-wrap">${p.bar}
+      <${Panel} ic="users" warna="hijau" judul="Kehadiran santri" ket=${absenGuru == null ? "Absen guru belum ada" : `Absen guru terisi ${absenGuru}% sesi`} besar=${r.kh == null ? null : r.kh + "%"} besarNada=${nada(r.kh)} persen
+        rows=${satu ? d.map(o => ({ nama: o.s.nama, sub: subS(o), nilai: o.x.kh.pct, v: P(o.x.kh.pct) }))
+          : perH(dd => ({ nilai: rata(dd.map(o => o.x.kh.pct)) })).map(x => ({ nama: x.h.nama, sub: subH(x.h, x.dd), nilai: x.nilai, v: P(x.nilai) }))}
+        catatan=${satu ? null : "Kehadiran = sesi hadir dibagi sesi halaqah aktif. Sesi yang belum diabsen dihitung tidak hadir."} />
+      ${!satu ? html`<${Panel} ic="checksq" warna="biru" judul="Absen guru terisi" ket="Sesi halaqah yang sudah diabsen" besar=${absenGuru == null ? null : absenGuru + "%"} besarNada=${nada(absenGuru)} persen
+        rows=${hqs.map((h, i) => ({ nama: h.nama, sub: (L.staffById(h.guru) || {}).pendek || "—", nilai: kinAll[i].pct, v: P(kinAll[i].pct) }))} />` : null}
+      ${quran.length ? html`<${Panel} ic="book" warna="hijau" judul="Ziyadah (hafalan baru)" ket=${`Target ${L.fmtHal(L.targetHal(p.jenis))} per santri · ${capai} dari ${quran.length} santri tercapai`} besar=${r.baris ? hal(r.baris) : "0 hal"}
+        rows=${satu ? quran.map(o => ({ nama: o.s.nama, sub: o.x.zBaris >= tg ? "Target tercapai ✓" : o.x.zHari ? `${o.x.zHari} hari setor` : "Belum ziyadah", nilai: o.x.zBaris, v: halV(o.x.zBaris), nada: nadaTarget(o.x.zBaris, tg) }))
+          : perH(dd => ({ baris: jml(dd, o => o.x.zBaris), cap: dd.filter(o => !o.iq && o.x.zBaris >= tg).length, n: dd.filter(o => !o.iq).length })).map(x => ({ nama: x.h.nama, sub: `${x.cap}/${x.n} santri capai target`, nilai: x.baris, v: halV(x.baris) }))} />` : null}
+      ${quran.length ? html`<${Panel} ic="repeat" warna="emas" judul="Murojaah" ket=${`${r.muro} kali setor`} besar=${`${r.muroHal} hal`}
+        rows=${satu ? quran.map(o => ({ nama: o.s.nama, sub: subS(o), nilai: o.x.muroHal, v: `${o.x.muroHal} hal` }))
+          : perH(dd => ({ v0: jml(dd, o => o.x.muroHal) })).map(x => ({ nama: x.h.nama, sub: subH(x.h, x.dd), nilai: x.v0, v: `${x.v0} hal` }))} />` : null}
+      ${quran.length && r.manzil ? html`<${Panel} ic="layers" warna="ungu" judul="Manzil" ket="Setoran pekanan" besar=${`${r.manzil}×`}
+        rows=${satu ? quran.map(o => ({ nama: o.s.nama, sub: o.x.manzil ? `Nilai rata-rata ${o.x.manzilNilai ?? "—"}` : "Belum setor manzil", nilai: o.x.manzil, v: `${o.x.manzil}×` }))
+          : perH(dd => ({ v0: jml(dd, o => o.x.manzil) })).map(x => ({ nama: x.h.nama, sub: subH(x.h, x.dd), nilai: x.v0, v: `${x.v0}×` }))} />` : null}
+      ${iqro.length ? html`<${Panel} ic="bookopen" warna="biru" judul="Tahsin (Iqro')" ket=${`${iqro.length} santri masih Iqro'`} besar=${`${jml(iqro, o => o.x.tahsinHal)} hal`}
+        rows=${iqro.map(o => ({ nama: o.s.nama, sub: (st => (st && st.jilid ? `Iqro' ${st.jilid}${st.hal ? " · hal. " + st.hal : ""}` : subS(o)))(L.tahsinStatus(o.s)), nilai: o.x.tahsinHal, v: `${o.x.tahsinHal} hal` }))} batas=${satu ? 0 : 10} />` : null}
+      <${Panel} ic="award" warna="emas" judul="Tasmi' lulus" ket=${perJuz.length ? perJuz.map(([j, n]) => `Juz ${j}: ${n} santri`).join(" · ") : r.tasmiUji ? `${r.tasmiUji} kali ujian` : "Belum ada ujian tasmi'"} besar=${`${r.tasmi} juz`}
+        rows=${tasmiRows.map(o => ({ nama: o.s.nama, sub: `Juz ${o.x.tasmiLulus.join(", ")}`, nilai: o.x.tasmiLulus.length, v: `${o.x.tasmiLulus.length} juz` }))} kosongT="Belum ada santri yang lulus tasmi' pada periode ini." />
+      <${Unduhan} judul=${judul} rg=${p.rg} tabel=${() => tabelTahfidz(hqs, p.rg)} ttd="tahfidz"
+        ekstra=${[{ judul: `Laporan Ziyadah ${p.jenis === "bulanan" ? "Bulanan" : p.jenis === "mid" ? "Tengah Semester" : "Semester"}`, ket: `Per halaqah: juz, jumlah, dari–sampai surat, keterangan${hqs.length > 1 ? ` · ${hqs.length} halaqah` : ""}`, fn: () => unduhLaporanZiyadah(hqs, p.rg, p.jenis) }]} /></div>`;
 }
 
 // ================= MAPEL / KURIKULUM =================
@@ -110,106 +120,102 @@ function dataKelas(mp, k, rg) {
 export function RekapMapel({ mapel, kelas, modul }) {
   useApp();
   const lk = lingkup(), p = usePeriode("bulanan", null, "kbm");
-  const pairs = mapel && kelas ? [[mapel, kelas]] : modul === "mapel" && (lk.m.ajar || []).length ? lk.m.ajar.map(x => [...x]) : lk.pairs, mps = [...new Set(pairs.map(([mp]) => mp))];
-  const milik = (lk.m.ajar || []).map(([mp]) => mp).find(x => mps.includes(x)); const [f, setF] = useState(milik || mps[0]), [urut, setUrut] = useState("hadir");
+  const pairs = mapel && kelas ? [[mapel, kelas]] : modul === "mapel" && (lk.m.ajar || []).length ? lk.m.ajar.map(x => [...x]) : lk.pairs;
   if (!pairs.length) return kosong("Rekap Mapel", "Akun ini belum mengajar mapel.");
   if (pairs.length === 1) {
-    const [mp, k] = pairs[0], x = dataKelas(mp, k, p.rg);
-    const rows = [...x.d].sort((a, b) => (urut === "hadir" ? (a.kh.pct ?? -1) - (b.kh.pct ?? -1) : urut === "projek" ? (b.pj ?? -1) - (a.pj ?? -1) : 0) || a.s.nama.localeCompare(b.s.nama));
+    const [mp, k] = pairs[0], x = dataKelas(mp, k, p.rg), adaPj = x.d.filter(o => o.pj != null);
     return html`<${SubHeader} title=${`${namaMapel(mp)} · Kelas ${k}`} sub=${`${(L.staffById(x.g) || {}).pendek || "—"} · ${x.d.length} santri`} />
-      <div class="wrap">${p.bar}
-        <div class="rx-hero"><${Metrik} items=${[["Pertemuan terlaksana", `${x.kj.absen}/${x.kj.sesi}`, "sudah diabsen guru", x.kj.pct, nada(x.kj.pct)], ["Jurnal diisi", `${x.kj.jurnal}/${x.kj.sesi}`, "materi tercatat", x.kj.pctJ, nada(x.kj.pctJ)],
-          ["Kehadiran santri", P(x.kh), "rata-rata kelas", x.kh, nada(x.kh)], ["Projek", `${x.pj.length}`, "dalam periode ini", null, "ungu"]]} /></div>
-        ${x.pj.length ? html`<${Bagian} t="Projek" /><div class="rx-list">${x.pj.map(pj => html`<div class="rx-pj"><div><b>${pj.nama}</b><small>${L.fmtTgl(pj.tgl)} · ${pj.dinilai}/${x.d.length} dinilai</small></div><span class=${"rx-pill " + (pj.rata == null ? "mut" : pj.rata < 70 ? "merah" : "hijau")}>${pj.rata ?? "—"}</span></div>`)}</div>` : null}
-        <${Bagian} t="Per santri" /><${Urut} opsi=${[["hadir", "Kehadiran terendah"], ["projek", "Nilai projek"], ["nama", "Nama"]]} nilai=${urut} set=${setUrut} />
-        ${rows.map((o, i) => html`<${BarisSantri} no=${i + 1} s=${o.s} ket=${`Hadir ${o.kh.H || 0} dari ${o.kh.sesi || 0} pertemuan`} utama=${P(o.kh.pct)} utamaNada=${nada(o.kh.pct)}
-          kolom=${[["Sakit", o.kh.S || 0], ["Izin", o.kh.I || 0], ["Alpa", o.kh.A || 0, o.kh.A ? "merah" : ""], ["Projek", o.pj ?? "—"]]} />`)}
-        <${Hint}>Kehadiran = hadir dibagi pertemuan terjadwal pada hari KBM aktif. Pertemuan yang belum diabsen dihitung tidak hadir.</${Hint}>
+      <div class="wrap rp-wrap">${p.bar}
+        <${Panel} ic="users" warna="hijau" judul="Kehadiran santri" ket="Rata-rata kelas" besar=${x.kh == null ? null : x.kh + "%"} besarNada=${nada(x.kh)} persen
+          rows=${x.d.map(o => ({ nama: o.s.nama, sub: o.kh.sesi ? `${o.kh.sesi} pertemuan` : "", nilai: o.kh.pct, v: P(o.kh.pct) }))}
+        />
+        <${Panel} ic="checksq" warna="biru" judul="Pertemuan terlaksana" ket=${`${x.kj.absen} dari ${x.kj.sesi} pertemuan sudah diabsen`} besar=${x.kj.pct == null ? null : x.kj.pct + "%"} besarNada=${nada(x.kj.pct)} />
+        <${Panel} ic="edit" warna="ungu" judul="Jurnal mengajar terisi" ket=${`${x.kj.jurnal} dari ${x.kj.sesi} pertemuan ada materinya`} besar=${x.kj.pctJ == null ? null : x.kj.pctJ + "%"} besarNada=${nada(x.kj.pctJ)} />
+        ${x.pj.length ? html`<${Panel} ic="award" warna="emas" judul="Nilai projek" ket=${x.pj.map(pj => pj.nama).join(" · ")} besar=${rata(adaPj.map(o => o.pj))} besarNada=${nada(rata(adaPj.map(o => o.pj)))} persen
+          rows=${x.d.map(o => ({ nama: o.s.nama, nilai: o.pj, v: o.pj }))} />` : null}
         <${Unduhan} judul=${`Rekap ${namaMapel(mp)} Kelas ${k}`} rg=${p.rg} tabel=${() => tabelMapel([[mp, k]], p.rg)} ttd="mapel" /></div>`;
   }
-  const tampil = mps.length > 1 ? pairs.filter(([mp]) => mp === f) : pairs;
-  const semua = pairs.map(([mp, k]) => dataKelas(mp, k, p.rg)), terl = jml(semua, x => x.kj.absen), ses = jml(semua, x => x.kj.sesi), jur = jml(semua, x => x.kj.jurnal);
-  return html`<${SubHeader} title=${modul === "kurikulum" ? "Rekap KBM" : "Rekap Mapel"} sub=${`${pairs.length} kelas · ${mps.length} mapel`} />
-    <div class="wrap">${p.bar}
-      <div class="rx-hero"><${Metrik} items=${[["Pertemuan terlaksana", `${terl}/${ses}`, "seluruh kelas", ses ? Math.round((terl / ses) * 100) : null, nada(ses ? Math.round((terl / ses) * 100) : null)], ["Jurnal diisi", `${jur}/${ses}`, "materi tercatat", ses ? Math.round((jur / ses) * 100) : null, nada(ses ? Math.round((jur / ses) * 100) : null)],
-        ["Kehadiran santri", P(rata(semua.map(x => x.kh))), "rata-rata", rata(semua.map(x => x.kh)), nada(rata(semua.map(x => x.kh)))]]} /></div>
-      ${mps.length > 1 ? html`<div class="seg small mb8 rx-mapel">${mps.map(mp => html`<button type="button" class=${mp === f ? "on" : ""} onClick=${() => setF(mp)}>${namaMapel(mp).replace("Pendidikan ", "").replace("Bahasa ", "B. ")}</button>`)}</div>` : null}
-      <${Bagian} t="Per kelas" />
-      ${tampil.map(([mp, k]) => { const x = dataKelas(mp, k, p.rg);
-        return html`<${Grup} judul=${`${namaMapel(mp)} · Kelas ${k}`} sub=${`${(L.staffById(x.g) || {}).pendek || "—"} · ${x.d.length} santri`} onClick=${() => nav.go("rekapMapel", { mapel: mp, kelas: k })}
-          items=${[["Terlaksana", `${x.kj.absen}/${x.kj.sesi}`, null, x.kj.pct, nada(x.kj.pct)], ["Jurnal", `${x.kj.jurnal}/${x.kj.sesi}`, null, x.kj.pctJ, nada(x.kj.pctJ)], ["Hadir santri", P(x.kh), null, x.kh, nada(x.kh)], ["Projek", String(x.pj.length), null, null, "ungu"]]} />`; })}
+  const semua = pairs.map(([mp, k]) => ({ mp, k, ...dataKelas(mp, k, p.rg) })), terl = jml(semua, x => x.kj.absen), ses = jml(semua, x => x.kj.sesi), jur = jml(semua, x => x.kj.jurnal);
+  const nm = x => `${namaMapel(x.mp)} · Kelas ${x.k}`, sub = x => `${(L.staffById(x.g) || {}).pendek || "—"} · ${x.d.length} santri`;
+  const khAll = rata(semua.map(x => x.kh)), pjAll = semua.filter(x => x.pj.length);
+  return html`<${SubHeader} title=${modul === "kurikulum" ? "Rekap KBM" : "Rekap Mapel"} sub=${`${pairs.length} kelas · ${new Set(pairs.map(([mp]) => mp)).size} mapel`} />
+    <div class="wrap rp-wrap">${p.bar}
+      <${Panel} ic="users" warna="hijau" judul="Kehadiran santri" ket="Rata-rata per mapel & kelas" besar=${khAll == null ? null : khAll + "%"} besarNada=${nada(khAll)} persen
+        rows=${semua.map(x => ({ nama: nm(x), sub: sub(x), nilai: x.kh, v: P(x.kh) }))} catatan="Pertemuan yang belum diabsen dihitung tidak hadir." />
+      <${Panel} ic="checksq" warna="biru" judul="Pertemuan terlaksana" ket=${`${terl} dari ${ses} pertemuan sudah diabsen`} besar=${pct(terl, ses) == null ? null : pct(terl, ses) + "%"} besarNada=${nada(pct(terl, ses))} persen
+        rows=${semua.map(x => ({ nama: nm(x), sub: sub(x), nilai: x.kj.pct, v: P(x.kj.pct) }))} />
+      <${Panel} ic="edit" warna="ungu" judul="Jurnal mengajar terisi" ket=${`${jur} dari ${ses} pertemuan ada materinya`} besar=${pct(jur, ses) == null ? null : pct(jur, ses) + "%"} besarNada=${nada(pct(jur, ses))} persen
+        rows=${semua.map(x => ({ nama: nm(x), sub: sub(x), nilai: x.kj.pctJ, v: P(x.kj.pctJ) }))} />
+      ${pjAll.length ? html`<${Panel} ic="award" warna="emas" judul="Projek" ket="Jumlah projek dalam periode ini" besar=${String(jml(pjAll, x => x.pj.length))}
+        rows=${pjAll.map(x => ({ nama: nm(x), sub: sub(x), nilai: x.pj.length, v: `${x.pj.length} projek` }))} />` : null}
       <${Unduhan} judul=${modul === "kurikulum" ? "Rekap KBM" : "Rekap Mapel"} rg=${p.rg} tabel=${() => tabelMapel(pairs, p.rg)} ttd="mapel" /></div>`;
 }
 function tabelMapel(pairs, rg) {
   return { catatan: "Kehadiran = hadir dibagi pertemuan terjadwal pada hari KBM aktif. Pertemuan yang belum diabsen dihitung tidak hadir.",
-    bagian: [{ judul: "Per kelas", kol: ["Mapel", "Kelas", "Guru", "Terlaksana", "Jurnal diisi", "Kehadiran santri", "Projek"], rows: pairs.map(([mp, k]) => { const x = dataKelas(mp, k, rg); return [namaMapel(mp), k, (L.staffById(x.g) || {}).nama || "—", `${x.kj.absen}/${x.kj.sesi}`, `${x.kj.jurnal}/${x.kj.sesi}`, P(x.kh), x.pj.length]; }) },
-      ...pairs.map(([mp, k]) => ({ judul: `${namaMapel(mp)} Kelas ${k} · per santri`, kol: ["Santri", "Hadir", "Sakit", "Izin", "Alpa", "Pertemuan", "Kehadiran", "Rata projek"],
-        rows: dataKelas(mp, k, rg).d.map(o => [o.s.nama, o.kh.H || 0, o.kh.S || 0, o.kh.I || 0, o.kh.A || 0, o.kh.sesi || 0, P(o.kh.pct), o.pj ?? "—"]) }))] };
+    bagian: [{ judul: "Per kelas", kol: ["Mapel", "Kelas", "Guru", "Pertemuan terlaksana", "Jurnal terisi", "Kehadiran santri", "Projek"], rows: pairs.map(([mp, k]) => { const x = dataKelas(mp, k, rg); return [namaMapel(mp), k, (L.staffById(x.g) || {}).nama || "—", P(x.kj.pct), P(x.kj.pctJ), P(x.kh), x.pj.length]; }) },
+      ...pairs.map(([mp, k]) => ({ judul: `${namaMapel(mp)} Kelas ${k} · per santri`, kol: ["Santri", "Kehadiran", "Rata projek"],
+        rows: dataKelas(mp, k, rg).d.map(o => [o.s.nama, P(o.kh.pct), o.pj ?? "—"]) }))] };
 }
 
 // ================= ASRAMA (mutaba'ah ibadah & adab) =================
 const dataAsrama = (list, rg) => list.map(s => { const m = L.mutPersen(s.id, rg); return { s, m, mut: m.ibadah == null ? null : Math.round((m.ibadah + m.adab) / 2) }; });
-function itemAsrama(d, mut) {
-  const ib = rata(d.map(o => o.m.ibadah)), ad = rata(d.map(o => o.m.adab));
-  return [["Ibadah", P(ib), "rata-rata santri", ib, nada(ib)], ["Adab", P(ad), "rata-rata santri", ad, nada(ad)],
-    mut ? ["Mutaba'ah diisi", `${mut.isi}/${mut.target}`, "santri × hari dinilai", mut.pct, nada(mut.pct)] : null,
-    mut ? ["Diisi menyusul", String(mut.menyusul), mut.hariLibur ? `${mut.hariLibur} hari tidak dinilai` : "tidak ada hari tidak dinilai", null, "emas"] : null];
-}
 export function RekapAsrama({ aid }) {
   useApp();
-  const lk = lingkup(), asr = aid ? [L.asramaById(aid)] : lk.asr, p = usePeriode("bulanan", null, "asrama"), [urut, setUrut] = useState("mut");
+  const lk = lingkup(), asr = aid ? [L.asramaById(aid)] : lk.asr, p = usePeriode("bulanan", null, "asrama");
   if (!asr.length || !asr[0]) return kosong("Rekap Asrama", "Akun ini belum memegang asrama.");
-  const satu = asr.length === 1, semua = asr.flatMap(a => L.santriAsrama(a.id)), d = dataAsrama(semua, p.rg), mut = satu ? L.kinerjaMut(asr[0].id, p.rg) : null;
-  const f = { mut: o => o.mut ?? 101, ibadah: o => o.m.ibadah ?? 101, adab: o => o.m.adab ?? 101, nama: () => 0 }[urut], rows = [...d].sort((a, b) => f(a) - f(b) || a.s.nama.localeCompare(b.s.nama));
-  return html`<${SubHeader} title=${satu ? "Rekap Asrama " + asr[0].nama : "Rekap Asrama"} sub=${satu ? `${(L.staffById(asr[0].musyrif) || {}).pendek || ""} · ${semua.length} santri` : `${asr.length} asrama · ${semua.length} santri`} />
-    <div class="wrap">${p.bar}
-      <div class="rx-hero"><${Metrik} items=${itemAsrama(d, mut)} /></div>
-      ${satu ? html`<${Bagian} t="Per santri" /><${Urut} opsi=${[["mut", "Terendah"], ["ibadah", "Ibadah"], ["adab", "Adab"], ["nama", "Nama"]]} nilai=${urut} set=${setUrut} />
-        ${rows.map((o, i) => html`<${BarisSantri} no=${i + 1} s=${o.s} ket=${`Kelas ${o.s.kelas}${L.sedangIzin(o.s.id) ? " · sedang izin" : ""}`} utama=${o.mut == null ? "Belum ada data" : L.predikatMut(o.mut).h + " · " + o.mut + "%"} utamaNada=${nada(o.mut)}
-          kolom=${[["Ibadah", P(o.m.ibadah), nada(o.m.ibadah)], ["Adab", P(o.m.adab), nada(o.m.adab)], ["Diisi", `${o.m.isi}/${o.m.hari}`], ["Menyusul", o.m.menyusul || 0]]} />`)}`
-        : html`<${Bagian} t="Per asrama" />${asr.map(a => { const dd = dataAsrama(L.santriAsrama(a.id), p.rg), ku = L.kinerjaMut(a.id, p.rg), ib = rata(dd.map(o => o.m.ibadah)), ad = rata(dd.map(o => o.m.adab));
-          return html`<${Grup} judul=${"Asrama " + a.nama} sub=${`${(L.staffById(a.musyrif) || {}).pendek || "—"} · Pondok ${a.pondok} · ${dd.length} santri`} onClick=${() => nav.go("rekapAsrama", { aid: a.id })}
-            items=${[["Ibadah", P(ib), null, ib, nada(ib)], ["Adab", P(ad), null, ad, nada(ad)], ["Diisi", P(ku.pct), null, ku.pct, nada(ku.pct)], ["Menyusul", String(ku.menyusul), null, null, "emas"]]} />`; })}`}
-      <${Hint}>Mutaba'ah dihitung Senin–Jumat. Hari yang terlewat bisa diisi menyusul paling lambat 7 hari. Hari wali asrama berhalangan atau santri izin tidak mengurangi nilai.</${Hint}>
-      <${Unduhan} judul=${satu ? "Rekap Asrama " + asr[0].nama : "Rekap Asrama"} rg=${p.rg} ttd="asrama" tabel=${() => ({ catatan: "Mutaba'ah dihitung Senin–Jumat. Hari kosong tanpa alasan dihitung 0; hari wali asrama berhalangan atau santri izin tidak dihitung.",
-        bagian: [{ judul: "Per asrama", kol: ["Asrama", "Wali asrama", "Santri", "Mutaba'ah diisi", "Menyusul", "Hari tidak dinilai", "Ibadah", "Adab"], rows: asr.map(a => { const dd = dataAsrama(L.santriAsrama(a.id), p.rg), ku = L.kinerjaMut(a.id, p.rg);
-          return [a.nama, (L.staffById(a.musyrif) || {}).nama || "—", dd.length, `${ku.isi}/${ku.target}`, ku.menyusul, ku.hariLibur, P(rata(dd.map(o => o.m.ibadah))), P(rata(dd.map(o => o.m.adab)))]; }) },
-          ...asr.map(a => ({ judul: `Asrama ${a.nama} · per santri`, kol: ["Santri", "Kelas", "Ibadah", "Adab", "Predikat", "Hari diisi", "Menyusul", "Tidak dinilai"],
-            rows: dataAsrama(L.santriAsrama(a.id), p.rg).map(o => [o.s.nama, o.s.kelas, P(o.m.ibadah), P(o.m.adab), o.mut == null ? "—" : L.predikatMut(o.mut).h, `${o.m.isi}/${o.m.hari}`, o.m.menyusul, o.m.dikecualikan]) }))] })} /></div>`;
+  const satu = asr.length === 1, semua = asr.flatMap(a => L.santriAsrama(a.id)), d = dataAsrama(semua, p.rg);
+  const ib = rata(d.map(o => o.m.ibadah)), ad = rata(d.map(o => o.m.adab)), kus = asr.map(a => L.kinerjaMut(a.id, p.rg));
+  const isi = jml(kus, k => k.isi), tgt = jml(kus, k => k.target), mutPct = pct(isi, tgt), menyusul = jml(kus, k => k.menyusul), libur = jml(kus, k => k.hariLibur);
+  const perA = f => asr.map((a, i) => { const dd = dataAsrama(L.santriAsrama(a.id), p.rg); return { a, dd, ku: kus[i], nilai: f(dd, kus[i]) }; });
+  const subA = x => `${(L.staffById(x.a.musyrif) || {}).pendek || "—"} · Pondok ${x.a.pondok} · ${x.dd.length} santri`;
+  const subS = o => `Kelas ${o.s.kelas}${L.sedangIzin(o.s.id) ? " · sedang izin" : ""}`;
+  const judul = satu ? "Rekap Asrama " + asr[0].nama : "Rekap Asrama";
+  return html`<${SubHeader} title=${judul} sub=${satu ? `${(L.staffById(asr[0].musyrif) || {}).pendek || ""} · ${semua.length} santri` : `${asr.length} asrama · ${semua.length} santri`} />
+    <div class="wrap rp-wrap">${p.bar}
+      <${Panel} ic="moon" warna="hijau" judul="Ibadah" ket="Rata-rata capaian mutaba'ah ibadah" besar=${ib == null ? null : ib + "%"} besarNada=${nada(ib)} persen
+        rows=${satu ? d.map(o => ({ nama: o.s.nama, sub: subS(o), nilai: o.m.ibadah, v: P(o.m.ibadah) })) : perA(dd => rata(dd.map(o => o.m.ibadah))).map(x => ({ nama: "Asrama " + x.a.nama, sub: subA(x), nilai: x.nilai, v: P(x.nilai) }))} />
+      <${Panel} ic="heart" warna="biru" judul="Adab" ket="Rata-rata capaian mutaba'ah adab" besar=${ad == null ? null : ad + "%"} besarNada=${nada(ad)} persen
+        rows=${satu ? d.map(o => ({ nama: o.s.nama, sub: subS(o), nilai: o.m.adab, v: P(o.m.adab) })) : perA(dd => rata(dd.map(o => o.m.adab))).map(x => ({ nama: "Asrama " + x.a.nama, sub: subA(x), nilai: x.nilai, v: P(x.nilai) }))} />
+      <${Panel} ic="checksq" warna="ungu" judul="Mutaba'ah terisi" ket=${`Diisi menyusul ${menyusul}× · ${libur} hari tidak dinilai`} besar=${mutPct == null ? null : mutPct + "%"} besarNada=${nada(mutPct)} persen
+        rows=${satu ? null : perA((dd, ku) => ku.pct).map(x => ({ nama: "Asrama " + x.a.nama, sub: subA(x), nilai: x.nilai, v: P(x.nilai) }))}
+        catatan=${satu ? null : "Mutaba'ah dihitung Senin–Jumat. Hari terlewat bisa diisi menyusul paling lambat 7 hari; hari wali asrama berhalangan atau santri izin tidak mengurangi nilai."} />
+      <${Unduhan} judul=${judul} rg=${p.rg} ttd="asrama" tabel=${() => ({ catatan: "Mutaba'ah dihitung Senin–Jumat. Hari kosong tanpa alasan dihitung 0; hari wali asrama berhalangan atau santri izin tidak dihitung.",
+        bagian: [{ judul: "Per asrama", kol: ["Asrama", "Wali asrama", "Santri", "Mutaba'ah terisi", "Menyusul", "Hari tidak dinilai", "Ibadah", "Adab"], rows: asr.map(a => { const dd = dataAsrama(L.santriAsrama(a.id), p.rg), ku = L.kinerjaMut(a.id, p.rg);
+          return [a.nama, (L.staffById(a.musyrif) || {}).nama || "—", dd.length, P(ku.pct), ku.menyusul, ku.hariLibur, P(rata(dd.map(o => o.m.ibadah))), P(rata(dd.map(o => o.m.adab)))]; }) },
+          ...asr.map(a => ({ judul: `Asrama ${a.nama} · per santri`, kol: ["Santri", "Kelas", "Ibadah", "Adab", "Predikat"],
+            rows: dataAsrama(L.santriAsrama(a.id), p.rg).map(o => [o.s.nama, o.s.kelas, P(o.m.ibadah), P(o.m.adab), o.mut == null ? "—" : L.predikatMut(o.mut).h]) }))] })} /></div>`;
 }
 
 // ================= KESANTRIAN (izin & pelanggaran) =================
 const dataKes = (list, rg) => list.map(s => { const pl = L.pelanggaranDalam(s.id, rg), iz = L.izinDalam(s.id, rg); return { s, pl, iz, poin: pl.poinRingan + pl.poinSB }; });
-function itemKes(d) {
-  return [["Izin keluar", `${jml(d, o => o.iz.n)}`, `${d.filter(o => o.iz.n).length} santri`, null, "biru"], ["Terlambat kembali", `${jml(d, o => o.iz.telat)}`, "dari izin", null, jml(d, o => o.iz.telat) ? "merah" : "hijau"],
-    ["Pelanggaran ringan", `${jml(d, o => o.pl.ringan)}`, "dari BAP", null, "emas"], ["Sedang / berat", `${jml(d, o => o.pl.sedang)} / ${jml(d, o => o.pl.berat)}`, "dari BAP", null, "merah"],
-    ["Total poin", `${jml(d, o => o.poin)}`, `${d.filter(o => o.poin).length} santri`, null, "merah"]];
-}
 export function RekapKesantrian({ pondok, aid }) {
   useApp();
-  const lk = lingkup(), p = usePeriode("bulanan", null, "asrama"), [semuaSantri, setSemua] = useState(false);
+  const lk = lingkup(), p = usePeriode("bulanan", null, "asrama");
   const asr = aid ? [L.asramaById(aid)] : lk.pondok.length ? L.ASRAMA.filter(a => (pondok ? a.pondok === pondok : lk.pondok.includes(a.pondok))) : lk.asr;
   if (!asr.length || !asr[0]) return kosong("Rekap Kesantrian", "Tidak ada data kesantrian untuk akun ini.");
   const satu = asr.length === 1, d = dataKes(asr.flatMap(a => L.santriAsrama(a.id)), p.rg);
-  const ada = d.filter(o => o.poin || o.iz.n).sort((a, b) => b.poin - a.poin || b.iz.n - a.iz.n), tampil = semuaSantri ? [...d].sort((a, b) => b.poin - a.poin || a.s.nama.localeCompare(b.s.nama)) : ada;
   const judul = satu ? "Kesantrian · Asrama " + asr[0].nama : pondok ? "Rekap Kesantrian · Pondok " + pondok : "Rekap Kesantrian";
+  const izin = jml(d, o => o.iz.n), telat = jml(d, o => o.iz.telat), ri = jml(d, o => o.pl.ringan), se = jml(d, o => o.pl.sedang), be = jml(d, o => o.pl.berat), poin = jml(d, o => o.poin);
+  const perA = f => asr.map(a => { const dd = dataKes(L.santriAsrama(a.id), p.rg); return { a, dd, ...f(dd) }; });
+  const subS = o => `Kelas ${o.s.kelas} · ${L.asramaAman(o.s.asrama).nama}`, subA = x => `${(L.staffById(x.a.musyrif) || {}).pendek || "—"} · Pondok ${x.a.pondok}`;
+  const ALH = "Alhamdulillah, tidak ada catatan pada periode ini.";
   return html`<${SubHeader} title=${judul} sub=${`Izin & pelanggaran · ${d.length} santri`} />
-    <div class="wrap">${p.bar}
-      <div class="rx-hero"><${Metrik} items=${itemKes(d)} /></div>
-      ${!satu ? html`<${Bagian} t="Per asrama" />${asr.map(a => { const dd = dataKes(L.santriAsrama(a.id), p.rg);
-        return html`<${Grup} judul=${"Asrama " + a.nama} sub=${`${(L.staffById(a.musyrif) || {}).pendek || "—"} · Pondok ${a.pondok} · ${dd.length} santri`} onClick=${() => nav.go("rekapKesantrian", { aid: a.id })}
-          items=${[["Izin", String(jml(dd, o => o.iz.n)), null, null, "biru"], ["Ringan", String(jml(dd, o => o.pl.ringan)), null, null, "emas"], ["Sedang/berat", String(jml(dd, o => o.pl.sedang + o.pl.berat)), null, null, "merah"], ["Poin", String(jml(dd, o => o.poin)), null, null, "merah"]]} />`; })}` : null}
-      <${Bagian} t=${semuaSantri ? "Semua santri" : "Santri yang tercatat"} right=${html`<button type="button" class="link" onClick=${() => setSemua(!semuaSantri)}>${semuaSantri ? "Hanya yang tercatat" : "Tampilkan semua"}</button>`} />
-      ${tampil.length ? tampil.map((o, i) => html`<${BarisSantri} no=${i + 1} s=${o.s} ket=${`Kelas ${o.s.kelas} · ${L.asramaAman(o.s.asrama).nama}`} utama=${`${o.poin} poin`} utamaNada=${o.poin ? "merah" : "hijau"}
-          tanda=${o.pl.bap.map(b => b.pelanggaranNama)}
-          kolom=${[["Izin", o.iz.n + (o.iz.telat ? ` (${o.iz.telat} telat)` : ""), o.iz.telat ? "merah" : ""], ["Ringan", o.pl.ringan, o.pl.ringan ? "emas" : ""], ["Sedang", o.pl.sedang, o.pl.sedang ? "merah" : ""], ["Berat", o.pl.berat, o.pl.berat ? "merah" : ""]]} />`)
-        : html`<${Card}><${Empty} t="Alhamdulillah, tidak ada izin maupun pelanggaran pada periode ini." icon="check" /></${Card}>`}
-      <${Hint}>Semua pelanggaran (ringan, sedang, berat) berasal dari BAP Kesantrian. Izin dihitung dari tanggal keluar.</${Hint}>
+    <div class="wrap rp-wrap">${p.bar}
+      <${Panel} ic="door" warna="biru" judul="Izin keluar" ket=${`${d.filter(o => o.iz.n).length} santri izin`} besar=${`${izin}×`}
+        rows=${satu ? d.filter(o => o.iz.n).map(o => ({ nama: o.s.nama, sub: subS(o), nilai: o.iz.n, v: `${o.iz.n}×` })) : perA(dd => ({ n: jml(dd, o => o.iz.n) })).map(x => ({ nama: "Asrama " + x.a.nama, sub: subA(x), nilai: x.n, v: `${x.n}×` }))} kosongT=${ALH} />
+      <${Panel} ic="clock" warna="merah" judul="Terlambat kembali" ket=${izin ? `${pct(telat, izin)}% dari izin` : "Dari izin keluar"} besar=${`${telat}×`} besarNada=${telat ? "merah" : "hijau"}
+        rows=${d.filter(o => o.iz.telat).map(o => ({ nama: o.s.nama, sub: subS(o), nilai: o.iz.telat, v: `${o.iz.telat}×`, nada: "merah" }))} kosongT="Tidak ada santri yang terlambat kembali." />
+      <${Panel} ic="alert" warna="emas" judul="Pelanggaran (BAP)" ket=${`Ringan ${ri} · Sedang ${se} · Berat ${be}`} besar=${`${ri + se + be}`} besarNada=${se + be ? "merah" : ri ? "emas" : "hijau"}
+        rows=${satu ? d.filter(o => o.pl.ringan + o.pl.sedang + o.pl.berat).map(o => ({ nama: o.s.nama, sub: o.pl.bap.map(b => b.pelanggaranNama).join(", ") || subS(o), nilai: o.pl.ringan + o.pl.sedang + o.pl.berat, v: `${o.pl.ringan + o.pl.sedang + o.pl.berat}×`, nada: o.pl.sedang + o.pl.berat ? "merah" : "emas" }))
+          : perA(dd => ({ r: jml(dd, o => o.pl.ringan), s: jml(dd, o => o.pl.sedang), b: jml(dd, o => o.pl.berat) })).map(x => ({ nama: "Asrama " + x.a.nama, sub: `Ringan ${x.r} · Sedang ${x.s} · Berat ${x.b}`, nilai: x.r + x.s + x.b, v: `${x.r + x.s + x.b}×`, nada: x.s + x.b ? "merah" : "emas" }))} kosongT=${ALH} />
+      <${Panel} ic="star" warna="merah" judul="Poin pelanggaran" ket=${`${d.filter(o => o.poin).length} santri memiliki poin`} besar=${String(poin)} besarNada=${poin ? "merah" : "hijau"}
+        rows=${d.filter(o => o.poin).map(o => ({ nama: o.s.nama, sub: subS(o), nilai: o.poin, v: `${o.poin} poin`, nada: "merah" }))} batas=${10} kosongT=${ALH}
+        catatan="Semua pelanggaran (ringan, sedang, berat) berasal dari BAP Kesantrian. Izin dihitung dari tanggal keluar." />
       <${Unduhan} judul=${judul} rg=${p.rg} ttd="kesantrian" tabel=${() => ({ catatan: "Semua pelanggaran berasal dari BAP Kesantrian.",
         bagian: [{ judul: "Per asrama", kol: ["Asrama", "Pondok", "Santri", "Izin", "Terlambat", "Ringan", "Sedang", "Berat", "Total poin"], rows: asr.map(a => { const dd = dataKes(L.santriAsrama(a.id), p.rg);
           return [a.nama, a.pondok, dd.length, jml(dd, o => o.iz.n), jml(dd, o => o.iz.telat), jml(dd, o => o.pl.ringan), jml(dd, o => o.pl.sedang), jml(dd, o => o.pl.berat), jml(dd, o => o.poin)]; }) },
           { judul: "Santri yang tercatat", kol: ["Santri", "Kelas", "Asrama", "Izin", "Terlambat", "Ringan", "Sedang", "Berat", "Poin", "Pelanggaran BAP"],
-            rows: ada.map(o => [o.s.nama, o.s.kelas, L.asramaAman(o.s.asrama).nama, o.iz.n, o.iz.telat, o.pl.ringan, o.pl.sedang, o.pl.berat, o.poin, o.pl.bap.map(b => b.pelanggaranNama).join("; ") || "—"]) }] })} /></div>`;
+            rows: d.filter(o => o.poin || o.iz.n).sort((a, b) => b.poin - a.poin).map(o => [o.s.nama, o.s.kelas, L.asramaAman(o.s.asrama).nama, o.iz.n, o.iz.telat, o.pl.ringan, o.pl.sedang, o.pl.berat, o.poin, o.pl.bap.map(b => b.pelanggaranNama).join("; ") || "—"]) }] })} /></div>`;
 }
 
 // Pintu masuk lama nav.go("rekap", { modul }) → rekap modul yang sesuai

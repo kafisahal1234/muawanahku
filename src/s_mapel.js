@@ -181,5 +181,5 @@ export function RekapKelas({ mapel, kelas }) {
   const list = L.santriKelas(kelas), pert = all("absenKelas").filter(d => d.kelas === kelas && (!mapel || d.mapel === mapel)).length;
   return html`<${SubHeader} title=${`Kehadiran Kelas ${kelas}`} sub=${(mapel ? L.mapelById(mapel).nama : "Semua mapel") + ` · ${pert} pertemuan tercatat`} />
     <div class="wrap"><${Card}><div class="list">${list.map(s => { const k = L.kehadiranKelas(s.id, mapel);
-      return html`<${Row} name=${s.nama} sub=${k.tot ? `H ${k.H} · S ${k.S} · I ${k.I} · A ${k.A}` : "Belum ada data"} right=${k.pct == null ? "—" : html`<${Pill} t=${k.pct + "%"} tone=${k.pct >= 80 ? "green" : "red"} />`} />`; })}</div></${Card}></div>`;
+      return html`<${Row} name=${s.nama} sub=${k.tot ? `${k.tot} pertemuan` : "Belum ada data"} right=${k.pct == null ? "—" : html`<${Pill} t=${k.pct + "%"} tone=${k.pct >= 80 ? "green" : "red"} />`} />`; })}</div></${Card}></div>`;
 }

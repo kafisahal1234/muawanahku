@@ -4,6 +4,7 @@ import { S, all, get, put, toast, uid } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
 import { me } from "./common.js";
+import { Panel } from "./s_rekapmodul.js";
 
 export function slotStatus(j, tgl) {
   const d = get("absenKelas", L.absenKelasKey(j.id, tgl));
@@ -105,9 +106,13 @@ export function RekapKehadiran() {
 
 export function RekapNilai() {
   useApp();
-  return html`<${SubHeader} title="Rekap Nilai" sub="Rata-rata nilai akhir per kelas" /><div class="wrap">${["7", "8", "9A", "9B"].map(k => html`<${Card} title=${"Kelas " + k}><div class="list">
-    ${DATA.mapel.map(m => { const v = L.santriKelas(k).map(s => (L.nilaiAkhir(s.id, m.id) || {}).akhir).filter(x => x != null); const avg = v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; const low = v.filter(x => x < 70).length;
-      return html`<${Row} name=${m.nama} sub=${v.length ? `${v.length} santri dinilai · ${low} di bawah KKM` : "Belum ada nilai"} icon=${html`<${Icon} n="award" s=${18} />`} right=${avg == null ? "—" : html`<${Pill} t=${avg} tone=${avg >= 70 ? "green" : "red"} />`} />`; })}</div></${Card}>`)}</div>`;
+  const avg = xs => (xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null);
+  const nd = v => (v == null ? "" : v >= 90 ? "hijau" : v >= 75 ? "biru" : v >= 60 ? "emas" : "merah");
+  return html`<${SubHeader} title="Rekap Nilai" sub="Rata-rata nilai akhir per kelas · KKM 70" /><div class="wrap rp-wrap">${["7", "8", "9A", "9B"].map(k => {
+    const per = DATA.mapel.map(m => { const v = L.santriKelas(k).map(s => (L.nilaiAkhir(s.id, m.id) || {}).akhir).filter(x => x != null); return { m, v, a: avg(v), low: v.filter(x => x < 70).length }; });
+    const semua = avg(per.filter(x => x.a != null).map(x => x.a)), low = per.reduce((n, x) => n + x.low, 0);
+    return html`<${Panel} ic="award" warna="emas" judul=${"Kelas " + k} ket=${`${L.santriKelas(k).length} santri${semua != null ? ` · ${low} nilai di bawah KKM` : ""}`} besar=${semua} besarNada=${nd(semua)} persen
+      rows=${per.map(x => ({ nama: x.m.nama, sub: x.v.length ? `${x.v.length} santri dinilai${x.low ? ` · ${x.low} di bawah KKM` : ""}` : "", nilai: x.a, v: x.a }))} kosongT="Belum ada nilai untuk kelas ini." />`; })}</div>`;
 }
 
 export function RekapIzinGuru() {

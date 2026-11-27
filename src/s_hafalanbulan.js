@@ -1,10 +1,10 @@
 // Rekap perolehan hafalan per bulan (guru tahfidz / wali asrama; Wadir Tahfidz & Mudir: semua halaqah) + unduh PDF
 import { useState } from "preact/hooks";
 import { html, nav, useApp, Card, SubHeader, Row, Pill, Btn, Empty, Hint, Stat } from "./ui.js";
-import { all } from "./store.js";
+import { all, get } from "./store.js";
 import * as L from "./logic.js";
 import { me } from "./common.js";
-import { unduhPdf, tabelKePdf } from "./pdf.js";
+import { unduhPdf, tabelKePdf, laporanZiyadahPdf } from "./pdf.js";
 import { ttdUntukPdf } from "./s_ttd.js";
 
 const BLN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -16,6 +16,7 @@ export function perolehanBulan(sid, bulan) {
   return { baris, hal: baris / 15, juz: baris / 300, hari: new Set(z.map(r => r.tanggal)).size, muro: recs.filter(r => r.jenis === "murojaah").length,
     tasmi: recs.filter(r => r.jenis === "tasmi" && r.lulus).map(r => r.juz) };
 }
+const hqLap = () => { const m = me(), r = m.roles; return r.includes("mudir") || r.includes("wadir_tahfidz") ? L.HALAQAH : L.halaqahOf(m.id) ? [L.halaqahOf(m.id)] : []; };
 function kelompok() {
   const m = me(), r = m.roles, hq = L.halaqahOf(m.id), a = L.asramaOf(m.id);
   const semua = r.includes("mudir") || r.includes("wadir_tahfidz");
@@ -45,7 +46,57 @@ export function RekapHafalanBulan() {
       <${Card}><div class="stats"><${Stat} label="Total baris" value=${tot} /><${Stat} label="Setara" value=${tot ? L.fmtBaris(tot) : "—"} tone="blue" /><${Stat} label=${`Capai target ${tgT}`} value=${`${semuaRows.filter(x => x.p.baris >= tgB).length}/${semuaRows.length}`} tone="gold" /></div></${Card}>
       ${data.map(g => html`<${Card} title=${g.nama} right=${html`<small>${g.rows.length} santri</small>`}><div class="list">${g.rows.map(({ s, p }) => html`<${Row} name=${s.nama}
           sub=${p.baris ? `${p.baris} baris · ${dk(p.hal, 1)} hal · ${dk(p.juz, 2)} juz · ${p.hari} hari setor` : "Belum ada ziyadah bulan ini"}
-          right=${html`<${Pill} t=${p.baris ? L.fmtBaris(p.baris) + (p.baris >= tgB ? " ✓" : "") : "0"} tone=${p.baris >= tgB ? "green" : p.baris >= tgB / 2 ? "gold" : p.baris ? "red" : "muted"} />`} onClick=${() => nav.go("santri", { sid: s.id })} />`)}</div></${Card}>`)}
+          right=${html`<${Pill} t=${p.baris ? L.fmtBaris(p.baris) + (p.baris >= tgB ? " ✓" : "") : "0"} tone=${p.baris >= tgB ? "green" : p.baris >= tgB / 2 ? "gold" : p.baris ? "red" : "muted"} />`} />`)}</div></${Card}>`)}
       <${Hint}>Target ${tgT} per bulan (${L.targetSemester().toLocaleString("id-ID")} juz per semester, ${L.BULAN_AKTIF} bulan aktif). Perolehan dihitung dari ziyadah yang lulus pada ${namaBulan(bulan)}. 15 baris = 1 halaman, 20 halaman = 1 juz.</${Hint}>
-      <div class="sticky-act"><${Btn} icon="download" onClick=${unduh}>Unduh PDF ${namaBulan(bulan)}</${Btn}></div></div>`;
+      <div class="sticky-act btn-row">${hqLap().length ? html`<${Btn} icon="download" onClick=${() => unduhLaporanZiyadah(hqLap(), L.periodeRange("bulanan", bulan + "-01"), "bulanan")}>Laporan ziyadah</${Btn}>` : null}<${Btn} kind="ghost" icon="download" onClick=${unduh}>Rekap PDF</${Btn}></div></div>`;
+}
+
+// ================= Laporan Ziyadah Hafalan Al-Qur'an (bulanan / tengah semester / semester) =================
+// Satu lembar per halaqah. Dari–sampai dihitung dari posisi baris setoran ziyadah yang lulus (mushaf 15 baris).
+const jumlahTeks = baris => { if (!baris) return "—"; const h = Math.floor(baris / 15), b = baris % 15; return [h ? `${h} Halaman` : "", b ? `${b} Baris` : ""].filter(Boolean).join(" "); };
+const titikAyat = (juz, baris) => { const [s, a] = L.ayahAtBaris(juz, Math.max(1, baris)); return `${L.surahName(s)} : ${a}`; };
+export function ziyadahLaporan(s, dari, sampai, tgBaris) {
+  const dlm = r => r.tanggal >= dari && r.tanggal <= sampai, rec = L.setoranSantri(s.id).filter(dlm);
+  const z = rec.filter(r => r.jenis === "ziyadah" && r.lulus && (r.sesudah || 0) > (r.sebelum || 0)).sort((a, b) => (a.tanggal + String(a.ts || 0)).localeCompare(b.tanggal + String(b.ts || 0)));
+  const tasmi = rec.filter(r => r.jenis === "tasmi" && r.lulus).map(r => r.juz);
+  const ket = [];
+  if (L.santriIqra(s)) {
+    const t = L.tahsinStatus(s), th = all("tahsin").filter(r => r.santri === s.id && dlm(r) && r.jenis === "baca");
+    const hal = th.reduce((n, r) => n + (r.dari != null ? Math.max(1, r.sampai - r.dari + 1) : 0), 0);
+    return { juz: "Tahsin", jumlah: hal ? `${hal} Halaman Iqro'` : "—", dari: "—", sampai: "—", ket: t && t.jilid ? `Tahsin Iqro' ${t.jilid}${t.hal ? " hal. " + t.hal : ""}` : "Tahsin", baris: 0 };
+  }
+  if (!z.length) {
+    if (tasmi.length) ket.push(`Lulus tasmi' Juz ${tasmi.join(", ")}`);
+    else if (L.hafalan(s).siapTasmi) ket.push("Siap ujian kenaikan juz");
+    return { juz: "—", jumlah: "—", dari: "—", sampai: "—", ket: ket.join(" · ") || "Belum ada ziyadah", baris: 0 };
+  }
+  const baris = z.reduce((n, r) => n + Math.max(0, (r.sesudah || 0) - (r.sebelum || 0)), 0), juzs = [...new Set(z.map(r => r.juz))];
+  const a = z[0], b = z[z.length - 1];
+  if (tasmi.length) ket.push(`Lulus tasmi' Juz ${tasmi.join(", ")}`);
+  else if (L.hafalan(s).siapTasmi) ket.push("Siap ujian kenaikan juz");
+  if (tgBaris && baris >= tgBaris) ket.push("Target tercapai");
+  return { juz: juzs.map(j => "Juz " + j).join(", "), jumlah: jumlahTeks(baris), dari: titikAyat(a.juz, (a.sebelum || 0) + 1), sampai: titikAyat(b.juz, b.sesudah), ket: ket.join(" · "), baris };
+}
+export async function unduhLaporanZiyadah(hqs, rg, jenis) {
+  const rh = L.rentangHitung(rg), tg = Math.round(L.targetHal(jenis) * 15);
+  const wadir = L.STAFF.find(st => (st.roles || []).includes("wadir_tahfidz"));
+  const ttdDari = st => { const t = st ? get("ttd", st.id) : null; return t && t.img ? { img: t.img, w: t.w, h: t.h } : {}; };
+  const BL = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  const akhir = rh.kosong ? L.today() : rh.sampai, d = L.parseYmd(akhir);
+  const periode = jenis === "bulanan" ? rg.label : jenis === "mid" ? `Tengah Semester ${L.semesterKini(rg.dari).nama} ${L.setelan().tp}` : `Semester ${L.semesterKini(rg.dari).nama} ${L.setelan().tp}`;
+  const lembar = hqs.map(h => {
+    const g = L.staffById(h.guru) || {}, list = [...L.santriHalaqah(h.id)].sort((x, y) => x.nama.localeCompare(y.nama));
+    const data = list.map(s => ({ s, z: rh.kosong ? { juz: "—", jumlah: "—", dari: "—", sampai: "—", ket: "", baris: 0 } : ziyadahLaporan(s, rh.dari, rh.sampai, tg) }));
+    const quran = data.filter(x => x.z.juz !== "Tahsin"), tot = quran.reduce((n, x) => n + x.z.baris, 0), capai = quran.filter(x => x.z.baris >= tg).length;
+    return {
+      info: [["Pengampu", g.nama || "—"], ["Periode", periode], ["Halaqah", h.nama.replace(/^Halaqah\s*/, "")], ["Jumlah santri", `${list.length} santri`]],
+      rows: data.map((x, i) => [i + 1, x.s.nama, x.z.juz, x.z.jumlah, x.z.dari, x.z.sampai, x.z.ket]),
+      ringkas: quran.length ? `Total ziyadah: ${jumlahTeks(tot)} · rata-rata ${(tot / 15 / Math.max(1, quran.length)).toLocaleString("id-ID", { maximumFractionDigits: 1 })} halaman per santri · target ${L.fmtHal(L.targetHal(jenis))} per santri tercapai oleh ${capai} dari ${quran.length} santri.` : "",
+      kiri: wadir && wadir.id !== g.id ? { atas: "Mengetahui,", jabatan: "Wadir Tahfidz", nama: wadir.nama, ...ttdDari(wadir) } : null,
+      kanan: { jabatan: "Pengampu Halaqah", nama: g.nama, ...ttdDari(g) },
+    };
+  });
+  const judul = jenis === "bulanan" ? "Laporan Bulanan Ziyadah Hafalan Al-Qur'an" : jenis === "mid" ? "Laporan Tengah Semester Ziyadah Hafalan Al-Qur'an" : "Laporan Semester Ziyadah Hafalan Al-Qur'an";
+  const nama = `${judul} - ${hqs.length === 1 ? hqs[0].nama + " - " : ""}${periode}`.replace(/[\/:]/g, "-");
+  await unduhPdf(nama, () => laporanZiyadahPdf({ judul, lembar, tempatTgl: `Metro, ${d.getDate()} ${BL[d.getMonth()]} ${d.getFullYear()}` }));
 }

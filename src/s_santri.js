@@ -34,7 +34,7 @@ export function RiwayatSetoran({ sid, n = 12, koreksi }) {
 export function KehadiranCard({ s }) {
   const [j, setJ] = useState("bulanan"), rg = L.periodeRange(j);
   const kh = L.kehadiranHalaqah(s.id, rg), kk = L.kehadiranKelas(s.id, null, rg), mp = L.mutPersen(s.id, rg);
-  const sub = k => (k.sesi ? `H${k.H} S${k.S} I${k.I} A${k.A} · ${k.sesi} sesi${k.kosong ? `, ${k.kosong} belum diabsen` : ""}` : "belum ada hari aktif");
+  const sub = k => (k.sesi ? `${k.sesi} sesi${k.kosong ? ` · ${k.kosong} belum diabsen` : ""}` : "belum ada hari aktif");
   return html`<${Card} title="Kehadiran & mutaba'ah" right=${html`<small>${rg.label}</small>`}>
     <div class="seg small mb8">${[["pekanan", "Pekan"], ["bulanan", "Bulan"], ["mid", "Mid"], ["semester", "Semester"], ["tahunan", "Tahun"]].map(([k, t]) => html`<button class=${k === j ? "on" : ""} onClick=${() => setJ(k)}>${t}</button>`)}</div>
     <div class="stats"><${Stat} label="Halaqah" value=${kh.pct == null ? "—" : kh.pct + "%"} sub=${sub(kh)} /><${Stat} label="Kelas" value=${kk.pct == null ? "—" : kk.pct + "%"} sub=${sub(kk)} />

@@ -163,7 +163,7 @@ export function RekapTahsin() {
       <${Card}><div class="iq-ringkas">${per.map((n, i) => html`<span class=${n ? "ada" : ""}><b>${n}</b><small>Iqro' ${i + 1}</small></span>`)}<span class=${"qr" + (lulus ? " ada" : "")}><b>${lulus}</b><small>Al-Qur'an</small></span></div>
         <div class="stats mt8"><${Stat} label="Santri tahsin" value=${rows.length} /><${Stat} label="Siap ujian" value=${siap} tone=${siap ? "gold" : ""} /><${Stat} label="Lulus Iqro'" value=${lulus} tone="green" /></div></${Card}>
       ${grup.map(g => html`<${Card} title=${g.h.nama} right=${html`<small>${g.rows.length} santri</small>`}><div class="list">${g.rows.map(({ s, t, n }) => html`<${Row} name=${s.nama} sub=${`${t.label} · ${n.length}x membaca bulan ini`}
-        right=${t.siapUjian ? html`<${Pill} t="Menunggu ujian" tone="gold" />` : t.quran ? html`<${Pill} t="Al-Qur'an" tone="green" />` : html`<span class="iq-mini"><b>${t.jilid || "?"}</b><small>${t.hal || 0}/${L.IQRA_HAL}</small></span>`} onClick=${() => nav.go("santri", { sid: s.id })} />`)}</div></${Card}>`)}
+        right=${t.siapUjian ? html`<${Pill} t="Menunggu ujian" tone="gold" />` : t.quran ? html`<${Pill} t="Al-Qur'an" tone="green" />` : html`<span class="iq-mini"><b>${t.jilid || "?"}</b><small>${t.hal || 0}/${L.IQRA_HAL}</small></span>`} />`)}</div></${Card}>`)}
       <div class="sticky-act"><${Btn} icon="download" onClick=${unduh}>Unduh rekap tahsin (PDF)</${Btn}></div>` : html`<${Card}><${Empty} t="Belum ada santri tahsin." icon="bookopen" /></${Card}>`}</div>`;
 }
 

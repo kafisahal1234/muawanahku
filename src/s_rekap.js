@@ -16,16 +16,29 @@ import { ttdUntukPdf } from "./s_ttd.js";
 const tone = v => (v == null ? "muted" : v >= 90 ? "green" : v >= 75 ? "blue" : v >= 60 ? "gold" : "red");
 const P = v => (v == null ? "—" : v + "%");
 
+// Pemilih periode rekap: hanya Bulanan, Tengah semester (mid), dan Semester. Satu tombol → lembar pilihan.
+const BLN_P = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 export function usePeriode(def = "bulanan", izin = null, fokus = null) {
-  const [jenis0, setJenis] = useState(def); const [ref, setRef] = useState(L.today());
-  const opsi = L.PERIODE.filter(([k]) => !izin || izin.includes(k)), jenis = opsi.some(([k]) => k === jenis0) ? jenis0 : opsi[0][0];
-  const rg = L.periodeRange(jenis, ref), geser = ["harian", "pekanan", "bulanan"].includes(jenis);
-  const ha = L.hariAktifDalam(rg, "halaqah").length, hk = L.hariAktifDalam(rg, "kbm").length, hs = L.hariAktifDalam(rg, "asrama").length, rh = L.rentangHitung(rg);
-  const bar = html`<div class="periode">
-    <div class="seg small">${opsi.map(([k, t]) => html`<button type="button" class=${k === jenis ? "on" : ""} onClick=${() => { setJenis(k); setRef(L.today()); }}>${t}</button>`)}</div>
-    <div class="per-nav">${geser ? html`<button class="icon-btn" aria-label="Sebelumnya" onClick=${() => setRef(L.geserPeriode(jenis, ref, -1))}><${Icon} n="left" s=${20} /></button>` : null}
-      <div class="per-t"><b>${rg.label}</b><small>${rh.kosong ? "Belum ada hari yang dihitung" : fokus ? `${L.fmtShort(rh.dari)} – ${L.fmtShort(rh.sampai)} · ${{ halaqah: ha, kbm: hk, asrama: hs }[fokus]} hari ${{ halaqah: "halaqah", kbm: "KBM", asrama: "aktif" }[fokus]}` : `Dihitung ${L.fmtShort(rh.dari)} – ${L.fmtShort(rh.sampai)} · aktif: halaqah ${ha}, KBM ${hk}, asrama ${hs} hari`}</small></div>
-      ${geser ? html`<button class="icon-btn" aria-label="Berikutnya" disabled=${rg.sampai >= L.today()} onClick=${() => setRef(L.geserPeriode(jenis, ref, 1))}><${Icon} n="right" s=${20} /></button>` : null}</div></div>`;
+  const [pil, setPil] = useState({ jenis: ["bulanan", "mid", "semester"].includes(def) ? def : "bulanan", ref: L.today() }), [buka, setBuka] = useState(false);
+  const jenis = pil.jenis, rg = L.periodeRange(jenis, pil.ref), rh = L.rentangHitung(rg), sm = L.semesterKini();
+  const hari = fokus ? L.hariAktifDalam(rg, fokus).length : 0, namaHari = { halaqah: "hari halaqah", kbm: "hari KBM", asrama: "hari aktif" }[fokus] || "hari";
+  // bulan-bulan semester berjalan sampai bulan ini (terbaru di atas)
+  const bulan = []; { const a = L.parseYmd(sm.mulai), b = L.parseYmd(L.today()); for (let d = new Date(b.getFullYear(), b.getMonth(), 1); d >= new Date(a.getFullYear(), a.getMonth(), 1); d = new Date(d.getFullYear(), d.getMonth() - 1, 1)) bulan.push(L.ymd(d)); }
+  const pilih = (j, ref) => { setPil({ jenis: j, ref: ref || L.today() }); setBuka(false); };
+  const aktif = (j, ref) => jenis === j && (j !== "bulanan" || (pil.ref || "").slice(0, 7) === ref.slice(0, 7));
+  const opsi = (j, ref, judul, ket) => html`<button type="button" class=${"per-op" + (aktif(j, ref) ? " on" : "")} onClick=${() => pilih(j, ref)}><span><b>${judul}</b><small>${ket}</small></span>${aktif(j, ref) ? html`<${Icon} n="check" s=${20} />` : null}</button>`;
+  const jenisTeks = { bulanan: "Rekap bulanan", mid: "Rekap tengah semester", semester: "Rekap semester" }[jenis];
+  const bar = html`<button type="button" class="per-pick" onClick=${() => setBuka(true)}>
+      <span class="per-ic"><${Icon} n="calendar" s=${20} /></span>
+      <span class="per-tx"><small>${jenisTeks}</small><b>${rg.label}</b><em>${rh.kosong ? "Belum ada hari yang dihitung" : `${L.fmtShort(rh.dari)} – ${L.fmtShort(rh.sampai)}${fokus ? ` · ${hari} ${namaHari}` : ""}`}</em></span>
+      <span class="per-ganti">Ganti <${Icon} n="down" s=${16} /></span></button>
+    <${Sheet} open=${buka} title="Pilih periode rekap" onClose=${() => setBuka(false)}>
+      <p class="per-grp">Bulanan</p>
+      ${bulan.map(b => { const d = L.parseYmd(b); return opsi("bulanan", b, `${BLN_P[d.getMonth()]} ${d.getFullYear()}`, b.slice(0, 7) === L.today().slice(0, 7) ? "Bulan ini" : "Satu bulan penuh"); })}
+      <p class="per-grp">Semester ${sm.nama.toLowerCase()} ${L.setelan().tp}</p>
+      ${opsi("mid", L.today(), "Tengah semester (mid)", `${L.fmtShort(sm.mulai)} – ${L.fmtShort(sm.mid)}`)}
+      ${opsi("semester", L.today(), "Satu semester", `${L.fmtShort(sm.mulai)} – ${L.fmtShort(sm.selesai)}`)}
+    </${Sheet}>`;
   return { jenis, rg, bar };
 }
 

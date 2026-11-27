@@ -143,3 +143,67 @@ export async function unduhPdf(nama, buat) {
   catch (e) { toast((e && e.message && e.message.length < 120 ? e.message : "PDF gagal dibuat. Coba lagi."), "err"); }
   finally { sibuk = false; }
 }
+
+// ---------- Laporan Ziyadah Hafalan Al-Qur'an (per halaqah; bulanan / tengah semester / semester) ----------
+// lembar: [{ info: [[label, nilai], ...] (2 kolom), rows: [[no, nama, juz, jumlah, dari, sampai, ket]], ringkas: "…", kiri: ttd|null, kanan: ttd }]
+// ttd: { atas: "Mengetahui,", jabatan, nama, img, w, h }
+export async function laporanZiyadahPdf({ judul, lembar, tempatTgl }) {
+  const { jsPDF, autoTable } = await muatPdf();
+  const kop = await kopJpeg();
+  const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait", compress: true });
+  const W = pdf.internal.pageSize.getWidth(), H = pdf.internal.pageSize.getHeight(), M = 14;
+  const NAVY = [51, 52, 63], TEAL = [11, 107, 67], GOLD = [229, 168, 72];
+  const kopH = kop ? Math.min(30, (W - 8) * kop.utuh.r) : 0;
+  const kepala = () => { if (kop) pdf.addImage(kop.utuh.src, "JPEG", 4.5, 0, kopH / kop.utuh.r, kopH, "kop", "FAST"); else { pdf.setFont("helvetica", "bold"); pdf.setFontSize(12); pdf.setTextColor(...NAVY); pdf.text("Kampung Qur'an Al Muawanah", M, 14); } };
+  const blok = (t, cx, y) => {
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor(...NAVY);
+    if (t.atas) pdf.text(t.atas, cx, y, { align: "center" });
+    pdf.text(t.jabatan || "", cx, y + 4.5, { align: "center" });
+    if (t.img) { const r = (t.h || 1) / (t.w || 1), iw = Math.min(42, 18 / r), ih = iw * r; try { pdf.addImage(t.img, "PNG", cx - iw / 2, y + 6.5 + (18 - ih) / 2, iw, ih, undefined, "FAST"); } catch (e) { } }
+    const nm = String(t.nama || "").replace(/^Ust(dzh)?\.\s*/, "");
+    pdf.setFont("helvetica", "bold"); pdf.text(nm || "( ............................ )", cx, y + 29, { align: "center" });
+    if (nm) { const tw = pdf.getTextWidth(nm); pdf.setDrawColor(...NAVY); pdf.setLineWidth(0.25); pdf.line(cx - tw / 2, y + 30, cx + tw / 2, y + 30); }
+  };
+  lembar.forEach((lb, li) => {
+    if (li) pdf.addPage();
+    kepala();
+    let y = kopH + 8;
+    pdf.setFont("helvetica", "bold"); pdf.setFontSize(13.5); pdf.setTextColor(...NAVY); pdf.text(judul.toUpperCase(), W / 2, y, { align: "center" });
+    pdf.setFillColor(...GOLD); pdf.roundedRect(W / 2 - 15, y + 2.2, 30, 1.2, 0.6, 0.6, "F"); y += 9;
+    // identitas: dua kolom label : nilai
+    pdf.setFontSize(9.2);
+    const kol = [M, W / 2 + 6], lw = 24;
+    lb.info.forEach(([l, v], i) => {
+      const x = kol[i % 2], yy = y + Math.floor(i / 2) * 5;
+      pdf.setFont("helvetica", "normal"); pdf.setTextColor(95, 105, 115); pdf.text(l, x, yy);
+      pdf.setTextColor(...NAVY); pdf.text(":", x + lw, yy); pdf.setFont("helvetica", "bold"); pdf.text(String(v || "—"), x + lw + 3, yy);
+    });
+    y += Math.ceil(lb.info.length / 2) * 5 + 2;
+    autoTable(pdf, {
+      startY: y, head: [["No", "Nama Santri", "Juz Ziyadah", "Jumlah Ziyadah", "Dari", "Sampai", "Keterangan"]],
+      body: lb.rows.length ? lb.rows.map(r => r.map(v => (v == null ? "" : String(v)))) : [[{ content: "Belum ada santri di halaqah ini.", colSpan: 7, styles: { halign: "center" } }]],
+      margin: { left: M, right: M, top: kopH + 6, bottom: 18 }, theme: "grid",
+      styles: { font: "helvetica", fontSize: 8.4, cellPadding: { top: 2.4, bottom: 2.4, left: 1.8, right: 1.8 }, lineColor: [214, 224, 219], lineWidth: 0.15, textColor: NAVY, valign: "middle", overflow: "linebreak" },
+      headStyles: { fillColor: TEAL, textColor: 255, fontStyle: "bold", fontSize: 8.4, valign: "middle" },
+      alternateRowStyles: { fillColor: [244, 249, 246] },
+      columnStyles: { 0: { cellWidth: 9, halign: "center" }, 1: { cellWidth: 37, fontStyle: "bold" }, 2: { cellWidth: 16 }, 3: { cellWidth: 27 }, 4: { cellWidth: 28 }, 5: { cellWidth: 28 } },
+      didParseCell: d => { if (d.section === "body" && d.column.index === 6 && /lulus|siap|tercapai/i.test(String(d.cell.raw))) { d.cell.styles.textColor = TEAL; d.cell.styles.fontStyle = "bold"; } },
+      didDrawPage: d => { if (d.pageNumber > 1) kepala(); },
+    });
+    y = pdf.lastAutoTable.finalY + 5;
+    if (lb.ringkas) { pdf.setFont("helvetica", "normal"); pdf.setFontSize(8.4); pdf.setTextColor(80, 90, 100); const ls = pdf.splitTextToSize(lb.ringkas, W - 2 * M); pdf.text(ls, M, y + 1); y += ls.length * 3.8 + 3; }
+    if (y > H - 52) { pdf.addPage(); kepala(); y = kopH + 10; }
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor(...NAVY);
+    const cxR = W - M - 35, cxL = M + 35;
+    pdf.text(tempatTgl, cxR, y + 3, { align: "center" });
+    if (lb.kiri) blok(lb.kiri, cxL, y + 3);
+    blok(lb.kanan, cxR, y + 3);
+  });
+  const n = pdf.internal.getNumberOfPages();
+  for (let i = 1; i <= n; i++) {
+    pdf.setPage(i); pdf.setDrawColor(...GOLD); pdf.setLineWidth(0.8); pdf.line(M, H - 11, W - M, H - 11);
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(7.5); pdf.setTextColor(110, 120, 135);
+    pdf.text(`Kampung Qur'an Al Muawanah · ${judul}`, M, H - 6.5); pdf.text(`Halaman ${i} dari ${n}`, W - M, H - 6.5, { align: "right" });
+  }
+  return pdf.output("blob");
+}

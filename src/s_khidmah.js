@@ -3,6 +3,8 @@ import { useState } from "preact/hooks";
 import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, Empty, Seg, Hint, Angka } from "./ui.js";
 import { all, get, put, toast } from "./store.js";
 import * as L from "./logic.js";
+import { usePeriode } from "./s_rekap.js";
+import { Panel } from "./s_rekapmodul.js";
 import { me } from "./common.js";
 import { unduhPdf, tabelKePdf } from "./pdf.js";
 import { ttdUntukPdf } from "./s_ttd.js";
@@ -138,22 +140,20 @@ export function KhidmahRiwayat({ gid: g0 }) {
 // Rekap semua musyrif (Mudir, Wadir Kesantrian)
 export function RekapKhidmah({ pondok }) {
   useApp();
-  const [per, setPer] = useState("bulanan"), rg = L.periodeRange(per), p = pondok === "all" ? null : pondok;
-  const rows = musyrifList(p).map(({ a, g }) => ({ a, g, rk: per === "harian" ? null : rekapKhidmah(g.id, rg), h: hasilKhidmah(g.id, L.today()) }))
-    .map(x => ({ ...x, v: x.rk ? x.rk.pct : x.h.pct })).sort((x, y) => (x.v ?? -1) - (y.v ?? -1));
-  const rata = rows.filter(x => x.v != null), avg = rata.length ? Math.round(rata.reduce((n, x) => n + x.v, 0) / rata.length) : null;
-  const unduh = () => unduhPdf(`Rekap Ceklis Musyrif ${rg.label || L.fmtTgl(L.today())}`, () => tabelKePdf({
-    judul: "Rekap Ceklis Harian Musyrif", sub: `${per === "harian" ? L.fmtTgl(L.today()) : rg.label}${p ? " · Pondok " + p : ""} · ${rows.length} wali asrama`,
+  const pr = usePeriode("bulanan"), per = pr.jenis, rg = pr.rg, p = pondok === "all" ? null : pondok;
+  const rows = musyrifList(p).map(({ a, g }) => ({ a, g, rk: rekapKhidmah(g.id, rg) })).map(x => ({ ...x, v: x.rk ? x.rk.pct : null }));
+  const rata = rows.filter(x => x.v != null), avg = rata.length ? Math.round(rata.reduce((n, x) => n + x.v, 0) / rata.length) : null, kurang = rows.filter(x => x.v != null && x.v < 75).length;
+  const unduh = () => unduhPdf(`Rekap Ceklis Musyrif ${rg.label}`, () => tabelKePdf({
+    judul: "Rekap Ceklis Harian Musyrif", sub: `${rg.label}${p ? " · Pondok " + p : ""} · ${rows.length} wali asrama`,
     catatan: "Persentase = tugas terlaksana dibanding tugas yang berlaku pada hari itu. Sebagian tugas terisi otomatis dari absen halaqah, setoran dan mutaba'ah. Hari wali asrama izin tidak dihitung bila kosong.",
     oleh: `Dicetak oleh ${me().nama}, ${L.fmtTgl(L.today())} · MuawanahQu`, ttd: ttdUntukPdf("kesantrian"),
-    bagian: [{ judul: "Per wali asrama", kol: ["No", "Wali asrama", "Asrama", "Pondok", "Terlaksana", "Hari diisi", "Tidak dinilai"],
-      rows: rows.map((x, i) => [i + 1, x.g.nama, x.a.nama, x.a.pondok, x.v == null ? "—" : x.v + "%", x.rk ? `${x.rk.hariIsi}/${x.rk.hari}` : x.h.doc ? "Ya" : "Belum", x.rk ? x.rk.dikecualikan : "—"]) }],
+    bagian: [{ judul: "Per wali asrama", kol: ["No", "Wali asrama", "Asrama", "Pondok", "Terlaksana", "Hari diisi"],
+      rows: [...rows].sort((x, y) => (y.v ?? -1) - (x.v ?? -1)).map((x, i) => [i + 1, x.g.nama, x.a.nama, x.a.pondok, x.v == null ? "—" : x.v + "%", x.rk ? `${x.rk.hariIsi} dari ${x.rk.hari} hari` : "—"]) }],
   }));
-  return html`<${SubHeader} title="Rekap Ceklis Musyrif" sub=${`Ceklis harian wali asrama${p ? " · Pondok " + p : ""}`}><${Seg} small items=${L.PERIODE.filter(([k]) => ["harian", "pekanan", "bulanan", "semester"].includes(k))} value=${per} onChange=${setPer} /></${SubHeader}>
-    <div class="wrap">
-      <${Card}><div class="stats"><${Stat} label="Rata-rata" value=${avg == null ? "—" : avg + "%"} /><${Stat} label="Wali asrama" value=${rows.length} /><${Stat} label=${per === "harian" ? "Sudah mengisi" : "Di bawah 75%"} value=${per === "harian" ? `${rows.filter(x => x.h.doc).length}/${rows.length}` : rows.filter(x => x.v != null && x.v < 75).length} tone="gold" /></div></${Card}>
-      <${Card}><div class="list">${rows.map(x => html`<${Row} name=${x.g.nama} sub=${`Asrama ${x.a.nama} · Pondok ${x.a.pondok}${x.rk ? ` · diisi ${x.rk.hariIsi}/${x.rk.hari} hari` : x.h.doc ? ` · ${x.h.selesai.size}/${x.h.units.length} tugas` : " · belum mengisi hari ini"}`}
-        right=${html`<${Pill} t=${x.v == null ? "—" : x.v + "%"} tone=${nada(x.v)} />`} onClick=${() => nav.go(per === "harian" ? "khidmah" : "khidmahRiwayat", { gid: x.g.id })} />`)}</div></${Card}>
-      <${Hint}>Sebagian tugas terisi otomatis dari data aplikasi (absen halaqah, setoran, mutaba'ah), jadi tidak bisa dicentang tanpa bukti.</${Hint}>
+  return html`<${SubHeader} title="Rekap Ceklis Musyrif" sub=${`Ceklis harian wali asrama${p ? " · Pondok " + p : ""}`} />
+    <div class="wrap rp-wrap">${pr.bar}
+      <${Panel} ic="checksq" warna="hijau" judul="Tugas harian terlaksana" ket=${`${rows.length} wali asrama${avg != null ? ` · ${kurang} di bawah 75%` : ""}`} besar=${avg == null ? null : avg + "%"} besarNada=${avg == null ? "" : avg >= 90 ? "hijau" : avg >= 75 ? "biru" : avg >= 60 ? "emas" : "merah"} persen
+        rows=${rows.map(x => ({ nama: x.g.nama, sub: `Asrama ${x.a.nama} · Pondok ${x.a.pondok}${x.rk ? ` · diisi ${x.rk.hariIsi} dari ${x.rk.hari} hari` : ""}`, nilai: x.v, v: x.v == null ? "" : x.v + "%" }))}
+        catatan="Sebagian tugas terisi otomatis dari data aplikasi (absen halaqah, setoran, mutaba'ah), jadi tidak bisa dicentang tanpa bukti." />
       <div class="sticky-act"><${Btn} icon="download" onClick=${unduh}>Unduh PDF</${Btn}></div></div>`;
 }
