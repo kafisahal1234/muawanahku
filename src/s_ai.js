@@ -256,7 +256,7 @@ export function AwalSheet({ judul, awal, onSimpan, onClose, tombol = "Pakai" }) 
 }
 
 // ================= IMPOR BIODATA SANTRI =================
-const BIO = [["nis", "NIS"], ["lahir", "Tgl lahir"], ["tempatLahir", "Tempat lahir"], ["ayah", "Ayah"], ["ibu", "Ibu"], ["hpWali", "HP wali"], ["alamat", "Alamat"], ["hobi", "Hobi"], ["cita", "Cita-cita"]];
+const BIO = [["panggilan", "Panggilan"], ["nis", "NIS"], ["lahir", "Tgl lahir"], ["tempatLahir", "Tempat lahir"], ["ayah", "Ayah"], ["ibu", "Ibu"], ["hpWali", "HP wali"], ["alamat", "Alamat"], ["hobi", "Hobi"], ["cita", "Cita-cita"]];
 const BULAN = { jan: 1, feb: 2, peb: 2, mar: 3, apr: 4, mei: 5, may: 5, jun: 6, jul: 7, agu: 8, agt: 8, aug: 8, sep: 9, okt: 10, oct: 10, nov: 11, nop: 11, des: 12, dec: 12 };
 export function keTanggal(v) {
   const t = String(v || "").trim().toLowerCase(); if (!t) return "";
@@ -273,7 +273,7 @@ function santriLokal(tabel) {
   if (hi < 0) return tabel.map(r => ({ nama: String(r[0] || "").replace(/^\s*\d+[.)]?\s*/, "").trim() })).filter(r => r.nama.length > 2);
   const H = tabel[hi], c = { nama: cariKolom(H, /nama( lengkap| santri)?$|^nama/), nis: cariKolom(H, /nis|induk/), kelas: cariKolom(H, /kelas/), asrama: cariKolom(H, /asrama|kamar/),
     tanggal_lahir: cariKolom(H, /tgl|tanggal/), tempat_lahir: cariKolom(H, /tempat/), ayah: cariKolom(H, /ayah|bapak/), ibu: cariKolom(H, /ibu/), hp_wali: cariKolom(H, /hp|telp|telepon|wa\b|whatsapp|no\.? ?hp/),
-    alamat: cariKolom(H, /alamat/), hobi: cariKolom(H, /hobi/), cita: cariKolom(H, /cita/) };
+    alamat: cariKolom(H, /alamat/), hobi: cariKolom(H, /hobi/), cita: cariKolom(H, /cita/), panggilan: cariKolom(H, /panggil/) };
   return tabel.slice(hi + 1).map(r => Object.fromEntries(Object.entries(c).map(([k, i]) => [k, i >= 0 ? String(r[i] || "").trim() : ""]))).filter(r => r.nama.length > 2);
 }
 const PROMPT_SANTRI = `Tugas: baca dokumen data santri di bawah dan ubah ke JSON.
@@ -287,10 +287,22 @@ Aturan:
 - tanggal_lahir dalam format YYYY-MM-DD (ubah dari format apa pun, misal "12 Januari 2013" atau "12/01/2013" = hari/bulan/tahun). Bila ada "Tempat, tanggal" pisahkan ke tempat_lahir.
 - kelas hanya salah satu dari daftar kelas; asrama hanya nama dari daftar asrama; bila tidak jelas, kosongkan.
 - hp_wali hanya angka (boleh diawali 0 atau 62).
+- panggilan: nama panggilan santri bila tertulis (satu kata, misal "Fulan"); kosongkan bila tidak ada.
 - Kosongkan ("") data yang tidak ada di dokumen. Jangan mengarang.
-Jawab hanya JSON: {"baris":[{"nama":"","santri_id":null,"nis":"","kelas":"","asrama":"","tanggal_lahir":"","tempat_lahir":"","ayah":"","ibu":"","hp_wali":"","alamat":"","hobi":"","cita":"","catatan":""}]}`;
+Jawab hanya JSON: {"baris":[{"nama":"","santri_id":null,"panggilan":"","nis":"","kelas":"","asrama":"","tanggal_lahir":"","tempat_lahir":"","ayah":"","ibu":"","hp_wali":"","alamat":"","hobi":"","cita":"","catatan":""}]}`;
 
 function waliBaru(nama) { const w = nama.trim().split(/\s+/).find(x => !/^(m\.?|muh\.?|muhammad|muhamad|ahmad)$/i.test(x)) || "santri"; return { wali: (L.hurufKode(w) || "santri") + Math.floor(10 + Math.random() * 89), panggilan: w }; }
+// Bandingkan baris dokumen dengan santri lama: hanya kolom yang berbeda yang diperbarui (id santri tetap → data hafalan aman)
+function nilaiCocok(s, f) {
+  const beda = s ? BIO.filter(([k]) => f[k] && f[k] !== (s[k] || "")).map(([k]) => k) : [];
+  if (s && f.kelas && f.kelas !== s.kelas) beda.push("kelas"); if (s && f.asrama && f.asrama !== s.asrama) beda.push("asrama");
+  const st = s ? (beda.length ? "perbarui" : "sama") : "baru";
+  return { sid: s ? s.id : "", beda, st, ikut: st !== "sama" };
+}
+// calon santri lama untuk baris yang belum cocok: nama mirip atau tanggal lahir sama
+function calonMirip(f, semua) {
+  return semua.map(s => ({ s, v: mirip(f.nama, s.nama) + (f.lahir && s.lahir === f.lahir ? 0.4 : 0) })).filter(x => x.v >= 0.45).sort((a, b) => b.v - a.v).slice(0, 5).map(x => x.s);
+}
 export function ImporSantri() {
   useApp();
   const [langkah, setLangkah] = useState(""); const [busy, setBusy] = useState(false); const [rows, setRows] = useState(null); const [dok, setDok] = useState("");
@@ -311,18 +323,19 @@ export function ImporSantri() {
       setRows(hasil.map((r, i) => {
         let s = r.santri_id && semua.find(x => x.id === r.santri_id); if (s && mirip(r.nama, s.nama) < 0.35) s = null;
         if (!s) { const c = cocokkan(r.nama, semua); if (c.sc >= 0.82) s = c.best; }
-        const f = { nama: String(r.nama).trim(), nis: String(r.nis || "").trim(), lahir: keTanggal(r.tanggal_lahir), tempatLahir: String(r.tempat_lahir || "").trim(), ayah: String(r.ayah || "").trim(), ibu: String(r.ibu || "").trim(),
+        const lhr = keTanggal(r.tanggal_lahir);
+        // nama ditulis beda (mis. "M." vs "Muhammad") tetapi tanggal lahir sama → santri yang sama
+        if (!s && lhr) { const c = cocokkan(r.nama, semua.filter(x => x.lahir === lhr)); if (c.best && c.sc >= 0.5) s = c.best; }
+        const f = { nama: String(r.nama).trim(), panggilan: String(r.panggilan || "").trim(), nis: String(r.nis || "").trim(), lahir: keTanggal(r.tanggal_lahir), tempatLahir: String(r.tempat_lahir || "").trim(), ayah: String(r.ayah || "").trim(), ibu: String(r.ibu || "").trim(),
           hpWali: String(r.hp_wali || "").replace(/[^\d+]/g, ""), alamat: String(r.alamat || "").trim(), hobi: String(r.hobi || "").trim(), cita: String(r.cita || "").trim(), kelas: keKelas(r.kelas), asrama: keAsrama(r.asrama) };
         if (s && dipakai.has(s.id)) s = null; if (s) dipakai.add(s.id);
-        const beda = s ? BIO.filter(([k]) => f[k] && f[k] !== (s[k] || "")).map(([k]) => k) : [];
-        if (s && f.kelas && f.kelas !== s.kelas) beda.push("kelas"); if (s && f.asrama && f.asrama !== s.asrama) beda.push("asrama");
-        const st = s ? (beda.length ? "perbarui" : "sama") : "baru";
-        return { k: i, sid: s ? s.id : "", f, beda, st, ikut: st !== "sama", catatan: r.catatan || "" };
+        return { k: i, f, ...nilaiCocok(s, f), catatan: r.catatan || "", calon: s ? [] : calonMirip(f, semua) };
       }));
     } catch (e) { toast(e.message || "Gagal membaca dokumen", "err"); }
     finally { setBusy(false); setLangkah(""); }
   };
   const ubah = (k, o) => setRows(rows.map(r => (r.k === k ? { ...r, ...o } : r)));
+  const hubungkan = (k, sid) => setRows(rows.map(r => (r.k === k ? { ...r, ...nilaiCocok(sid ? L.santriById(sid) : null, r.f) } : r)));
   const n = st => rows.filter(r => r.st === st).length, ikut = rows ? rows.filter(r => r.ikut && r.st !== "sama") : [];
   const simpan = async () => {
     setSB(true); let b = 0, u = 0;
@@ -340,7 +353,7 @@ export function ImporSantri() {
     <div class="wrap">${!rows ? html`<${Hint}>Unggah daftar santri (Excel, Word, PDF, foto, atau teks). Bisa untuk menambah santri baru sekaligus melengkapi data yang sudah ada: NIS, tanggal lahir, nama orang tua, HP wali, alamat.</${Hint}>
       <${PilihDokumen} onBaca=${baca} busy=${busy} langkah=${langkah} contoh=${"Contoh:\n1. Ahmad Fauzi, NIS 2301, Bandar Lampung 12-03-2013, Ayah: Budi\n2. M Raya Anugrah lahir 5 Mei 2012 kelas 8"} />`
     : html`<${Card}><div class="stats"><${Stat} label="Diperbarui" value=${n("perbarui")} /><${Stat} label="Baru" value=${n("baru")} tone="blue" /><${Stat} label="Tanpa perubahan" value=${n("sama")} tone="gold" /></div>
-        <p class="small" style="margin:8px 0 0">Dari <b>${dok}</b>. Hanya kolom yang terisi di dokumen yang diperbarui. Bila tanggal lahir berubah, kode akses wali ikut berubah.</p></${Card}>
+        <p class="small" style="margin:8px 0 0">Dari <b>${dok}</b>. Hanya kolom yang terisi di dokumen yang diperbarui. Data hafalan, absen, dan nilai tetap tersambung karena santri lama diperbarui, bukan dibuat ulang. Bila panggilan atau tanggal lahir berubah, kode akses wali ikut berubah.</p></${Card}>
       ${rows.some(r => r.st === "baru" && (!r.f.kelas || !r.f.asrama)) ? html`<${Card} title="Untuk santri baru yang kelas/asramanya tidak tertulis"><div class="btn-row"><${Field} label="Kelas"><select class="in" value=${kelas} onChange=${e => setKelas(e.target.value)}>${L.KELAS.map(k => html`<option value=${k.id}>${k.nama}</option>`)}</select></${Field}>
         <${Field} label="Asrama"><select class="in" value=${asr} onChange=${e => setAsr(e.target.value)}>${L.ASRAMA.map(a => html`<option value=${a.id}>${a.nama}</option>`)}</select></${Field}></div></${Card}>` : null}
       <div class="imp-list">${rows.map(r => { const s = r.sid && L.santriById(r.sid);
@@ -349,6 +362,9 @@ export function ImporSantri() {
             <div class="imp-t"><b>${s ? s.nama : r.f.nama}</b><small>${s ? (s.nama !== r.f.nama ? `Di dokumen: ${r.f.nama} · ` : "") + `Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama}` : `Santri baru · kelas ${r.f.kelas || kelas} · ${L.asramaAman(r.f.asrama || asr).nama}`}</small></div>
             <${Pill} t=${{ perbarui: "Perbarui", baru: "Baru", sama: "Sama" }[r.st]} tone=${{ perbarui: "green", baru: "blue", sama: "muted" }[r.st]} /></div>
           ${r.st === "perbarui" ? html`<div class="imp-beda">${r.beda.map(k => html`<span><i>${lab[k]}</i> ${k === "asrama" ? L.asramaAman(r.f[k]).nama : k === "lahir" ? L.fmtTgl(r.f[k]) : r.f[k]}</span>`)}</div>` : null}
+          ${!r.sid && r.calon && r.calon.length ? html`<label class="imp-hub"><span>Santri lama dengan nama mirip? Hubungkan agar data hafalannya tetap menyambung:</span>
+            <select class="in" value="" onChange=${e => hubungkan(r.k, e.target.value)}><option value="">Tetap sebagai santri baru</option>${r.calon.map(c => html`<option value=${c.id}>${c.nama} · kelas ${c.kelas} · ${L.asramaAman(c.asrama).nama}</option>`)}</select></label>` : null}
+          ${r.sid && r.calon && r.calon.some(c => c.id === r.sid) ? html`<button type="button" class="link" style="min-height:36px" onClick=${() => hubungkan(r.k, "")}>Batalkan, jadikan santri baru</button>` : null}
           ${r.st === "baru" ? html`<div class="imp-beda">${BIO.filter(([k]) => r.f[k]).map(([k, l]) => html`<span><i>${l}</i> ${k === "lahir" ? L.fmtTgl(r.f[k]) : r.f[k]}</span>`)}</div>` : null}
           ${r.catatan ? html`<small class="imp-cat">${r.catatan}</small>` : null}</div>`; })}</div>
       <div class="sticky-act"><div class="btn-row"><${Btn} kind="ghost" onClick=${() => setRows(null)}>Ulangi</${Btn}><${Btn} icon="check" disabled=${!ikut.length || sb} onClick=${simpan}>${sb ? "Menyimpan…" : `Simpan ${ikut.length} santri`}</${Btn}></div></div>`}</div>`;
