@@ -275,3 +275,14 @@ html[data-tema=gelap] .ku-card{background:var(--card);border-color:var(--line);b
 html[data-tema=gelap] .ku-org{border-color:var(--line)}html[data-tema=gelap] .ku-ic{background:#1f3a2b;color:#8fe0b4}
 html[data-tema=gelap] .ku-foto{box-shadow:0 0 0 2px var(--card),0 0 0 4px rgba(226,169,59,.7)}
 .menu-row .foto-av,.row .foto-av{flex:0 0 auto!important}
+/* v3.2: area status bar = elemen hijau padat asli (iPhone tidak lagi memberi efek blur di atas) + tarik-untuk-segarkan */
+body:before{display:none}
+.atas-solid{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--g);z-index:200}
+.ptr{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);height:0;overflow:hidden;z-index:30;background:var(--g);display:flex;align-items:center;justify-content:center;pointer-events:none}
+.ptr-ic{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;background:rgba(255,255,255,.14);opacity:0}
+.ptr.siap .ptr-ic{background:rgba(255,255,255,.24)}
+.ptr.putar .ptr-ic{opacity:1!important;animation:ptrPutar .7s linear infinite}
+@keyframes ptrPutar{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+html[data-tema=gelap] .atas-solid,html[data-tema=gelap] .ptr{background:var(--g)}
+html[data-tema=gelap] .ptr-ic{color:#fff}
+@media (prefers-reduced-motion: reduce){.ptr.putar .ptr-ic{animation-duration:1.4s}}

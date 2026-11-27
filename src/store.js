@@ -40,6 +40,12 @@ export async function sambungUlang() {
   mencoba = false; S.menyambung = false; emit();
   if (S.terputus) setTimeout(sambungUlang, navigator.onLine ? 20000 : 8000);
 }
+// Tarik-untuk-segarkan: sambung ulang bila terputus, kirim input tertunda, lalu gambar ulang layar
+export async function segarkan() {
+  if (S.terputus || (ONLINE() && S.mode !== "db")) await sambungUlang();
+  else if (bacaAntrean().length && db) await kirimAntrean();
+  emit();
+}
 export async function initStore() {
   if (!ONLINE()) loadLocal();
   else bacaAntrean().forEach(x => { if (x.hapus) { const o = { ...S.data[x.col] }; delete o[x.id]; S.data[x.col] = o; } else S.data[x.col] = { ...S.data[x.col], [x.id]: x.obj }; });
