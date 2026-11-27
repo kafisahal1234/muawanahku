@@ -36,10 +36,7 @@ export function Tahfidz() {
         <${Tile} icon="layers" label="Manzil" color="indigo" badge=${manzil || null} onClick=${() => nav.go("manzilList")} />
         <${Tile} icon="mic" label="Tasmi'" color="orange" badge=${siap || null} onClick=${() => nav.go("tasmiList")} />
         <${Tile} icon="award" label="Nilai Mid/Smt" color="gold" onClick=${() => nav.go("ujianList")} />
-        <${Tile} icon="trend" label="Progres Santri" color="purple" onClick=${() => nav.go("progres", { hid: a.id })} />
         <${Tile} icon="chart" label="Rekap Halaqah" color="teal" onClick=${() => nav.go("rekapTahfidz")} />
-        <${Tile} icon="calendar" label="Perolehan Bulanan" color="pink" onClick=${() => nav.go("hafalanBulan")} />
-        ${tahsin.length ? html`<${Tile} icon="clipboard" label="Rekap Tahsin" color="indigo" onClick=${() => nav.go("rekapTahsin")} />` : null}
         <${Tile} icon="briefcase" label="Izin Guru" color="slate" onClick=${() => nav.go("izinGuru")} />
         <${Tile} icon="edit" label="Riwayat & Koreksi" color="coral" onClick=${() => nav.go("riwayatModul", { modul: "tahfidz" })} />
 </div></${Card}>

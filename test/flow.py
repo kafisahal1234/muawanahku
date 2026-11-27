@@ -51,7 +51,7 @@ async def main():
         await tile(pg, "Manzil"); await pg.screenshot(path="test/f4_manzil.png", full_page=True); await pg.locator(".sub-h .back").click()
         # mutabaah + motd
         await keUtama(pg); await pg.locator(".bnav button").first.click(); await tile(pg, "Asrama Saya"); await pg.wait_for_timeout(200)
-        await keUtama(pg); await pg.locator(".bnav button").first.click(); await tile(pg, "Mutaba'ah"); await pg.screenshot(path="test/f5_mut.png", full_page=True)
+        await keUtama(pg); await pg.locator(".bnav button").first.click(); await tile(pg, "Asrama Saya"); await tile(pg, "Mutaba'ah"); await pg.screenshot(path="test/f5_mut.png", full_page=True)
         await pg.click("text=Simpan · santri berikutnya"); await pg.wait_for_timeout(200)
         # kurikulum jadwal bentrok
         await keUtama(pg); await pg.locator(".bnav button").first.click(); await tile(pg, "Kurikulum"); await tile(pg, "Jadwal Mengajar"); await pg.screenshot(path="test/f6_jadwal.png", full_page=True)

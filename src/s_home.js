@@ -112,10 +112,10 @@ function tilesFor(st) {
     add("bookopen", r.includes("mudir") || r.includes("wadir_tahfidz") ? "Halaqah Saya" : "Tahfidz", "emerald", () => nav.go("tahfidz"), belum || null);
   }
   if (r.includes("musyrif") && a) {
-    add("checksq", "Mutaba'ah", "teal", () => nav.go("mutabaah"));
-    add("clipboard", "Ceklis Musyrif", "emerald", () => nav.go("khidmah"), (() => { const k = KH.hasilKhidmah(st.id, L.today()); return L.hariAktif(L.today(), "asrama") && k.pct < 100 ? k.units.length - k.selesai.size : null; })());
     const ids = new Set(L.santriAsrama(a.id).map(s => s.id));
-    add("home", "Asrama Saya", "coral", () => nav.go("asramaSaya"), (!r.includes("wadir_kesantrian") && L.izinAktif().filter(i => ids.has(i.santri)).length) || null);
+    // Mutaba'ah & Ceklis Musyrif ada di dalam Asrama Saya; lencana = tugas ceklis yang belum + izin aktif
+    const kh = KH.hasilKhidmah(st.id, L.today()), sisaCeklis = L.hariAktif(L.today(), "asrama") && kh.pct < 100 ? kh.units.length - kh.selesai.size : 0;
+    add("home", "Asrama Saya", "coral", () => nav.go("asramaSaya"), (sisaCeklis + (!r.includes("wadir_kesantrian") ? L.izinAktif().filter(i => ids.has(i.santri)).length : 0)) || null);
     add("award", "Rapor", "gold", () => nav.go("raporList"));
   }
   if (r.some(x => ["mudir", "admin", "wadir_kurikulum"].includes(x))) add("cal2", "Kalender", "pink", () => nav.go("kalender"));
