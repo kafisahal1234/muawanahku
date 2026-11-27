@@ -49,9 +49,9 @@ service cloud.firestore {
     match /mk_santriEdit/{id} {
       allow read: if masuk();
       allow write: if staf();
-      // wali: hanya biodata pelengkap; nama, panggilan, tanggal lahir, No. WA wali, kode & penempatan hanya oleh Admin/staf
+      // wali: hanya biodata pelengkap; nama, panggilan, NIS, tanggal lahir, No. WA wali, kode & penempatan hanya oleh Admin/staf
       allow update: if wali() && id == santriWali()
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['nama', 'panggilan', 'lahir', 'hpWali', 'kode', 'wali', 'kelas', 'asrama', 'halaqah', 'hapus', 'tambahan']);
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['nama', 'panggilan', 'nis', 'lahir', 'hpWali', 'kode', 'wali', 'kelas', 'asrama', 'halaqah', 'hapus', 'tambahan']);
     }
     match /mk_profil/{id} {
       allow read: if masuk();

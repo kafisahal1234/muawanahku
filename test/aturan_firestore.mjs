@@ -55,6 +55,7 @@ await cek("wali baca daftar kode ditolak", assertFails(getDocs(collection(wl, "m
 await cek("wali ubah biodata anaknya", assertSucceeds(setDoc(doc(wl, "mk_santriEdit/s001"), { nama: "Fulan", hp: "08" })));
 await cek("wali ubah hobi (updateDoc) boleh", assertSucceeds(updateDoc(doc(wl, "mk_santriEdit/s001"), { hobi: "Futsal" })));
 await cek("wali ubah nama lengkap ditolak", assertFails(updateDoc(doc(wl, "mk_santriEdit/s001"), { nama: "Ganti" })));
+await cek("wali ubah NIS ditolak", assertFails(updateDoc(doc(wl, "mk_santriEdit/s001"), { nis: "999" })));
 await cek("wali ubah panggilan ditolak", assertFails(updateDoc(doc(wl, "mk_santriEdit/s001"), { panggilan: "X" })));
 await cek("wali ubah tanggal lahir ditolak", assertFails(updateDoc(doc(wl, "mk_santriEdit/s001"), { lahir: "2012-01-01" })));
 await cek("wali ubah No. WA wali ditolak", assertFails(updateDoc(doc(wl, "mk_santriEdit/s001"), { hpWali: "0811" })));

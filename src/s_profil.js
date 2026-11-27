@@ -127,7 +127,7 @@ export function WaliProfil() {
   const LAIN = BIODATA.filter(([k]) => !BIO_S.some(([b]) => b === k) && s[k]).map(([k, l]) => [k, l, k.startsWith("hp") ? "tel" : "text"]), SEMUA = [...BIO_S, ...LAIN];
   const tambahan = Object.entries(s.tambahan || {}).filter(([, v]) => v);
   // data identitas (dasar kode akses & kontak resmi) hanya diubah Admin pondok
-  const KUNCI = ["panggilan", "lahir", "hpWali"], BISA = SEMUA.filter(([k]) => !KUNCI.includes(k));
+  const KUNCI = ["panggilan", "nis", "lahir", "hpWali"], BISA = SEMUA.filter(([k]) => !KUNCI.includes(k));
   const mulai = () => { setF(Object.fromEntries(BISA.map(([k]) => [k, s[k] || ""]))); setEd(true); };
   const simpan = async () => {
     const lama = (S.data.santriEdit || {})[s.id] || {}, baru = { ...lama, ...Object.fromEntries(BISA.map(([k]) => [k, String(f[k] || "").trim()])), diubahWali: Date.now() };
@@ -150,7 +150,7 @@ export function WaliProfil() {
       <${Section} t="Biodata" /><${Card} cls="kv-card"><div class="kv"><span>Nama lengkap <${Icon} n="lock" s=${12} /></span><b>${s.nama}</b></div>
         ${SEMUA.map(([k, lab]) => html`<div class="kv"><span>${lab}${KUNCI.includes(k) ? html` <${Icon} n="lock" s=${12} />` : null}</span><b class=${val(k) ? "" : "kosong"}>${val(k) || "Belum diisi"}</b></div>`)}</${Card}>
       ${tambahan.length ? html`<${Section} t="Data tambahan dari pondok" /><${Card} cls="kv-card">${tambahan.map(([l, v]) => html`<div class="kv"><span>${l}</span><b>${v}</b></div>`)}</${Card}>` : null}
-      <p class="small" style="margin:2px 4px 10px"><${Icon} n="lock" s=${13} /> Nama lengkap, nama panggilan, tanggal lahir, dan No. HP wali hanya bisa diubah oleh Admin pondok. <button class="link" onClick=${() => nav.go("kontakUstadz")}>Hubungi Admin</button></p>
+      <p class="small" style="margin:2px 4px 10px"><${Icon} n="lock" s=${13} /> Nama lengkap, nama panggilan, NIS, tanggal lahir, dan No. HP wali hanya bisa diubah oleh Admin pondok. <button class="link" onClick=${() => nav.go("kontakUstadz")}>Hubungi Admin</button></p>
       <${Btn} icon="edit" onClick=${mulai}>Ubah biodata ananda</${Btn}>
       <p class="small center mt8">Kelas, asrama, dan halaqah ditentukan pondok.</p></div>`;
 }
