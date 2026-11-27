@@ -1,5 +1,6 @@
 import { render, Component } from "preact";
 import { pasangTarik } from "./tarik.js";
+import { pasangZoom } from "./zoom.js";
 import { useEffect, useState } from "preact/hooks";
 import { html, nav, useApp, Icon, ToastHost } from "./ui.js";
 import { S, initStore, sambungUlang, toast } from "./store.js";
@@ -159,7 +160,7 @@ try {
 } catch (e) { }
 // Rasa aplikasi asli: tanpa zoom cubit/ketuk-ganda, efek sentuh (ripple), service worker di hosting sendiri
 try {
-  // cubit-perbesar (pinch-zoom) diizinkan untuk aksesibilitas; ketuk-ganda tetap tidak memperbesar (touch-action: manipulation)
+  // cubit-perbesar dikunci di zoom.js (ketuk 3 kali untuk mode perbesar); ketuk-ganda tidak memperbesar (touch-action: manipulation)
   document.addEventListener("pointerdown", e => {
     const el = e.target.closest && e.target.closest(".btn,button.row,.menu-row,.sched,.demo-acc,.rk,.pchip");
     if (!el || el.disabled) return;
@@ -170,5 +171,5 @@ try {
   }, { passive: true });
   if ("serviceWorker" in navigator && location.protocol === "https:" && window.top === window && !/claude|anthropic/.test(location.hostname)) navigator.serviceWorker.register("sw.js").catch(() => {});
 } catch (e) { }
-terapkanTema(); terapkanBahasa(); try { pasangTarik(); } catch (e) { }
+terapkanTema(); terapkanBahasa(); try { pasangTarik(); } catch (e) { } try { pasangZoom(); } catch (e) { }
 render(html`<${App} />`, document.getElementById("root"));
