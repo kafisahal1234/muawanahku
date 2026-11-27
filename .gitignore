@@ -3,3 +3,7 @@ dist/
 test/*.png
 MuawanahKu_Demo.html
 *.log
+test/out/
+test/aturan/node_modules/
+test/aturan/*.log
+__pycache__/

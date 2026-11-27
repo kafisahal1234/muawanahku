@@ -1,6 +1,7 @@
 import asyncio, subprocess, json
+from _jalur import DIST, URL_DIST, ADMIN, OUT
 from playwright.async_api import async_playwright
-srv = subprocess.Popen(["python3", "-m", "http.server", "8793", "-d", "/home/claude/webapp/dist"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+srv = subprocess.Popen(["python3", "-m", "http.server", "8793", "-d", DIST], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 U = "http://localhost:8793/index.html"
 SEED = {"santriEdit": {"sx1": {"nama": 12345, "kelas": "8", "asrama": ""}, "sx2": {"nama": "Santri Tanpa Asrama", "kelas": "8", "asrama": "a99", "wali": "tanpaasrama"}, "s005": {"hapus": True}, "s060": {"hapus": True}},
  "staffEdit": {"yudistira": {"pondok": ""}},

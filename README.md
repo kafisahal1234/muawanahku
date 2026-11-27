@@ -14,16 +14,16 @@ Aplikasi pondok untuk **Pondok Tahfidz Modern Kampung Qur'an Al Muawanah** (Metr
 | `src/store.js` | Penyimpanan data (db bersama artifact, cadangan localStorage) |
 | `src/s_*.js` | Layar per modul: tahfidz, asrama (MOTD/mutaba'ah), mapel, kurikulum, kesantrian, wadir, admin, rapor, rekap, koreksi data |
 | `src/theme.css`, `src/skin.css` | Tampilan (Material Design 3 / Apple HIG) |
-| `src/data.js` | Data master (guru, asrama, santri, mapel, jadwal) — **berisi nama asli, jangan dibuat publik** |
+| `src/data.js` | Data master (asrama, halaqah, kelas, mapel, jadwal) — data santri & guru ada di database, bukan di kode |
 | `build.py` | Build menjadi satu file `dist/index.html` |
-| `test/*.py` | Uji alur dengan Playwright |
+| `test/` | Uji Playwright (data contoh fiktif `test/contoh/seed.json`) dan uji aturan Firestore (`test/aturan/`) — lihat `CLAUDE.md` |
 
 ## Menjalankan
 
 ```bash
 npm install          # preact, htm, esbuild
 python3 build.py     # hasil: dist/index.html (buka langsung di browser)
-python3 test/flow.py # uji alur (perlu playwright + chrome)
+PYTHONPATH=test/pwseed python3 test/flow.py   # uji alur (perlu playwright + chromium)
 ```
 
 ## Deploy (GitHub Pages)

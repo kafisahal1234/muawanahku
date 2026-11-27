@@ -68,7 +68,7 @@ export function Login() {
     setBusy(true); const r = await L.loginWali(kk); setBusy(false); if (r.err) return gagal(r.err);
     LOCK.fails = 0; setErr(""); nav.setUser(r, { splash: true });
   };
-  const walis = L.santriList().filter(s => s.nama.toLowerCase().includes(q.toLowerCase()) || s.wali.includes(q.toLowerCase())).slice(0, 40);
+  const walis = L.santriList().filter(s => s.nama.toLowerCase().includes(q.toLowerCase()) || String(s.wali || L.kodeAkses(s) || "").includes(q.toLowerCase())).slice(0, 40);
   return html`<div class="login"><div class="lg">${Array.from({ length: 7 }, (_, i) => html`<i class="lg-dot" style=${`--i:${i}`}></i>`)}<${Logo} s=${150} /><h1 class="sr-only">MuawanahQu</h1><p>Pondok Tahfidz Modern Kampung Qur'an Al Muawanah</p></div>
     <form class="card" onSubmit=${e => { e.preventDefault(); mode === "wali" ? masukWali() : masuk(); }}>
       <${Seg} items=${[["staff", "Ustadz / Staf"], ["wali", "Wali Santri"]]} value=${mode} onChange=${m => { setMode(m); setErr(""); setU(""); setP(""); }} />

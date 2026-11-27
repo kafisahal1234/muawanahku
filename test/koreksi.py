@@ -1,6 +1,7 @@
 import asyncio
+from _jalur import DIST, URL_DIST, ADMIN, OUT
 from playwright.async_api import async_playwright
-URL = "file:///home/claude/webapp/dist/index.html"
+URL = URL_DIST
 
 async def keUtama(pg):
     # navigasi bawah hanya tampil di layar utama; kembali dulu bila sedang di layar lanjutan

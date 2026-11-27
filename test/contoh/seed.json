@@ -1,0 +1,2216 @@
+{
+ "staffEdit": {
+  "syamsul": {
+   "roles": [
+    "mudir",
+    "guru_mapel"
+   ],
+   "ajar": [
+    [
+     "fiqih",
+     "7"
+    ],
+    [
+     "fiqih",
+     "8"
+    ]
+   ],
+   "username": "syamsul",
+   "nama": "Ust. Syamsul (contoh)",
+   "pendek": "Ust. Syamsul"
+  },
+  "hidayat": {
+   "roles": [
+    "wadir_tahfidz",
+    "guru_tahfidz"
+   ],
+   "ajar": [],
+   "username": "hidayat",
+   "nama": "Ust. Hidayat (contoh)",
+   "pendek": "Ust. Hidayat"
+  },
+  "kaafi": {
+   "roles": [
+    "wadir_kurikulum",
+    "guru_tahfidz",
+    "musyrif",
+    "guru_mapel"
+   ],
+   "ajar": [
+    [
+     "it",
+     "9A"
+    ],
+    [
+     "it",
+     "9B"
+    ]
+   ],
+   "username": "kaafi",
+   "nama": "Ust. Kaafi (contoh)",
+   "pendek": "Ust. Kaafi"
+  },
+  "yudistira": {
+   "roles": [
+    "wadir_kesantrian",
+    "guru_tahfidz",
+    "musyrif",
+    "guru_mapel"
+   ],
+   "pondok": "29",
+   "ajar": [
+    [
+     "it",
+     "8"
+    ]
+   ],
+   "username": "yudistira",
+   "nama": "Ust. Yudistira (contoh)",
+   "pendek": "Ust. Yudistira"
+  },
+  "izzudin": {
+   "roles": [
+    "wadir_kesantrian",
+    "guru_tahfidz",
+    "musyrif",
+    "guru_mapel"
+   ],
+   "pondok": "21",
+   "ajar": [
+    [
+     "fiqih",
+     "9A"
+    ],
+    [
+     "fiqih",
+     "9B"
+    ]
+   ],
+   "username": "izzudin",
+   "nama": "Ust. Izzudin (contoh)",
+   "pendek": "Ust. Izzudin"
+  },
+  "rangga": {
+   "roles": [
+    "guru_tahfidz",
+    "musyrif",
+    "guru_mapel"
+   ],
+   "ajar": [
+    [
+     "it",
+     "7"
+    ]
+   ],
+   "username": "rangga",
+   "nama": "Ust. Rangga (contoh)",
+   "pendek": "Ust. Rangga"
+  },
+  "khanza": {
+   "roles": [
+    "admin",
+    "guru_mapel"
+   ],
+   "ajar": [
+    [
+     "bing",
+     "7"
+    ],
+    [
+     "bing",
+     "8"
+    ]
+   ],
+   "username": "khanza",
+   "nama": "Ustdzh. Khanza (contoh)",
+   "pendek": "Ustdzh. Khanza"
+  },
+  "ridho": {
+   "roles": [
+    "guru_mapel"
+   ],
+   "ajar": [
+    [
+     "bing",
+     "9A"
+    ],
+    [
+     "bing",
+     "9B"
+    ]
+   ],
+   "username": "ridho",
+   "nama": "Ust. Ridho (contoh)",
+   "pendek": "Ust. Ridho"
+  },
+  "jazulis": {
+   "roles": [
+    "guru_mapel"
+   ],
+   "ajar": [
+    [
+     "karakter",
+     "7"
+    ],
+    [
+     "karakter",
+     "8"
+    ],
+    [
+     "karakter",
+     "9A"
+    ],
+    [
+     "karakter",
+     "9B"
+    ]
+   ],
+   "username": "jazulis",
+   "nama": "Ust. Jazulis (contoh)",
+   "pendek": "Ust. Jazulis"
+  },
+  "ugi": {
+   "roles": [
+    "guru_tahfidz",
+    "musyrif"
+   ],
+   "ajar": [],
+   "username": "ugi",
+   "nama": "Ust. Ugi (contoh)",
+   "pendek": "Ust. Ugi"
+  },
+  "habib": {
+   "roles": [
+    "guru_tahfidz",
+    "musyrif"
+   ],
+   "ajar": [],
+   "username": "habib",
+   "nama": "Ust. Habib (contoh)",
+   "pendek": "Ust. Habib"
+  },
+  "affan": {
+   "roles": [
+    "guru_tahfidz",
+    "musyrif"
+   ],
+   "ajar": [],
+   "username": "affan",
+   "nama": "Ust. Affan (contoh)",
+   "pendek": "Ust. Affan"
+  },
+  "naufal": {
+   "roles": [
+    "guru_tahfidz",
+    "musyrif"
+   ],
+   "ajar": [],
+   "username": "naufal",
+   "nama": "Ust. Naufal (contoh)",
+   "pendek": "Ust. Naufal"
+  },
+  "khoirul": {
+   "roles": [
+    "guru_tahfidz",
+    "musyrif"
+   ],
+   "ajar": [],
+   "username": "khoirul",
+   "nama": "Ust. Khoirul (contoh)",
+   "pendek": "Ust. Khoirul"
+  },
+  "rifaul": {
+   "roles": [
+    "guru_tahfidz",
+    "musyrif"
+   ],
+   "ajar": [],
+   "username": "rifaul",
+   "nama": "Ust. Rifaul (contoh)",
+   "pendek": "Ust. Rifaul"
+  },
+  "abdul": {
+   "roles": [
+    "guru_tahfidz",
+    "musyrif"
+   ],
+   "ajar": [],
+   "username": "abdul",
+   "nama": "Ust. Abdul (contoh)",
+   "pendek": "Ust. Abdul"
+  }
+ },
+ "akun": {
+  "syamsul": {
+   "hash": "e6bcdaf32822ddf2114ba55bd2f99a3b75629cae1156c7221ae6f19ce443bb46"
+  },
+  "hidayat": {
+   "hash": "8fc11c20c0bfd6731fcafc729ca7e319df12659951200312725f585c3f9cd779"
+  },
+  "kaafi": {
+   "hash": "c584c42e00e74be0a40b8a0cc49173cde17e815a3f662ef7cfe849a75bcfc50d"
+  },
+  "yudistira": {
+   "hash": "b67055b3634224e9ca2aac8362eeb4ef8d3d27ed8531a017673d6be5ecbbe7af"
+  },
+  "izzudin": {
+   "hash": "1ebe29e88e660d8d71d0427c2446832a22b36ce771f779f8e21430be02026c3e"
+  },
+  "rangga": {
+   "hash": "c685018cb2738993046fd4eeb67cca9bc4abad2c97dd989d375434a0401cb1c9"
+  },
+  "khanza": {
+   "hash": "bd8abfe1c6ca1dd2750f7e917d82c3fd231be255a818059c023ee0c6e8c54025"
+  },
+  "ridho": {
+   "hash": "6c6d659e154658dc1248751937b0b844bc7d4e9628623d2f990b2a7a1a1b84e8"
+  },
+  "jazulis": {
+   "hash": "33eee0f96d5ceaefedb1ca1a638e3abd0b42676d35878b2bbb0451f357afde2c"
+  },
+  "ugi": {
+   "hash": "9cb3bae930d9c154f9262ca3d446620a32d64adf8d26c64ac5084d973d734477"
+  },
+  "habib": {
+   "hash": "0489a7127926acddfaca2e8a9f55c4c8ad0b85cd1e59d67543efc68cdd4c0f34"
+  },
+  "affan": {
+   "hash": "a983c8f1dbb5a5fcc2cbce1d75be829d97032e28711b0ee76ba8fbe9eb77885d"
+  },
+  "naufal": {
+   "hash": "8f0d77d7d8186e35aa0797c4c955f88e7eac6b86d8b6caf4841f9871ee53cdb7"
+  },
+  "khoirul": {
+   "hash": "48c48d0b42559541c6c0eee22d3f401e1dbe959dced7d42efdd99dcd22ad3c59"
+  },
+  "rifaul": {
+   "hash": "ecfabdb80cd3269a945056d8b67903f9fcca58875bf5bec6f04a435c1be031af"
+  },
+  "abdul": {
+   "hash": "72bfa127d600eec656f8abde9e06843c0ac3a073eb5a2606267e00b4050a04f1"
+  },
+  "admin123": {
+   "hash": "b7b90ce36f5b8d6730df760f1b2633eca2c270abeee8f8da72479e38cd1a5037"
+  }
+ },
+ "santriEdit": {
+  "t001": {
+   "kelas": "8",
+   "asrama": "a1",
+   "awal": {
+    "selesai": [
+     30,
+     29
+    ],
+    "aktif": 1,
+    "baris": 275
+   },
+   "halaqah": "h1",
+   "nama": "Ibrahim Saputra",
+   "panggilan": "Ibrahim",
+   "lahir": "2011-09-04",
+   "nis": "2600001"
+  },
+  "t002": {
+   "kelas": "8",
+   "asrama": "a1",
+   "awal": {
+    "selesai": [
+     30,
+     29
+    ],
+    "aktif": 1,
+    "baris": 160
+   },
+   "halaqah": "h1",
+   "nama": "Ismail Mubarak",
+   "panggilan": "Ismail",
+   "lahir": "2012-01-03",
+   "nis": "2600002"
+  },
+  "t003": {
+   "kelas": "8",
+   "asrama": "a1",
+   "awal": {
+    "selesai": [
+     30,
+     29
+    ],
+    "aktif": 1,
+    "baris": 81
+   },
+   "halaqah": "h1",
+   "nama": "Rafi Nugraha Hakim",
+   "panggilan": "Rafi",
+   "lahir": "2014-01-27",
+   "nis": "2600003"
+  },
+  "t004": {
+   "kelas": "8",
+   "asrama": "a1",
+   "awal": {
+    "selesai": [
+     30,
+     29
+    ],
+    "aktif": 1,
+    "baris": 64
+   },
+   "halaqah": "h1",
+   "nama": "Naufal Ramadhan",
+   "panggilan": "Naufal",
+   "lahir": "2011-10-19",
+   "nis": "2600004"
+  },
+  "t005": {
+   "kelas": "8",
+   "asrama": "a1",
+   "awal": {
+    "selesai": [
+     30,
+     29
+    ],
+    "aktif": 1,
+    "baris": 78
+   },
+   "halaqah": "h1",
+   "nama": "Ilham Fadhil Maulana",
+   "panggilan": "Ilham",
+   "lahir": "2012-05-14",
+   "nis": "2600005"
+  },
+  "t006": {
+   "kelas": "8",
+   "asrama": "a1",
+   "awal": {
+    "selesai": [
+     30,
+     29
+    ],
+    "aktif": 1,
+    "baris": 168
+   },
+   "halaqah": "h1",
+   "nama": "Zaid Aziz Ramadhan",
+   "panggilan": "Zaid",
+   "lahir": "2012-02-19",
+   "nis": "2600006"
+  },
+  "t007": {
+   "kelas": "8",
+   "asrama": "a1",
+   "awal": {
+    "selesai": [
+     30,
+     29
+    ],
+    "aktif": 1,
+    "baris": 249
+   },
+   "halaqah": "h1",
+   "nama": "Naufal Alfarizi Kurniawan",
+   "panggilan": "Naufal",
+   "lahir": "2011-10-02",
+   "nis": "2600007"
+  },
+  "t008": {
+   "kelas": "8",
+   "asrama": "a1",
+   "awal": {
+    "selesai": [
+     30,
+     29
+    ],
+    "aktif": 1,
+    "baris": 179
+   },
+   "halaqah": "h1",
+   "nama": "Daffa Alfarizi",
+   "panggilan": "Daffa",
+   "lahir": "2014-06-15",
+   "nis": "2600008"
+  },
+  "t009": {
+   "kelas": "8",
+   "asrama": "a1",
+   "awal": {
+    "selesai": [
+     30,
+     29
+    ],
+    "aktif": 1,
+    "baris": 163
+   },
+   "halaqah": "h1",
+   "nama": "Naufal Alfath Kurniawan",
+   "panggilan": "Naufal",
+   "lahir": "2012-12-25",
+   "nis": "2600009"
+  },
+  "t010": {
+   "kelas": "8",
+   "asrama": "a2",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     28
+    ],
+    "aktif": 1,
+    "baris": 0
+   },
+   "halaqah": "h2",
+   "nama": "Hasan Hakim Mubarak",
+   "panggilan": "Hasan",
+   "lahir": "2014-06-24",
+   "nis": "2600010"
+  },
+  "t011": {
+   "kelas": "8",
+   "asrama": "a2",
+   "awal": {
+    "selesai": [
+     30
+    ],
+    "aktif": 29,
+    "baris": 90
+   },
+   "halaqah": "h2",
+   "nama": "Hafidz Firdaus",
+   "panggilan": "Hafidz",
+   "lahir": "2011-09-14",
+   "nis": "2600011"
+  },
+  "t012": {
+   "kelas": "8",
+   "asrama": "a2",
+   "awal": {
+    "selesai": [
+     29,
+     30
+    ],
+    "aktif": 1,
+    "baris": 165
+   },
+   "halaqah": "h2",
+   "nama": "Umar Syahputra",
+   "panggilan": "Umar",
+   "lahir": "2014-01-22",
+   "nis": "2600012"
+  },
+  "t013": {
+   "kelas": "8",
+   "asrama": "a2",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     28,
+     27
+    ],
+    "aktif": 1,
+    "baris": 0
+   },
+   "halaqah": "h2",
+   "nama": "Abdullah Aziz",
+   "panggilan": "Abdullah",
+   "lahir": "2013-06-23",
+   "nis": "2600013"
+  },
+  "t014": {
+   "kelas": "8",
+   "asrama": "a2",
+   "awal": {
+    "selesai": [
+     30
+    ],
+    "aktif": 29,
+    "baris": 270
+   },
+   "halaqah": "h2",
+   "nama": "Ismail Hamdani Rabbani",
+   "panggilan": "Ismail",
+   "lahir": "2014-02-27",
+   "nis": "2600014"
+  },
+  "t015": {
+   "kelas": "8",
+   "asrama": "a2",
+   "awal": {
+    "selesai": [
+     6,
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5,
+     28,
+     27,
+     26
+    ],
+    "aktif": 7,
+    "baris": 90
+   },
+   "halaqah": "h2",
+   "nama": "Abdullah Wijaya",
+   "panggilan": "Abdullah",
+   "lahir": "2011-01-24",
+   "nis": "2600015"
+  },
+  "t016": {
+   "kelas": "8",
+   "asrama": "a2",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     28
+    ],
+    "aktif": 1,
+    "baris": 0
+   },
+   "halaqah": "h2",
+   "nama": "Hanif Firdaus",
+   "panggilan": "Hanif",
+   "lahir": "2014-05-23",
+   "nis": "2600016"
+  },
+  "t017": {
+   "kelas": "8",
+   "asrama": "a2",
+   "awal": {
+    "selesai": [
+     30
+    ],
+    "aktif": 29,
+    "baris": 60
+   },
+   "halaqah": "h2",
+   "nama": "Ilham Kurniawan",
+   "panggilan": "Ilham",
+   "lahir": "2013-03-20",
+   "nis": "2600017"
+  },
+  "t018": {
+   "kelas": "8",
+   "asrama": "a2",
+   "awal": {
+    "selesai": [
+     30,
+     28
+    ],
+    "aktif": 29,
+    "baris": 0
+   },
+   "halaqah": "h2",
+   "nama": "Fulan Rabbani Fadhil",
+   "panggilan": "Fulan",
+   "lahir": "2013-03-24",
+   "nis": "2600018"
+  },
+  "t019": {
+   "kelas": "8",
+   "asrama": "a2",
+   "awal": {
+    "selesai": [
+     30,
+     28
+    ],
+    "aktif": 29,
+    "baris": 0
+   },
+   "halaqah": "h2",
+   "nama": "Hasan Hidayat",
+   "panggilan": "Hasan",
+   "lahir": "2014-02-06",
+   "nis": "2600019"
+  },
+  "t020": {
+   "kelas": "8",
+   "asrama": "a3",
+   "awal": {
+    "selesai": [
+     7,
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     8
+    ],
+    "aktif": 9,
+    "baris": 180
+   },
+   "halaqah": "h3",
+   "nama": "Hafidz Hidayat Aziz",
+   "panggilan": "Hafidz",
+   "lahir": "2012-07-28",
+   "nis": "2600020"
+  },
+  "t021": {
+   "kelas": "8",
+   "asrama": "a3",
+   "awal": {
+    "selesai": [
+     29,
+     30
+    ],
+    "aktif": 1,
+    "baris": 165
+   },
+   "halaqah": "h3",
+   "nama": "Rizky Wijaya",
+   "panggilan": "Rizky",
+   "lahir": "2014-04-05",
+   "nis": "2600021"
+  },
+  "t022": {
+   "kelas": "8",
+   "asrama": "a3",
+   "awal": {
+    "selesai": [
+     30
+    ],
+    "aktif": 1,
+    "baris": 240
+   },
+   "halaqah": "h3",
+   "nama": "Abdullah Pratama Saputra",
+   "panggilan": "Abdullah",
+   "lahir": "2012-01-16",
+   "nis": "2600022"
+  },
+  "t023": {
+   "kelas": "8",
+   "asrama": "a3",
+   "awal": {
+    "selesai": [
+     30
+    ],
+    "aktif": 29,
+    "baris": 195
+   },
+   "halaqah": "h3",
+   "nama": "Ammar Mubarak Pratama",
+   "panggilan": "Ammar",
+   "lahir": "2011-03-14",
+   "nis": "2600023"
+  },
+  "t024": {
+   "kelas": "8",
+   "asrama": "a3",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1
+    ],
+    "aktif": 2,
+    "baris": 120
+   },
+   "halaqah": "h3",
+   "nama": "Rizky Kurniawan Hamdani",
+   "panggilan": "Rizky",
+   "lahir": "2012-12-28",
+   "nis": "2600024"
+  },
+  "t025": {
+   "kelas": "8",
+   "asrama": "a3",
+   "awal": {
+    "selesai": [
+     28,
+     30,
+     29
+    ],
+    "aktif": 1,
+    "baris": 135
+   },
+   "halaqah": "h3",
+   "nama": "Azka Hamdani Fadhil",
+   "panggilan": "Azka",
+   "lahir": "2014-07-13",
+   "nis": "2600025"
+  },
+  "t026": {
+   "kelas": "8",
+   "asrama": "a3",
+   "awal": {
+    "selesai": [
+     1,
+     30,
+     29,
+     2
+    ],
+    "aktif": 3,
+    "baris": 0
+   },
+   "halaqah": "h3",
+   "nama": "Ilham Ramadhan",
+   "panggilan": "Ilham",
+   "lahir": "2011-04-03",
+   "nis": "2600026"
+  },
+  "t027": {
+   "kelas": "8",
+   "asrama": "a3",
+   "awal": {
+    "selesai": [
+     30
+    ],
+    "aktif": 29,
+    "baris": 180
+   },
+   "halaqah": "h3",
+   "nama": "Ali Alfath Pratama",
+   "panggilan": "Ali",
+   "lahir": "2011-02-01",
+   "nis": "2600027"
+  },
+  "t028": {
+   "kelas": "8",
+   "asrama": "a3",
+   "awal": {
+    "selesai": [
+     1,
+     30,
+     29
+    ],
+    "aktif": 2,
+    "baris": 150
+   },
+   "halaqah": "h3",
+   "nama": "Naufal Saputra Aziz",
+   "panggilan": "Naufal",
+   "lahir": "2013-10-01",
+   "nis": "2600028"
+  },
+  "t029": {
+   "kelas": "7",
+   "asrama": "a4",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h4",
+   "nama": "Abdullah Alfarizi Hamdani",
+   "panggilan": "Abdullah",
+   "lahir": "2013-06-20",
+   "nis": "2600029"
+  },
+  "t030": {
+   "kelas": "7",
+   "asrama": "a4",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h4",
+   "nama": "Ismail Rabbani Ramadhan",
+   "panggilan": "Ismail",
+   "lahir": "2014-08-16",
+   "nis": "2600030"
+  },
+  "t031": {
+   "kelas": "7",
+   "asrama": "a4",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h4",
+   "nama": "Fathan Firdaus Hakim",
+   "panggilan": "Fathan",
+   "lahir": "2013-12-09",
+   "nis": "2600031"
+  },
+  "t032": {
+   "kelas": "7",
+   "asrama": "a4",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h4",
+   "nama": "Fathan Pratama Akbar",
+   "panggilan": "Fathan",
+   "lahir": "2013-03-23",
+   "nis": "2600032"
+  },
+  "t033": {
+   "kelas": "7",
+   "asrama": "a4",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h4",
+   "nama": "Rizky Contoh Akbar",
+   "panggilan": "Rizky",
+   "lahir": "2011-12-28",
+   "nis": "2600033"
+  },
+  "t034": {
+   "kelas": "7",
+   "asrama": "a4",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h4",
+   "nama": "Husain Akbar",
+   "panggilan": "Husain",
+   "lahir": "2013-04-18",
+   "nis": "2600034"
+  },
+  "t035": {
+   "kelas": "7",
+   "asrama": "a4",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h4",
+   "nama": "Rizky Akbar",
+   "panggilan": "Rizky",
+   "lahir": "2012-04-27",
+   "nis": "2600035"
+  },
+  "t036": {
+   "kelas": "7",
+   "asrama": "a4",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h4",
+   "nama": "Ilham Maulana Alfarizi",
+   "panggilan": "Ilham",
+   "lahir": "2013-12-01",
+   "nis": "2600036"
+  },
+  "t037": {
+   "kelas": "7",
+   "asrama": "a4",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h4",
+   "nama": "Ahmad Wijaya Rabbani",
+   "panggilan": "Ahmad",
+   "lahir": "2013-08-26",
+   "nis": "2600037"
+  },
+  "t038": {
+   "kelas": "7",
+   "asrama": "a5",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h5",
+   "nama": "Arkan Kurniawan Kurniawan",
+   "panggilan": "Arkan",
+   "lahir": "2011-04-16",
+   "nis": "2600038"
+  },
+  "t039": {
+   "kelas": "7",
+   "asrama": "a5",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h5",
+   "nama": "Ali Syahputra Alfarizi",
+   "panggilan": "Ali",
+   "lahir": "2011-08-21",
+   "nis": "2600039"
+  },
+  "t040": {
+   "kelas": "7",
+   "asrama": "a5",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h5",
+   "nama": "Ismail Hakim",
+   "panggilan": "Ismail",
+   "lahir": "2012-08-06",
+   "nis": "2600040"
+  },
+  "t041": {
+   "kelas": "7",
+   "asrama": "a5",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h5",
+   "nama": "Rafi Syahputra",
+   "panggilan": "Rafi",
+   "lahir": "2014-08-13",
+   "nis": "2600041"
+  },
+  "t042": {
+   "kelas": "7",
+   "asrama": "a5",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h5",
+   "nama": "Rayyan Hakim Pratama",
+   "panggilan": "Rayyan",
+   "lahir": "2012-01-05",
+   "nis": "2600042"
+  },
+  "t043": {
+   "kelas": "7",
+   "asrama": "a5",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h5",
+   "nama": "Naufal Alfath",
+   "panggilan": "Naufal",
+   "lahir": "2014-11-12",
+   "nis": "2600043"
+  },
+  "t044": {
+   "kelas": "7",
+   "asrama": "a5",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h5",
+   "nama": "Zaid Aziz Aziz",
+   "panggilan": "Zaid",
+   "lahir": "2011-12-21",
+   "nis": "2600044"
+  },
+  "t045": {
+   "kelas": "7",
+   "asrama": "a5",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h5",
+   "nama": "Fulan Akbar Saputra",
+   "panggilan": "Fulan",
+   "lahir": "2012-04-01",
+   "nis": "2600045"
+  },
+  "t046": {
+   "kelas": "7",
+   "asrama": "a5",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h5",
+   "nama": "Husain Alfarizi Firdaus",
+   "panggilan": "Husain",
+   "lahir": "2013-05-18",
+   "nis": "2600046"
+  },
+  "t047": {
+   "kelas": "7",
+   "asrama": "a6",
+   "awal": {
+    "selesai": [
+     30
+    ],
+    "aktif": 29,
+    "baris": 0
+   },
+   "halaqah": "h6",
+   "nama": "Rafi Saputra",
+   "panggilan": "Rafi",
+   "lahir": "2013-08-22",
+   "nis": "2600047"
+  },
+  "t048": {
+   "kelas": "7",
+   "asrama": "a6",
+   "awal": {
+    "selesai": [
+     30,
+     29
+    ],
+    "aktif": 1,
+    "baris": 150
+   },
+   "halaqah": "h6",
+   "nama": "Naufal Akbar",
+   "panggilan": "Naufal",
+   "lahir": "2012-09-05",
+   "nis": "2600048"
+  },
+  "t049": {
+   "kelas": "7",
+   "asrama": "a6",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h6",
+   "nama": "Azka Akbar",
+   "panggilan": "Azka",
+   "lahir": "2012-10-01",
+   "nis": "2600049"
+  },
+  "t050": {
+   "kelas": "7",
+   "asrama": "a6",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 0
+   },
+   "halaqah": "h6",
+   "nama": "Zaki Saputra Pratama",
+   "panggilan": "Zaki",
+   "lahir": "2011-09-02",
+   "nis": "2600050"
+  },
+  "t051": {
+   "kelas": "8",
+   "asrama": "a6",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "aktif": 8,
+    "baris": 0
+   },
+   "halaqah": "h6",
+   "nama": "Ibrahim Akbar Akbar",
+   "panggilan": "Ibrahim",
+   "lahir": "2011-09-02",
+   "nis": "2600051"
+  },
+  "t052": {
+   "kelas": "8",
+   "asrama": "a6",
+   "awal": {
+    "selesai": [
+     30
+    ],
+    "aktif": 29,
+    "baris": 150
+   },
+   "halaqah": "h6",
+   "nama": "Hasan Alfarizi Wijaya",
+   "panggilan": "Hasan",
+   "lahir": "2011-09-15",
+   "nis": "2600052"
+  },
+  "t053": {
+   "kelas": "8",
+   "asrama": "a6",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 150
+   },
+   "halaqah": "h6",
+   "nama": "Rizky Contoh Hakim",
+   "panggilan": "Rizky",
+   "lahir": "2012-12-09",
+   "nis": "2600053"
+  },
+  "t054": {
+   "kelas": "8",
+   "asrama": "a6",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1
+    ],
+    "aktif": 2,
+    "baris": 150
+   },
+   "halaqah": "h6",
+   "nama": "Hafidz Akbar",
+   "panggilan": "Hafidz",
+   "lahir": "2012-12-17",
+   "nis": "2600054"
+  },
+  "t055": {
+   "kelas": "8",
+   "asrama": "a6",
+   "awal": {
+    "selesai": [],
+    "aktif": 30,
+    "baris": 150
+   },
+   "halaqah": "h6",
+   "nama": "Farhan Wijaya",
+   "panggilan": "Farhan",
+   "lahir": "2012-08-05",
+   "nis": "2600055"
+  },
+  "t056": {
+   "kelas": "9A",
+   "asrama": "a7",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8
+    ],
+    "aktif": 9,
+    "baris": 0
+   },
+   "halaqah": "h7",
+   "nama": "Rafi Ramadhan Hidayat",
+   "panggilan": "Rafi",
+   "lahir": "2011-11-08",
+   "nis": "2600056"
+  },
+  "t057": {
+   "kelas": "9A",
+   "asrama": "a7",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "aktif": 8,
+    "baris": 0
+   },
+   "halaqah": "h7",
+   "nama": "Rafi Hakim",
+   "panggilan": "Rafi",
+   "lahir": "2011-03-23",
+   "nis": "2600057"
+  },
+  "t058": {
+   "kelas": "9A",
+   "asrama": "a7",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1
+    ],
+    "aktif": 2,
+    "baris": 0
+   },
+   "halaqah": "h7",
+   "nama": "Faiz Kurniawan Saputra",
+   "panggilan": "Faiz",
+   "lahir": "2012-08-08",
+   "nis": "2600058"
+  },
+  "t059": {
+   "kelas": "9A",
+   "asrama": "a7",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "aktif": 8,
+    "baris": 0
+   },
+   "halaqah": "h7",
+   "nama": "Rayyan Ramadhan",
+   "panggilan": "Rayyan",
+   "lahir": "2012-11-27",
+   "nis": "2600059"
+  },
+  "t060": {
+   "kelas": "9A",
+   "asrama": "a7",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1
+    ],
+    "aktif": 2,
+    "baris": 0
+   },
+   "halaqah": "h7",
+   "nama": "Hasan Pratama",
+   "panggilan": "Hasan",
+   "lahir": "2014-06-14",
+   "nis": "2600060"
+  },
+  "t061": {
+   "kelas": "9A",
+   "asrama": "a7",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1
+    ],
+    "aktif": 2,
+    "baris": 0
+   },
+   "halaqah": "h7",
+   "nama": "Ali Kurniawan Syahputra",
+   "panggilan": "Ali",
+   "lahir": "2013-01-11",
+   "nis": "2600061"
+  },
+  "t062": {
+   "kelas": "9A",
+   "asrama": "a7",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "aktif": 6,
+    "baris": 0
+   },
+   "halaqah": "h7",
+   "nama": "Rizky Alfath",
+   "panggilan": "Rizky",
+   "lahir": "2014-06-17",
+   "nis": "2600062"
+  },
+  "t063": {
+   "kelas": "9A",
+   "asrama": "a7",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4
+    ],
+    "aktif": 5,
+    "baris": 0
+   },
+   "halaqah": "h7",
+   "nama": "Daffa Firdaus",
+   "panggilan": "Daffa",
+   "lahir": "2011-04-04",
+   "nis": "2600063"
+  },
+  "t064": {
+   "kelas": "9A",
+   "asrama": "a7",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ],
+    "aktif": 7,
+    "baris": 0
+   },
+   "halaqah": "h7",
+   "nama": "Abdullah Wijaya Wijaya",
+   "panggilan": "Abdullah",
+   "lahir": "2012-05-25",
+   "nis": "2600064"
+  },
+  "t065": {
+   "kelas": "9A",
+   "asrama": "a7",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10
+    ],
+    "aktif": 11,
+    "baris": 0
+   },
+   "halaqah": "h7",
+   "nama": "Zaid Nugraha Wijaya",
+   "panggilan": "Zaid",
+   "lahir": "2014-12-11",
+   "nis": "2600065"
+  },
+  "t066": {
+   "kelas": "9A",
+   "asrama": "a8",
+   "awal": {
+    "selesai": [
+     3,
+     4,
+     30,
+     29,
+     1,
+     2,
+     5
+    ],
+    "aktif": 6,
+    "baris": 0
+   },
+   "halaqah": "h12",
+   "nama": "Abdullah Wijaya",
+   "panggilan": "Abdullah",
+   "lahir": "2012-07-03",
+   "nis": "2600066"
+  },
+  "t067": {
+   "kelas": "9A",
+   "asrama": "a8",
+   "awal": {
+    "selesai": [
+     30,
+     29
+    ],
+    "aktif": 1,
+    "baris": 0
+   },
+   "halaqah": "h8",
+   "nama": "Husain Contoh",
+   "panggilan": "Husain",
+   "lahir": "2011-10-28",
+   "nis": "2600067"
+  },
+  "t068": {
+   "kelas": "9A",
+   "asrama": "a8",
+   "awal": {
+    "selesai": [
+     5,
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     6
+    ],
+    "aktif": 27,
+    "baris": 30
+   },
+   "halaqah": "h8",
+   "nama": "Hasan Hakim",
+   "panggilan": "Hasan",
+   "lahir": "2014-01-11",
+   "nis": "2600068"
+  },
+  "t069": {
+   "kelas": "9A",
+   "asrama": "a8",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5,
+     28
+    ],
+    "aktif": 6,
+    "baris": 150
+   },
+   "halaqah": "h12",
+   "nama": "Rizky Nugraha",
+   "panggilan": "Rizky",
+   "lahir": "2011-09-23",
+   "nis": "2600069"
+  },
+  "t070": {
+   "kelas": "9A",
+   "asrama": "a8",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "aktif": 6,
+    "baris": 0
+   },
+   "halaqah": "h12",
+   "nama": "Hasan Ramadhan Pratama",
+   "panggilan": "Hasan",
+   "lahir": "2012-04-10",
+   "nis": "2600070"
+  },
+  "t071": {
+   "kelas": "9A",
+   "asrama": "a8",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     28
+    ],
+    "aktif": 3,
+    "baris": 60
+   },
+   "halaqah": "h12",
+   "nama": "Faiz Firdaus",
+   "panggilan": "Faiz",
+   "lahir": "2013-08-17",
+   "nis": "2600071"
+  },
+  "t072": {
+   "kelas": "9A",
+   "asrama": "a8",
+   "awal": {
+    "selesai": [
+     10,
+     11,
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     12
+    ],
+    "aktif": 13,
+    "baris": 0
+   },
+   "halaqah": "h12",
+   "nama": "Akmal Pratama Wijaya",
+   "panggilan": "Akmal",
+   "lahir": "2011-05-02",
+   "nis": "2600072"
+  },
+  "t073": {
+   "kelas": "9A",
+   "asrama": "a8",
+   "awal": {
+    "selesai": [
+     8,
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     9,
+     10,
+     11
+    ],
+    "aktif": 12,
+    "baris": 90
+   },
+   "halaqah": "h12",
+   "nama": "Ahmad Contoh Akbar",
+   "panggilan": "Ahmad",
+   "lahir": "2012-09-16",
+   "nis": "2600073"
+  },
+  "t074": {
+   "kelas": "9A",
+   "asrama": "a8",
+   "awal": {
+    "selesai": [
+     30,
+     29
+    ],
+    "aktif": 28,
+    "baris": 0
+   },
+   "halaqah": "h8",
+   "nama": "Hasan Alfath",
+   "panggilan": "Hasan",
+   "lahir": "2014-11-16",
+   "nis": "2600074"
+  },
+  "t075": {
+   "kelas": "9A",
+   "asrama": "a9",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1
+    ],
+    "aktif": 2,
+    "baris": 0
+   },
+   "halaqah": "h8",
+   "nama": "Rizky Hidayat Akbar",
+   "panggilan": "Rizky",
+   "lahir": "2012-04-11",
+   "nis": "2600075"
+  },
+  "t076": {
+   "kelas": "9A",
+   "asrama": "a9",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2
+    ],
+    "aktif": 3,
+    "baris": 0
+   },
+   "halaqah": "h9",
+   "nama": "Ali Saputra",
+   "panggilan": "Ali",
+   "lahir": "2011-03-01",
+   "nis": "2600076"
+  },
+  "t077": {
+   "kelas": "9A",
+   "asrama": "a9",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1
+    ],
+    "aktif": 2,
+    "baris": 0
+   },
+   "halaqah": "h9",
+   "nama": "Abdullah Wijaya Nugraha",
+   "panggilan": "Abdullah",
+   "lahir": "2011-11-27",
+   "nis": "2600077"
+  },
+  "t078": {
+   "kelas": "9A",
+   "asrama": "a9",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3
+    ],
+    "aktif": 4,
+    "baris": 0
+   },
+   "halaqah": "h9",
+   "nama": "Ilham Akbar Firdaus",
+   "panggilan": "Ilham",
+   "lahir": "2013-01-15",
+   "nis": "2600078"
+  },
+  "t079": {
+   "kelas": "9A",
+   "asrama": "a9",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1
+    ],
+    "aktif": 2,
+    "baris": 0
+   },
+   "halaqah": "h9",
+   "nama": "Umar Pratama Wijaya",
+   "panggilan": "Umar",
+   "lahir": "2013-06-11",
+   "nis": "2600079"
+  },
+  "t080": {
+   "kelas": "9B",
+   "asrama": "a9",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3
+    ],
+    "aktif": 4,
+    "baris": 0
+   },
+   "halaqah": "h8",
+   "nama": "Rizky Syahputra Maulana",
+   "panggilan": "Rizky",
+   "lahir": "2013-04-12",
+   "nis": "2600080"
+  },
+  "t081": {
+   "kelas": "9B",
+   "asrama": "a9",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ],
+    "aktif": 7,
+    "baris": 0
+   },
+   "halaqah": "h9",
+   "nama": "Umar Contoh Syahputra",
+   "panggilan": "Umar",
+   "lahir": "2014-05-17",
+   "nis": "2600081"
+  },
+  "t082": {
+   "kelas": "9B",
+   "asrama": "a9",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1
+    ],
+    "aktif": 2,
+    "baris": 0
+   },
+   "halaqah": "h8",
+   "nama": "Faiz Alfarizi Maulana",
+   "panggilan": "Faiz",
+   "lahir": "2011-02-09",
+   "nis": "2600082"
+  },
+  "t083": {
+   "kelas": "9B",
+   "asrama": "a9",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1
+    ],
+    "aktif": 2,
+    "baris": 0
+   },
+   "halaqah": "h9",
+   "nama": "Ammar Hakim Saputra",
+   "panggilan": "Ammar",
+   "lahir": "2011-07-01",
+   "nis": "2600083"
+  },
+  "t084": {
+   "kelas": "9B",
+   "asrama": "a10",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     28
+    ],
+    "aktif": 4,
+    "baris": 0
+   },
+   "halaqah": "h10",
+   "nama": "Yusuf Firdaus Maulana",
+   "panggilan": "Yusuf",
+   "lahir": "2012-11-23",
+   "nis": "2600084"
+  },
+  "t085": {
+   "kelas": "9B",
+   "asrama": "a10",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     28
+    ],
+    "aktif": 3,
+    "baris": 0
+   },
+   "halaqah": "h10",
+   "nama": "Salman Hamdani",
+   "panggilan": "Salman",
+   "lahir": "2014-03-10",
+   "nis": "2600085"
+  },
+  "t086": {
+   "kelas": "9B",
+   "asrama": "a10",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     28
+    ],
+    "aktif": 3,
+    "baris": 0
+   },
+   "halaqah": "h10",
+   "nama": "Rayyan Hamdani Saputra",
+   "panggilan": "Rayyan",
+   "lahir": "2014-12-23",
+   "nis": "2600086"
+  },
+  "t087": {
+   "kelas": "9B",
+   "asrama": "a10",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     28
+    ],
+    "aktif": 11,
+    "baris": 0
+   },
+   "halaqah": "h10",
+   "nama": "Salman Akbar",
+   "panggilan": "Salman",
+   "lahir": "2011-11-19",
+   "nis": "2600087"
+  },
+  "t088": {
+   "kelas": "9B",
+   "asrama": "a10",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     28,
+     27
+    ],
+    "aktif": 5,
+    "baris": 0
+   },
+   "halaqah": "h10",
+   "nama": "Salman Maulana Hakim",
+   "panggilan": "Salman",
+   "lahir": "2012-11-12",
+   "nis": "2600088"
+  },
+  "t089": {
+   "kelas": "9B",
+   "asrama": "a10",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     28
+    ],
+    "aktif": 3,
+    "baris": 0
+   },
+   "halaqah": "h10",
+   "nama": "Fulan Hidayat Alfath",
+   "panggilan": "Fulan",
+   "lahir": "2011-11-18",
+   "nis": "2600089"
+  },
+  "t090": {
+   "kelas": "9B",
+   "asrama": "a10",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     28
+    ],
+    "aktif": 3,
+    "baris": 0
+   },
+   "halaqah": "h10",
+   "nama": "Akmal Maulana Rabbani",
+   "panggilan": "Akmal",
+   "lahir": "2014-02-24",
+   "nis": "2600090"
+  },
+  "t091": {
+   "kelas": "9B",
+   "asrama": "a10",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     28
+    ],
+    "aktif": 5,
+    "baris": 0
+   },
+   "halaqah": "h10",
+   "nama": "Arkan Akbar Aziz",
+   "panggilan": "Arkan",
+   "lahir": "2011-12-24",
+   "nis": "2600091"
+  },
+  "t092": {
+   "kelas": "9B",
+   "asrama": "a10",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     28
+    ],
+    "aktif": 5,
+    "baris": 0
+   },
+   "halaqah": "h10",
+   "nama": "Fathan Wijaya",
+   "panggilan": "Fathan",
+   "lahir": "2012-12-25",
+   "nis": "2600092"
+  },
+  "t093": {
+   "kelas": "9B",
+   "asrama": "a10",
+   "awal": {
+    "selesai": [
+     30,
+     28
+    ],
+    "aktif": 29,
+    "baris": 0
+   },
+   "halaqah": "h10",
+   "nama": "Ali Maulana Alfath",
+   "panggilan": "Ali",
+   "lahir": "2014-02-16",
+   "nis": "2600093"
+  },
+  "t094": {
+   "kelas": "9B",
+   "asrama": "a11",
+   "awal": {
+    "selesai": [
+     30,
+     29
+    ],
+    "aktif": 1,
+    "baris": 0
+   },
+   "halaqah": "h11",
+   "nama": "Arkan Firdaus",
+   "panggilan": "Arkan",
+   "lahir": "2012-02-20",
+   "nis": "2600094"
+  },
+  "t095": {
+   "kelas": "9B",
+   "asrama": "a11",
+   "awal": {
+    "selesai": [
+     10,
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     11
+    ],
+    "aktif": 12,
+    "baris": 0
+   },
+   "halaqah": "h11",
+   "nama": "Zaid Syahputra",
+   "panggilan": "Zaid",
+   "lahir": "2013-10-19",
+   "nis": "2600095"
+  },
+  "t096": {
+   "kelas": "9B",
+   "asrama": "a11",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1
+    ],
+    "aktif": 2,
+    "baris": 150
+   },
+   "halaqah": "h11",
+   "nama": "Zaid Contoh Rabbani",
+   "panggilan": "Zaid",
+   "lahir": "2013-11-04",
+   "nis": "2600096"
+  },
+  "t097": {
+   "kelas": "9B",
+   "asrama": "a11",
+   "awal": {
+    "selesai": [
+     30,
+     29
+    ],
+    "aktif": 1,
+    "baris": 0
+   },
+   "halaqah": "h11",
+   "nama": "Hanif Alfarizi Rabbani",
+   "panggilan": "Hanif",
+   "lahir": "2013-08-15",
+   "nis": "2600097"
+  },
+  "t098": {
+   "kelas": "9B",
+   "asrama": "a11",
+   "awal": {
+    "selesai": [
+     30,
+     29
+    ],
+    "aktif": 1,
+    "baris": 195
+   },
+   "halaqah": "h11",
+   "nama": "Hafidz Ramadhan Aziz",
+   "panggilan": "Hafidz",
+   "lahir": "2011-08-01",
+   "nis": "2600098"
+  },
+  "t099": {
+   "kelas": "9B",
+   "asrama": "a11",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4
+    ],
+    "aktif": 5,
+    "baris": 180
+   },
+   "halaqah": "h11",
+   "nama": "Yusuf Alfath",
+   "panggilan": "Yusuf",
+   "lahir": "2014-05-13",
+   "nis": "2600099"
+  },
+  "t100": {
+   "kelas": "9B",
+   "asrama": "a11",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2
+    ],
+    "aktif": 3,
+    "baris": 0
+   },
+   "halaqah": "h11",
+   "nama": "Ali Alfarizi Hakim",
+   "panggilan": "Ali",
+   "lahir": "2012-12-17",
+   "nis": "2600100"
+  },
+  "t101": {
+   "kelas": "9B",
+   "asrama": "a11",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4
+    ],
+    "aktif": 5,
+    "baris": 75
+   },
+   "halaqah": "h11",
+   "nama": "Husain Kurniawan",
+   "panggilan": "Husain",
+   "lahir": "2013-02-23",
+   "nis": "2600101"
+  },
+  "t102": {
+   "kelas": "9B",
+   "asrama": "a11",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "aktif": 6,
+    "baris": 90
+   },
+   "halaqah": "h11",
+   "nama": "Ismail Maulana",
+   "panggilan": "Ismail",
+   "lahir": "2014-07-01",
+   "nis": "2600102"
+  },
+  "t103": {
+   "kelas": "9B",
+   "asrama": "a11",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1,
+     2
+    ],
+    "aktif": 3,
+    "baris": 150
+   },
+   "halaqah": "h11",
+   "nama": "Umar Contoh",
+   "panggilan": "Umar",
+   "lahir": "2014-05-24",
+   "nis": "2600103"
+  },
+  "t104": {
+   "kelas": "7",
+   "asrama": "a6",
+   "awal": {
+    "selesai": [
+     30,
+     29,
+     1
+    ],
+    "aktif": 2,
+    "baris": 150
+   },
+   "halaqah": "h6",
+   "nama": "Zaid Nugraha Kurniawan",
+   "panggilan": "Zaid",
+   "lahir": "2011-06-01",
+   "nis": "2600104"
+  }
+ }
+}

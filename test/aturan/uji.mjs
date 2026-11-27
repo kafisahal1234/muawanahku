@@ -3,11 +3,11 @@ import { readFileSync } from "fs";
 import { createHash } from "crypto";
 import { doc, getDoc, setDoc, updateDoc, getDocs, collection, deleteDoc } from "firebase/firestore";
 const H = (u, p) => createHash("sha256").update(u + ":" + p).digest("hex");
-const env = await initializeTestEnvironment({ projectId: "demo-mq", firestore: { rules: readFileSync("/home/claude/webapp/firestore.rules", "utf8"), host: "127.0.0.1", port: 8085 } });
+const env = await initializeTestEnvironment({ projectId: "demo-mq", firestore: { rules: readFileSync(new URL("../../firestore.rules", import.meta.url), "utf8"), host: "127.0.0.1", port: 8085 } });
 await env.clearFirestore();
 await env.withSecurityRulesDisabled(async c => { const d = c.firestore();
   await setDoc(doc(d, "mk_akun/kafi"), { hash: H("kafi", "kafi123") });
-  await setDoc(doc(d, "mk_akun/admin123"), { hash: H("admin123", "admin010203") });
+  await setDoc(doc(d, "mk_akun/admin123"), { hash: H("admin123", "contoh123") });
   await setDoc(doc(d, "mk_akun/mati"), { hash: H("mati", "mati123"), nonaktif: true });
   await setDoc(doc(d, "mk_staffEdit/kaafi"), { username: "kafi", roles: ["guru_tahfidz"], nama: "Kafi" });
   await setDoc(doc(d, "mk_staffEdit/admin"), { username: "admin123", roles: ["admin"], nama: "Admin" });
@@ -39,7 +39,7 @@ await cek("staf isi kode wali", assertSucceeds(setDoc(doc(st, "mk_kodeWali/budi0
 await cek("staf tidak bisa memalsukan sesi admin", assertFails(setDoc(doc(st, "mk_sesi/staf1"), { jenis: "staff", u: "admin123", h: H("kafi", "kafi123"), sid: "admin" })));
 // admin
 const ad = env.authenticatedContext("adm1").firestore();
-await cek("sesi admin", assertSucceeds(setDoc(doc(ad, "mk_sesi/adm1"), { jenis: "staff", u: "admin123", h: H("admin123", "admin010203"), sid: "admin" })));
+await cek("sesi admin", assertSucceeds(setDoc(doc(ad, "mk_sesi/adm1"), { jenis: "staff", u: "admin123", h: H("admin123", "contoh123"), sid: "admin" })));
 await cek("admin ubah jabatan guru", assertSucceeds(updateDoc(doc(ad, "mk_staffEdit/kaafi"), { roles: ["guru_tahfidz", "wali_asrama"] })));
 await cek("admin reset sandi guru", assertSucceeds(setDoc(doc(ad, "mk_akun/kafi"), { hash: H("kafi", "baru123") })));
 await cek("sesi staf lama tidak berlaku setelah sandi direset", assertFails(getDocs(collection(st, "mk_setoran"))));

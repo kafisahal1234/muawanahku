@@ -1,6 +1,7 @@
 import asyncio, subprocess, json
+from _jalur import DIST, URL_DIST, ADMIN, OUT
 from playwright.async_api import async_playwright
-srv = subprocess.Popen(["python3", "-m", "http.server", "8793", "-d", "/home/claude/webapp/dist"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+srv = subprocess.Popen(["python3", "-m", "http.server", "8793", "-d", DIST], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 U = "http://localhost:8793/index.html"
 IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1"
 async def main():

@@ -1,6 +1,7 @@
 import asyncio, json, sys
+from _jalur import DIST, URL_DIST, ADMIN, OUT
 from playwright.async_api import async_playwright
-URL = "file:///home/claude/webapp/dist/index.html"
+URL = URL_DIST
 ACC = sys.argv[1].split(",") if len(sys.argv) > 1 else ["kaafi"]
 
 async def keUtama(pg):

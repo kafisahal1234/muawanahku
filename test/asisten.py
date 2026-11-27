@@ -1,6 +1,7 @@
 import asyncio, subprocess, json, base64
+from _jalur import DIST, URL_DIST, ADMIN, OUT
 from playwright.async_api import async_playwright
-srv = subprocess.Popen(["python3", "-m", "http.server", "8796", "-d", "/home/claude/webapp/dist"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+srv = subprocess.Popen(["python3", "-m", "http.server", "8796", "-d", DIST], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 U = "http://localhost:8796/index.html"; O = "/tmp/ui"
 PNG = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEklEQVR4nGNgYGD4z0AEYBxVSFUAAJ6/AQGG0UPDAAAAAElFTkSuQmCC")
 MOCK = r"""

@@ -1,0 +1,14 @@
+{
+  "name": "muawanahqu-uji-aturan",
+  "private": true,
+  "description": "Uji aturan keamanan Firestore (firestore.rules) di emulator lokal",
+  "type": "module",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore --project demo-mq \"node uji.mjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "firebase": "^13.4.0",
+    "firebase-tools": "^15.37.0"
+  }
+}

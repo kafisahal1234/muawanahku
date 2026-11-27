@@ -1,7 +1,8 @@
 # Uji sinyal lemah/putus memakai Firebase TIRUAN (semua permintaan ke Google diblokir/diganti, tidak menyentuh database asli)
 import asyncio, subprocess, json
+from _jalur import DIST, URL_DIST, ADMIN, OUT
 from playwright.async_api import async_playwright
-srv = subprocess.Popen(["python3", "-m", "http.server", "8785", "-d", "/home/claude/webapp/dist"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+srv = subprocess.Popen(["python3", "-m", "http.server", "8785", "-d", DIST], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 U = "http://127.0.0.2:8785/index.html"  # bukan "localhost" → aplikasi berperilaku seperti versi online
 FAKE = {
  "firebase-app.js": "export const initializeApp = c => ({ name: '[DEFAULT]', options: c }); export const getApps = () => [];",

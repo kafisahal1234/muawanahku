@@ -1,6 +1,7 @@
 import asyncio, subprocess
+from _jalur import DIST, URL_DIST, ADMIN, OUT
 from playwright.async_api import async_playwright
-srv = subprocess.Popen(["python3", "-m", "http.server", "8791", "-d", "/home/claude/webapp/dist"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+srv = subprocess.Popen(["python3", "-m", "http.server", "8791", "-d", DIST], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 U = "http://localhost:8791/index.html"; O = "/tmp/ui"
 async def login(pg, u, p=None):
     await pg.fill("input[autocomplete=username]", u); await pg.fill(".pass-in input", p or u + "123"); await pg.click("button[type=submit]"); await pg.wait_for_timeout(900)

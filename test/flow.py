@@ -1,12 +1,13 @@
 import asyncio, json
+from _jalur import DIST, URL_DIST, ADMIN, OUT
 from playwright.async_api import async_playwright
-URL = "file:///home/claude/webapp/dist/index.html"
+URL = URL_DIST
 async def login(pg, u, p=None):
     await pg.evaluate("sessionStorage.clear(); localStorage.removeItem('mk_user')"); await pg.goto(URL); await pg.wait_for_timeout(300)
     await pg.fill("input[autocomplete=username]", u); await pg.fill("input[type=password]", p or u + "123"); await pg.click("button[type=submit]"); await pg.wait_for_timeout(300)
 async def loginWali(pg, nama):
     await pg.evaluate("sessionStorage.clear(); localStorage.removeItem('mk_user')"); await pg.goto(URL); await pg.wait_for_timeout(300)
-    await pg.click("text=Lihat semua akun demo"); await pg.fill(".sheet .search input", nama); await pg.wait_for_timeout(100); await pg.locator(".demo-acc:has(.av.gold)").first.click(); await pg.wait_for_timeout(300)
+    await pg.click("text=Lihat semua akun demo"); await pg.fill(".sheet .search input", nama); await pg.wait_for_timeout(100); await pg.locator(".demo-acc").first.click(); await pg.wait_for_timeout(300)
 async def tile(pg, label): await pg.locator(f".tile:has(.tile-lb:text-is(\"{label}\"))").first.click(); await pg.wait_for_timeout(250)
 
 async def keUtama(pg):
@@ -23,7 +24,7 @@ async def main():
         b = await p.chromium.launch(args=["--host-resolver-rules=MAP *.googleapis.com 127.0.0.1, MAP www.gstatic.com 127.0.0.1, MAP *.firebaseio.com 127.0.0.1, MAP *.firebaseapp.com 127.0.0.1, MAP firebase.googleapis.com 127.0.0.1"], executable_path="/usr/bin/google-chrome")
         pg = await b.new_page(reduced_motion="reduce", viewport={"width": 400, "height": 860})
         await pg.clock.set_fixed_time("2026-11-23T08:10:00+07:00")
-        pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
+        pg.on("pageerror", lambda e: errs.append(str(e) + " @ " + (e.stack or "")[:300])); pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
         await pg.goto(URL); await pg.evaluate("localStorage.clear()")
         await login(pg, "kaafi")
         await tile(pg, "Tahfidz"); await pg.screenshot(path="test/f1_tahfidz.png", full_page=True)
@@ -69,20 +70,20 @@ async def main():
         print("jurnal menu:", (await pg.locator(".card").first.inner_text())[:60].replace("\n"," | "))
         # kesantrian izin by izzudin
         await login(pg, "izzudin"); await tile(pg, "Kesantrian"); await tile(pg, "Surat Izin")
-        await pg.locator("button.pick").click(); await pg.fill(".sheet .search input", "sultan abdullah"); await pg.locator(".sheet .row").first.click()
+        await pg.locator("button.pick").click(); await pg.fill(".sheet .search input", "faiz kurniawan"); await pg.locator(".sheet .row").first.click()
         await pg.fill("textarea", "Walimah kakak"); await pg.click("text=Simpan surat izin"); await pg.locator(".dialog .btn.primary").click(); await pg.wait_for_timeout(300)
         await pg.screenshot(path="test/f8_surat.png", full_page=True)
         await keUtama(pg); await pg.locator(".bnav button").first.click(); await tile(pg, "Kesantrian"); await tile(pg, "Form BAP")
-        await pg.locator("button.pick").click(); await pg.fill(".sheet .search input", "davin"); await pg.locator(".sheet .row").first.click()
+        await pg.locator("button.pick").click(); await pg.fill(".sheet .search input", "hasan hakim"); await pg.locator(".sheet .row").first.click()
         await pg.select_option("select.in", "p5"); await pg.fill("textarea >> nth=0", "Ditemukan HP di lemari"); await pg.click("text=Simpan BAP"); await pg.locator(".dialog .btn.primary").click(); await pg.wait_for_timeout(300)
         await pg.screenshot(path="test/f9_bap.png", full_page=True)
         # mudir announcement
         await login(pg, "syamsul"); await pg.screenshot(path="test/f10_mudir.png", full_page=True); await pg.click(".ab-btn:not(.ab-ai)"); await pg.wait_for_timeout(250)
         await pg.fill("input[placeholder^='Misal: Jadwal']", "Jadwal perpulangan akhir semester"); await pg.fill("textarea", "Perpulangan 20 Desember 2026."); await pg.click("text=Kirim pengumuman"); await pg.wait_for_timeout(300)
         # wali
-        await loginWali(pg, "sultan abdullah"); await pg.screenshot(path="test/f11_wali.png", full_page=True)
+        await loginWali(pg, "faiz kurniawan"); await pg.screenshot(path="test/f11_wali.png", full_page=True)
         await keUtama(pg); await pg.locator(".bnav button").nth(3).click(); await pg.wait_for_timeout(200); await pg.screenshot(path="test/f12_wali_izin.png", full_page=True)
-        await loginWali(pg, "davin"); await keUtama(pg); await pg.locator(".bnav button").nth(3).click(); await pg.wait_for_timeout(200); await pg.screenshot(path="test/f13_wali_davin.png", full_page=True)
+        await loginWali(pg, "hasan"); await keUtama(pg); await pg.locator(".bnav button").nth(3).click(); await pg.wait_for_timeout(200); await pg.screenshot(path="test/f13_wali_davin.png", full_page=True)
         # rapor
         await login(pg, "kaafi"); await tile(pg, "Rapor"); await pg.locator(".card .row").first.click(); await pg.wait_for_timeout(200); await pg.screenshot(path="test/f14_rapor.png", full_page=True)
         await b.close()

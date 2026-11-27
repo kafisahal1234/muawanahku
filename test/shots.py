@@ -1,6 +1,7 @@
 import asyncio
+from _jalur import DIST, URL_DIST, ADMIN, OUT
 from playwright.async_api import async_playwright
-URL = "file:///home/claude/webapp/dist/index.html"
+URL = URL_DIST
 async def login(pg, u):
     await pg.evaluate("sessionStorage.clear(); localStorage.removeItem('mk_user')"); await pg.goto(URL); await pg.wait_for_timeout(300)
     await pg.fill("input[autocomplete=username]", u); await pg.fill("input[autocomplete=current-password]", u + "123"); await pg.click("button[type=submit]"); await pg.wait_for_timeout(400)

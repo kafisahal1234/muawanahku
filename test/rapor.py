@@ -1,6 +1,7 @@
 import asyncio, json, random
+from _jalur import DIST, URL_DIST, ADMIN, OUT
 from playwright.async_api import async_playwright
-URL = "file:///home/claude/webapp/dist/index.html"
+URL = URL_DIST
 SID = "s056"  # Adiyatma, kelas 9A, asrama a7 (Ust. Kafi)
 random.seed(3)
 def seed():
