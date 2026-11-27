@@ -258,8 +258,26 @@ export function AwalSheet({ judul, awal, onSimpan, onClose, tombol = "Pakai" }) 
 // ================= IMPOR BIODATA SANTRI =================
 const BIO = [["panggilan", "Panggilan"], ["nis", "NIS"], ["lahir", "Tgl lahir"], ["tempatLahir", "Tempat lahir"], ["ayah", "Ayah"], ["ibu", "Ibu"], ["hpWali", "HP wali"], ["alamat", "Alamat"], ["hobi", "Hobi"], ["cita", "Cita-cita"]];
 const BULAN = { jan: 1, feb: 2, peb: 2, mar: 3, apr: 4, mei: 5, may: 5, jun: 6, jul: 7, agu: 8, agt: 8, aug: 8, sep: 9, okt: 10, oct: 10, nov: 11, nop: 11, des: 12, dec: 12 };
+// Pembaca format pesan WA "Pendataan Data Santri" (tanpa AI): *1. Nama Lengkap* lalu Nama Panggilan / Tanggal Lahir / No. WA
+export function bacaFormatBiodata(teks) {
+  const t = String(teks || ""); if (!/nama\s*panggilan\s*:|no\.?\s*(wa|hp)[^:\n]*(bunda|wali)[^:\n]*:/i.test(t)) return null;
+  const isi = v => { const x = String(v || "").replace(/[*_]/g, "").trim(); return /^(\?|-|–|\.\.\.|…)?$/.test(x) ? "" : x; };
+  const out = []; let r = null;
+  for (const baris of t.split(/\r?\n/)) {
+    if (/^\s*\*?\s*(keterangan|catatan)\b/i.test(baris)) { r = null; continue; } // bagian keterangan di akhir pesan
+    if (/^\s*•/.test(baris)) continue;
+    const h = baris.match(/^\s*\*?\s*(\d{1,3})\s*[.)]\s*(.+?)\s*\*?\s*$/);
+    if (h && !/:/.test(h[2])) { r = { nama: h[2].replace(/[*_]/g, "").trim(), panggilan: "", tanggal_lahir: "", hp_wali: "" }; out.push(r); continue; }
+    const m = baris.match(/^\s*[•\-]?\s*([^:]{3,40}?)\s*:\s*(.*)$/); if (!r || !m) continue;
+    const k = m[1].toLowerCase();
+    if (/panggilan/.test(k)) r.panggilan = isi(m[2]);
+    else if (/tanggal|tgl/.test(k)) r.tanggal_lahir = isi(m[2]);
+    else if (/wa|hp|telp|nomor|no\b|no\./.test(k)) r.hp_wali = isi(m[2]).replace(/[^\d+]/g, "");
+  }
+  return out.filter(x => x.nama.length > 2);
+}
 export function keTanggal(v) {
-  const t = String(v || "").trim().toLowerCase(); if (!t) return "";
+  const t = String(v || "").trim().toLowerCase().replace(/\s*,\s*/g, " ").replace(/\s+/g, " "); if (!t) return "";
   let m = t.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/); if (m) return ok(+m[1], +m[2], +m[3]);
   m = t.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/); if (m) return ok(+m[3] < 100 ? 2000 + +m[3] : +m[3], +m[2], +m[1]);
   m = t.match(/(\d{1,2})\s+([a-z]+)\.?\s+(\d{4})/); if (m && BULAN[m[2].slice(0, 3)]) return ok(+m[3], BULAN[m[2].slice(0, 3)], +m[1]);
@@ -313,7 +331,9 @@ export function ImporSantri() {
     try {
       const d = await siapkanDokumen(inp, setLangkah); setDok(d.nama);
       let hasil;
-      if (aiAda()) {
+      const wa = d.teks ? bacaFormatBiodata(d.teks) : null; // format pesan WA pendataan: dibaca pasti, tanpa AI
+      if (wa && wa.length) hasil = wa;
+      else if (aiAda()) {
         setLangkah(`${aiNama()} sedang membaca isi dokumen…`);
         const j = await tanyaAI({ sistem: SISTEM_DASAR, json: true, berkas: d.berkas, teks: PROMPT_SANTRI.replace("{SANTRI}", daftarSantri()).replace("{KELAS}", L.KELAS.map(k => k.id).join(", ")).replace("{ASRAMA}", L.ASRAMA.map(a => a.nama).join(", ")) + isiDok(d) });
         hasil = (Array.isArray(j) ? j : j.baris || []).filter(r => r && r.nama);
