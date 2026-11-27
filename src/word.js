@@ -1,9 +1,8 @@
 // Unduh dokumen (rapor) sebagai Word (.docx) yang bisa diedit.
 // HTML rapor yang sama dengan pratinjau/PDF diubah menjadi dokumen Word: kop & kaki sebagai gambar halaman,
 // judul, tabel (lengkap dengan colspan & warna), kotak catatan, dan blok tanda tangan.
-// "Terkunci seperti PDF": tiap halaman rapor = satu bingkai bertinggi tetap (tidak bisa meluber/bergeser ke halaman lain),
-// baris tabel tidak terpotong antarhalaman, dan dokumen diproteksi (Restrict Editing) — hanya teks/angka yang bisa diubah,
-// tata letak, tabel, gambar kop & tanda tangan tidak bisa digeser.
+// Supaya tidak berantakan: setiap halaman rapor diawali page break (section baru), baris tabel tidak terpotong
+// antarhalaman, dan tabel berukuran tetap. Dokumen tetap biasa (tanpa proteksi/sorotan), bebas diedit.
 import { toast } from "./store.js";
 import { simpanFile } from "./pdf.js";
 
@@ -164,11 +163,8 @@ export async function htmlKeDocx(docHtml, pilihHalaman = ".rp-page") {
     return out;
   }
 
-  // bingkai halaman: satu sel bertinggi TETAP seukuran area isi halaman → isi tidak pernah meluber ke halaman berikutnya
-  const mungil = mungilDari(D), LEBAR_ISI = (794 - 96 - 85) * PX, TINGGI_ISI = (1123 - 183 - 120) * PX - 260;
-  const bingkai = isi => new Table({ width: { size: LEBAR_ISI, type: WidthType.DXA }, columnWidths: [LEBAR_ISI], layout: TableLayoutType.FIXED, borders: NOB,
-    rows: [new TableRow({ cantSplit: true, height: { value: TINGGI_ISI, rule: HeightRule.EXACT }, children: [new TableCell({ width: { size: LEBAR_ISI, type: WidthType.DXA }, borders: NOB,
-      margins: { top: 0, bottom: 0, left: 0, right: 0 }, verticalAlign: VerticalAlign.TOP, children: [...isi, mungil()] })] })] });
+  // penutup tiap halaman: paragraf super tipis agar page break tidak memunculkan halaman kosong
+  const mungil = mungilDari(D);
 
   // kop & kaki halaman sebagai gambar mengambang (posisi sama dengan rapor PDF)
   const gambarMengambang = (img, kiri, atas, lebar) => {
@@ -187,38 +183,16 @@ export async function htmlKeDocx(docHtml, pilihHalaman = ".rp-page") {
     sections: pages.map((pg, i) => ({
       properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 183 * PX, bottom: 120 * PX, left: 96 * PX, right: 85 * PX, header: 0, footer: 0 } } },
       headers: header ? { default: header } : undefined, footers: footer ? { default: footer } : undefined,
-      children: [bingkai(isiHalaman(pg)), mungil()],
+      children: [...isiHalaman(pg), mungil()],
     })),
   });
-  const blob = await Packer.toBlob(doc);
-  return kunciDocx(blob);
+  return Packer.toBlob(doc);
 }
 
 // paragraf super tipis (penutup sel/section) agar tidak memicu halaman kosong
 function mungilDari(D) { const { Paragraph, TextRun, LineRuleType } = D; return () => new Paragraph({ spacing: { before: 0, after: 0, line: 20, lineRule: LineRuleType.EXACT }, children: [new TextRun({ text: "", size: 2 })] }); }
 
-// Proteksi "Restrict Editing" (tanpa sandi): seluruh dokumen hanya-baca, kecuali teks di setiap paragraf
-// (izin w:permStart/permEnd untuk semua orang). Hasilnya: angka & huruf bisa diedit, tata letak tidak bisa digeser.
-async function kunciDocx(blob) {
-  const Z = window.MKZIP; if (!Z) return blob;
-  try {
-    const f = Z.unzipSync(new Uint8Array(await blob.arrayBuffer()));
-    let doc = Z.strFromU8(f["word/document.xml"]), n = 0;
-    doc = doc.replace(/<w:p(?=[ >])([^>]*)>([\s\S]*?)<\/w:p>/g, (m, at, isi) => {
-      if (!/<w:t[ >]/.test(isi)) return m;
-      const id = ++n, i = isi.indexOf("</w:pPr>"), pos = i >= 0 ? i + 8 : 0;
-      return `<w:p${at}>${isi.slice(0, pos)}<w:permStart w:id="${id}" w:edGrp="everyone"/>${isi.slice(pos)}<w:permEnd w:id="${id}"/></w:p>`;
-    });
-    f["word/document.xml"] = Z.strToU8(doc);
-    let set = Z.strFromU8(f["word/settings.xml"]);
-    if (!/documentProtection/.test(set)) {
-      const lindung = `<w:documentProtection w:edit="readOnly" w:enforcement="1"/>`;
-      set = /<w:displayBackgroundShape\/>/.test(set) ? set.replace("<w:displayBackgroundShape/>", "<w:displayBackgroundShape/>" + lindung) : set.replace(/(<w:settings[^>]*>)/, "$1" + lindung);
-      f["word/settings.xml"] = Z.strToU8(set);
-    }
-    return new Blob([Z.zipSync(f, { level: 6 })], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-  } catch (e) { console.error(e); return blob; }
-}
+
 
 let sibuk = false;
 export async function unduhWord(nama, buat) {
