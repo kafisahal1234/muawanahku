@@ -79,3 +79,7 @@ html[data-tema=gelap] .imp-peta span{background:#26322b;color:#d4dbd7}html[data-
 .tb-row{display:flex;gap:6px;align-items:flex-end}
 .tb-row>:first-child{flex:1}
 .tb-row .icon-btn{margin-bottom:12px}
+/* kolom tanggal di iOS tidak melebar keluar kolom */
+input.in[type=date]{min-width:0;width:100%;max-width:100%;-webkit-appearance:none;appearance:none;display:block;text-align:left}
+input.in[type=date]::-webkit-date-and-time-value{text-align:left}
+.btn-row>*{min-width:0}
