@@ -172,6 +172,12 @@ function tasksFor(st) {
   return out.slice(0, 3);
 }
 
+// tanggal hari ini + Hijriah (kalender Ummul Qura bawaan HP), mis. "Jumat, 17 Jumadilakhir 1448 H"
+function tglHijriah() {
+  const d = new Date();
+  try { const h = new Intl.DateTimeFormat("id-u-ca-islamic-umalqura", { day: "numeric", month: "long", year: "numeric" }).format(d);
+    return L.HARI_ID[d.getDay()] + ", " + h; } catch (e) { return ""; }
+}
 // ---------- kepala beranda (gaya aplikasi: header solid, kartu ringkasan menimpa header) ----------
 function HomeTop({ nama, sub, bell, foto, children, cls }) {
   return html`<header class="ht"><div class="ht-row"><span class="ht-logo applogo"><img src=${APP_LOGO} alt="Logo MuawanahQu" /></span>
@@ -179,7 +185,7 @@ function HomeTop({ nama, sub, bell, foto, children, cls }) {
       <button class="ht-btn ab-btn" aria-label=${bell ? `Pengumuman, ${bell} baru` : "Pengumuman"} onClick=${() => nav.go("pengumuman")}><${Icon} n="bell" s=${23} w=${2.2} />${bell ? html`<b>${bell}</b>` : null}</button>
       ${aiAda() ? html`<button class="ht-btn ab-btn ab-ai" aria-label="Asisten AI" onClick=${() => nav.go("asisten")}><${Icon} n="chat" s=${23} w=${2.2} /></button>` : null}
       <button class="ht-foto" aria-label="Akun saya" onClick=${() => nav.setTab("akun")}><${FotoAv} src=${foto} nama=${nama} size=${42} /></button></div>
-      ${sub ? html`<div class="ht-sub">${sub}</div>` : null}</header>
+      ${sub ? html`<div class="ht-sub">${sub}</div>` : html`<div class="ht-tgl"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="#F2C14E"/></svg>${tglHijriah()}</div>`}</header>
     <section class=${"hc" + (cls ? " " + cls : "")}>${children}</section>`;
 }
 const newPeng = () => all("pengumuman").filter(p => Date.now() - p.ts < 7 * 864e5).length;

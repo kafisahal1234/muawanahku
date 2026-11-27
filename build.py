@@ -15,7 +15,7 @@ for src, dst in [("vendor/pdf.min.mjs", "pdf.min.mjs"), ("vendor/pdf.worker.min.
 try:  # Mode Gelap: dibuat ulang otomatis bila tinycss2 tersedia; bila tidak, pakai src/dark.css yang tersimpan
     import subprocess, sys; subprocess.run([sys.executable, "tools/buat_gelap.py"], check=True, capture_output=True)
 except Exception: pass
-css = open("src/theme.css").read() + open("src/skin.css").read() + open("src/dark.css").read() + open("src/dark_manual.css").read() + open("src/polish.css").read()
+css = open("src/theme.css").read() + open("src/skin.css").read() + open("src/dark.css").read() + open("src/dark_manual.css").read() + open("src/polish.css").read() + open("src/poles.css").read()
 js = open("dist/app.js").read().replace("</script", "<\\/script")
 # ikon aplikasi (PWA) dari logo
 import base64, io, json, re

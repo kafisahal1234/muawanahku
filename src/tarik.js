@@ -12,8 +12,9 @@ let ind, y0 = 0, x0 = 0, tarik = 0, aktif = false, terkunci = false, sibuk = fal
 function indikator() {
   if (ind && document.body.contains(ind)) return ind;
   ind = document.createElement("div"); ind.className = "ptr"; ind.setAttribute("aria-hidden", "true");
-  ind.innerHTML = '<span class="ptr-sp"><svg viewBox="0 0 24 24" width="26" height="26">' +
-    Array.from({ length: 8 }, (_, i) => `<rect x="11" y="2" width="2" height="6" rx="1" transform="rotate(${i * 45} 12 12)" opacity="${(i + 1) / 8}"/>`).join("") + "</svg></span>";
+  // tanda ۞ (rub' al-hizb) seperti di mushaf: dua persegi bersilang + titik emas
+  ind.innerHTML = '<span class="ptr-sp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">' +
+    '<rect x="5.5" y="5.5" width="13" height="13"/><rect x="5.5" y="5.5" width="13" height="13" transform="rotate(45 12 12)"/><circle cx="12" cy="12" r="3" fill="#F2C14E" stroke="none"/></svg></span>';
   document.body.appendChild(ind); return ind;
 }
 const isi = () => document.querySelector(".app > .scr");
@@ -35,7 +36,7 @@ function atur(px, halus) {
   const s = isi(), i = indikator(), tr = "cubic-bezier(.2,.8,.2,1)";
   if (kepala) {
     kepala.style.transition = halus ? `padding-bottom .28s ${tr}` : "none";
-    kepala.style.paddingBottom = px ? padAsli + px + "px" : "";
+    if (px) kepala.style.setProperty("padding-bottom", padAsli + px + "px", "important"); else kepala.style.removeProperty("padding-bottom");
     i.classList.add("tanpa-pita");
     i.style.setProperty("--y", (celahAsli.dasar + celahAsli.atasKartu + px) / 2 + "px");
   } else {
