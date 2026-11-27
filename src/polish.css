@@ -69,3 +69,13 @@ html[data-tema=gelap] .empty>svg{background:#1F2E26;box-shadow:none}
 html[data-tema=gelap] .badge{background:#D42E22}
 .mode-it{font-weight:600;color:var(--g,#0B6B43)}html[data-tema=gelap] .mode-it{color:#6FD3A0}
 .imp-hub{display:block;margin:8px 0 2px}.imp-hub span{display:block;font-size:12.5px;color:var(--mut);margin-bottom:4px}.imp-hub select{min-height:42px;font-size:15px}
+/* impor santri: peta kolom terbaca & data tambahan */
+.imp-peta{display:flex;flex-wrap:wrap;gap:6px}
+.imp-peta span{font-size:12.5px;padding:5px 9px;border-radius:9px;background:#EEF6F1;color:#22352B}
+.imp-peta span.tb{background:#FFF4DD;color:#5a4210}
+html[data-tema=gelap] .imp-peta span{background:#26322b;color:#d4dbd7}html[data-tema=gelap] .imp-peta span.tb{background:#3a3220;color:#f0dcae}
+@media (prefers-color-scheme:dark){html[data-tema=sistem] .imp-peta span{background:#26322b;color:#d4dbd7}html[data-tema=sistem] .imp-peta span.tb{background:#3a3220;color:#f0dcae}}
+.imp-peta b{font-weight:600}
+.tb-row{display:flex;gap:6px;align-items:flex-end}
+.tb-row>:first-child{flex:1}
+.tb-row .icon-btn{margin-bottom:12px}

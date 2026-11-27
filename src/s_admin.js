@@ -7,6 +7,8 @@ import { logUbah } from "./s_koreksi.js";
 import { me, has } from "./common.js";
 import { AiBtn, useAIRun } from "./s_ai.js";
 import { tanyaAI, SISTEM_DASAR } from "./ai.js";
+import { BIODATA } from "./biodata.js";
+const BIO_LAIN = BIODATA.filter(([k]) => !["panggilan", "nis", "lahir"].includes(k));
 
 export function DataMaster() {
   useApp();
@@ -40,7 +42,9 @@ export function SantriAdmin({ asrama, kelas }) {
     ${ed ? html`<${EditSantri} e=${ed} onClose=${() => setEd(null)} />` : null}</div>`;
 }
 function EditSantri({ e, onClose }) {
-  const [f, setF] = useState({ ...e, panggilan: e.panggilan || L.tebakPanggilan(e.nama) }); const [ask, setAsk] = useState(false);
+  const [f, setF] = useState({ ...e, panggilan: e.panggilan || L.tebakPanggilan(e.nama), tambahan: { ...(e.tambahan || {}) } }); const [ask, setAsk] = useState(false);
+  const [lbBaru, setLbBaru] = useState(""), [isiBaru, setIsiBaru] = useState("");
+  const setTb = (l, v) => setF({ ...f, tambahan: { ...f.tambahan, [l]: v } }), hapusTb = l => { const t = { ...f.tambahan }; delete t[l]; setF({ ...f, tambahan: t }); };
   const [pgTulis, setPgTulis] = useState(!!e.panggilan);
   const set = (k, v) => setF({ ...f, [k]: v });
   const setNama = v => setF({ ...f, nama: v, ...(pgTulis ? {} : { panggilan: L.tebakPanggilan(v) }) });
@@ -51,7 +55,9 @@ function EditSantri({ e, onClose }) {
     const id = e.baru ? uid("s") : e.id;
     const asalLama = e.baru ? null : L.HALAQAH.find(h => h.guru === (L.asramaById(e.asrama) || {}).musyrif), asalBaru = L.HALAQAH.find(h => h.guru === (L.asramaById(f.asrama) || {}).musyrif);
     const hq = f.halaqah && !(asalLama && f.halaqah === asalLama.id && f.asrama !== e.asrama) ? f.halaqah : asalBaru ? asalBaru.id : null;
-    const bio = Object.fromEntries(["tempatLahir", "hobi", "cita", "alamat", "ayah", "ibu", "hpWali"].map(k => [k, (f[k] || "").trim()]));
+    const bio = Object.fromEntries(BIO_LAIN.map(([k]) => [k, String(f[k] || "").trim()]));
+    const tb = { ...f.tambahan }; if (lbBaru.trim() && isiBaru.trim()) tb[lbBaru.trim()] = isiBaru.trim();
+    bio.tambahan = Object.fromEntries(Object.entries(tb).map(([l, v]) => [l, String(v || "").trim()]).filter(([l, v]) => l && v));
     const base = { nama: f.nama.trim(), kelas: f.kelas || e.kelas || "", asrama: f.asrama || e.asrama || "", halaqah: hq || undefined, nis: (f.nis || "").trim(), ...bio, ...(f.lahir ? { lahir: f.lahir } : {}) };
     base.panggilan = panggilan;
     if (e.baru) base.wali = (L.hurufKode(panggilan) || "santri") + Math.floor(10 + Math.random() * 89);
@@ -66,8 +72,12 @@ function EditSantri({ e, onClose }) {
     <${Field} label="Nama panggilan" hint="Dipakai untuk kode akses wali. Contoh: Ahmad Fulan bin Fulan → Fulan"><input class="in" value=${f.panggilan || ""} placeholder=${L.tebakPanggilan(f.nama) || "Nama panggilan"} onInput=${x => { setPgTulis(true); set("panggilan", x.target.value); }} /></${Field}>
     <div class="btn-row"><${Field} label="NIS" hint="Tampil di rapor"><input class="in" inputmode="numeric" value=${f.nis || ""} onInput=${x => set("nis", x.target.value)} /></${Field}>
     <${Field} label="Tanggal lahir" hint=${f.lahir ? "Untuk kode akses wali" : "Belum diisi · sementara pakai tanggal contoh"}><input class="in" type="date" value=${f.lahir || ""} onInput=${x => set("lahir", x.target.value)} /></${Field}></div>
-    <details class="bio-det"><summary>Biodata lain (tampil di profil wali)</summary>
-      ${[["tempatLahir", "Tempat lahir"], ["hobi", "Hobi"], ["cita", "Cita-cita"], ["alamat", "Alamat"], ["ayah", "Nama ayah"], ["ibu", "Nama ibu"], ["hpWali", "No. HP wali"]].map(([k, lab]) => html`<${Field} label=${lab}><input class="in" value=${f[k] || ""} inputmode=${k === "hpWali" ? "tel" : null} onInput=${x => set(k, x.target.value)} /></${Field}>`)}</details>
+    <details class="bio-det" open=${!e.baru && (BIO_LAIN.some(([k]) => e[k]) || Object.keys(e.tambahan || {}).length > 0)}><summary>Biodata lain (tampil di profil wali)</summary>
+      ${BIO_LAIN.map(([k, lab]) => html`<${Field} label=${lab}>${k === "jk" ? html`<select class="in" value=${f.jk || ""} onChange=${x => set("jk", x.target.value)}><option value="">—</option><option>Laki-laki</option><option>Perempuan</option></select>`
+        : html`<input class="in" value=${f[k] || ""} inputmode=${k.startsWith("hp") ? "tel" : null} onInput=${x => set(k, x.target.value)} />`}</${Field}>`)}
+      <p class="small" style="margin:4px 0 8px"><b>Data tambahan</b> · kolom lain dari impor atau isian sendiri (misal ukuran baju)</p>
+      ${Object.entries(f.tambahan).map(([l, v]) => html`<div class="tb-row"><${Field} label=${l}><input class="in" value=${v} onInput=${x => setTb(l, x.target.value)} /></${Field}><button type="button" class="icon-btn" aria-label=${"Hapus " + l} onClick=${() => hapusTb(l)}><${Icon} n="trash" s=${18} c="#B3261E" /></button></div>`)}
+      <div class="btn-row"><${Field} label="Nama kolom baru"><input class="in" value=${lbBaru} placeholder="Misal: Ukuran baju" onInput=${x => setLbBaru(x.target.value)} /></${Field}><${Field} label="Isi"><input class="in" value=${isiBaru} onInput=${x => setIsiBaru(x.target.value)} /></${Field}></div></details>
     ${f.nama.trim() ? html`<div class="pos" style="margin:0 0 12px"><span>Kode akses wali${f.lahir ? "" : " (tanggal lahir belum diisi)"}</span><b>${f.lahir ? kode : "—"}</b></div>` : null}
     ${kembar ? html`<div class="note red"><${Icon} n="alert" s=${18} />Kode ${kode} sudah dipakai ${kembar.nama}. Bedakan nama panggilannya.</div>` : null}
     <div class="btn-row"><${Field} label="Kelas"><select class="in" value=${f.kelas} onChange=${x => set("kelas", x.target.value)}>${L.KELAS.map(k => html`<option value=${k.id}>${k.nama}</option>`)}</select></${Field}>

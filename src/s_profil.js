@@ -6,6 +6,7 @@ import { S, get, put, toast } from "./store.js";
 import * as L from "./logic.js";
 import { me, FotoAv, FotoBesar, fotoPersegi, kunciFoto } from "./common.js";
 import { logUbah } from "./s_koreksi.js";
+import { BIODATA } from "./biodata.js";
 
 const BIO = [["tempatLahir", "Tempat lahir", "text", "Metro"], ["tglLahir", "Tanggal lahir", "date", ""], ["jk", "Jenis kelamin", "jk", ""], ["hp", "No. HP / WhatsApp", "tel", "08xx"],
   ["email", "Email", "email", "nama@email.com"], ["alamat", "Alamat", "area", "Alamat tinggal"], ["pendidikan", "Pendidikan terakhir", "text", "S1 Pendidikan …"],
@@ -122,15 +123,18 @@ export function WaliProfil() {
   useApp();
   const s = L.santriById(nav.user.id), a = L.asramaAman(s.asrama), [ed, setEd] = useState(false), [f, setF] = useState(null);
   const val = k => (k === "lahir" ? (s.lahir ? L.fmtTgl(s.lahir, false) : null) : s[k]);
-  const mulai = () => { setF({ nama: s.nama, ...Object.fromEntries(BIO_S.map(([k]) => [k, s[k] || ""])) }); setEd(true); };
+  // kolom biodata lain yang sudah terisi (dari impor admin) ikut tampil & bisa diubah wali; data tambahan hanya ditampilkan
+  const LAIN = BIODATA.filter(([k]) => !BIO_S.some(([b]) => b === k) && s[k]).map(([k, l]) => [k, l, k.startsWith("hp") ? "tel" : "text"]), SEMUA = [...BIO_S, ...LAIN];
+  const tambahan = Object.entries(s.tambahan || {}).filter(([, v]) => v);
+  const mulai = () => { setF({ nama: s.nama, ...Object.fromEntries(SEMUA.map(([k]) => [k, s[k] || ""])) }); setEd(true); };
   const simpan = async () => {
     if (!f.nama.trim()) return toast("Nama lengkap ananda wajib diisi.", "err");
-    const lama = (S.data.santriEdit || {})[s.id] || {}, baru = { ...lama, nama: f.nama.trim(), ...Object.fromEntries(BIO_S.map(([k]) => [k, String(f[k] || "").trim()])), kode: L.kodeAkses(s), diubahWali: Date.now() };
+    const lama = (S.data.santriEdit || {})[s.id] || {}, baru = { ...lama, nama: f.nama.trim(), ...Object.fromEntries(SEMUA.map(([k]) => [k, String(f[k] || "").trim()])), kode: L.kodeAkses(s), diubahWali: Date.now() };
     if (await put("santriEdit", s.id, baru)) { logUbah("ubah", "santriEdit", s.id, `Biodata ${baru.nama} diperbarui oleh wali`, lama); toast("Biodata ananda tersimpan"); setEd(false); }
   };
   if (ed) return html`<${SubHeader} title="Ubah Biodata Ananda" sub=${s.nama} />
     <div class="wrap form-page"><${Card}><${Field} label="Nama lengkap"><input class="in" value=${f.nama} onInput=${e => setF({ ...f, nama: e.target.value })} /></${Field}>
-      ${BIO_S.map(([k, lab, t]) => html`<${Field} label=${lab}>${t === "area" ? html`<textarea class="in" rows="2" value=${f[k]} onInput=${e => setF({ ...f, [k]: e.target.value })}></textarea>`
+      ${SEMUA.map(([k, lab, t]) => html`<${Field} label=${lab}>${t === "area" ? html`<textarea class="in" rows="2" value=${f[k]} onInput=${e => setF({ ...f, [k]: e.target.value })}></textarea>`
         : html`<input class="in" type=${t === "tel" ? "tel" : t} inputmode=${t === "tel" ? "tel" : null} value=${f[k]} onInput=${e => setF({ ...f, [k]: e.target.value })} />`}</${Field}>`)}</${Card}>
       <${Hint}>Kode akses masuk tetap <b>${L.kodeAkses(s)}</b> walaupun nama atau tanggal lahir diubah.</${Hint}>
       <div class="sticky-act btn-stack"><${Btn} icon="check" onClick=${simpan}>Simpan biodata</${Btn}><${Btn} kind="text" onClick=${() => setEd(false)}>Batal</${Btn}></div></div>`;
@@ -140,7 +144,8 @@ export function WaliProfil() {
       <div class="prof-bar"><i style=${`width:${Math.round((isi / BIO_S.length) * 100)}%`}></i></div><small>Biodata terisi ${isi} dari ${BIO_S.length}</small></div>
       <${Section} t="Kode akses" /><${Card} cls="kv-card"><div class="kv"><span>Kode akses wali</span><b>${L.kodeAkses(s)}</b></div><p class="small" style="margin:6px 0 0">Terkunci, tidak bisa diubah. Simpan baik-baik untuk masuk ke aplikasi.</p></${Card}>
       <${Section} t="Biodata" /><${Card} cls="kv-card"><div class="kv"><span>Nama lengkap</span><b>${s.nama}</b></div>
-        ${BIO_S.map(([k, lab]) => html`<div class="kv"><span>${lab}</span><b class=${val(k) ? "" : "kosong"}>${val(k) || "Belum diisi"}</b></div>`)}</${Card}>
+        ${SEMUA.map(([k, lab]) => html`<div class="kv"><span>${lab}</span><b class=${val(k) ? "" : "kosong"}>${val(k) || "Belum diisi"}</b></div>`)}</${Card}>
+      ${tambahan.length ? html`<${Section} t="Data tambahan dari pondok" /><${Card} cls="kv-card">${tambahan.map(([l, v]) => html`<div class="kv"><span>${l}</span><b>${v}</b></div>`)}</${Card}>` : null}
       <${Btn} icon="edit" onClick=${mulai}>Ubah biodata ananda</${Btn}>
       <p class="small center mt8">Kelas, asrama, dan halaqah ditentukan pondok.</p></div>`;
 }

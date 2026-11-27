@@ -9,6 +9,8 @@ import { logUbah } from "./s_koreksi.js";
 import { tanyaAI, aiAda, aiNama, SISTEM_DASAR } from "./ai.js";
 import { bacaBerkas, parseCSV, TERIMA } from "./berkas.js";
 import { bacaFormatHafalan, cocokFormat, keHalaman, keIqro, fmt as fmtHal } from "./baca_hafalan.js";
+import { BIODATA, LABEL_BIO, KUNCI_BIO, bacaDataSantri, rapikanBaris, keTanggal } from "./biodata.js";
+export { keTanggal };
 
 // ---------- alat bantu ----------
 const norm = s => String(s || "").toLowerCase().replace(/\b(muhammad|muhamad|moh|muh|mohammad|m)\b\.?/g, " ").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
@@ -256,34 +258,7 @@ export function AwalSheet({ judul, awal, onSimpan, onClose, tombol = "Pakai" }) 
 }
 
 // ================= IMPOR BIODATA SANTRI =================
-const BIO = [["panggilan", "Panggilan"], ["nis", "NIS"], ["lahir", "Tgl lahir"], ["tempatLahir", "Tempat lahir"], ["ayah", "Ayah"], ["ibu", "Ibu"], ["hpWali", "HP wali"], ["alamat", "Alamat"], ["hobi", "Hobi"], ["cita", "Cita-cita"]];
-const BULAN = { jan: 1, feb: 2, peb: 2, mar: 3, apr: 4, mei: 5, may: 5, jun: 6, jul: 7, agu: 8, agt: 8, aug: 8, sep: 9, okt: 10, oct: 10, nov: 11, nop: 11, des: 12, dec: 12 };
-// Pembaca format pesan WA "Pendataan Data Santri" (tanpa AI): *1. Nama Lengkap* lalu Nama Panggilan / Tanggal Lahir / No. WA
-export function bacaFormatBiodata(teks) {
-  const t = String(teks || ""); if (!/nama\s*panggilan\s*:|no\.?\s*(wa|hp)[^:\n]*(bunda|wali)[^:\n]*:/i.test(t)) return null;
-  const isi = v => { const x = String(v || "").replace(/[*_]/g, "").trim(); return /^(\?|-|–|\.\.\.|…)?$/.test(x) ? "" : x; };
-  const out = []; let r = null;
-  for (const baris of t.split(/\r?\n/)) {
-    if (/^\s*\*?\s*(keterangan|catatan)\b/i.test(baris)) { r = null; continue; } // bagian keterangan di akhir pesan
-    if (/^\s*•/.test(baris)) continue;
-    const h = baris.match(/^\s*\*?\s*(\d{1,3})\s*[.)]\s*(.+?)\s*\*?\s*$/);
-    if (h && !/:/.test(h[2])) { r = { nama: h[2].replace(/[*_]/g, "").trim(), panggilan: "", tanggal_lahir: "", hp_wali: "" }; out.push(r); continue; }
-    const m = baris.match(/^\s*[•\-]?\s*([^:]{3,40}?)\s*:\s*(.*)$/); if (!r || !m) continue;
-    const k = m[1].toLowerCase();
-    if (/panggilan/.test(k)) r.panggilan = isi(m[2]);
-    else if (/tanggal|tgl/.test(k)) r.tanggal_lahir = isi(m[2]);
-    else if (/wa|hp|telp|nomor|no\b|no\./.test(k)) r.hp_wali = isi(m[2]).replace(/[^\d+]/g, "");
-  }
-  return out.filter(x => x.nama.length > 2);
-}
-export function keTanggal(v) {
-  const t = String(v || "").trim().toLowerCase().replace(/\s*,\s*/g, " ").replace(/\s+/g, " "); if (!t) return "";
-  let m = t.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/); if (m) return ok(+m[1], +m[2], +m[3]);
-  m = t.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/); if (m) return ok(+m[3] < 100 ? 2000 + +m[3] : +m[3], +m[2], +m[1]);
-  m = t.match(/(\d{1,2})\s+([a-z]+)\.?\s+(\d{4})/); if (m && BULAN[m[2].slice(0, 3)]) return ok(+m[3], BULAN[m[2].slice(0, 3)], +m[1]);
-  return "";
-  function ok(y, mo, d) { if (y < 1990 || y > 2030 || mo < 1 || mo > 12 || d < 1 || d > 31) return ""; return `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`; }
-}
+const BIO = BIODATA;
 const keKelas = v => { const t = String(v || "").toUpperCase().replace(/\s|KELAS|KLS/g, ""); return L.KELAS.some(k => k.id === t) ? t : ""; };
 const keAsrama = v => { const t = String(v || "").toLowerCase().trim(); if (!t) return ""; const a = L.ASRAMA.find(x => x.id === t || x.nama.toLowerCase() === t) || L.ASRAMA.find(x => x.nama.toLowerCase().includes(t) || t.includes(x.nama.toLowerCase())); return a ? a.id : ""; };
 function santriLokal(tabel) {
@@ -300,19 +275,30 @@ Santri yang sudah ada di aplikasi (id|nama|kelas|asrama):
 Kelas yang ada: {KELAS}. Asrama yang ada: {ASRAMA}.
 
 Aturan:
-- Satu objek untuk tiap santri di dokumen. Abaikan judul, nomor urut, baris kosong.
+- Satu objek untuk tiap santri di dokumen. Abaikan judul, nomor urut, baris kosong, dan bagian keterangan/petunjuk pengisian.
 - santri_id: id santri yang sama dari daftar di atas (ejaan boleh sedikit beda; M./Muh. = Muhammad). Bila santri baru/tidak ada, isi null.
+- Masukkan setiap data ke kolom yang sesuai: {KOLOM}.
 - tanggal_lahir dalam format YYYY-MM-DD (ubah dari format apa pun, misal "12 Januari 2013" atau "12/01/2013" = hari/bulan/tahun). Bila ada "Tempat, tanggal" pisahkan ke tempat_lahir.
 - kelas hanya salah satu dari daftar kelas; asrama hanya nama dari daftar asrama; bila tidak jelas, kosongkan.
-- hp_wali hanya angka (boleh diawali 0 atau 62).
-- panggilan: nama panggilan santri bila tertulis (satu kata, misal "Fulan"); kosongkan bila tidak ada.
+- Nomor HP hanya angka. hp_wali = nomor WA utama wali/bunda; bila hanya ada nomor ayah/ibu, isi juga hp_ayah/hp_ibu.
+- panggilan: nama panggilan santri bila tertulis (satu kata); kosongkan bila tidak ada.
+- Data lain yang tidak punya kolom (misal ukuran baju, golongan darah, riwayat penyakit, prestasi) masukkan ke "lainnya" dengan label aslinya, misal {"Ukuran baju":"L"}. Jangan ada data yang dibuang.
 - Kosongkan ("") data yang tidak ada di dokumen. Jangan mengarang.
-Jawab hanya JSON: {"baris":[{"nama":"","santri_id":null,"panggilan":"","nis":"","kelas":"","asrama":"","tanggal_lahir":"","tempat_lahir":"","ayah":"","ibu":"","hp_wali":"","alamat":"","hobi":"","cita":"","catatan":""}]}`;
+Jawab hanya JSON: {"baris":[{"nama":"","santri_id":null,"kelas":"","asrama":"","tanggal_lahir":"","tempat_lahir":"","hp_wali":"",{KEYS},"lainnya":{},"catatan":""}]}`;
+const KUNCI_AI = { lahir: "tanggal_lahir", tempatLahir: "tempat_lahir", hpWali: "hp_wali", hpAyah: "hp_ayah", hpIbu: "hp_ibu", anakKe: "anak_ke", asalSekolah: "asal_sekolah", pekerjaanAyah: "pekerjaan_ayah", pekerjaanIbu: "pekerjaan_ibu", namaWali: "nama_wali" };
+const kunciAI = k => KUNCI_AI[k] || k;
+const promptSantri = () => PROMPT_SANTRI.replace("{SANTRI}", daftarSantri()).replace("{KELAS}", L.KELAS.map(k => k.id).join(", ")).replace("{ASRAMA}", L.ASRAMA.map(a => a.nama).join(", "))
+  .replace("{KOLOM}", BIODATA.map(([k, l]) => `${kunciAI(k)} (${l})`).join(", ")).replace("{KEYS}", BIODATA.filter(([k]) => !["lahir", "tempatLahir", "hpWali"].includes(k)).map(([k]) => `"${kunciAI(k)}":""`).join(","));
+// baris JSON dari AI → data rapi (lewat kamus biodata yang sama dengan pembaca tanpa AI)
+function dariAI(r) {
+  const pasang = [["Nama", r.nama], ["Kelas", r.kelas], ["Asrama", r.asrama], ...BIODATA.map(([k, l]) => [l, r[kunciAI(k)]]), ...Object.entries(r.lainnya && typeof r.lainnya === "object" ? r.lainnya : {})];
+  return { ...rapikanBaris(pasang), santri_id: r.santri_id, catatan: r.catatan || "" };
+}
 
 function waliBaru(nama) { const w = nama.trim().split(/\s+/).find(x => !/^(m\.?|muh\.?|muhammad|muhamad|ahmad)$/i.test(x)) || "santri"; return { wali: (L.hurufKode(w) || "santri") + Math.floor(10 + Math.random() * 89), panggilan: w }; }
 // Bandingkan baris dokumen dengan santri lama: hanya kolom yang berbeda yang diperbarui (id santri tetap → data hafalan aman)
 function nilaiCocok(s, f) {
-  const beda = s ? BIO.filter(([k]) => f[k] && f[k] !== (s[k] || "")).map(([k]) => k) : [];
+  const beda = s ? [...BIO.filter(([k]) => f[k] && f[k] !== (s[k] || "")).map(([k]) => k), ...Object.entries(f.tambahan || {}).filter(([l, v]) => v && v !== ((s.tambahan || {})[l] || "")).map(([l]) => "t:" + l)] : [];
   if (s && f.kelas && f.kelas !== s.kelas) beda.push("kelas"); if (s && f.asrama && f.asrama !== s.asrama) beda.push("asrama");
   const st = s ? (beda.length ? "perbarui" : "sama") : "baru";
   return { sid: s ? s.id : "", beda, st, ikut: st !== "sama" };
@@ -324,6 +310,7 @@ function calonMirip(f, semua) {
 export function ImporSantri() {
   useApp();
   const [langkah, setLangkah] = useState(""); const [busy, setBusy] = useState(false); const [rows, setRows] = useState(null); const [dok, setDok] = useState("");
+  const [peta, setPeta] = useState([]);
   const [kelas, setKelas] = useState("7"); const [asr, setAsr] = useState(L.ASRAMA[0].id); const [sb, setSB] = useState(false);
   const semua = L.santriList();
   const baca = async inp => {
@@ -331,23 +318,24 @@ export function ImporSantri() {
     try {
       const d = await siapkanDokumen(inp, setLangkah); setDok(d.nama);
       let hasil;
-      const wa = d.teks ? bacaFormatBiodata(d.teks) : null; // format pesan WA pendataan: dibaca pasti, tanpa AI
-      if (wa && wa.length) hasil = wa;
+      const lokal = bacaDataSantri(d); // dokumen berlabel/berjudul kolom: dibaca pasti tanpa AI, semua kolom ikut
+      if (lokal && lokal.baris.length) { hasil = lokal.baris; setPeta(lokal.peta); }
       else if (aiAda()) {
         setLangkah(`${aiNama()} sedang membaca isi dokumen…`);
-        const j = await tanyaAI({ sistem: SISTEM_DASAR, json: true, berkas: d.berkas, teks: PROMPT_SANTRI.replace("{SANTRI}", daftarSantri()).replace("{KELAS}", L.KELAS.map(k => k.id).join(", ")).replace("{ASRAMA}", L.ASRAMA.map(a => a.nama).join(", ")) + isiDok(d) });
-        hasil = (Array.isArray(j) ? j : j.baris || []).filter(r => r && r.nama);
-      } else hasil = santriLokal(d.tabel || []);
+        const j = await tanyaAI({ sistem: SISTEM_DASAR, json: true, berkas: d.berkas, teks: promptSantri() + isiDok(d) });
+        hasil = (Array.isArray(j) ? j : j.baris || []).filter(r => r && r.nama).map(dariAI);
+        const ada = new Set(hasil.flatMap(x => [...KUNCI_BIO.filter(k => x[k]), ...Object.keys(x.tambahan || {}).map(l => "t:" + l)]));
+        setPeta([{ label: "Nama", ke: "nama" }, ...[...ada].map(k => (k.startsWith("t:") ? { label: k.slice(2), ke: null } : { label: LABEL_BIO[k], ke: k }))]);
+      } else { hasil = santriLokal(d.tabel || []).map(x => ({ ...x, tambahan: {} })); setPeta([{ label: "Nama", ke: "nama" }]); }
       if (!hasil.length) throw new Error("Tidak ada data santri yang terbaca dari dokumen ini.");
       const dipakai = new Set();
       setRows(hasil.map((r, i) => {
         let s = r.santri_id && semua.find(x => x.id === r.santri_id); if (s && mirip(r.nama, s.nama) < 0.35) s = null;
         if (!s) { const c = cocokkan(r.nama, semua); if (c.sc >= 0.82) s = c.best; }
-        const lhr = keTanggal(r.tanggal_lahir);
+        const lhr = r.lahir || keTanggal(r.tanggal_lahir);
         // nama ditulis beda (mis. "M." vs "Muhammad") tetapi tanggal lahir sama → santri yang sama
         if (!s && lhr) { const c = cocokkan(r.nama, semua.filter(x => x.lahir === lhr)); if (c.best && c.sc >= 0.5) s = c.best; }
-        const f = { nama: String(r.nama).trim(), panggilan: String(r.panggilan || "").trim(), nis: String(r.nis || "").trim(), lahir: keTanggal(r.tanggal_lahir), tempatLahir: String(r.tempat_lahir || "").trim(), ayah: String(r.ayah || "").trim(), ibu: String(r.ibu || "").trim(),
-          hpWali: String(r.hp_wali || "").replace(/[^\d+]/g, ""), alamat: String(r.alamat || "").trim(), hobi: String(r.hobi || "").trim(), cita: String(r.cita || "").trim(), kelas: keKelas(r.kelas), asrama: keAsrama(r.asrama) };
+        const f = { nama: String(r.nama).trim(), ...Object.fromEntries(KUNCI_BIO.map(k => [k, String(r[k] || "").trim()])), lahir: lhr, kelas: keKelas(r.kelas), asrama: keAsrama(r.asrama), tambahan: r.tambahan || {} };
         if (s && dipakai.has(s.id)) s = null; if (s) dipakai.add(s.id);
         return { k: i, f, ...nilaiCocok(s, f), catatan: r.catatan || "", calon: s ? [] : calonMirip(f, semua) };
       }));
@@ -361,19 +349,27 @@ export function ImporSantri() {
     setSB(true); let b = 0, u = 0;
     for (const r of ikut) {
       const ex = (S.data.santriEdit || {});
-      if (r.st === "perbarui") { const o = Object.fromEntries(r.beda.map(k => [k, r.f[k]])); if (await put("santriEdit", r.sid, { ...(ex[r.sid] || {}), ...o })) u++; }
-      else { const o = Object.fromEntries(Object.entries(r.f).filter(([k, v]) => v && k !== "kelas" && k !== "asrama"));
+      if (r.st === "perbarui") {
+        const o = Object.fromEntries(r.beda.filter(k => !k.startsWith("t:")).map(k => [k, r.f[k]])), tb = r.beda.filter(k => k.startsWith("t:")).map(k => k.slice(2));
+        if (tb.length) o.tambahan = { ...((ex[r.sid] || {}).tambahan || (L.santriById(r.sid) || {}).tambahan || {}), ...Object.fromEntries(tb.map(l => [l, r.f.tambahan[l]])) };
+        if (await put("santriEdit", r.sid, { ...(ex[r.sid] || {}), ...o })) u++; }
+      else { const o = Object.fromEntries(Object.entries(r.f).filter(([k, v]) => v && k !== "kelas" && k !== "asrama" && k !== "tambahan"));
+        if (Object.keys(r.f.tambahan || {}).length) o.tambahan = r.f.tambahan;
         if (await put("santriEdit", uid("s"), { ...o, ...waliBaru(r.f.nama), kelas: r.f.kelas || kelas, asrama: r.f.asrama || asr })) b++; }
     }
     logUbah("ubah", "santriEdit", "impor", `Impor data santri dari ${dok}: ${u} diperbarui, ${b} baru`);
     setSB(false); toast(`${u} santri diperbarui, ${b} santri baru`); nav.back();
   };
   const lab = Object.fromEntries([...BIO, ["kelas", "Kelas"], ["asrama", "Asrama"]]);
+  const tampil = (r, k) => (k.startsWith("t:") ? r.f.tambahan[k.slice(2)] : k === "asrama" ? L.asramaAman(r.f[k]).nama : k === "lahir" ? L.fmtTgl(r.f[k]) : r.f[k]);
+  const ke = x => (x.ke === "nama" ? "Nama lengkap" : x.ke === "ttl" ? "Tempat & tanggal lahir" : x.ke === "kelas" ? "Kelas" : x.ke === "asrama" ? "Asrama" : x.ke ? LABEL_BIO[x.ke] : "Data tambahan");
   return html`<${SubHeader} title="Impor Data Santri" sub="Biodata dari dokumen apa pun" />
-    <div class="wrap">${!rows ? html`<${Hint}>Unggah daftar santri (Excel, Word, PDF, foto, atau teks). Bisa untuk menambah santri baru sekaligus melengkapi data yang sudah ada: NIS, tanggal lahir, nama orang tua, HP wali, alamat.</${Hint}>
-      <${PilihDokumen} onBaca=${baca} busy=${busy} langkah=${langkah} contoh=${"Contoh:\n1. Ahmad Fauzi, NIS 2301, Bandar Lampung 12-03-2013, Ayah: Budi\n2. M Raya Anugrah lahir 5 Mei 2012 kelas 8"} />`
+    <div class="wrap">${!rows ? html`<${Hint}>Unggah daftar santri (Excel, Word, PDF, foto, atau teks). Isi apa saja yang ada: nama, panggilan, tanggal lahir, No. WA, NIS, hobi, alamat, orang tua, sampai kolom lain seperti ukuran baju. Setiap kolom otomatis dimasukkan ke tempat yang sesuai; kolom yang belum punya tempat disimpan sebagai data tambahan.</${Hint}>
+      <${PilihDokumen} onBaca=${baca} busy=${busy} langkah=${langkah} contoh=${"Contoh:\nNama: Ahmad Fauzi\nPanggilan: Fauzi\nTgl lahir: 12-03-2013\nNo WA: 0812 3456 7890\nNIS: 2301\nHobi: Futsal\n\nNama: M Raya Anugrah, Panggilan: Raya, TTL: Metro, 5 Mei 2012"} />`
     : html`<${Card}><div class="stats"><${Stat} label="Diperbarui" value=${n("perbarui")} /><${Stat} label="Baru" value=${n("baru")} tone="blue" /><${Stat} label="Tanpa perubahan" value=${n("sama")} tone="gold" /></div>
         <p class="small" style="margin:8px 0 0">Dari <b>${dok}</b>. Hanya kolom yang terisi di dokumen yang diperbarui. Data hafalan, absen, dan nilai tetap tersambung karena santri lama diperbarui, bukan dibuat ulang. Bila panggilan atau tanggal lahir berubah, kode akses wali ikut berubah.</p></${Card}>
+      ${peta.length > 1 ? html`<${Card} title="Kolom yang terbaca"><div class="imp-peta">${peta.map(x => html`<span class=${x.ke ? "" : "tb"}><b>${x.label}</b> → ${ke(x)}</span>`)}</div>
+        ${peta.some(x => !x.ke) ? html`<p class="small" style="margin:8px 0 0">Kolom tanpa tempat khusus disimpan sebagai <b>Data tambahan</b> di biodata santri, jadi tidak ada data yang hilang.</p>` : null}</${Card}>` : null}
       ${rows.some(r => r.st === "baru" && (!r.f.kelas || !r.f.asrama)) ? html`<${Card} title="Untuk santri baru yang kelas/asramanya tidak tertulis"><div class="btn-row"><${Field} label="Kelas"><select class="in" value=${kelas} onChange=${e => setKelas(e.target.value)}>${L.KELAS.map(k => html`<option value=${k.id}>${k.nama}</option>`)}</select></${Field}>
         <${Field} label="Asrama"><select class="in" value=${asr} onChange=${e => setAsr(e.target.value)}>${L.ASRAMA.map(a => html`<option value=${a.id}>${a.nama}</option>`)}</select></${Field}></div></${Card}>` : null}
       <div class="imp-list">${rows.map(r => { const s = r.sid && L.santriById(r.sid);
@@ -381,11 +377,11 @@ export function ImporSantri() {
           <div class="imp-top"><label class="imp-cek"><input type="checkbox" checked=${r.ikut && r.st !== "sama"} disabled=${r.st === "sama"} onChange=${e => ubah(r.k, { ikut: e.target.checked })} /></label>
             <div class="imp-t"><b>${s ? s.nama : r.f.nama}</b><small>${s ? (s.nama !== r.f.nama ? `Di dokumen: ${r.f.nama} · ` : "") + `Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama}` : `Santri baru · kelas ${r.f.kelas || kelas} · ${L.asramaAman(r.f.asrama || asr).nama}`}</small></div>
             <${Pill} t=${{ perbarui: "Perbarui", baru: "Baru", sama: "Sama" }[r.st]} tone=${{ perbarui: "green", baru: "blue", sama: "muted" }[r.st]} /></div>
-          ${r.st === "perbarui" ? html`<div class="imp-beda">${r.beda.map(k => html`<span><i>${lab[k]}</i> ${k === "asrama" ? L.asramaAman(r.f[k]).nama : k === "lahir" ? L.fmtTgl(r.f[k]) : r.f[k]}</span>`)}</div>` : null}
+          ${r.st === "perbarui" ? html`<div class="imp-beda">${r.beda.map(k => html`<span><i>${k.startsWith("t:") ? k.slice(2) : lab[k]}</i> ${tampil(r, k)}</span>`)}</div>` : null}
           ${!r.sid && r.calon && r.calon.length ? html`<label class="imp-hub"><span>Santri lama dengan nama mirip? Hubungkan agar data hafalannya tetap menyambung:</span>
             <select class="in" value="" onChange=${e => hubungkan(r.k, e.target.value)}><option value="">Tetap sebagai santri baru</option>${r.calon.map(c => html`<option value=${c.id}>${c.nama} · kelas ${c.kelas} · ${L.asramaAman(c.asrama).nama}</option>`)}</select></label>` : null}
           ${r.sid && r.calon && r.calon.some(c => c.id === r.sid) ? html`<button type="button" class="link" style="min-height:36px" onClick=${() => hubungkan(r.k, "")}>Batalkan, jadikan santri baru</button>` : null}
-          ${r.st === "baru" ? html`<div class="imp-beda">${BIO.filter(([k]) => r.f[k]).map(([k, l]) => html`<span><i>${l}</i> ${k === "lahir" ? L.fmtTgl(r.f[k]) : r.f[k]}</span>`)}</div>` : null}
+          ${r.st === "baru" ? html`<div class="imp-beda">${[...BIO.filter(([k]) => r.f[k]).map(([k]) => k), ...Object.keys(r.f.tambahan || {}).map(l => "t:" + l)].map(k => html`<span><i>${k.startsWith("t:") ? k.slice(2) : lab[k]}</i> ${tampil(r, k)}</span>`)}</div>` : null}
           ${r.catatan ? html`<small class="imp-cat">${r.catatan}</small>` : null}</div>`; })}</div>
       <div class="sticky-act"><div class="btn-row"><${Btn} kind="ghost" onClick=${() => setRows(null)}>Ulangi</${Btn}><${Btn} icon="check" disabled=${!ikut.length || sb} onClick=${simpan}>${sb ? "Menyimpan…" : `Simpan ${ikut.length} santri`}</${Btn}></div></div>`}</div>`;
 }
