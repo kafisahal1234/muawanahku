@@ -2,7 +2,7 @@
 // Semua pesan dikirim dari WhatsApp ustadz yang menekan tombol: aplikasi hanya menyiapkan teksnya.
 import { useState } from "preact/hooks";
 import { html, nav, useApp, Icon, Card, SubHeader, Row, Pill, Btn, Empty, Field, Seg, Sheet } from "./ui.js";
-import { all, toast } from "./store.js";
+import { all, get, toast } from "./store.js";
 import * as L from "./logic.js";
 import { me } from "./common.js";
 
@@ -146,13 +146,19 @@ const barisKontak = (st, s, sub, pill) => html`<${Row} name=${st.pendek || st.na
 export function KontakUstadz() {
   useApp();
   const s = nav.user && nav.user.kind === "wali" ? L.santriById(nav.user.id) : null;
-  if (!s) return html`<${SubHeader} title="Kontak ustadz" /><div class="wrap"><${Empty} t="Halaman ini untuk wali santri." /></div>`;
+  if (!s) return html`<${SubHeader} title="Hubungi ustadz" /><div class="wrap"><${Empty} t="Halaman ini untuk wali santri." /></div>`;
   const grup = kontakUntukSantri(s).map(g => ({ ...g, orang: g.orang.filter(bisaDihubungi) })).filter(g => g.orang.length);
-  return html`<${SubHeader} title="Kontak ustadz" sub=${`Hubungi sesuai keperluan · ananda ${s.nama}`} />
-    <div class="wrap">
-      ${grup.length ? html`${grup.map(g => html`<${Card} title=${g.judul}><p class="small" style="margin:-4px 0 6px">${g.d}</p><div class="list">${g.orang.map(st => barisKontak(st, s, st.nama !== st.pendek ? st.nama : g.judul, "WhatsApp"))}</div></${Card}>`)}
-        <p class="small" style="margin:4px 4px 0">Ketuk nama untuk membuka WhatsApp dengan salam pembuka. Mohon menghubungi sesuai keperluan dan pada jam yang wajar; untuk hal sehari-hari hubungi Wali Asrama terlebih dahulu.</p>`
+  const IC = { musyrif: "home2", wadir_kesantrian: "shield", wadir_tahfidz: "bookopen", wadir_kurikulum: "calendar", mudir: "star", admin: "settings" };
+  const noTampil = hp => { let d = String(hp || "").replace(/\D/g, ""); if (d.startsWith("62")) d = "0" + d.slice(2); return d.replace(/^(\d{4})(\d{4})(\d+)$/, "$1 $2 $3"); };
+  return html`<${SubHeader} title="Hubungi ustadz" sub="Pilih sesuai keperluan Ayah/Bunda" />
+    <div class="wrap wl-wrap">
+      ${grup.length ? grup.map(g => html`<section class="ku-card">
+          <header class="ku-h"><span class="ku-ic"><${Icon} n=${IC[g.k] || "user"} s=${20} /></span><div><b>${g.judul}</b><small>${g.d}</small></div></header>
+          ${g.orang.map(st => html`<div class="ku-org"><span class="ku-foto">${(get("profil", st.id) || {}).foto ? html`<img src=${get("profil", st.id).foto} alt=${"Foto " + st.nama} />` : html`<i>${L.initials(String(st.pendek || st.nama).replace(/^Ust(dzh|adz)?\.?\s*/i, ""))}</i>`}</span>
+            <span class="ku-t"><b>${st.nama}</b><small>${noTampil(st.hp)}</small></span>
+            <button type="button" class="ku-wa" aria-label=${"Chat WhatsApp " + st.nama} onClick=${() => bukaWaWali(st.hp, pesanKeUstadz(st, s))}><${Icon} n="chat" s=${17} /> Chat</button></div>`)}</section>`)
         : html`<${Card}><${Empty} t="Nomor WhatsApp ustadz belum diisi oleh pondok." icon="chat" /></${Card}>`}
+      ${grup.length ? html`<p class="wl-note" style="margin:0 6px">Tombol Chat membuka WhatsApp dengan salam pembuka. Mohon menghubungi pada jam yang wajar; untuk urusan sehari-hari hubungi Wali Asrama terlebih dahulu.</p>` : null}
     </div>`;
 }
 // Ringkas di Beranda wali: Wali Asrama lebih dulu (kontak pertama untuk urusan harian)
