@@ -13,6 +13,7 @@ import * as W from "./s_wadir.js";
 import * as AD from "./s_admin.js";
 import * as SA from "./s_santri.js";
 import * as WA from "./s_wa.js";
+import * as AK from "./s_akun.js";
 import * as HM from "./s_home.js";
 import * as SY from "./s_system.js";
 import * as RK from "./s_rekap.js";
@@ -38,7 +39,7 @@ import { terapkanTema, terapkanBahasa } from "./i18n.js";
 const SCREENS = {
   tahfidz: T.Tahfidz, absenHalaqah: T.AbsenHalaqah, setorList: T.SetorList, ziyadah: T.Ziyadah, murojaah: T.Murojaah, manzilList: T.ManzilList, manzil: T.Manzil,
   tasmiList: T.TasmiList, tasmi: T.Tasmi, ujianList: T.UjianList, ujian: T.Ujian, progres: T.Progres, izinGuru: T.IzinGuru,
-  mutabaah: A.Mutabaah, izinCatatan: A.IzinCatatan, asramaSaya: A.AsramaSaya, khidmah: KH.Khidmah, khidmahRiwayat: KH.KhidmahRiwayat, rekapKhidmah: KH.RekapKhidmah, hafalanBulan: HB.RekapHafalanBulan, tandaTangan: TT.TandaTangan, ujianIqra: TS.UjianIqra, pesanWali: WA.PesanWali, kontakUstadz: WA.KontakUstadz, tahsinList: TS.TahsinList, tahsin: TS.Tahsin, rekapTahsin: TS.RekapTahsin,
+  mutabaah: A.Mutabaah, izinCatatan: A.IzinCatatan, asramaSaya: A.AsramaSaya, khidmah: KH.Khidmah, khidmahRiwayat: KH.KhidmahRiwayat, rekapKhidmah: KH.RekapKhidmah, hafalanBulan: HB.RekapHafalanBulan, tandaTangan: TT.TandaTangan, ujianIqra: TS.UjianIqra, pesanWali: WA.PesanWali, daftarAkun: AK.DaftarAkun, kontakUstadz: WA.KontakUstadz, tahsinList: TS.TahsinList, tahsin: TS.Tahsin, rekapTahsin: TS.RekapTahsin,
   mapel: M.Mapel, absenKelasPilih: M.AbsenKelasPilih, absenKelas: M.AbsenKelas, jurnalPilih: M.JurnalPilih, jurnalKelas: M.JurnalKelas, nilaiPilih: M.NilaiPilih, nilaiMapel: M.NilaiMapel, rekapKelasPilih: M.RekapKelasPilih, rekapKelas: M.RekapKelas,
   kurikulum: K.Kurikulum, jamPelajaran: K.JamPelajaran, jadwal: K.Jadwal, pengampu: K.Pengampu, kinerjaGuru: K.KinerjaGuru, rekapKehadiran: K.RekapKehadiran, rekapNilai: K.RekapNilai, rekapIzinGuru: K.RekapIzinGuru,
   kesantrian: KS.Kesantrian, suratIzin: KS.SuratIzin, izinView: KS.IzinView, catatKembali: KS.CatatKembali, formBap: KS.FormBap, bapView: KS.BapView, surat: KS.SuratView, histori: KS.Histori, rekapIzin: KS.RekapIzin, rekapPelanggaran: KS.RekapPelanggaran, rekapMotd: KS.RekapMotd,

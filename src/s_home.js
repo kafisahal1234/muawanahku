@@ -106,7 +106,7 @@ function tilesFor(st) {
   if (r.includes("wadir_tahfidz")) { add("sliders", "Pengelolaan Tahfidz", "emerald", () => nav.go("pengelolaan")); add("award", "Rapor", "gold", () => nav.go("raporList")); }
   if (r.includes("wadir_kurikulum")) add("calendar", "Kurikulum", "orange", () => nav.go("kurikulum"));
   if (r.includes("wadir_kesantrian")) add("shield", "Kesantrian", "coral", () => nav.go("kesantrian"), L.izinAktif().filter(i => L.pondokOfSantri(L.santriById(i.santri)) === st.pondok).length || null);
-  if (r.includes("admin")) add("grid", "Data Master", "slate", () => nav.go("dataMaster"));
+  if (r.includes("admin")) { add("grid", "Data Master", "slate", () => nav.go("dataMaster")); add("users", "Daftar Akun", "teal", () => nav.go("daftarAkun")); }
   if (r.includes("guru_tahfidz") && hq) {
     const belum = L.santriHalaqah(hq.id).filter(s => !L.kunci(s).sudah).length;
     add("bookopen", r.includes("mudir") || r.includes("wadir_tahfidz") ? "Halaqah Saya" : "Tahfidz", "emerald", () => nav.go("tahfidz"), belum || null);

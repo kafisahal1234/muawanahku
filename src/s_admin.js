@@ -17,6 +17,7 @@ export function DataMaster() {
     <${Card} title="Menu Data Master"><div class="tiles">
       <${Tile} icon="users" label="Santri" color="emerald" onClick=${() => nav.go("santriAdmin")} />
       <${Tile} icon="user" label="Guru & Akun" color="blue" onClick=${() => nav.go("akunAdmin")} />
+      <${Tile} icon="users" label="Daftar Akun" color="teal" onClick=${() => nav.go("daftarAkun")} />
       <${Tile} icon="home2" label="Asrama" color="orange" onClick=${() => nav.go("asramaAdmin")} />
       <${Tile} icon="bookopen" label="Halaqah" color="teal" onClick=${() => nav.go("halaqahAdmin")} />
       <${Tile} icon="grid" label="Kelas" color="indigo" onClick=${() => nav.go("kelasAdmin")} />

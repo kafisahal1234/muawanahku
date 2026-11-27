@@ -21,7 +21,7 @@ export const KAMUS = {
   "Asrama Saya": ["My Dormitory", "سكني"], "Rapor": ["Report Card", "كشف الدرجات"], "Kalender": ["Calendar", "التقويم"], "Kesantrian": ["Student Affairs", "شؤون الطلاب"],
   "Pengumuman": ["Announcements", "الإعلانات"], "Bantuan": ["Help", "المساعدة"], "Kebijakan Privasi": ["Privacy Policy", "سياسة الخصوصية"], "Tentang aplikasi": ["About the app", "عن التطبيق"],
   "Asisten AI": ["AI Assistant", "المساعد الذكي"], "Tanda Tangan": ["Signature", "التوقيع"], "Profil": ["Profile", "الملف الشخصي"], "Keamanan": ["Security", "الأمان"], "Akun saya": ["My account", "حسابي"],
-  "Informasi": ["Information", "معلومات"], "Profil Ananda": ["Child's profile", "ملف الابن"], "Data Master": ["Master Data", "البيانات الأساسية"], "Guru & Akun": ["Teachers & Accounts", "المعلمون والحسابات"],
+  "Informasi": ["Information", "معلومات"], "Profil Ananda": ["Child's profile", "ملف الابن"], "Data Master": ["Master Data", "البيانات الأساسية"], "Daftar Akun": ["Account List", "قائمة الحسابات"], "Guru & Akun": ["Teachers & Accounts", "المعلمون والحسابات"],
   "Ziyadah": ["Ziyadah", "الزيادة"], "Murojaah": ["Murojaah", "المراجعة"], "Manzil": ["Manzil", "المنزل"], "Tasmi'": ["Tasmi'", "التسميع"], "Tahsin": ["Tahsin", "التحسين"], "Tahsin (Iqro')": ["Tahsin (Iqro')", "التحسين (إقرأ)"],
   "Absen Halaqah": ["Halaqah Attendance", "حضور الحلقة"], "Absen Kelas": ["Class Attendance", "حضور الفصل"], "Absen kelas": ["Class attendance", "حضور الفصل"], "Progres Santri": ["Student Progress", "تقدم الطلاب"],
   "Rekap Halaqah": ["Halaqah Report", "تقرير الحلقة"], "Rekap Tahfidz": ["Tahfidz Report", "تقرير التحفيظ"], "Rekap Tahsin": ["Tahsin Report", "تقرير التحسين"], "Rekap Asrama": ["Dormitory Report", "تقرير السكن"],
