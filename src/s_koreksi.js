@@ -148,7 +148,7 @@ export function RiwayatModul({ modul = "tahfidz" }) {
   const M = MODUL[modul] || MODUL.tahfidz, m = me();
   const pengawas = m.roles.some(r => ["mudir", "admin", ...M.pengawas].includes(r));
   const [mode, setMode] = useState(pengawas ? "semua" : "saya"); const [q, setQ] = useState(""); const [sel, setSel] = useState(null); const [n, setN] = useState(40);
-  const pondok = m.roles.includes("wadir_kesantrian") && !m.roles.includes("mudir") ? m.pondok : null;
+  const mp = L.mudirPondok(m), pondok = mp ? (mp.length === 1 && !m.roles.includes("wadir_kesantrian") ? mp[0] : null) : m.roles.includes("wadir_kesantrian") ? m.pondok : null;
   const cocok = r => !pondok || !(modul === "kesantrian" || modul === "asrama") || (r.pondok ? r.pondok === pondok : L.pondokOfSantri(L.santriAman(r.santri)) === pondok);
   const ev = kumpulRiwayat(m.id, pengawas && mode === "semua", M.cols, cocok).map(x => ({ ...x, e: entriRiwayat(x.col, x.list) }))
     .filter(x => !q || (x.e.jud + " " + x.e.det).toLowerCase().includes(q.toLowerCase()));

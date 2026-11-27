@@ -19,6 +19,7 @@ PYTHONPATH=test/pwseed python3 test/wali_layar.py     # tangkapan layar wali   �
 PYTHONPATH=test/pwseed python3 test/laporan_ziyadah.py
 PYTHONPATH=test/pwseed python3 test/puasa_sunnah.py     # butir puasa hanya Senin & Kamis
 PYTHONPATH=test/pwseed python3 test/rapor_layar.py      # rapor: gambar + PDF + Word → test/out/rapor/
+PYTHONPATH=test/pwseed python3 test/pantauan_layar.py   # Pantauan Santri: Mudir umum vs Mudir Pondok 21
 cd test/aturan && npm install && npm test             # uji firestore.rules di emulator (harus "gagal 0")
 ```
 
@@ -56,7 +57,7 @@ Preact + htm, dibundel esbuild; CSS = `theme.css + skin.css + dark.css + dark_ma
 - Jangan pernah menaruh data santri/guru asli, sandi, atau nomor HP pribadi di kode/repo (repo **publik**). Uji memakai `test/contoh/seed.json` (fiktif).
 - Jangan menulis ke Firebase produksi saat menguji.
 
-**Peran**: Admin (data master saja, tanpa rekap), Mudir, Wadir Tahfidz/Kurikulum/Kesantrian (Kesantrian per pondok 21/29), Wali Asrama (=musyrif), Guru Halaqah, Guru Mapel, Wali santri. Satu akun bisa banyak peran.
+**Peran**: Admin (data master saja, tanpa rekap), Mudir (umum = semua pondok; atau khusus satu pondok lewat field `mudirPondok`, mis. Mudir Pondok 21 — hanya rekap/santri pondoknya; `L.mudirPondok(st)`, penanda tangan rapor/surat per pondok `L.mudirUntuk(p)`; menu **Pantauan Santri** `src/s_pantauan.js`), Wadir Tahfidz/Kurikulum/Kesantrian (Kesantrian per pondok 21/29), Wali Asrama (=musyrif), Guru Halaqah, Guru Mapel, Wali santri. Satu akun bisa banyak peran.
 
 **Pondok**: Pondok 29 = kelas 7–8 (asrama a1–a6), Pondok 21 = kelas 9A–9B (a7–a11). Tampilan dikelompokkan per pondok (29 dulu).
 

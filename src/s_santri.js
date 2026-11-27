@@ -70,9 +70,10 @@ function NilaiCard({ s }) {
 export function RaporList() {
   useApp();
   const m = me(); const a = L.asramaOf(m.id);
-  const lihatSemua = m.roles.some(r => ["mudir", "wadir_tahfidz", "wadir_kurikulum"].includes(r));
+  const mp = L.mudirPondok(m), lihatSemua = m.roles.some(r => ["mudir", "wadir_tahfidz", "wadir_kurikulum"].includes(r));
+  const lingkupMudir = mp && !m.roles.some(r => ["wadir_tahfidz", "wadir_kurikulum"].includes(r)) && mp.length === 1 ? mp[0] : null;
   const [scope, setScope] = useState(a && !lihatSemua ? a.id : (a ? a.id : "all")); const [q, setQ] = useState("");
-  const list = (scope === "all" ? L.santriList() : L.santriAsrama(scope)).filter(s => s.nama.toLowerCase().includes(q.toLowerCase()));
+  const list = (scope === "all" ? L.santriList().filter(s => !lingkupMudir || L.pondokOfSantri(s) === lingkupMudir) : L.santriAsrama(scope)).filter(s => s.nama.toLowerCase().includes(q.toLowerCase()));
   return html`<${SubHeader} title="Rapor" sub="Semester ganjil 2026/2027 · tersusun otomatis">${lihatSemua ? html`<${Seg} small items=${[...(a ? [[a.id, "Asrama saya"]] : []), ["all", "Semua santri"]]} value=${scope} onChange=${setScope} />` : null}</${SubHeader}>
     <div class="wrap"><${SearchBox} value=${q} onInput=${setQ} />${L.kelompokPondok(list, s => L.pondokOfSantri(s)).filter(g => g.isi.length).map(g => html`<${Card} title=${`${g.nama} · ${g.ket} (${g.isi.length})`}><div class="list">${g.isi.map(s => html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama}`} onClick=${() => nav.go("raporView", { sid: s.id })} />`)}</div></${Card}>`)}</div>`;
 }

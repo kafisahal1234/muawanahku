@@ -39,7 +39,8 @@ service cloud.firestore {
     match /mk_staffEdit/{id} {
       allow read: if masuk();
       allow create, delete: if admin();
-      allow update: if admin() || (staf() && id == sesi().sid && request.resource.data.get('roles', null) == resource.data.get('roles', null));
+      allow update: if admin() || (staf() && id == sesi().sid && request.resource.data.get('roles', null) == resource.data.get('roles', null)
+        && request.resource.data.get('pondok', null) == resource.data.get('pondok', null) && request.resource.data.get('mudirPondok', null) == resource.data.get('mudirPondok', null));
     }
     // Daftar kode akses wali: diisi aplikasi dari akun staf
     match /mk_kodeWali/{kode} {

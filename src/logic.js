@@ -206,7 +206,13 @@ export function predikat(v) {
 // Tanda tangan tersimpan (PNG transparan) milik pejabat/ustadz; dipakai otomatis di surat, rapor, dan rekap PDF
 export const TTD_ROLES = ["mudir", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian", "musyrif"];
 export const ttdOf = id => { const t = id && get("ttd", id); return t && t.img ? t.img : null; };
-export const mudirStaff = () => STAFF.find(s => (s.roles || []).includes("mudir")) || null;
+export const mudirStaff = () => STAFF.find(s => (s.roles || []).includes("mudir") && !s.mudirPondok) || STAFF.find(s => (s.roles || []).includes("mudir")) || null;
+// Mudir bisa umum (semua pondok) atau khusus satu pondok (field mudirPondok diisi Admin, mis. "21").
+// Hasil: daftar pondok yang dipantau, atau null bila bukan mudir.
+export const mudirPondok = st => (st && (st.roles || []).includes("mudir") ? (st.mudirPondok ? [st.mudirPondok] : ["29", "21"]) : null);
+// Mudir yang menandatangani dokumen santri sebuah pondok: mudir khusus pondok itu, bila ada; kalau tidak, mudir umum
+export const mudirUntuk = p => STAFF.find(s => (s.roles || []).includes("mudir") && s.mudirPondok === p) || mudirStaff();
+export const pondokKelas = k => { const x = DATA.kelas.find(c => c.id === k); return x ? x.pondok : String(k)[0] === "7" || String(k)[0] === "8" ? "29" : "21"; };
 // Nomor WhatsApp resmi pondok → tautan wa.me (0812… / +62 812… → 62812…)
 export const waNomor = n => { let d = String(n || "").replace(/\D/g, ""); if (d.startsWith("0")) d = "62" + d.slice(1); else if (d.startsWith("8")) d = "62" + d; return d.length >= 10 ? d : ""; };
 export const waLink = (n, teks) => { const d = waNomor(n); return d ? `https://wa.me/${d}${teks ? "?text=" + encodeURIComponent(teks) : ""}` : ""; };
@@ -577,8 +583,9 @@ export function kinerjaMut(aid, rg) {
 export function santriScope(user) {
   if (user.kind === "wali") return [santriById(user.id)];
   const st = staffById(user.id), r = st.roles;
-  if (r.includes("mudir") || r.includes("wadir_tahfidz") || r.includes("wadir_kurikulum") || r.includes("admin")) return santriList();
+  if (r.includes("wadir_tahfidz") || r.includes("wadir_kurikulum") || r.includes("admin")) return santriList();
   let out = [];
+  const mp = mudirPondok(st); if (mp) out = out.concat(santriList().filter(s => mp.includes(pondokOfSantri(s))));
   if (r.includes("wadir_kesantrian")) out = out.concat(santriList().filter(s => pondokOfSantri(s) === st.pondok));
   if (r.includes("musyrif")) { const a = asramaOf(st.id); if (a) out = out.concat(santriAsrama(a.id)); }
   if (r.includes("guru_tahfidz")) { const h = halaqahOf(st.id); if (h) out = out.concat(santriHalaqah(h.id)); }
@@ -655,6 +662,7 @@ export function pondokStaff(st) {
   const h = halaqahOf(st.id); if (h && h.pondok) p.add(h.pondok);
   (st.ajar || []).forEach(([, k]) => { const kk = DATA.kelas.find(x => x.id === k); if (kk) p.add(kk.pondok); });
   if (st.pondok && st.roles && st.roles.includes("wadir_kesantrian")) p.add(st.pondok);
+  if (st.mudirPondok && st.roles && st.roles.includes("mudir")) p.add(st.mudirPondok);
   return [...p];
 }
 // kelompokkan daftar per pondok (urutan Pondok 29 lalu 21); kunci "lain" untuk yang tidak terikat satu pondok

@@ -21,13 +21,15 @@
   },
   "hidayat": {
    "roles": [
+    "mudir",
     "wadir_tahfidz",
     "guru_tahfidz"
    ],
    "ajar": [],
    "username": "hidayat",
    "nama": "Ust. Hidayat (contoh)",
-   "pendek": "Ust. Hidayat"
+   "pendek": "Ust. Hidayat",
+   "mudirPondok": "21"
   },
   "kaafi": {
    "roles": [

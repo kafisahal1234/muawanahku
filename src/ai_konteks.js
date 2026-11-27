@@ -98,8 +98,9 @@ function blokIzinGuru(r, guruOk) {
 
 function santriLingkup(m) {
   const r = m.roles;
-  if (r.some(x => ["mudir", "admin", "wadir_tahfidz", "wadir_kurikulum"].includes(x))) return L.santriList();
+  if (r.some(x => ["admin", "wadir_tahfidz", "wadir_kurikulum"].includes(x)) || (L.mudirPondok(m) || []).length > 1) return L.santriList();
   const o = new Map(), add = l => l.forEach(s => o.set(s.id, s));
+  if (L.mudirPondok(m)) add(L.santriList().filter(s => L.mudirPondok(m).includes(L.pondokOfSantri(s))));
   if (r.includes("wadir_kesantrian")) add(L.santriList().filter(s => !m.pondok || L.pondokOfSantri(s) === m.pondok));
   L.ASRAMA.filter(a => a.musyrif === m.id).forEach(a => add(L.santriAsrama(a.id)));
   L.HALAQAH.filter(h => h.guru === m.id).forEach(h => add(L.santriHalaqah(h.id)));
@@ -127,7 +128,7 @@ function bangunKonteks() {
       data: `${umum}\n\nDATA ANANDA:\n${dataSantriAI(s)}\nZiyadah bulan ini: ${pb.baris} baris (${L.fmtBaris(pb.baris)}), ${pb.hari} hari setor\nSetoran terakhir: ${set}\nIzin terakhir: ${iz}` };
   }
   const m = me(), rl = m.roles, peran = rl.map(x => L.ROLE_LABEL[x] || x).join(", "), list = santriLingkup(m), bl = r.t.slice(0, 7);
-  const semua = rl.some(x => ["mudir", "admin"].includes(x)), blok = [];
+  const semua = rl.includes("admin") || (L.mudirPondok(m) || []).length > 1, blok = [];
   const jad = L.jadwalAll().filter(j => j.guru === m.id).map(j => `${j.hari} ${L.jamById(j.jam).nama} ${L.mapelById(j.mapel).nama} kelas ${j.kelas}`).join("; ") || "-";
   const a = L.asramaOf(m.id), hq = L.halaqahOf(m.id);
   // Kurikulum: seluruh guru mapel & kelas; guru mapel: miliknya sendiri

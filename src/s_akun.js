@@ -21,6 +21,7 @@ export function jabatanStaf(st) {
     else if (k === "guru_tahfidz") out.push("Guru Halaqah");
     else if (k === "guru_mapel") { const m = [...new Set((st.ajar || []).map(([id]) => (L.mapelById(id) || {}).nama).filter(Boolean))]; out.push(m.length ? `Guru ${m.join(", ")}` : "Guru Mapel"); }
     else if (k === "wadir_kesantrian") out.push(st.pondok ? `Wadir Kesantrian Pondok ${st.pondok}` : "Wadir Kesantrian");
+    else if (k === "mudir") out.push(st.mudirPondok ? `Mudir Pondok ${st.mudirPondok}` : "Mudir");
     else if (k === "admin") out.push("Admin Pondok");
     else out.push(L.ROLE_LABEL[k] || k);
   });

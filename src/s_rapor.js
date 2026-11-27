@@ -37,7 +37,7 @@ export const RP_CSS = `.rp{font-family:Montserrat,Arial,sans-serif;color:#2E2F30
 .rp .qttd3{display:flex;justify-content:space-between;text-align:center;font-size:12px;margin-top:6px}.rp .qttd3>div{width:32%}.rp .qttd3 .qg{height:54px}.rp .qttd3 b{font-size:11px;white-space:nowrap}.rp .rp-mid .qsec{margin-top:9px}`;
 
 // tanda tangan tersimpan (Akun → Tanda Tangan) ditempel otomatis di atas nama
-const mdr = () => L.mudirStaff() || L.staffAman("syamsul");
+const mdr = s => (s && L.mudirUntuk(L.pondokOfSantri(s))) || L.mudirStaff() || L.staffAman("syamsul");
 // nama di bawah tanda tangan: tanpa sapaan (Ust./Ustadz/Ustadzah), cukup nama + gelar
 const namaTtd = n => String(n || "").replace(/^\s*(ustadzah|ustadz|ustazah|ustaz|ustz?\.?|ust\.?)\s+/i, "").trim();
 const ttdImg = id => { const t = L.ttdOf(id); return t ? `<img class="qttd-img" src="${t}" alt="">` : ""; };
@@ -107,7 +107,7 @@ export function raporHTML(sid, periode) {
     ${ket.map((r, i) => `<tr>${r.map((v, j) => `<td class="qc ${j === 0 ? "qb" : ""} ${i === 3 && j === 0 ? "qred" : ""}">${v}</td>`).join("")}</tr>`).join("")}</table>
     <div class="qttd" style="margin-top:32px"><div></div><div>Metro, ${tg}</div></div>
     <div class="qttd"><div>Orang Tua / Wali<div class="qg"></div><b>______________________________</b></div><div>Wali Asrama / Wali Halaqah<div class="qg">${ttdImg(mus && mus.id)}</div><b style="text-decoration:underline">${esc(namaTtd(mus.nama))}</b></div></div>
-    <div class="qttd" style="margin-top:14px"><div>Mengetahui,<br>Mudir<div class="qg">${ttdImg(mdr().id)}</div><b style="text-decoration:underline">${esc(namaTtd(mdr().nama))}</b></div></div>${foot}</div>`;
+    <div class="qttd" style="margin-top:14px"><div>Mengetahui,<br>Mudir<div class="qg">${ttdImg(mdr(s).id)}</div><b style="text-decoration:underline">${esc(namaTtd(mdr(s).nama))}</b></div></div>${foot}</div>`;
   return p1 + p2 + p3 + p4;
 }
 
@@ -138,7 +138,7 @@ export function raporMidHTML(sid) {
     <div class="qsec">C. MUTABA'AH IBADAH DAN ADAB</div>${C}<p class="qnote">Persentase dari hari yang mutaba'ahnya terisi (${mp.isi || 0} hari). A 90–100% · B 75–89% · C 60–74% · D di bawah 60%.</p>
     <div class="qsec">D. CATATAN WALI ASRAMA</div><div class="qbox" style="min-height:50px">${esc(cat)}</div>
     <div class="qttd3" style="margin-top:12px"><div></div><div></div><div>Metro, ${tg}</div></div>
-    <div class="qttd3" style="margin-top:2px"><div>Orang Tua / Wali<div class="qg"></div><b>_________________________</b></div><div>Wali Asrama<div class="qg">${ttdImg(mus && mus.id)}</div><b style="text-decoration:underline">${esc(namaTtd(mus.nama))}</b></div><div>Mengetahui, Mudir<div class="qg">${ttdImg(mdr().id)}</div><b style="text-decoration:underline">${esc(namaTtd(mdr().nama))}</b></div></div>${foot}</div>`;
+    <div class="qttd3" style="margin-top:2px"><div>Orang Tua / Wali<div class="qg"></div><b>_________________________</b></div><div>Wali Asrama<div class="qg">${ttdImg(mus && mus.id)}</div><b style="text-decoration:underline">${esc(namaTtd(mus.nama))}</b></div><div>Mengetahui, Mudir<div class="qg">${ttdImg(mdr(s).id)}</div><b style="text-decoration:underline">${esc(namaTtd(mdr(s).nama))}</b></div></div>${foot}</div>`;
 }
 
 export function raporDoc(sid, periode) {

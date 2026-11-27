@@ -47,14 +47,17 @@ const P2 = v => (v == null ? "—" : v + "%");
 const rata = xs => { const v = xs.filter(x => x != null); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
 const santriPondok = p => L.santriList().filter(s => L.pondokOfSantri(s) === p);
 export function lingkup() {
-  const m = me(), r = m.roles, a = L.asramaOf(m.id), hq = L.halaqahOf(m.id), mudir = r.includes("mudir");
+  const m = me(), r = m.roles, a = L.asramaOf(m.id), hq = L.halaqahOf(m.id), mp = L.mudirPondok(m), mudir = !!mp;
+  // Mudir umum: semua pondok; Mudir Pondok 21: hanya halaqah, asrama, kelas, dan santri pondok 21
   const urut = (arr, mine) => (mine ? [mine, ...arr.filter(x => x.id !== mine.id)] : arr);
-  const hqs = mudir || r.includes("wadir_tahfidz") ? urut(L.HALAQAH, hq) : r.includes("guru_tahfidz") && hq ? [hq] : [];
-  const asr = mudir ? urut(L.ASRAMA, a) : r.includes("wadir_kesantrian") ? urut(L.ASRAMA.filter(x => x.pondok === m.pondok), a) : r.includes("musyrif") && a ? [a] : [];
-  const semuaKls = mudir || r.includes("wadir_kurikulum");
-  const pairs = semuaKls ? [...new Map(L.jadwalAll().map(j => [`${j.mapel}|${j.kelas}`, [j.mapel, j.kelas]])).values()].sort((x, y) => (x[0] + x[1]).localeCompare(y[0] + y[1]))
-    : r.includes("guru_mapel") ? (m.ajar || []).map(x => [...x]) : [];
-  const pondok = mudir ? ["29", "21"] : r.includes("wadir_kesantrian") ? [m.pondok] : [];
+  const pAsr = new Set([...(mp || []), ...(r.includes("wadir_kesantrian") ? [m.pondok] : [])]);
+  const hqs = r.includes("wadir_tahfidz") ? urut(L.HALAQAH, hq) : mudir ? urut(L.HALAQAH.filter(h => mp.includes(L.pondokHalaqah(h)) || (hq && h.id === hq.id)), hq) : r.includes("guru_tahfidz") && hq ? [hq] : [];
+  const asr = pAsr.size ? urut(L.ASRAMA.filter(x => pAsr.has(x.pondok) || (a && x.id === a.id)), a) : r.includes("musyrif") && a ? [a] : [];
+  const semuaKls = r.includes("wadir_kurikulum") || (mudir && mp.length > 1);
+  const semuaPair = [...new Map(L.jadwalAll().map(j => [`${j.mapel}|${j.kelas}`, [j.mapel, j.kelas]])).values()].sort((x, y) => (x[0] + x[1]).localeCompare(y[0] + y[1]));
+  const ajar = r.includes("guru_mapel") ? (m.ajar || []).map(x => [...x]) : [];
+  const pairs = semuaKls ? semuaPair : mudir ? [...new Map([...semuaPair.filter(([, k]) => mp.includes(L.pondokKelas(k))), ...ajar].map(x => [x.join("|"), x])).values()] : ajar;
+  const pondok = ["29", "21"].filter(p => pAsr.has(p));
   // kelompok pelanggaran: per pondok (kesantrian/mudir) atau per asrama binaan (wali asrama)
   const kelPel = pondok.length ? pondok.map(p => ({ id: "p" + p, nama: "Pondok " + p, list: santriPondok(p), pondok: p })) : asr.map(x => ({ id: x.id, nama: "Asrama " + x.nama, list: L.santriAsrama(x.id), aid: x.id }));
   const tabs = [];

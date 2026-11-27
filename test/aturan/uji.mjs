@@ -34,6 +34,8 @@ await cek("staf baca akun", assertSucceeds(getDoc(doc(st, "mk_akun/kafi"))));
 await cek("staf ubah akun orang lain ditolak", assertFails(setDoc(doc(st, "mk_akun/admin123"), { hash: "x" })));
 await cek("staf ubah jabatan sendiri ditolak", assertFails(updateDoc(doc(st, "mk_staffEdit/kaafi"), { roles: ["admin"] })));
 await cek("staf ubah nama sendiri", assertSucceeds(updateDoc(doc(st, "mk_staffEdit/kaafi"), { nama: "Kafi S" })));
+await cek("staf ubah cakupan mudir sendiri ditolak", assertFails(updateDoc(doc(st, "mk_staffEdit/kaafi"), { mudirPondok: "" })));
+await cek("staf ubah pondok sendiri ditolak", assertFails(updateDoc(doc(st, "mk_staffEdit/kaafi"), { pondok: "21" })));
 await cek("staf ubah profil guru lain ditolak", assertFails(updateDoc(doc(st, "mk_staffEdit/admin"), { nama: "x" })));
 await cek("staf isi kode wali", assertSucceeds(setDoc(doc(st, "mk_kodeWali/budi020212"), { santri: "s002" })));
 await cek("staf tidak bisa memalsukan sesi admin", assertFails(setDoc(doc(st, "mk_sesi/staf1"), { jenis: "staff", u: "admin123", h: H("kafi", "kafi123"), sid: "admin" })));
