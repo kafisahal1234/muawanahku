@@ -8,10 +8,10 @@ window.__AI_MOCK = async ({ teks, sistem, berkas, json }) => {
   window.__AI_LOG.push({ teks, sistem, nb: berkas.length, json });
   if (/dokumen nilai mapel/.test(teks)) return { projek_nama: ["Poster Wudhu", "Video"], baris: [{ nama: "Adiyatma W", santri_id: null, projek: [88, 90], pts: 75, pas: 8.5, aspek: [80, 81, 82, 83] }, { nama: "Affan Abdilah", santri_id: null, projek: [70, null], pts: 66, pas: 72, aspek: [] }, { nama: "Orang Lain", projek: [1] }] };
   if (/jadwal pelajaran/.test(teks)) return { jadwal: [{ hari: "Senin", jam: "j1", kelas: "7", mapel: "fiqih", guru: null }, { hari: "Selasa", jam: "j2", kelas: "9A", mapel: "it", guru: "kaafi" }, { hari: "Rabu", jam: "j1", kelas: "8", mapel: "olahraga", guru: null }] };
-  if (/Asisten MuawanahQu/.test(sistem || "")) return "Jawaban asisten: **3 santri** perlu perhatian.\n- Faeyza\n- Fatih";
+  if (/Asisten MuawanahQu/.test(sistem || "")) return "Jawaban asisten: **3 santri** perlu perhatian.\n- Fulan\n- Ahmad";
   await new Promise(r => setTimeout(r, 150));
   if (/data hafalan Al-Qur'an/.test(teks)) return { baris: [
-    { nama: "Faeyza Masril", santri_id: "s001", juz_selesai: [30, 29, 1, 2], juz_aktif: 3, halaman_aktif: 5 },
+    { nama: "Fulan Contoh", santri_id: "s001", juz_selesai: [30, 29, 1, 2], juz_aktif: 3, halaman_aktif: 5 },
     { nama: "M Fatih Machali S.", santri_id: "s002", juz_selesai: [], jumlah_juz: 4.5 },
     { nama: "Budi Tidakada", santri_id: null, jumlah_juz: 1, catatan: "Tidak ada di daftar" } ] };
   if (/data santri di bawah/.test(teks)) return { baris: [
@@ -50,7 +50,7 @@ async def main():
         await tile(pg, "Pengelolaan Tahfidz"); await pg.wait_for_timeout(300); await tile(pg, "Data Awal Hafalan"); await pg.wait_for_timeout(300)
         await pg.click(".up-cta"); await pg.wait_for_timeout(300)
         await pg.set_input_files("input[type=file]", "/tmp/aidoc/awal.xlsx"); await pg.wait_for_selector(".imp-row", timeout=20000)
-        log = await pg.evaluate("window.__AI_LOG"); print("AI melihat isi excel:", "Faeyza Masril" in log[-1]["teks"] and "sedang juz 3 hal 5" in log[-1]["teks"])
+        log = await pg.evaluate("window.__AI_LOG"); print("AI melihat isi excel:", "Fulan Contoh" in log[-1]["teks"] and "sedang juz 3 hal 5" in log[-1]["teks"])
         print("pratinjau:", [t.replace("\n", " | ") for t in await pg.locator(".imp-row").all_inner_texts()])
         await pg.screenshot(path="test/ai1_awal.png", full_page=True)
         await pg.click(".sticky-act .btn:has-text('Simpan')"); await pg.wait_for_timeout(500)

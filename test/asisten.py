@@ -8,7 +8,7 @@ window.__AI_LOG = [];
 window.__AI_MOCK = async ({ teks, sistem, berkas, json }) => {
   window.__AI_LOG.push({ teks, sistem, nb: berkas.length });
   await new Promise(r => setTimeout(r, 400));
-  if (berkas.length) return "Foto berisi **jadwal piket**. Ringkasannya:\n1. Senin: Faeyza\n2. Selasa: Fatih";
+  if (berkas.length) return "Foto berisi **jadwal piket**. Ringkasannya:\n1. Senin: Fulan\n2. Selasa: Ahmad";
   return "Berdasarkan data pekan ini, guru yang perlu perhatian:\n\n| Guru | Terlaksana | Jurnal |\n|---|---|---|\n| Ust. Rangga | 0/4 (0%) | 0% |\n| Ust. Yudistira | 1/4 (25%) | 0% |\n\n**Saran:**\n- Ingatkan absen & jurnal setiap selesai KBM\n- Cek di menu `Kurikulum → Rekap KBM`";
 };
 """

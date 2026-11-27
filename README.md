@@ -15,7 +15,6 @@ Aplikasi pondok untuk **Pondok Tahfidz Modern Kampung Qur'an Al Muawanah** (Metr
 | `src/s_*.js` | Layar per modul: tahfidz, asrama (MOTD/mutaba'ah), mapel, kurikulum, kesantrian, wadir, admin, rapor, rekap, koreksi data |
 | `src/theme.css`, `src/skin.css` | Tampilan (Material Design 3 / Apple HIG) |
 | `src/data.js` | Data master (guru, asrama, santri, mapel, jadwal) — **berisi nama asli, jangan dibuat publik** |
-| `prep.py` | Penyusun `src/data.js` dari data mentah |
 | `build.py` | Build menjadi satu file `dist/index.html` |
 | `test/*.py` | Uji alur dengan Playwright |
 
