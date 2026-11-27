@@ -195,7 +195,7 @@ export function Beranda() {
   useApp();
   const st = me(), tiles = tilesFor(st), tasks = tasksFor(st), peng = all("pengumuman").sort((a, b) => b.ts - a.ts)[0];
   const strip = tasks[0] ? { t: tasks[0][0], s: tasks[0][1], go: tasks[0][3], ic: "bap", w: tasks[0][2] === "coral" ? "coral" : "gold" } : peng ? { t: peng.judul, s: "Pengumuman terbaru", go: () => nav.go("pengumuman"), ic: "toa", w: "gold" } : null;
-  return html`<${HomeTop} nama=${st.pendek || st.nama} sub=${chipsFor(st).join(" · ")} bell=${newPeng()} foto=${fotoUser(nav.user)}>
+  return html`<${HomeTop} nama=${st.pendek || st.nama} bell=${newPeng()} foto=${fotoUser(nav.user)}>
       <div class="sum"><${Summary} st=${st} /></div></${HomeTop}>
     <div class="wrap">
     ${strip ? html`<button class="strip" onClick=${strip.go}><span class="strip-ic" style=${`background:${WARNA[strip.w][2]}`}><${Ikon} n=${strip.ic} warna=${strip.w} s=${28} /></span><span class="strip-t"><b>${strip.t}</b><small>${strip.s}</small></span><span class="strip-go">Lihat <${Icon} n="right" s=${16} w=${2.4} /></span></button>` : null}
