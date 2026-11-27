@@ -161,7 +161,7 @@ function tasksFor(st) {
     if (b) out.push([`${b} santri belum setor ziyadah`, `Halaqah ${st.pendek} · hari ini`, "coral", () => nav.go("setorList", { jenis: "ziyadah" })]);
     if (ts) out.push([`${ts} santri siap tasmi'`, "Selesai satu juz", "gold", () => nav.go("tasmiList")]); }
   if (r.includes("guru_mapel")) { const sl = L.jadwalAll().filter(j => j.guru === st.id && j.hari === L.hariIni() && !(get("absenKelas", L.absenKelasKey(j.id, tgl)) || {}).materi);
-    if (sl.length) out.push([`${sl.length} jurnal belum diisi hari ini`, sl.map(j => `${L.mapelById(j.mapel).nama} ${j.kelas}`).join(" · "), "blue", () => nav.go("mapel", { mapel: sl[0].mapel })]); }
+    if (sl.length) out.push([`${sl.length} jurnal belum diisi hari ini`, sl.map(j => `${L.mapelById(j.mapel).nama} ${j.kelas}`).join(" · "), "blue", () => nav.go("jurnalPilih", { mapel: sl[0].mapel })]); }
   if (r.includes("wadir_kurikulum") || r.includes("mudir")) { const sl = L.jadwalAll().filter(j => j.hari === L.hariIni() && slotStatus(j, tgl)[0] !== "Lengkap");
     if (sl.length) out.push([`${sl.length} jadwal belum lengkap`, "Absen atau jurnal kelas", "gold", () => nav.go("kurikulum", { ro: !r.includes("wadir_kurikulum") })]); }
   if (r.includes("wadir_kesantrian") || r.includes("mudir")) { const l = L.izinAktif().filter(i => L.terlambat(i) && (r.includes("mudir") || L.pondokOfSantri(L.santriById(i.santri)) === st.pondok));

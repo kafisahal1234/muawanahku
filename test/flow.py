@@ -61,7 +61,12 @@ async def main():
         # mapel IT absen
         await keUtama(pg); await pg.locator(".bnav button").first.click(); await tile(pg, "Mapel IT"); await pg.screenshot(path="test/f7_mapel.png", full_page=True)
         await pg.click("text=Absen di luar jadwal"); await pg.locator(".row").first.click(); await pg.wait_for_timeout(200)
-        await pg.fill("input[placeholder='Misal: Descriptive text']", "Algoritma dan flowchart"); await pg.click("text=Simpan absen & jurnal"); await pg.wait_for_timeout(300)
+        await pg.click("text=Simpan absen"); await pg.wait_for_timeout(400); await pg.screenshot(path="test/f7b_absen.png", full_page=True)
+        await pg.click("text=Isi jurnal"); await pg.wait_for_timeout(300)
+        await pg.fill("input[placeholder='Misal: Descriptive text']", "Algoritma dan flowchart"); await pg.click("text=Simpan jurnal"); await pg.wait_for_timeout(400)
+        print("jurnal tersimpan:", await pg.locator(".kv b:has-text('Algoritma dan flowchart')").count())
+        await keUtama(pg); await pg.locator(".bnav button").first.click(); await tile(pg, "Mapel IT"); await tile(pg, "Jurnal Mengajar"); await pg.screenshot(path="test/f7c_jurnal.png", full_page=True)
+        print("jurnal menu:", (await pg.locator(".card").first.inner_text())[:60].replace("\n"," | "))
         # kesantrian izin by izzudin
         await login(pg, "izzudin"); await tile(pg, "Kesantrian"); await tile(pg, "Surat Izin")
         await pg.locator("button.pick").click(); await pg.fill(".sheet .search input", "sultan abdullah"); await pg.locator(".sheet .row").first.click()

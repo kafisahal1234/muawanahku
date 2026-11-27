@@ -33,7 +33,7 @@ export const KAMUS = {
   "Menu Asrama": ["Dormitory Menu", "قائمة السكن"], "Riwayat & Koreksi": ["History & Corrections", "السجل والتصحيح"], "Koreksi Input Tahfidz": ["Correct Tahfidz Input", "تصحيح إدخال التحفيظ"], "Log Perubahan": ["Change Log", "سجل التغييرات"],
   "Izin Guru": ["Teacher Leave", "استئذان المعلم"], "Izin & Catatan": ["Leave & Notes", "الاستئذان والملاحظات"], "Surat Izin": ["Leave Letter", "خطاب الاستئذان"], "Catat Kembali": ["Record Return", "تسجيل العودة"],
   "Histori Santri": ["Student History", "سجل الطالب"], "Perizinan": ["Leave Permits", "الاستئذانات"], "Pelanggaran": ["Violations", "المخالفات"], "Pelanggaran (BAP)": ["Violations (report)", "المخالفات (محضر)"],
-  "Jurnal": ["Journal", "اليومية"], "Jurnal mengajar": ["Teaching journal", "يومية التدريس"], "Absen & Jurnal": ["Attendance & Journal", "الحضور واليومية"], "Input Nilai": ["Enter Grades", "إدخال الدرجات"],
+  "Jurnal": ["Journal", "اليومية"], "Jurnal mengajar": ["Teaching journal", "يومية التدريس"], "Absen & Jurnal": ["Attendance & Journal", "الحضور واليومية"], "Jurnal Mengajar": ["Teaching Journal", "يومية التدريس"], "Simpan jurnal": ["Save journal", "حفظ اليومية"], "Simpan absen": ["Save attendance", "حفظ الحضور"], "Isi jurnal": ["Fill journal", "املأ اليومية"], "Input Nilai": ["Enter Grades", "إدخال الدرجات"],
   "Jadwal hari ini": ["Today's schedule", "جدول اليوم"], "Jadwal mengajar hari ini": ["Today's teaching schedule", "جدول التدريس اليوم"], "Jadwal Mengajar": ["Teaching Schedule", "جدول التدريس"], "Jam Pelajaran": ["Lesson Hours", "الحصص"],
   "Mapel & Pengampu": ["Subjects & Teachers", "المواد والمعلمون"], "Kalender Akademik": ["Academic Calendar", "التقويم الدراسي"], "Libur pondok": ["Pesantren holidays", "عطلة المعهد"],
   // beranda & ringkasan
