@@ -184,3 +184,76 @@ html[data-tema=gelap] .rp-more{color:#8fe0b4}
 html[data-tema=gelap] .per-pick,html[data-tema=gelap] .per-op{background:var(--card);border-color:var(--line);box-shadow:none}
 html[data-tema=gelap] .per-ganti{background:#1f3a2b;color:#8fe0b4}html[data-tema=gelap] .per-tx small,html[data-tema=gelap] .per-grp{color:#8fd3ae}
 html[data-tema=gelap] .per-op.on{border-color:#1BB06B;background:#1a2f23;color:#8fe0b4}
+/* ===== Akun wali: ramah orang tua ===== */
+.wl-wrap{display:flex;flex-direction:column;gap:12px}
+.wl-card{background:#fff;border:1px solid #E3ECE6;border-radius:22px;padding:14px 16px 12px;box-shadow:0 1px 0 rgba(10,60,38,.04),0 10px 24px -18px rgba(10,60,38,.4)}
+.wl-h{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+.wl-h>div{flex:1;min-width:0;display:flex;flex-direction:column}
+.wl-h small{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#2F6B4D}
+.wl-h b{font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.wl-dot{width:10px;height:10px;border-radius:50%;background:#1BB06B;box-shadow:0 0 0 5px rgba(27,176,107,.18)}
+.wl-link{display:inline-flex;align-items:center;gap:2px;background:#EAF5EF;color:#0B6B43;border:none;border-radius:999px;padding:7px 11px;font-weight:700;font-size:13px;cursor:pointer}
+.wl-hic,.wl-ic{display:inline-flex;align-items:center;justify-content:center;flex:none}
+.wl-hic{width:36px;height:36px;border-radius:12px}
+.wl-ic{width:36px;height:36px;border-radius:50%}
+.wl-hic.hijau,.wl-ic.hijau{background:#E3F4EA;color:#0B7A47}.wl-hic.biru,.wl-ic.biru{background:#E4EEFB;color:#1F5FB0}.wl-hic.emas,.wl-ic.emas{background:#FFF2D8;color:#996100}
+.wl-hic.merah,.wl-ic.merah{background:#FDE8E5;color:#B3261E}.wl-hic.ungu,.wl-ic.ungu{background:#EFE9FA;color:#6B45B0}.wl-hic.mut,.wl-ic.mut{background:#EEF2EF;color:#7F948A}
+.wl-kabar,.wl-list{display:flex;flex-direction:column}
+.wl-k,.wl-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid #F0F4F1;background:none;border-left:none;border-right:none;border-bottom:none;width:100%;text-align:left;font:inherit;color:inherit}
+.wl-k:first-child,.wl-row:first-child{border-top:none}
+button.wl-row{cursor:pointer}
+.wl-kt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.wl-kt b{font-size:14.5px;font-weight:700;color:var(--ink);line-height:1.3}
+.wl-kt small{font-size:12.5px;color:var(--mut);line-height:1.4}
+.wl-row em{font-style:normal;font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px;flex:none}
+em.hijau{background:#E3F4EA;color:#0B6B3E}em.biru{background:#E4EEFB;color:#1F5FB0}em.emas{background:#FFF2D6;color:#7A5410}em.merah{background:#FDE7E4;color:#9C2A1F}em.mut{background:#EEF2EF;color:#6D8278}
+.wl-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wl-t{border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:2px;background:#F6FAF8;border:1px solid #E7EFEA}
+.wl-t-ic{width:30px;height:30px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:4px;background:#fff}
+.wl-t small{font-size:12px;color:var(--mut);font-weight:600}
+.wl-t b{font-size:21px;font-weight:800;color:var(--ink);letter-spacing:-.02em}
+.wl-t em{font-style:normal;font-size:12px;font-weight:700}
+.wl-t.hijau em,.wl-t.hijau .wl-t-ic{color:#0B7A47}.wl-t.biru em,.wl-t.biru .wl-t-ic{color:#1F5FB0}.wl-t.emas em,.wl-t.emas .wl-t-ic{color:#996100}.wl-t.merah em,.wl-t.merah .wl-t-ic{color:#B3261E}.wl-t.mut em,.wl-t.mut .wl-t-ic{color:#7F948A}
+.wl-peng{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-radius:18px;border:1px solid #F1DFB6;background:#FFF9EC;cursor:pointer;font:inherit;color:inherit}
+.wl-peng .wl-kt small{font-weight:700;color:#8A6412}
+.wl-peta{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin:6px 0 10px}
+.wl-j{position:relative;aspect-ratio:1;border-radius:10px;background:#EEF3F0;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:12px;font-weight:700;color:#7F948A}
+.wl-j b{position:relative;z-index:1}
+.wl-j.ok{background:linear-gradient(145deg,#1BB06B,#0B6B43);color:#fff}
+.wl-j.now{background:#FFF2D8;color:#7A5410;box-shadow:inset 0 0 0 2px #E2A93B}
+.wl-j.now i{position:absolute;left:0;right:0;bottom:0;background:#F6D38A}
+.wl-leg{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--mut)}
+.wl-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;background:#EEF3F0;margin-right:5px;vertical-align:-1px}
+.wl-leg i.ok{background:#139A5C}.wl-leg i.now{background:#F6D38A;box-shadow:inset 0 0 0 1.5px #E2A93B}
+.wl-note{margin:8px 0 0;font-size:12.5px;line-height:1.45;color:var(--mut)}
+.wl-hari>p{margin:12px 0 2px;font-size:12px;font-weight:800;letter-spacing:.03em;color:#2F6B4D}
+.wl-hari:first-child>p{margin-top:0}
+.wl-more{display:block;width:100%;margin-top:8px;padding:11px;border:none;border-radius:14px;background:#EAF5EF;color:#0B6B43;font-weight:700;cursor:pointer}
+.wl-b{padding:10px 0;border-top:1px solid #F0F4F1}.wl-b:first-of-type{border-top:none}
+.wl-b-h{display:flex;align-items:center;gap:8px}
+.wl-b-h span{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--ink)}
+.wl-b-h b{font-size:15px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.wl-b-h em{font-style:normal;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px}
+.wl-b small{display:block;margin-top:4px;font-size:12px;color:var(--mut);line-height:1.4}
+.wl-bar{display:block;height:8px;border-radius:5px;background:#EDF2EF;overflow:hidden;margin-top:8px}
+.wl-bar i{display:block;height:100%;border-radius:5px}
+.wl-bar i.hijau{background:#1BA46A}.wl-bar i.biru{background:#2E7BD8}.wl-bar i.emas{background:#E09A1F}.wl-bar i.merah{background:#D9483B}.wl-bar i.mut{background:#C9D6CE}
+.wl-status{display:flex;align-items:center;gap:14px;padding:16px;border-radius:22px;color:#fff}
+.wl-status.hijau{background:linear-gradient(140deg,#1BA46A,#0B6B43)}.wl-status.emas{background:linear-gradient(140deg,#E9A93A,#B57611)}.wl-status.merah{background:linear-gradient(140deg,#E0584A,#A8261C)}
+.wl-s-ic{width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.18);display:inline-flex;align-items:center;justify-content:center;flex:none}
+.wl-status div{display:flex;flex-direction:column;gap:2px}.wl-status small{font-size:12px;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.05em}
+.wl-status b{font-size:19px;font-weight:800}.wl-status em{font-style:normal;font-size:13px;opacity:.92}
+.wl-step{margin:4px 0 12px;padding-left:20px;font-size:14px;line-height:1.55;color:var(--ink)}.wl-step li{margin:2px 0}
+.wl-wa{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:700;color:#0B6B43;background:#E3F4EA;padding:6px 10px;border-radius:999px;flex:none}
+.wl-per .per-pick{margin:0}
+.wl-kosong{padding:4px 0}
+html[data-tema=gelap] .wl-card{background:var(--card);border-color:var(--line);box-shadow:none}
+html[data-tema=gelap] .wl-k,html[data-tema=gelap] .wl-row,html[data-tema=gelap] .wl-b{border-color:var(--line)}
+html[data-tema=gelap] .wl-t{background:#1a241e;border-color:var(--line)}html[data-tema=gelap] .wl-t-ic{background:#26332b}
+html[data-tema=gelap] .wl-h small,html[data-tema=gelap] .wl-hari>p{color:#8fd3ae}
+html[data-tema=gelap] .wl-link,html[data-tema=gelap] .wl-more,html[data-tema=gelap] .wl-wa{background:#1f3a2b;color:#8fe0b4}
+html[data-tema=gelap] .wl-j{background:#26332b;color:#9DB3A6}html[data-tema=gelap] .wl-bar{background:#26332b}
+html[data-tema=gelap] .wl-peng{background:#2b2618;border-color:#4a3e22}html[data-tema=gelap] .wl-peng .wl-kt small{color:#f3cf86}
+html[data-tema=gelap] .wl-hic.hijau,html[data-tema=gelap] .wl-ic.hijau{background:#1f3a2b;color:#8fe0b4}html[data-tema=gelap] .wl-hic.biru,html[data-tema=gelap] .wl-ic.biru{background:#1e2e45;color:#9cc2f5}
+html[data-tema=gelap] .wl-hic.emas,html[data-tema=gelap] .wl-ic.emas{background:#3d321b;color:#f3cf86}html[data-tema=gelap] .wl-hic.merah,html[data-tema=gelap] .wl-ic.merah{background:#42221e;color:#f2a097}
+html[data-tema=gelap] .wl-hic.ungu,html[data-tema=gelap] .wl-ic.ungu{background:#2e2542;color:#c8b2f2}html[data-tema=gelap] .wl-hic.mut,html[data-tema=gelap] .wl-ic.mut{background:#26332b;color:#9DB3A6}

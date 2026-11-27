@@ -8,6 +8,7 @@ import * as L from "./logic.js";
 import * as KH from "./s_khidmah.js";
 import * as TSH from "./s_tahsin.js";
 import * as WA from "./s_wa.js";
+import * as WL from "./s_wali.js";
 import { kumpulRiwayat, entriRiwayat, KoreksiSheet } from "./s_koreksi.js";
 import { me, FotoAv, FotoLihat, fotoUser } from "./common.js";
 import { HafalanCard, RiwayatSetoran, KehadiranCard, CatatanCard } from "./s_santri.js";
@@ -245,7 +246,7 @@ export function Akun() {
       <div class="acc-head"><${FotoLihat} src=${fotoUser(u)} nama=${st ? st.pendek : sa.nama} size=${58} />
         <span class="acc-t"><b>${st ? st.nama : "Wali " + sa.nama}</b><small>${st ? st.roles.map(r => L.ROLE_LABEL[r]).join(" · ") : `Kelas ${sa.kelas} · ${L.asramaAman(sa.asrama).nama}`}</small></span></div>
       ${st ? html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil", pr ? "Biodata & foto profil" : "Lengkapi biodata & foto profil", () => nav.go("profil"), "green")}${item("lock", "Keamanan", "Username & kata sandi", () => nav.go("keamanan"), "blue")}${st.roles.some(r => L.TTD_ROLES.includes(r)) ? item("pen", "Tanda Tangan", get("ttd", st.id) ? "Tersimpan · otomatis di rapor & surat" : "Belum ada · tulis di layar atau foto dari kertas", () => nav.go("tandaTangan"), "purple") : null}</div>`
-        : html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil Ananda", fotoUser(u) ? "Biodata & foto profil" : "Biodata · tambahkan foto profil", () => nav.go("waliProfil"), "green")}${item("chat", "Kontak ustadz", "Wali Asrama, para Wadir, Mudir, Admin", () => nav.go("kontakUstadz"), "teal")}</div>`}
+        : html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil Ananda", fotoUser(u) ? "Biodata & foto profil" : "Biodata · tambahkan foto profil", () => nav.go("waliProfil"), "green")}</div><${Section} t="Hubungi ustadz" /><${WL.KontakAkun} s=${sa} />`}
       <div class="group mt8">${item("clipboard", "Log perubahan data", st ? "Koreksi & penghapusan oleh akun ini" : "Perubahan biodata ananda", () => nav.go("logUbah"), "gold")}</div>
       <${Section} t="Tampilan & bahasa" /><div class="group">${item(tema === "gelap" ? "moon" : "sun", "Tema", { terang: "Mode terang", gelap: "Mode gelap", sistem: "Ikuti pengaturan HP" }[tema], () => setPilih("tema"), "indigo")}${item("globe", "Bahasa", (BAHASA.find(x => x[0] === bahasa()) || BAHASA[0])[1], () => setPilih("bahasa"), "teal")}</div>
       <${Section} t="Informasi" /><div class="group">${item("bookopen", "Bantuan", null, () => nav.go("bantuan"), "teal")}${item("shield", "Kebijakan Privasi", null, () => nav.go("privasi"), "purple")}${item("settings", "Tentang aplikasi", VERSI, () => nav.go("tentang"), "slate")}</div>
@@ -292,7 +293,7 @@ function KartuHafalan({ h, c, t }) {
       <div class="hf-main"><small class="hf-lbl">Total hafalan ananda</small>
         <div class="hf-big">${h.khatam ? html`30 <em>juz · khatam</em>` : html`${h.selesai.length} <em>juz</em>${hal ? html` ${hal} <em>hal.</em>` : null}`}</div>
         ${h.khatam ? html`<span class="hf-pill">Khatam 30 juz</span>` : html`<small class="hf-lbl hf-now"><i></i>Sedang menghafal</small>
-          <div class="hf-pos"><b>Juz ${h.aktif}</b>${h.baris ? html`<span>hal. ${Math.ceil(h.baris / 15)} · baris ${((h.baris - 1) % 15) + 1}</span>` : html`<span>belum mulai</span>`}</div>`}</div></div>
+          <div class="hf-pos"><b>Juz ${h.aktif}</b><span>${WL.posisiSurah(h).replace(/^Surah /, "")}</span></div>`}</div></div>
     ${h.khatam ? null : html`<div class="hf-juz"><div class="hf-row"><span>Progres Juz ${h.aktif} · ${hal} dari ${halTotal} hal.</span><b>${pAktif}%</b></div>
       <div class="hf-bar"><i style=${`width:${pAktif}%`}></i></div></div>`}
     ${t ? html`<div class="hf-tahsin"><div class="hf-row"><span>Tahsin · ${t.quran ? "lulus Iqro', membaca Al-Qur'an" : "membaca Iqro'"}</span><b>${t.quran ? (t.ket || "Al-Qur'an") : t.jilid ? `Iqro' ${t.jilid} · hal. ${t.hal || 0}/${L.IQRA_HAL}` : "Belum diatur"}</b></div>
@@ -304,39 +305,29 @@ function KartuHafalan({ h, c, t }) {
 }
 export function WaliBeranda() {
   useApp();
-  const s = L.santriById(nav.user.id), a = L.asramaById(s.asrama);
-  const kab = [];
-  L.setoranSantri(s.id).forEach(r => kab.push([r.ts, r.jenis === "tasmi" ? `Tasmi' Juz ${r.juz} ${r.lulus ? "lulus" : "diulang"} · nilai ${r.nilai}` : r.jenis === "ziyadah" ? `Ziyadah ${r.baris} baris · nilai ${r.nilai}` : `${r.jenis === "manzil" ? "Manzil" : "Murojaah"} · nilai ${r.nilai}`, "bookopen"]));
-  all("izin").filter(i => i.santri === s.id).forEach(i => kab.push([i.ts, `${i.jenis === "Skorsing" ? "Skorsing" : "Izin " + i.jenis.toLowerCase()} sampai ${L.fmtDT(i.kembali)}`, "door", () => nav.go("izinView", { id: i.id })]));
-  all("bap").filter(b => b.santri === s.id).forEach(b => kab.push([b.ts, `Catatan pelanggaran: ${b.pelanggaranNama}`, "clipboard", () => nav.go("bapView", { id: b.id })]));
-  L.motdCatatan(s.id).forEach(c => kab.push([c.ts || 0, `${c.st === "A" ? "Alpa" : "Masbuq"} ${L.WAKTU.find(x => x[0] === c.waktu)[1]} · pelanggaran ringan`, "moon"]));
-  kab.sort((x, y) => y[0] - x[0]);
-  const peng = all("pengumuman").sort((x, y) => y.ts - x.ts).slice(0, 2);
-  const h = L.hafalan(s), c = L.capaianJuz(s);
-  return html`<${HomeTop} cls="hc-hf" nama=${"Wali " + (s.panggilan || s.nama.split(" ")[0])} sub=${`${s.nama} · Kelas ${s.kelas} · ${a.nama}`} bell=${newPeng()} foto=${fotoUser(nav.user)}>
+  const s = L.santriById(nav.user.id), a = L.asramaAman(s.asrama), h = L.hafalan(s), c = L.capaianJuz(s);
+  const peng = all("pengumuman").sort((x, y) => y.ts - x.ts)[0];
+  return html`<${HomeTop} cls="hc-hf" nama=${"Ayah/Bunda " + (s.panggilan || s.nama.split(" ")[0])} sub=${`${s.nama} · Kelas ${s.kelas} · Asrama ${a.nama}`} bell=${newPeng()} foto=${fotoUser(nav.user)}>
       <${KartuHafalan} h=${h} c=${c} t=${L.tahsinStatus(s)} /></${HomeTop}>
-    <div class="wrap"><button class="strip" onClick=${() => nav.go("waliRekap")}><span class="strip-ic" style=${`background:${WARNA.teal[2]}`}><${Ikon} n="grafik" warna="teal" s=${28} /></span><span class="strip-t"><b>Rekap Ananda</b><small>Hafalan, kehadiran, izin, pelanggaran per periode</small></span><span class="strip-go">Buka <${Icon} n="right" s=${16} w=${2.4} /></span></button>
-    <${WA.KontakUtamaWali} s=${s} />
-    ${(() => { const rg = L.periodeRange("bulanan"), kh = L.kehadiranHalaqah(s.id, rg), mp = L.mutPersen(s.id, rg), po = L.poinSantri(s.id);
-      return html`<${Card} title="Bulan ini" right=${html`<small>${rg.label}</small>`}><div class="stats"><${Stat} label="Hadir halaqah" value=${kh.pct == null ? "—" : kh.pct + "%"} /><${Stat} label="Mutaba'ah" value=${mp.ibadah == null ? "—" : Math.round((mp.ibadah + mp.adab) / 2) + "%"} /><${Stat} label="Poin catatan" value=${po.total} tone=${po.total ? "gold" : ""} /></div></${Card}>`; })()}
-    <${KartuAI} judul="Ringkasan untuk Ayah/Bunda" tombol="Buat ringkasan perkembangan" ket="AI merangkum perkembangan ananda dari data pondok dalam bahasa yang mudah dipahami." buat=${() => ringkasWali(s)} />
-    <${Card} title="Kabar terbaru">${kab.length ? html`<div class="list">${kab.slice(0, 6).map(([ts, t, ic, go]) => html`<${Row} name=${t} sub=${ts ? `${L.fmtTgl(L.ymd(new Date(ts)))}${go ? " · ketuk untuk detail" : ""}` : ""} icon=${html`<${Icon} n=${ic} s=${18} />`} onClick=${go} />`)}</div>` : html`<${Empty} t="Belum ada kabar baru tentang ananda." icon="heart" />`}</${Card}>
-</div>`;
+    <div class="wrap wl-wrap">
+      <${WL.KabarHariIni} s=${s} />
+      ${peng ? html`<button type="button" class="wl-peng" onClick=${() => nav.go("pengumuman")}><span class="wl-ic emas"><${Icon} n="megaphone" s=${18} /></span><span class="wl-kt"><small>Pengumuman pondok · ${L.fmtTgl(L.ymd(new Date(peng.ts)))}</small><b>${peng.judul || "Pengumuman"}</b></span><${Icon} n="right" s=${18} /></button>` : null}
+      <${WL.BulanIni} s=${s} />
+      <${KartuAI} judul="Ringkasan untuk Ayah/Bunda" tombol="Buat ringkasan perkembangan" ket="AI merangkum perkembangan ananda dari data pondok dalam bahasa yang mudah dipahami." buat=${() => ringkasWali(s)} />
+    </div>`;
 }
 export function WaliHafalan() {
   useApp(); const s = L.santriById(nav.user.id);
-  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Hafalan Ananda</h1><p>${s.nama}</p></div></div></div><div class="wrap"><${TahsinCard} s=${s} /><${HafalanCard} s=${s} /><${Section} t="Riwayat setoran dan tasmi'" /><${Card}><${RiwayatSetoran} sid=${s.id} n=${20} /></${Card}></div>`;
+  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Hafalan Ananda</h1><p>${s.nama}</p></div></div></div>
+    <div class="wrap wl-wrap">${L.tahsinStatus(s) ? html`<${TahsinCard} s=${s} />` : null}<${WL.PetaJuz} s=${s} /><${WL.LinimasaSetoran} s=${s} /></div>`;
 }
 export function WaliAnanda() {
   useApp(); const s = L.santriById(nav.user.id);
-  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Ananda</h1><p>${s.nama} · Kelas ${s.kelas}</p></div></div></div><div class="wrap"><${KehadiranCard} s=${s} />
-    <${Card} title="Nilai projek"><div class="list">${DATA.mapel.map(m => { const d = get("nilaiMapel", L.nilaiKey(m.id, s.kelas)), v = d && d.projek ? d.projek[s.id] : null, kk = L.kehadiranKelas(s.id, m.id);
-      const pj = d && d.projekList ? d.projekList.map(p => [p.nama, ((d.projekNilai || {})[p.id] || {})[s.id]]).filter(([, x]) => x !== "" && x != null) : [];
-      return html`<${Row} name=${m.nama} sub=${`${pj.length ? pj.map(([n, x]) => `${n}: ${x}`).join(" · ") + " · " : ""}Kehadiran kelas ${kk.pct == null ? "—" : kk.pct + "%"}`} icon=${html`<${Icon} n="award" s=${18} />`} right=${v == null || v === "" ? html`<${Pill} t="Belum" tone="muted" />` : html`<${Pill} t=${(pj.length > 1 ? "Rata " : "Projek ") + v} tone=${v >= 70 ? "green" : "red"} />`} />`; })}</div></${Card}>
-    <p class="fab-note">Nilai PTS, PAS, dan rapor dibagikan saat pembagian rapor, tidak tampil di aplikasi.</p></div>`;
+  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Perkembangan Ananda</h1><p>${s.nama} · Kelas ${s.kelas}</p></div></div></div>
+    <div class="wrap wl-wrap"><${WL.Perkembangan} s=${s} /></div>`;
 }
 export function WaliIzin() {
   useApp(); const s = L.santriById(nav.user.id);
-  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Izin & Catatan</h1><p>${s.nama}</p></div></div></div><div class="wrap">
-    <p class="hint">Untuk izin pulang atau keluar, hubungi Wadir Kesantrian Pondok ${L.pondokOfSantri(s)}. Setelah disetujui, izin tampil di sini.</p><${CatatanCard} s=${s} /></div>`;
+  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Izin & Kedisiplinan</h1><p>${s.nama}</p></div></div></div>
+    <div class="wrap wl-wrap"><${WL.IzinWali} s=${s} /></div>`;
 }
