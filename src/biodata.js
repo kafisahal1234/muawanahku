@@ -54,7 +54,7 @@ const BULAN = { jan: 1, feb: 2, peb: 2, mar: 3, apr: 4, mei: 5, may: 5, jun: 6, 
 export function keTanggal(v) {
   const t = String(v || "").trim().toLowerCase().replace(/\s*,\s*/g, " ").replace(/\s+/g, " "); if (!t) return "";
   let m = t.match(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/); if (m) return ok(+m[1], +m[2], +m[3]);
-  m = t.match(/(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/); if (m) return ok(+m[3] < 100 ? 2000 + +m[3] : +m[3], +m[2], +m[1]);
+  m = t.match(/(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/); if (m) { const y = +m[3] < 100 ? 2000 + +m[3] : +m[3]; return +m[2] > 12 && +m[1] <= 12 ? ok(y, +m[1], +m[2]) : ok(y, +m[2], +m[1]); } // hari/bulan/tahun; bila "bulan" > 12 berarti format bulan/hari
   m = t.match(/(\d{1,2})\s+([a-z]+)\.?\s+(\d{4})/); if (m && BULAN[m[2].slice(0, 3)]) return ok(+m[3], BULAN[m[2].slice(0, 3)], +m[1]);
   m = t.match(/^(\d{1,2})(\d{2})(\d{2})$/); if (m) return ok(2000 + +m[3], +m[2], +m[1]); // DDMMYY
   return "";

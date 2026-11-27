@@ -84,8 +84,12 @@ export async function bacaBerkas(file) {
     const teks = await file.text(); return { nama, jenis: "tabel", teks: teks.slice(0, 80000), tabel: parseCSV(teks), berkas: [] };
   }
   if (/^(xlsx|xlsm|xls|ods)$/.test(ext)) {
-    const X = await muatXLSX(), wb = X.read(new Uint8Array(await file.arrayBuffer()), { type: "array", cellDates: true });
+    const X = await muatXLSX(), wb = X.read(new Uint8Array(await file.arrayBuffer()), { type: "array", cellNF: true });
     let tabel = null, teks = "";
+    // Tanggal Excel ditulis ulang sebagai YYYY-MM-DD langsung dari nilai serialnya (bukan dari format tampilan
+    // seperti "1/14/14" yang bisa terbaca terbalik hari/bulan).
+    const p2 = n => String(n).padStart(2, "0");
+    wb.SheetNames.forEach(sn => { const ws = wb.Sheets[sn]; Object.keys(ws).forEach(a => { const c = ws[a]; if (a[0] === "!" || !c || c.t !== "n" || !c.z || !X.SSF.is_date(c.z)) return; const d = X.SSF.parse_date_code(c.v); if (d && d.y) c.w = `${d.y}-${p2(d.m)}-${p2(d.d)}`; }); });
     wb.SheetNames.forEach(sn => {
       const rows = X.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: false, defval: "", dateNF: "yyyy-mm-dd" }).filter(r => r.some(x => String(x).trim()));
       if (!rows.length) return;
