@@ -53,6 +53,12 @@ await cek("wali ubah nilai ditolak", assertFails(setDoc(doc(wl, "mk_setoran/x1")
 await cek("wali baca sidik sandi ditolak", assertFails(getDoc(doc(wl, "mk_akun/admin123"))));
 await cek("wali baca daftar kode ditolak", assertFails(getDocs(collection(wl, "mk_kodeWali"))));
 await cek("wali ubah biodata anaknya", assertSucceeds(setDoc(doc(wl, "mk_santriEdit/s001"), { nama: "Fulan", hp: "08" })));
+await cek("wali ubah hobi (updateDoc) boleh", assertSucceeds(updateDoc(doc(wl, "mk_santriEdit/s001"), { hobi: "Futsal" })));
+await cek("wali ubah nama lengkap ditolak", assertFails(updateDoc(doc(wl, "mk_santriEdit/s001"), { nama: "Ganti" })));
+await cek("wali ubah panggilan ditolak", assertFails(updateDoc(doc(wl, "mk_santriEdit/s001"), { panggilan: "X" })));
+await cek("wali ubah tanggal lahir ditolak", assertFails(updateDoc(doc(wl, "mk_santriEdit/s001"), { lahir: "2012-01-01" })));
+await cek("wali ubah No. WA wali ditolak", assertFails(updateDoc(doc(wl, "mk_santriEdit/s001"), { hpWali: "0811" })));
+await cek("wali buat dok santri baru ditolak", assertFails(setDoc(doc(wl, "mk_santriEdit/s001x"), { nama: "x" })));
 await cek("wali ubah biodata santri lain ditolak", assertFails(setDoc(doc(wl, "mk_santriEdit/s002"), { nama: "x" })));
 await cek("wali foto profil anaknya", assertSucceeds(setDoc(doc(wl, "mk_profil/s_s001"), { foto: "x" })));
 await cek("wali tulis log", assertSucceeds(setDoc(doc(wl, "mk_log/l1"), { aksi: "ubah" })));

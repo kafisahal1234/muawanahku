@@ -126,26 +126,31 @@ export function WaliProfil() {
   // kolom biodata lain yang sudah terisi (dari impor admin) ikut tampil & bisa diubah wali; data tambahan hanya ditampilkan
   const LAIN = BIODATA.filter(([k]) => !BIO_S.some(([b]) => b === k) && s[k]).map(([k, l]) => [k, l, k.startsWith("hp") ? "tel" : "text"]), SEMUA = [...BIO_S, ...LAIN];
   const tambahan = Object.entries(s.tambahan || {}).filter(([, v]) => v);
-  const mulai = () => { setF({ nama: s.nama, ...Object.fromEntries(SEMUA.map(([k]) => [k, s[k] || ""])) }); setEd(true); };
+  // data identitas (dasar kode akses & kontak resmi) hanya diubah Admin pondok
+  const KUNCI = ["panggilan", "lahir", "hpWali"], BISA = SEMUA.filter(([k]) => !KUNCI.includes(k));
+  const mulai = () => { setF(Object.fromEntries(BISA.map(([k]) => [k, s[k] || ""]))); setEd(true); };
   const simpan = async () => {
-    if (!f.nama.trim()) return toast("Nama lengkap ananda wajib diisi.", "err");
-    const lama = (S.data.santriEdit || {})[s.id] || {}, baru = { ...lama, nama: f.nama.trim(), ...Object.fromEntries(SEMUA.map(([k]) => [k, String(f[k] || "").trim()])), kode: L.kodeAkses(s), diubahWali: Date.now() };
+    const lama = (S.data.santriEdit || {})[s.id] || {}, baru = { ...lama, ...Object.fromEntries(BISA.map(([k]) => [k, String(f[k] || "").trim()])), diubahWali: Date.now() };
     if (await put("santriEdit", s.id, baru)) { logUbah("ubah", "santriEdit", s.id, `Biodata ${baru.nama} diperbarui oleh wali`, lama); toast("Biodata ananda tersimpan"); setEd(false); }
   };
   if (ed) return html`<${SubHeader} title="Ubah Biodata Ananda" sub=${s.nama} />
-    <div class="wrap form-page"><${Card}><${Field} label="Nama lengkap"><input class="in" value=${f.nama} onInput=${e => setF({ ...f, nama: e.target.value })} /></${Field}>
-      ${SEMUA.map(([k, lab, t]) => html`<${Field} label=${lab}>${t === "area" ? html`<textarea class="in" rows="2" value=${f[k]} onInput=${e => setF({ ...f, [k]: e.target.value })}></textarea>`
+    <div class="wrap form-page"><${Card} title="Diubah oleh Admin pondok" cls="kv-card">
+        ${[["Nama lengkap", s.nama], ...SEMUA.filter(([k]) => KUNCI.includes(k)).map(([k, lab]) => [lab, val(k)])].map(([lab, v]) => html`<div class="kv"><span>${lab}</span><b class=${v ? "" : "kosong"}><${Icon} n="lock" s=${13} /> ${v || "Belum diisi"}</b></div>`)}
+        <p class="small" style="margin:6px 0 0">Bila ada yang salah, hubungi Admin pondok untuk memperbaikinya.</p></${Card}>
+      <${Card} title="Bisa diubah wali">
+      ${BISA.map(([k, lab, t]) => html`<${Field} label=${lab}>${t === "area" ? html`<textarea class="in" rows="2" value=${f[k]} onInput=${e => setF({ ...f, [k]: e.target.value })}></textarea>`
         : html`<input class="in" type=${t === "tel" ? "tel" : t} inputmode=${t === "tel" ? "tel" : null} value=${f[k]} onInput=${e => setF({ ...f, [k]: e.target.value })} />`}</${Field}>`)}</${Card}>
-      <${Hint}>Kode akses masuk tetap <b>${L.kodeAkses(s)}</b> walaupun nama atau tanggal lahir diubah.</${Hint}>
+      <${Hint}>Kode akses masuk tetap <b>${L.kodeAkses(s)}</b>.</${Hint}>
       <div class="sticky-act btn-stack"><${Btn} icon="check" onClick=${simpan}>Simpan biodata</${Btn}><${Btn} kind="text" onClick=${() => setEd(false)}>Batal</${Btn}></div></div>`;
   const isi = BIO_S.filter(([k]) => s[k]).length;
-  return html`<${SubHeader} title="Profil Ananda" sub="Biodata diisi oleh wali" />
+  return html`<${SubHeader} title="Profil Ananda" sub="Data utama oleh pondok · pelengkap oleh wali" />
     <div class="wrap"><div class="prof-head"><${FotoEdit} nama=${s.nama} /><b>${s.nama}</b><small>Kelas ${s.kelas} · Asrama ${a.nama} · ${L.namaHalaqah(s)}</small>
       <div class="prof-bar"><i style=${`width:${Math.round((isi / BIO_S.length) * 100)}%`}></i></div><small>Biodata terisi ${isi} dari ${BIO_S.length}</small></div>
       <${Section} t="Kode akses" /><${Card} cls="kv-card"><div class="kv"><span>Kode akses wali</span><b>${L.kodeAkses(s)}</b></div><p class="small" style="margin:6px 0 0">Terkunci, tidak bisa diubah. Simpan baik-baik untuk masuk ke aplikasi.</p></${Card}>
-      <${Section} t="Biodata" /><${Card} cls="kv-card"><div class="kv"><span>Nama lengkap</span><b>${s.nama}</b></div>
-        ${SEMUA.map(([k, lab]) => html`<div class="kv"><span>${lab}</span><b class=${val(k) ? "" : "kosong"}>${val(k) || "Belum diisi"}</b></div>`)}</${Card}>
+      <${Section} t="Biodata" /><${Card} cls="kv-card"><div class="kv"><span>Nama lengkap <${Icon} n="lock" s=${12} /></span><b>${s.nama}</b></div>
+        ${SEMUA.map(([k, lab]) => html`<div class="kv"><span>${lab}${KUNCI.includes(k) ? html` <${Icon} n="lock" s=${12} />` : null}</span><b class=${val(k) ? "" : "kosong"}>${val(k) || "Belum diisi"}</b></div>`)}</${Card}>
       ${tambahan.length ? html`<${Section} t="Data tambahan dari pondok" /><${Card} cls="kv-card">${tambahan.map(([l, v]) => html`<div class="kv"><span>${l}</span><b>${v}</b></div>`)}</${Card}>` : null}
+      <p class="small" style="margin:2px 4px 10px"><${Icon} n="lock" s=${13} /> Nama lengkap, nama panggilan, tanggal lahir, dan No. HP wali hanya bisa diubah oleh Admin pondok. <button class="link" onClick=${() => nav.go("kontakUstadz")}>Hubungi Admin</button></p>
       <${Btn} icon="edit" onClick=${mulai}>Ubah biodata ananda</${Btn}>
       <p class="small center mt8">Kelas, asrama, dan halaqah ditentukan pondok.</p></div>`;
 }
