@@ -1,7 +1,8 @@
 import { render, Component } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { html, nav, useApp, Icon, ToastHost } from "./ui.js";
-import { S, initStore, sambungUlang, toast } from "./store.js";
+import { S, initStore, sambungUlang, segarkan, toast } from "./store.js";
+import { pasangTarik } from "./tarik.js";
 import { selaraskanKodeWali } from "./cloud.js";
 import * as L from "./logic.js";
 import * as T from "./s_tahfidz.js";
@@ -169,5 +170,5 @@ try {
   }, { passive: true });
   if ("serviceWorker" in navigator && location.protocol === "https:" && window.top === window && !/claude|anthropic/.test(location.hostname)) navigator.serviceWorker.register("sw.js").catch(() => {});
 } catch (e) { }
-terapkanTema(); terapkanBahasa();
+terapkanTema(); terapkanBahasa(); pasangTarik(segarkan);
 render(html`<${App} />`, document.getElementById("root"));
