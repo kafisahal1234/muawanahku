@@ -16,6 +16,11 @@ const JAM = 10;
 const jamTerbit = tgl => { const d = L.parseYmd(tgl); d.setHours(JAM, 0, 0, 0); return d; };
 const pad = n => String(n).padStart(2, "0");
 const akhirBulan = (y, m) => new Date(y, m + 1, 0).getDate();
+// Kelompok bidang untuk menyusun blok laporan (urutan tampil)
+export const KELOMPOK = [
+  ["ananda", "Perkembangan ananda", "heart", "hijau"], ["yayasan", "Garis besar pondok", "chart", "hijau"], ["tahfidz", "Tahfidz", "book", "hijau"],
+  ["asrama", "Mutaba'ah asrama", "moon", "ungu"], ["kesantrian", "Kesantrian", "shield", "merah"], ["kbm", "Kurikulum & mapel", "clipboard", "biru"], ["kinerja", "Kinerja ustadz", "users", "emas"],
+];
 export const JENIS_IKON = { pekanan: "calendar", bulanan: "chart", mid: "target", semester: "award", tahunan: "star" };
 export const JADWAL_TEKS = [["pekanan", "Pekanan", "Setiap Sabtu, 10.00"], ["bulanan", "Bulanan", "Tanggal 29, 10.00"], ["mid", "Tengah semester", "Saat mid semester"], ["semester", "Semester", "Akhir semester"], ["tahunan", "Tahunan", "Akhir tahun pelajaran"]];
 
@@ -67,44 +72,44 @@ const nilaiIkut = jenis => ["mid", "semester", "tahunan"].includes(jenis);
 // { tunda: true } → kembalikan tugas { judul, tunda() } agar layar bisa menghitung bertahap (tidak membeku)
 export function susunLaporan(jenis, rg, { tunda = false } = {}) {
   const B = [], hitung = (fn, meta) => { try { const e = denganLalu(fn, jenis, rg); Object.assign(e, meta); return e; } catch (er) { console.warn("laporan", er); return null; } };
-  const ev = (fn, meta = {}) => { if (tunda) B.push({ judul: meta.judul, tunda: () => hitung(fn, meta) }); else { const e = hitung(fn, meta); if (e) B.push(e); } };
-  if (nav.user && nav.user.kind === "wali") { const s = L.santriById(nav.user.id); if (s) ev(r => evAnanda(s, r, { jenis }), { judul: `Perkembangan ${s.panggilan || s.nama.split(" ")[0]}` }); return B; }
+  const ev = (fn, meta = {}) => { if (tunda) B.push({ judul: meta.judul, lingkup: meta.lingkup, kelompok: meta.kelompok, tunda: () => hitung(fn, meta) }); else { const e = hitung(fn, meta); if (e) B.push(e); } };
+  if (nav.user && nav.user.kind === "wali") { const s = L.santriById(nav.user.id); if (s) ev(r => evAnanda(s, r, { jenis }), { kelompok: "ananda", judul: `Perkembangan ${s.panggilan || s.nama.split(" ")[0]}` }); return B; }
   const m = me(); if (!m) return B;
   const r = m.roles || [], mp = L.mudirPondok(m), hq = L.HALAQAH.filter(h => h.guru === m.id), asr = L.ASRAMA.filter(a => a.musyrif === m.id);
   const yys = r.includes("yayasan") && r.every(x => x === "yayasan" || x === "admin");
-  if (r.includes("yayasan")) B.push(...laporanYayasan(jenis, rg));
+  if (r.includes("yayasan")) { if (tunda) { let yy = null; const ambil = () => (yy = yy || laporanYayasan(jenis, rg)); ["Tahfidz", "Kurikulum", "Kesantrian", "Ustadz & guru"].forEach((j, i) => B.push({ judul: j, kelompok: "yayasan", tunda: () => ambil()[i] })); } else B.push(...laporanYayasan(jenis, rg)); }
   if (yys) return B;
   // tugas pribadi lebih dulu
-  hq.forEach(h => ev(x => evTahfidz(L.santriHalaqah(h.id), x, { jenis, kinerjaHalaqah: [h.id] }), { judul: `Halaqah ${h.nama.replace(/^Halaqah\s*/i, "")}`, lingkup: "Halaqah yang Anda ampu" }));
+  hq.forEach(h => ev(x => evTahfidz(L.santriHalaqah(h.id), x, { jenis, kinerjaHalaqah: [h.id] }), { kelompok: "tahfidz", judul: `Halaqah ${h.nama.replace(/^Halaqah\s*/i, "")}`, lingkup: "Halaqah yang Anda ampu" }));
   asr.forEach(a => { const ss = L.santriAsrama(a.id);
-    ev(x => evAsrama(ss, x, { asrama: [a] }), { judul: `Mutaba'ah Asrama ${a.nama}`, lingkup: "Asrama binaan Anda" });
-    ev(x => evKesantrian(ss, x), { judul: `Izin & pelanggaran Asrama ${a.nama}`, lingkup: "Asrama binaan Anda" }); });
-  if ((m.ajar || []).length) ev(x => evMapel(m.ajar.map(p => [...p]), x, { nilai: nilaiIkut(jenis) }), { judul: "Kelas yang Anda ajar", lingkup: (m.ajar || []).map(([mp2, k]) => `${(L.mapelById(mp2) || {}).nama} ${k}`).join(", ") });
+    ev(x => evAsrama(ss, x, { asrama: [a] }), { kelompok: "asrama", judul: `Mutaba'ah Asrama ${a.nama}`, lingkup: "Asrama binaan Anda" });
+    ev(x => evKesantrian(ss, x), { kelompok: "kesantrian", judul: `Izin & pelanggaran Asrama ${a.nama}`, lingkup: "Asrama binaan Anda" }); });
+  if ((m.ajar || []).length) ev(x => evMapel(m.ajar.map(p => [...p]), x, { nilai: nilaiIkut(jenis) }), { kelompok: "kbm", judul: "Kelas yang Anda ajar", lingkup: (m.ajar || []).map(([mp2, k]) => `${(L.mapelById(mp2) || {}).nama} ${k}`).join(", ") });
   // pimpinan
   if (mp) mp.forEach(p => {
     const ss = santriPondok(p), lk = mp.length > 1 ? ` · Pondok ${p}` : "";
-    ev(x => evTahfidz(ss, x, { jenis, kinerjaHalaqah: L.HALAQAH.filter(h => L.pondokHalaqah(h) === p).map(h => h.id) }), { judul: `Tahfidz${lk}`, lingkup: `Seluruh halaqah Pondok ${p}` });
-    ev(x => evMapel(pasanganSemua().filter(([, k]) => L.pondokKelas(k) === p), x, { nilai: nilaiIkut(jenis) }), { judul: `KBM & nilai${lk}`, lingkup: `Seluruh kelas Pondok ${p}` });
-    ev(x => evAsrama(ss, x, { asrama: L.ASRAMA.filter(a => a.pondok === p) }), { judul: `Mutaba'ah${lk}`, lingkup: `Seluruh asrama Pondok ${p}` });
-    ev(x => evKesantrian(ss, x), { judul: `Kesantrian${lk}`, lingkup: `Seluruh santri Pondok ${p}` });
-    ev(x => evKinerja(stafPondok(p).filter(punyaTugas), x), { judul: `Kinerja ustadz${lk}`, lingkup: `Seluruh ustadz Pondok ${p}` });
+    ev(x => evTahfidz(ss, x, { jenis, kinerjaHalaqah: L.HALAQAH.filter(h => L.pondokHalaqah(h) === p).map(h => h.id) }), { kelompok: "tahfidz", judul: `Tahfidz${lk}`, lingkup: `Seluruh halaqah Pondok ${p}` });
+    ev(x => evMapel(pasanganSemua().filter(([, k]) => L.pondokKelas(k) === p), x, { nilai: nilaiIkut(jenis) }), { kelompok: "kbm", judul: `KBM & nilai${lk}`, lingkup: `Seluruh kelas Pondok ${p}` });
+    ev(x => evAsrama(ss, x, { asrama: L.ASRAMA.filter(a => a.pondok === p) }), { kelompok: "asrama", judul: `Mutaba'ah${lk}`, lingkup: `Seluruh asrama Pondok ${p}` });
+    ev(x => evKesantrian(ss, x), { kelompok: "kesantrian", judul: `Kesantrian${lk}`, lingkup: `Seluruh santri Pondok ${p}` });
+    ev(x => evKinerja(stafPondok(p).filter(punyaTugas), x), { kelompok: "kinerja", judul: `Kinerja ustadz${lk}`, lingkup: `Seluruh ustadz Pondok ${p}` });
   });
   if (!mp && r.includes("wadir_tahfidz")) {
-    ev(x => evTahfidz(L.santriList(), x, { jenis, kinerjaHalaqah: L.HALAQAH.map(h => h.id) }), { judul: "Tahfidz seluruh halaqah", lingkup: `${L.HALAQAH.length} halaqah` });
-    ev(x => evKinerja(L.staffAktif().filter(st => L.HALAQAH.some(h => h.guru === st.id)), x), { judul: "Kinerja guru halaqah", lingkup: "Absen halaqah per sesi" });
+    ev(x => evTahfidz(L.santriList(), x, { jenis, kinerjaHalaqah: L.HALAQAH.map(h => h.id) }), { kelompok: "tahfidz", judul: "Tahfidz seluruh halaqah", lingkup: `${L.HALAQAH.length} halaqah` });
+    ev(x => evKinerja(L.staffAktif().filter(st => L.HALAQAH.some(h => h.guru === st.id)), x), { kelompok: "kinerja", judul: "Kinerja guru halaqah", lingkup: "Absen halaqah per sesi" });
   }
   if (!mp && r.includes("wadir_kurikulum")) {
-    ev(x => evMapel(pasanganSemua(), x, { nilai: nilaiIkut(jenis) }), { judul: "KBM & nilai seluruh kelas", lingkup: "Semua mapel dan kelas" });
-    ev(x => evKinerja(L.staffAktif().filter(st => (st.ajar || []).length || L.jadwalAll().some(j => j.guru === st.id)), x), { judul: "Kinerja guru mapel", lingkup: "Absen & jurnal per pertemuan" });
+    ev(x => evMapel(pasanganSemua(), x, { nilai: nilaiIkut(jenis) }), { kelompok: "kbm", judul: "KBM & nilai seluruh kelas", lingkup: "Semua mapel dan kelas" });
+    ev(x => evKinerja(L.staffAktif().filter(st => (st.ajar || []).length || L.jadwalAll().some(j => j.guru === st.id)), x), { kelompok: "kinerja", judul: "Kinerja guru mapel", lingkup: "Absen & jurnal per pertemuan" });
   }
   if (!mp && r.includes("wadir_kesantrian")) {
     const p = m.pondok, ss = p ? santriPondok(p) : L.santriList(), as = L.ASRAMA.filter(a => !p || a.pondok === p), lk = p ? ` Pondok ${p}` : "";
-    ev(x => evAsrama(ss, x, { asrama: as }), { judul: `Mutaba'ah seluruh asrama${lk}`, lingkup: `${as.length} asrama` });
-    ev(x => evKesantrian(ss, x), { judul: `Kesantrian${lk}`, lingkup: `${ss.length} santri` });
-    ev(x => evKinerja(L.staffAktif().filter(st => as.some(a => a.musyrif === st.id)), x), { judul: `Kinerja wali asrama${lk}`, lingkup: "Mutaba'ah & ceklis musyrif" });
+    ev(x => evAsrama(ss, x, { asrama: as }), { kelompok: "asrama", judul: `Mutaba'ah seluruh asrama${lk}`, lingkup: `${as.length} asrama` });
+    ev(x => evKesantrian(ss, x), { kelompok: "kesantrian", judul: `Kesantrian${lk}`, lingkup: `${ss.length} santri` });
+    ev(x => evKinerja(L.staffAktif().filter(st => as.some(a => a.musyrif === st.id)), x), { kelompok: "kinerja", judul: `Kinerja wali asrama${lk}`, lingkup: "Mutaba'ah & ceklis musyrif" });
   }
   // kinerja pribadi untuk ustadz yang bukan pimpinan
-  if (!pimpinan(m) && punyaTugas(m)) ev(x => evKinerja([m], x), { judul: "Kinerja saya", lingkup: "Input yang menjadi tugas Anda" });
+  if (!pimpinan(m) && punyaTugas(m)) ev(x => evKinerja([m], x), { kelompok: "kinerja", judul: "Kinerja saya", lingkup: "Input yang menjadi tugas Anda" });
   return B;
 }
 
@@ -115,7 +120,7 @@ function laporanYayasan(jenis, rg) {
   const T = angka(angkaTahfidz, rg), K = angka(angkaKurikulum, rg), Ks = angka(angkaKesantrian, rg), D = angka(angkaSdm, rg);
   const TL = rl ? angka(angkaTahfidz, rl) : null, KL = rl ? angka(angkaKurikulum, rl) : null, KsL = rl ? angka(angkaKesantrian, rl) : null, DL = rl ? angka(angkaSdm, rl) : null;
   const P = v => (v == null ? "—" : v + "%"), dsm = v => (v == null ? "—" : (Math.round(v * 10) / 10).toLocaleString("id-ID"));
-  const bagian = (kunci, judul, ikon, baris, kes) => ({ kunci, judul, ikon, lingkup: "Pondok 29 (kelas 7–8) dibanding Pondok 21 (kelas 9A–9B)", banding: baris, ringkas: [], kesimpulan: kes, perhatian: [], baik: [], laluLabel: laluL,
+  const bagian = (kunci, judul, ikon, baris, kes) => ({ kunci, judul, ikon, kelompok: "yayasan", lingkup: "Pondok 29 (kelas 7–8) dibanding Pondok 21 (kelas 9A–9B)", banding: baris, ringkas: [], kesimpulan: kes, perhatian: [], baik: [], laluLabel: laluL,
     rinci: { kol: ["Aspek", "Pondok 29", "Pondok 21"], rows: baris.map(b => [b.t, b.f(b.v["29"]), b.f(b.v["21"])]) }, catatan: "Garis besar per pondok tanpa nama santri atau ustadz." });
   const row = (t, get, src, srcL, f = P, rendahBaik = false) => ({ t, f, rendahBaik, v: { "29": get(src["29"]), "21": get(src["21"]) }, lalu: srcL ? { "29": get(srcL["29"]), "21": get(srcL["21"]) } : null });
   const unggul = (b, nm) => { const a = b.v["29"], c = b.v["21"]; if (a == null || c == null || a === c) return null; const p29 = b.rendahBaik ? a < c : a > c; return `${nm} lebih baik di Pondok ${p29 ? "29" : "21"} (${b.f(p29 ? a : c)} dibanding ${b.f(p29 ? c : a)}).`; };

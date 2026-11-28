@@ -6563,5 +6563,89 @@ export const KAMUS2 = {
 "Dari pertemuan yang sudah diabsen": [
 "From recorded lessons",
 "من الحصص المسجلة"
+],
+"Tindak lanjut": [
+"Follow-up",
+"المتابعة"
+],
+"tindak lanjut": [
+"follow-up",
+"متابعة"
+],
+"kabar baik": [
+"good news",
+"أخبار طيبة"
+],
+"Ringkasan": [
+"Summary",
+"الملخص"
+],
+"Rincian": [
+"Details",
+"التفاصيل"
+],
+"Unduh laporan": [
+"Download report",
+"تنزيل التقرير"
+],
+"Unduh PDF per bagian": [
+"Download PDF per section",
+"تنزيل PDF لكل قسم"
+],
+"Unduh PDF bagian ini": [
+"Download this section as PDF",
+"تنزيل هذا القسم PDF"
+],
+"Bahas bagian ini dengan Asisten AI": [
+"Discuss this section with AI Assistant",
+"ناقش هذا القسم مع المساعد الذكي"
+],
+"Bahas semua dengan Asisten AI": [
+"Discuss everything with AI Assistant",
+"ناقش الكل مع المساعد الذكي"
+],
+"Sebelumnya": [
+"Previous",
+"السابق"
+],
+"Berikutnya": [
+"Next",
+"التالي"
+],
+"Aman": [
+"All good",
+"لا مشكلات"
+],
+"Semua bagian dalam satu PDF": [
+"All sections in one PDF",
+"كل الأقسام في ملف PDF واحد"
+],
+"Garis besar pondok": [
+"Campus overview",
+"نظرة عامة على المعهد"
+],
+"Perkembangan ananda": [
+"Your child's progress",
+"تقدم الابن"
+],
+"Mutaba'ah asrama": [
+"Dorm mutaba'ah",
+"متابعة السكن"
+],
+"Kurikulum & mapel": [
+"Curriculum & subjects",
+"المنهج والمواد"
+],
+"Kinerja ustadz": [
+"Teacher performance",
+"أداء المعلمين"
+],
+"Perhatian": [
+"Attention",
+"الاهتمام"
+],
+"perlu perhatian": [
+"needs attention",
+"يحتاج اهتمامًا"
 ]
 };

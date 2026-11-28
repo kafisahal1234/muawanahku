@@ -17,12 +17,17 @@ async def main():
             await pg.evaluate("document.querySelector('.tile:has(.tile-ic) ')") 
             await pg.evaluate("[...document.querySelectorAll('.tile')].find(t=>t.textContent.includes('Laporan')).click()"); await pg.wait_for_timeout(900)
             await pg.screenshot(path=f"{OUT}{u}_1_daftar.png")
-            await pg.click(".lap-hero"); await pg.wait_for_timeout(1500)
-            await pg.screenshot(path=f"{OUT}{u}_2_baca.png", full_page=True)
-            n = await pg.locator(".evx").count(); print(u, "bagian", n, "perlu", await pg.locator(".evx-ls li").count())
-            if await pg.locator(".evx-rb").count():
-                await pg.locator(".evx-rb").first.click(); await pg.wait_for_timeout(300)
-                await pg.locator(".evx").first.screenshot(path=f"{OUT}{u}_3_rinci.png")
+            await pg.click(".lap-hero"); await pg.wait_for_timeout(1800)
+            await pg.screenshot(path=f"{OUT}{u}_2_blok.png", full_page=True)
+            print(u, "blok", await pg.locator(".lb").count(), "kelompok", await pg.locator(".lg").count())
+            await pg.locator(".lb").first.click(); await pg.wait_for_timeout(900)
+            await pg.screenshot(path=f"{OUT}{u}_3_bagian.png", full_page=True)
+            for k, nm in [(1, "perlu"), (3, "rinci")]:
+                if await pg.locator(".lb-tabs button").count() > k:
+                    await pg.locator(".lb-tabs button").nth(k).click(); await pg.wait_for_timeout(400); await pg.screenshot(path=f"{OUT}{u}_4_{nm}.png")
+            await pg.evaluate("history.back()"); await pg.wait_for_timeout(700)
+            await pg.locator(".hdr-btn[aria-label='Unduh laporan']").click(); await pg.wait_for_timeout(600)
+            await pg.screenshot(path=f"{OUT}{u}_5_unduh.png")
         # wali (akun demo)
         await pg.evaluate("sessionStorage.clear(); localStorage.removeItem('mk_user')"); await pg.goto(URL_DIST); await pg.wait_for_timeout(600)
         await pg.locator("text=Wali Santri").first.click(); await pg.locator("text=Lihat semua akun demo").click(); await pg.wait_for_timeout(300)

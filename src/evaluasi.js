@@ -325,7 +325,7 @@ export function evAnanda(s, rg, { jenis = "pekanan" } = {}) {
   if (!t.iq && t.tg > 0 && t.x.zBaris < t.tg / 2) isu.push("Hafalan baru masih di bawah setengah target");
   if (m.m.ibadah != null && m.m.ibadah < 75) isu.push("Ibadah harian perlu dikuatkan");
   if (kk.A) isu.push(`Tidak hadir di kelas tanpa keterangan ${kk.A}×`);
-  if (isu.length) ev.perhatian.push({ id: s.id, jenis: "santri", nama: nm, sub: "Mohon doa dan dukungan dari rumah", isu, skor: 1 });
+  if (isu.length && !ev.kosong) ev.perhatian.push({ id: s.id, jenis: "santri", nama: nm, sub: "Mohon doa dan dukungan dari rumah", isu, skor: 1 });
   ev.labelPerhatian = "Perlu perhatian bersama"; ev.labelBaik = "Alhamdulillah";
   ev.catatan = "Ringkasan otomatis dari catatan ustadz di aplikasi. Untuk penjelasan lebih lanjut silakan menghubungi wali asrama.";
   return ev;

@@ -547,3 +547,58 @@ html[data-tema=gelap] .evx-tb tr td:first-child,html[data-tema=gelap] .evx-tb tr
 html[data-tema=gelap] .evx-ic,html[data-tema=gelap] .lap-r-ic{background:#1E3A2D;color:#8FE0B5}
 html[data-tema=gelap] .evx-t.hijau b{color:#6FD7A0}html[data-tema=gelap] .evx-t.biru b{color:#8DB5FF}html[data-tema=gelap] .evx-t.emas b{color:#F5C24E}html[data-tema=gelap] .evx-t.merah b{color:#FF8A7C}
 html[data-tema=gelap] .lap-wl{background:#13201A;border-color:#22352B}
+/* ===== v5.4 Laporan: blok per bidang + layar per bagian ===== */
+.lap-hd-n span.hijau b{color:#9BF0C2}
+.lg{display:flex;flex-direction:column;gap:8px}
+.lg-h{display:flex;align-items:center;gap:8px;margin:4px 4px 0;font-size:14px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.lg-h small{margin-left:auto;font-size:12px;font-weight:700;color:var(--mut)}
+.lg-dot{width:10px;height:10px;border-radius:4px;background:#1BA46A}.lg-dot.biru{background:#2E7BD8}.lg-dot.emas{background:#E09A1F}.lg-dot.merah{background:#D9483B}.lg-dot.ungu{background:#7E57C2}
+.lg-isi{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:640px){.lg-isi{grid-template-columns:1fr 1fr}}
+.lb{--c1:#E3F4EA;--c2:#0B6B43;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:12px;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;
+  padding:14px;border-radius:20px;border:1px solid #E3ECE6;background:radial-gradient(120px 80px at 100% 0,var(--c1),rgba(255,255,255,0) 75%),#fff;box-shadow:0 1px 0 rgba(10,60,38,.04),0 10px 22px -18px rgba(10,60,38,.45)}
+.lb.biru{--c1:#E6EEFD;--c2:#1F56B5}.lb.emas{--c1:#FFF1D6;--c2:#A86E05}.lb.merah{--c1:#FDE9E5;--c2:#B8322A}.lb.ungu{--c1:#EFE8FD;--c2:#6A3BD9}
+.lb-top{display:flex;align-items:center;gap:10px}
+.lb-ic{width:40px;height:40px;border-radius:13px;flex:none;display:grid;place-items:center;background:var(--c1);color:var(--c2)}
+.lb-t{flex:1;min-width:0;display:flex;flex-direction:column}.lb-t b{font-size:15.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em;line-height:1.25}
+.lb-t small{font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-ang{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lb-a{position:relative;display:flex;flex-direction:column;padding:9px 11px;border-radius:14px;background:#F4F8F6;min-width:0}
+.lb-a b{font-size:19px;font-weight:800;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-a small{font-size:11.5px;font-weight:700;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-a.hijau b{color:#0B7A45}.lb-a.biru b{color:#1F5FC9}.lb-a.emas b{color:#B07A12}.lb-a.merah b{color:#C2372A}
+.lb-a em{position:absolute;top:8px;right:9px;font-style:normal;font-size:10px;font-weight:900}.lb-a em.naik{color:#0B7A45}.lb-a em.turun{color:#C2372A}
+.lb-st{display:flex;flex-wrap:wrap;gap:6px}
+.lb-p{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;padding:5px 10px;border-radius:999px}
+.lb-p i{width:7px;height:7px;border-radius:50%;background:currentColor}
+.lb-p.merah{background:#FDE7E3;color:#B8322A}.lb-p.hijau{background:#E1F4E9;color:#0B6B43}.lb-p.abu{background:#EEF2F0;color:#5B6F64}
+.lb-skel{display:flex;flex-direction:column;gap:8px}.lb-skel i{display:block;height:46px;border-radius:14px;background:#EEF4F0;animation:skelDenyut 1.1s ease-in-out infinite alternate}.lb-skel i+i{height:22px;width:60%;border-radius:999px}
+/* lembar unduh */
+.lu-list{display:flex;flex-direction:column}.lu-g{margin:12px 4px 4px;font-size:12px;font-weight:800;color:var(--mut)}
+.lu-semua{margin-top:10px;border-top:1px solid #E3ECE6}
+/* layar satu bagian */
+.lb-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:12px -2px 0;padding:0 2px}.lb-tabs::-webkit-scrollbar{display:none}
+.lb-tabs button{flex:none;border:0;font:inherit;font-size:13px;font-weight:800;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.14);color:rgba(255,255,255,.88);cursor:pointer;transition:background-color .18s,color .18s}
+.lb-tabs button.on{background:#fff;color:#0B5D3B}
+.lbh{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:#fff;border:1px solid #E3ECE6}
+.lbh.biru .lb-ic{background:#E6EEFD;color:#1F56B5}.lbh.emas .lb-ic{background:#FFF1D6;color:#A86E05}.lbh.merah .lb-ic{background:#FDE9E5;color:#B8322A}.lbh.ungu .lb-ic{background:#EFE8FD;color:#6A3BD9}.lbh.hijau .lb-ic{background:#E3F4EA;color:#0B6B43}
+.lbh-t{display:flex;flex-direction:column;min-width:0}.lbh-t b{font-size:15px;font-weight:800;color:var(--ink)}.lbh-t small{font-size:12.5px;color:var(--mut)}
+.lb-loncat{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lb-loncat button{display:flex;align-items:center;gap:8px;border:0;font:inherit;text-align:left;cursor:pointer;padding:12px;border-radius:16px}
+.lb-loncat button b{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}.lb-loncat button span{flex:1;font-size:12.5px;font-weight:800;line-height:1.25}
+.lb-loncat .merah{background:#FDEDEA;color:#A8352B}.lb-loncat .hijau{background:#E5F5EC;color:#0B6B43}
+.lb-tb{margin-top:0;max-height:70vh}
+.lb-nav{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lb-nav button{display:flex;align-items:center;gap:6px;min-width:0;border:1px solid #E3ECE6;background:#fff;font:inherit;color:var(--ink);padding:10px 12px;border-radius:16px;cursor:pointer;text-align:left}
+.lb-nav button:last-child{justify-content:flex-end;text-align:right}
+.lb-nav button span{display:flex;flex-direction:column;min-width:0}.lb-nav small{font-size:11px;font-weight:700;color:var(--mut)}
+.lb-nav b{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-nav button:disabled{opacity:.4;cursor:default}
+html[data-tema=gelap] .lb,html[data-tema=gelap] .lbh,html[data-tema=gelap] .lb-nav button{background:#13201A;border-color:#22352B}
+html[data-tema=gelap] .lb-a,html[data-tema=gelap] .lb-skel i{background:#1A2A22}
+html[data-tema=gelap] .lb-ic{background:#1E3A2D;color:#8FE0B5}
+html[data-tema=gelap] .lb-p.merah,html[data-tema=gelap] .lb-loncat .merah{background:#3A1E1A;color:#FFB4A8}html[data-tema=gelap] .lb-p.hijau,html[data-tema=gelap] .lb-loncat .hijau{background:#16352A;color:#8FE0B5}html[data-tema=gelap] .lb-p.abu{background:#1F2D26;color:#A9BDB2}
+html[data-tema=gelap] .lu-semua{border-color:#22352B}
+.lap-head{flex-direction:column;align-items:stretch;gap:14px}
+.lap-hd-n{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.lap-hd-n span{min-width:0;padding:9px 6px}
+.lb-tabs button{padding:8px 12px;font-size:12.5px}

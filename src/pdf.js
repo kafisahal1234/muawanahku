@@ -96,7 +96,7 @@ export async function tabelKePdf({ judul, sub, catatan, bagian, oleh, ttd }) {
       styles: { font: "helvetica", fontSize: lebar ? 7.6 : 8.3, cellPadding: 1.6, lineColor: [214, 220, 226], lineWidth: 0.15, textColor: NAVY, valign: "middle", overflow: "linebreak" },
       headStyles: { fillColor: NAVY, textColor: 255, fontStyle: "bold", fontSize: lebar ? 7.4 : 8 },
       alternateRowStyles: { fillColor: [245, 247, 249] },
-      columnStyles: { 0: { fontStyle: "bold", cellWidth: lebar ? 42 : "auto" } },
+      columnStyles: b.kol[0] === "No" ? { 0: { cellWidth: 9, halign: "center" }, 1: { fontStyle: "bold" } } : { 0: { fontStyle: "bold", cellWidth: lebar ? 42 : "auto" } },
       didDrawPage: d => { if (d.pageNumber > 1 || pdf.internal.getNumberOfPages() > 1) kepala(); },
     });
     y = pdf.lastAutoTable.finalY + 8;

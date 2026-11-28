@@ -55,7 +55,7 @@ const SCREENS = {
   dataMaster: AD.DataMaster, santriAdmin: AD.SantriAdmin, akunAdmin: AD.AkunAdmin, asramaAdmin: AD.AsramaAdmin, kelasAdmin: AD.KelasAdmin, impor: AI.ImporSantri, imporAwal: AI.ImporAwal, asisten: AS.Asisten, imporJadwal: AI.ImporJadwal, pengumuman: AD.Pengumuman,
   ubahSandi: SY.UbahSandi, privasi: SY.Privasi, bantuan: SY.Bantuan, tentang: SY.Tentang,
   pantauan: PT.PantauanSantri, gabung: GB.Gabung, riwayatSaya: HM.RiwayatSaya, yyTahfidz: YY.YyTahfidz, yyKurikulum: YY.YyKurikulum, yyKesantrian: YY.YyKesantrian, yySdm: YY.YySdm, santri: SA.SantriDetail, raporList: SA.RaporList, raporView: SA.RaporView, kinerjaAll: SA.KinerjaAll,
-  profil: PF.Profil, keamanan: PF.Keamanan, waliProfil: PF.WaliProfil, laporan: LP.Laporan, laporanBaca: LP.LaporanBaca,
+  profil: PF.Profil, keamanan: PF.Keamanan, waliProfil: PF.WaliProfil, laporan: LP.Laporan, laporanBaca: LP.LaporanBaca, laporanBagian: LP.LaporanBagian,
   halaqahAdmin: HQ.HalaqahAdmin, halaqahEdit: HQ.HalaqahEdit,
   rekap: RM.RekapPintu, waliRekap: RK.WaliRekap, rekapDetail: RM.RekapDetailPintu, rekapTahfidz: RM.RekapTahfidz, rekapMapel: RM.RekapMapel, rekapAsrama: RM.RekapAsrama, rekapKesantrian: RM.RekapKesantrian, kalender: RK.Kalender, logUbah: KO.LogPerubahan, riwayatModul: KO.RiwayatModul,
 };
