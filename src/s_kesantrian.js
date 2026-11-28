@@ -4,7 +4,7 @@ import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, E
 import { all, get, put, toast, uid } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
-import { me, SantriPicker, compressImage } from "./common.js";
+import { me, SantriPicker, compressImage, MenuEvaluasi } from "./common.js";
 import { useDownloads, unduh } from "./s_system.js";
 import { AiBtn, useAIRun } from "./s_ai.js";
 import { tanyaAI, SISTEM_DASAR } from "./ai.js";
@@ -25,7 +25,12 @@ export function Kesantrian({ pondok }) {
   const ro = !p || !me().roles.includes("wadir_kesantrian");
   return html`<${SubHeader} title=${p ? "Kesantrian · Pondok " + p : "Kesantrian · Semua pondok"} sub=${ro ? "Pemantauan" : "Wadir Kesantrian · " + me().pendek} />
     <div class="wrap"><${Card}><div class="stats"><${Stat} label="Izin aktif" value=${iz.length} sub="santri" /><${Stat} label="Belum kembali" value=${lambat.length} sub="terlambat" tone=${lambat.length ? "red" : ""} /><${Stat} label="BAP bulan ini" value=${bap.length} tone="gold" /></div></${Card}>
-    <${Card} title="Menu Kesantrian"><div class="tiles">
+    ${ro ? html`<${MenuEvaluasi} ket="Pilih yang ingin dievaluasi" items=${[
+      { ic: "chart", w: "purple", t: "Rekap Kesantrian", d: "Ringkasan izin, pelanggaran, mutaba'ah, dan MOTD. Bulanan, tengah semester, semester.", go: () => nav.go("rekapKesantrian", { pondok: p }) },
+      { ic: "door", w: "coral", t: "Izin & Pelanggaran", d: "Daftar izin / pulang santri (aktif & selesai), poin pelanggaran, dan BAP terbaru.", n: iz.length, nl: "sedang izin", tone: lambat.length ? "red" : iz.length ? "gold" : "", go: () => nav.go("gabung", { jenis: "izinPelanggaran", pondok: p }) },
+      { ic: "moon", w: "indigo", t: "Asrama & Mutaba'ah", d: "Ibadah, adab, dan ceklis musyrif per asrama.", go: () => nav.go("rekapAsrama") },
+      { ic: "user", w: "blue", t: "Histori Santri", d: "Cari satu santri: poin, riwayat izin, BAP, dan catatannya.", go: () => nav.go("histori", { pondok: p }) }]} />`
+    : html`<${Card} title="Menu Kesantrian"><div class="tiles">
       ${!ro ? html`<${Tile} icon="file" label="Surat Izin" color="coral" onClick=${() => nav.go("suratIzin")} />
       <${Tile} icon="door" label="Catat Kembali" color="emerald" badge=${iz.length || null} onClick=${() => nav.go("catatKembali")} />
       <${Tile} icon="clipboard" label="Form BAP" color="orange" onClick=${() => nav.go("formBap")} />` : null}
@@ -35,7 +40,7 @@ export function Kesantrian({ pondok }) {
       <${Tile} icon="moon" label="Rekap Asrama" color="indigo" onClick=${() => nav.go("rekapAsrama")} />
       <${Tile} icon="calendar" label="Rekap Izin" color="teal" onClick=${() => nav.go("rekapIzin", { pondok: p })} />
       <${Tile} icon="alert" label="Rekap Pelanggaran" color="pink" onClick=${() => nav.go("rekapPelanggaran", { pondok: p })} />
-</div></${Card}>
+</div></${Card}>`}
     <${Card} title="Santri sedang izin" right=${html`<${Pill} t=${iz.length + " santri"} tone="gold" />`}>${iz.length ? html`<div class="list">${iz.map(i => { const s = L.santriAman(i.santri);
       return html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${i.jenis} · kembali ${L.fmtDT(i.kembali)}`} right=${html`<${Pill} t=${L.terlambat(i) ? "Terlambat" : i.jenis === "Keluar" ? "Keluar" : i.jenis === "Skorsing" ? "Skorsing" : "Di rumah"} tone=${L.terlambat(i) || i.jenis === "Skorsing" ? "red" : "gold"} />`} onClick=${() => nav.go("izinView", { id: i.id })} />`; })}</div>`
       : html`<${Empty} t="Tidak ada santri yang sedang izin." icon="check" />`}</${Card}></div>`;
@@ -215,19 +220,19 @@ export function Histori({ pondok }) {
     <${Card}><div class="list">${list.map(s => { const p = L.poinSantri(s.id); return html`<${Row} name=${s.nama} sub=${`Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama}`} right=${p.total ? html`<${Pill} t=${p.total + " poin"} tone="red" />` : html`<${Pill} t="0 poin" />`} onClick=${() => nav.go("santri", { sid: s.id, tab: "catatan" })} />`; })}</div></${Card}></div>`;
 }
 
-export function RekapIzin({ pondok }) {
+export function RekapIzin({ pondok, gabung: g }) {
   useApp();
   const [f, setF] = useState("aktif");
   const l = all("izin").filter(i => inPondok(pondok, i.santri) && (f === "semua" || (f === "aktif" ? i.status === "aktif" : i.status !== "aktif"))).sort((a, b) => b.ts - a.ts);
-  return html`<${SubHeader} title="Rekap Izin" sub=${pondok ? "Pondok " + pondok : "Semua pondok"}><${Seg} items=${[["aktif", "Aktif"], ["selesai", "Selesai"], ["semua", "Semua"]]} value=${f} onChange=${setF} /></${SubHeader}>
+  return html`<${SubHeader} title=${g ? g.t : "Rekap Izin"} sub=${pondok ? "Pondok " + pondok : "Semua pondok"}>${g ? g.seg : null}<${Seg} small items=${[["aktif", "Aktif"], ["selesai", "Selesai"], ["semua", "Semua"]]} value=${f} onChange=${setF} /></${SubHeader}>
     <div class="wrap"><${Card}>${l.length ? html`<div class="list">${l.map(i => html`<${Row} name=${L.santriAman(i.santri).nama} sub=${`${i.jenis} · ${L.fmtDT(i.keluar)} → ${L.fmtDT(i.kembali)}`} right=${html`<${Pill} t=${i.status === "aktif" ? (L.terlambat(i) ? "Terlambat" : "Aktif") : i.telat ? "Kembali telat" : "Kembali"} tone=${i.status === "aktif" ? (L.terlambat(i) ? "red" : "gold") : i.telat ? "red" : "green"} />`} onClick=${() => nav.go("izinView", { id: i.id })} />`)}</div>` : html`<${Empty} t="Tidak ada data izin." />`}</${Card}></div>`;
 }
 
-export function RekapPelanggaran({ pondok }) {
+export function RekapPelanggaran({ pondok, gabung: g }) {
   useApp();
   const rows = L.santriList().filter(s => !pondok || L.pondokOfSantri(s) === pondok).map(s => ({ s, p: L.poinSantri(s.id) })).filter(x => x.p.total).sort((a, b) => b.p.total - a.p.total);
   const bap = all("bap").filter(b => inPondok(pondok, b.santri)).sort((a, b) => b.ts - a.ts).slice(0, 15);
-  return html`<${SubHeader} title="Rekap Pelanggaran" sub="Dari BAP Kesantrian" /><div class="wrap">
+  return html`<${SubHeader} title=${g ? g.t : "Rekap Pelanggaran"} sub=${pondok ? "Dari BAP · Pondok " + pondok : "Dari BAP · semua pondok"}>${g ? g.seg : null}</${SubHeader}><div class="wrap">
     <${Section} t="Poin tertinggi" /><${Card}>${rows.length ? html`<div class="list">${rows.map(({ s, p }) => html`<${Row} name=${s.nama} sub=${`BAP ${p.bap} poin · MOTD ${p.motd} poin`} right=${html`<${Pill} t=${p.total + " poin"} tone="red" />`} onClick=${() => nav.go("santri", { sid: s.id, tab: "catatan" })} />`)}</div>` : html`<${Empty} t="Belum ada pelanggaran tercatat." icon="check" />`}</${Card}>
     <${Section} t="BAP terbaru" /><${Card}>${bap.length ? html`<div class="list">${bap.map(b => html`<${Row} name=${L.santriAman(b.santri).nama} sub=${`${b.pelanggaranNama} · ${L.fmtTgl(b.tanggal)}`} right=${html`<${Pill} t=${b.poin + " poin"} tone="red" />`} onClick=${() => nav.go("bapView", { id: b.id })} />`)}</div>` : html`<${Empty} t="Belum ada BAP." />`}</${Card}></div>`;
 }

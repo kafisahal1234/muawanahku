@@ -102,7 +102,8 @@ function tilesFor(st) {
     const mp = L.mudirPondok(st), pk = mp.length === 1 ? mp[0] : "all";
     const luar = L.izinAktif().filter(i => { const s = L.santriById(i.santri); return s && mp.includes(L.pondokOfSantri(s)); }).length;
     add("users", "Pantauan Santri", "coral", () => nav.go("pantauan"), luar || null);
-    add("chart", "Rekap Modul", "purple", () => nav.go("modulMudir")); add("award", "Rapor", "gold", () => nav.go("raporList"));
+    add("bookopen", "Tahfidz", "emerald", () => nav.go("pengelolaan", { ro: true })); add("calendar", "Kurikulum", "orange", () => nav.go("kurikulum", { ro: true }));
+    add("shield", "Kesantrian", "coral", () => nav.go("kesantrian", { pondok: pk })); add("award", "Rapor", "gold", () => nav.go("raporList"));
     add("clipboard", "Ceklis Musyrif", "emerald", () => nav.go("rekapKhidmah", { pondok: pk }));
   }
   if (r.includes("wadir_tahfidz")) add("award", "Ujian Iqro'", "gold", () => nav.go("ujianIqra"), TSH.siapUjianSemua().length || null);

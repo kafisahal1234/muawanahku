@@ -4,6 +4,7 @@ import { html, nav, Icon, Sheet, SearchBox, Row, Pill, Card, Counts, STATUS } fr
 import { staffById, santriById, initials } from "./logic.js";
 import * as L from "./logic.js";
 import { get } from "./store.js";
+import { Ikon, WARNA } from "./ikon.js";
 
 export const me = () => (nav.user && nav.user.kind === "staff" ? staffById(nav.user.id) : null);
 export const has = r => { const m = me(); return !!m && m.roles.includes(r); };
@@ -90,4 +91,14 @@ export function FotoLihat({ src, nama, size = 48, cls = "" }) {
   if (!src) return html`<${FotoAv} src=${src} nama=${nama} size=${size} cls=${cls} />`;
   return html`<button type="button" class="foto-btn" aria-label=${"Lihat foto " + (nama || "")} onClick=${e => { e.stopPropagation(); setBuka(true); }}><${FotoAv} src=${src} nama=${nama} size=${size} cls=${cls} /></button>
     ${buka ? html`<${FotoBesar} src=${src} nama=${nama} onClose=${() => setBuka(false)} />` : null}`;
+}
+
+// Daftar menu evaluasi untuk Mudir: tiap baris = ikon, nama, keterangan isi, angka singkat (opsional).
+export function MenuEvaluasi({ judul = "Evaluasi", ket, items }) {
+  return html`<section class="ev"><div class="ev-h"><h3>${judul}</h3>${ket ? html`<small>${ket}</small>` : null}</div>
+    <div class="ev-list">${items.filter(Boolean).map(m => html`<button class="ev-row" style=${`--ev:${WARNA[m.w][1]};--ev2:${WARNA[m.w][2]}`} onClick=${m.go}>
+      <span class="ev-ic"><${Ikon} n=${m.ic} warna=${m.w} s=${26} /></span>
+      <span class="ev-t"><b>${m.t}</b><small>${m.d}</small></span>
+      ${m.n != null ? html`<span class=${"ev-n " + (m.tone || "")}><b>${m.n}</b>${m.nl ? html`<em>${m.nl}</em>` : null}</span>` : null}
+      <${Icon} n="right" s=${18} c="#9AB0A5" /></button>`)}</div></section>`;
 }

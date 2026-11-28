@@ -3,7 +3,7 @@ import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, E
 import { S, all, get, put, toast } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
-import { me } from "./common.js";
+import { me, MenuEvaluasi } from "./common.js";
 import { AwalSheet } from "./s_ai.js";
 
 export const target = () => L.targetSemester();
@@ -18,13 +18,21 @@ export function halaqahStat(a) {
 export function Pengelolaan({ ro }) {
   useApp();
   const tgl = L.today(), sesi = L.sesiNow();
-  const sudah = L.HALAQAH.filter(h => get("absenHalaqah", L.halaqahKey(h.id, tgl, sesi))).length;
-  const all2 = L.santriList().map(s => L.hafalan(s)); const avg = all2.reduce((x, h) => x + h.jumlah, 0) / all2.length;
+  // Mudir pondok tertentu hanya melihat halaqah & santri pondoknya
+  const mp = ro ? L.mudirPondok(me()) : null, HQ = mp ? L.HALAQAH.filter(h => !h.pondok || mp.includes(h.pondok)) : L.HALAQAH;
+  const sudah = HQ.filter(h => get("absenHalaqah", L.halaqahKey(h.id, tgl, sesi))).length;
+  const dipP = sid => { if (!mp) return true; const x = L.santriById(sid); return !!x && mp.includes(L.pondokOfSantri(x)); };
+  const all2 = L.santriList().filter(s => dipP(s.id)).map(s => L.hafalan(s)); const avg = all2.reduce((x, h) => x + h.jumlah, 0) / all2.length;
   const siap = all2.filter(h => h.siapTasmi).length;
-  const gagal = all("setoran").filter(r => r.tanggal === tgl && !r.lulus).length;
-  return html`<${SubHeader} title="Pengelolaan Tahfidz" sub=${ro ? "Pemantauan Mudir" : `Wadir Tahfidz · ${me().pendek}`} />
-    <div class="wrap"><${Card}><div class="stats">${L.adaHalaqah(tgl) ? html`<${Stat} label=${"Absen " + sesi} value=${`${sudah}/${L.HALAQAH.length}`} sub="halaqah" tone=${sudah < L.HALAQAH.length ? "gold" : ""} />` : html`<${Stat} label="Halaqah" value="Libur" sub="Ahad" />`}<${Stat} label="Rata hafalan" value=${avg.toFixed(1)} sub="juz" /><${Stat} label="Siap tasmi'" value=${siap} tone="gold" /></div></${Card}>
-    <${Card} title="Menu Pengelolaan"><div class="tiles">
+  const gagal = all("setoran").filter(r => r.tanggal === tgl && !r.lulus && dipP(r.santri)).length;
+  return html`<${SubHeader} title="Pengelolaan Tahfidz" sub=${ro ? (mp && mp.length === 1 ? "Pemantauan Mudir · Pondok " + mp[0] : "Pemantauan Mudir") : `Wadir Tahfidz · ${me().pendek}`} />
+    <div class="wrap"><${Card}><div class="stats">${L.adaHalaqah(tgl) ? html`<${Stat} label=${"Absen " + sesi} value=${`${sudah}/${HQ.length}`} sub="halaqah" tone=${sudah < HQ.length ? "gold" : ""} />` : html`<${Stat} label="Halaqah" value="Libur" sub="Ahad" />`}<${Stat} label="Rata hafalan" value=${avg.toFixed(1)} sub="juz" /><${Stat} label="Siap tasmi'" value=${siap} tone="gold" /></div></${Card}>
+    ${ro ? html`<${MenuEvaluasi} ket="Pilih yang ingin dievaluasi" items=${[
+      { ic: "chart", w: "teal", t: "Rekap Tahfidz", d: "Kehadiran halaqah, ziyadah, murojaah per halaqah & per santri. Bulanan, tengah semester, semester.", go: () => nav.go("rekapTahfidz") },
+      { ic: "star", w: "gold", t: "Peringkat & Tasmi'", d: "Urutan hafalan santri per kelas, dan hasil ujian tasmi' (lulus / ulang).", n: all("setoran").filter(r => r.jenis === "tasmi" && r.lulus && dipP(r.santri)).length, nl: "lulus tasmi'", go: () => nav.go("gabung", { jenis: "peringkatTasmi" }) },
+      { ic: "iqro", w: "emerald", t: "Tahsin (Iqro')", d: "Santri yang masih belajar Iqro': jilid, halaman, dan yang siap ujian kenaikan.", n: L.santriList().filter(x => L.santriIqra(x) && dipP(x.id)).length, nl: "santri", go: () => nav.go("rekapTahsin") },
+      { ic: "alert", w: "coral", t: "Perlu perhatian", d: "Setoran hari ini yang nilainya di bawah KKM.", n: gagal, nl: "hari ini", tone: gagal ? "red" : "", go: () => nav.go("bawahKkm") }]} />`
+    : html`<${Card} title="Menu Pengelolaan"><div class="tiles">
       ${!ro ? html`<${Tile} icon="edit" label="Data Awal Hafalan" color="emerald" onClick=${() => nav.go("dataAwal")} />
       <${Tile} icon="target" label="Target Hafalan" color="orange" onClick=${() => nav.go("targetHafalan")} />
       <${Tile} icon="users" label="Kelola Halaqah" color="teal" onClick=${() => nav.go("halaqahAdmin")} />` : null}
@@ -33,8 +41,8 @@ export function Pengelolaan({ ro }) {
       <${Tile} icon="star" label="Peringkat Santri" color="gold" onClick=${() => nav.go("peringkat")} />
       <${Tile} icon="mic" label="Rekap Tasmi'" color="teal" onClick=${() => nav.go("rekapTasmi")} />
       <${Tile} icon="alert" label="Di bawah KKM" color="coral" badge=${gagal || null} onClick=${() => nav.go("bawahKkm")} />
-      ${!ro ? html`<${Tile} icon="clock" label="Koreksi Input Tahfidz" color="slate" onClick=${() => nav.go("riwayatModul", { modul: "tahfidz" })} />` : null}</div></${Card}>
-    <${Card} title="Capaian per halaqah" right=${html`<small>vs target semester</small>`}><div class="list">${L.HALAQAH.map(a => { const st = halaqahStat(a), g = L.staffById(a.guru) || { pendek: "—" };
+      ${!ro ? html`<${Tile} icon="clock" label="Koreksi Input Tahfidz" color="slate" onClick=${() => nav.go("riwayatModul", { modul: "tahfidz" })} />` : null}</div></${Card}>`}
+    <${Card} title="Capaian per halaqah" right=${html`<small>vs target semester</small>`}><div class="list">${HQ.map(a => { const st = halaqahStat(a), g = L.staffById(a.guru) || { pendek: "—" };
       return html`<button class="row" onClick=${() => nav.go("progres", { hid: a.id })}><span class="av">${L.initials(g.pendek.replace(/^Ust\.\s*/, ""))}</span><span class="row-t"><b>${a.nama}</b>
         <small>${st.n} santri · capaian target semester ${st.cap}% · rata total ${st.avg.toFixed(1)} juz${st.hadir != null ? " · hadir " + st.hadir + "%" : ""}</small><span style="display:block;margin-top:6px"><${Bar} v=${st.cap} tone=${st.cap >= 75 ? "green" : st.cap >= 50 ? "gold" : "red"} /></span></span><b style="font-size:13px;color:#0B5D3B">${st.cap}%</b></button>`; })}</div></${Card}></div>`;
 }
@@ -92,19 +100,19 @@ export function RekapHalaqah() {
       <div class="stats"><${Stat} label="Santri" value=${st.n} /><${Stat} label="Rata hafalan" value=${st.avg.toFixed(1)} sub="juz" /><${Stat} label="Hadir" value=${st.hadir == null ? "—" : st.hadir + "%"} /></div></${Card}>`; })}</div>`;
 }
 
-export function Peringkat() {
+export function Peringkat({ gabung: g }) {
   useApp();
   const [k, setK] = useState("all");
   const list = L.santriList().filter(s => k === "all" || s.kelas === k).map(s => ({ s, h: L.hafalan(s) })).sort((a, b) => b.h.jumlah - a.h.jumlah).slice(0, 30);
-  return html`<${SubHeader} title="Peringkat Santri" sub="Berdasarkan total hafalan"><${Seg} small items=${[["all", "Semua"], ["7", "Kls 7"], ["8", "Kls 8"], ["9A", "9A"], ["9B", "9B"]]} value=${k} onChange=${setK} /></${SubHeader}>
+  return html`<${SubHeader} title=${g ? g.t : "Peringkat Santri"} sub="Berdasarkan total hafalan">${g ? g.seg : null}<${Seg} small items=${[["all", "Semua"], ["7", "Kls 7"], ["8", "Kls 8"], ["9A", "9A"], ["9B", "9B"]]} value=${k} onChange=${setK} /></${SubHeader}>
     <div class="wrap"><${Card}><div class="list">${list.map(({ s, h }, i) => html`<button class="row" onClick=${() => nav.go("santri", { sid: s.id })}><span class=${"av " + (i < 3 ? "gold" : "")}>${i + 1}</span>
       <span class="row-t"><b>${s.nama}</b><small>Kelas ${s.kelas} · sedang Juz ${h.aktif}</small></span><b style="color:#0B5D3B">${L.fmtJumlah(h)}</b></button>`)}</div></${Card}></div>`;
 }
 
-export function RekapTasmi() {
+export function RekapTasmi({ gabung: g }) {
   useApp();
   const l = all("setoran").filter(r => r.jenis === "tasmi").sort((a, b) => b.ts - a.ts);
-  return html`<${SubHeader} title="Rekap Tasmi'" sub=${`${l.filter(r => r.lulus).length} lulus · ${l.filter(r => !r.lulus).length} ulang`} /><div class="wrap"><${Card}>
+  return html`<${SubHeader} title=${g ? g.t : "Rekap Tasmi'"} sub=${`${l.filter(r => r.lulus).length} lulus · ${l.filter(r => !r.lulus).length} ulang`}>${g ? g.seg : null}</${SubHeader}><div class="wrap"><${Card}>
     ${l.length ? html`<div class="list">${l.map(r => html`<${Row} name=${L.santriAman(r.santri).nama} sub=${`Juz ${r.juz} · ${L.fmtTgl(r.tanggal)} · penguji ${r.penguji || "—"}`} right=${html`<${Pill} t=${(r.lulus ? "Lulus " : "Ulang ") + r.nilai} tone=${r.lulus ? "green" : "red"} />`} />`)}</div>` : html`<${Empty} t="Belum ada tasmi'." icon="mic" />`}</${Card}></div>`;
 }
 

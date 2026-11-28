@@ -1,4 +1,5 @@
 import { render, Component } from "preact";
+import * as GB from "./s_gabung.js";
 import * as PT from "./s_pantauan.js";
 import { pasangTarik } from "./tarik.js";
 import { pasangZoom } from "./zoom.js";
@@ -50,7 +51,7 @@ const SCREENS = {
   pengelolaan: W.Pengelolaan, dataAwal: W.DataAwal, targetHafalan: W.TargetHafalan, kinerjaTahfidz: W.KinerjaTahfidz, rekapHalaqah: W.RekapHalaqah, peringkat: W.Peringkat, rekapTasmi: W.RekapTasmi, bawahKkm: W.BawahKkm,
   dataMaster: AD.DataMaster, santriAdmin: AD.SantriAdmin, akunAdmin: AD.AkunAdmin, asramaAdmin: AD.AsramaAdmin, kelasAdmin: AD.KelasAdmin, impor: AI.ImporSantri, imporAwal: AI.ImporAwal, asisten: AS.Asisten, imporJadwal: AI.ImporJadwal, pengumuman: AD.Pengumuman,
   ubahSandi: SY.UbahSandi, privasi: SY.Privasi, bantuan: SY.Bantuan, tentang: SY.Tentang,
-  pantauan: PT.PantauanSantri, modulMudir: PT.ModulMudir, santri: SA.SantriDetail, raporList: SA.RaporList, raporView: SA.RaporView, kinerjaAll: SA.KinerjaAll,
+  pantauan: PT.PantauanSantri, gabung: GB.Gabung, santri: SA.SantriDetail, raporList: SA.RaporList, raporView: SA.RaporView, kinerjaAll: SA.KinerjaAll,
   profil: PF.Profil, keamanan: PF.Keamanan, waliProfil: PF.WaliProfil,
   halaqahAdmin: HQ.HalaqahAdmin, halaqahEdit: HQ.HalaqahEdit,
   rekap: RM.RekapPintu, waliRekap: RK.WaliRekap, rekapDetail: RM.RekapDetailPintu, rekapTahfidz: RM.RekapTahfidz, rekapMapel: RM.RekapMapel, rekapAsrama: RM.RekapAsrama, rekapKesantrian: RM.RekapKesantrian, kalender: RK.Kalender, logUbah: KO.LogPerubahan, riwayatModul: KO.RiwayatModul,

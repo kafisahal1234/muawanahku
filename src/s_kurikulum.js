@@ -3,7 +3,7 @@ import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, E
 import { S, all, get, put, toast, uid } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
-import { me } from "./common.js";
+import { me, MenuEvaluasi } from "./common.js";
 import { Panel } from "./s_rekapmodul.js";
 
 export function slotStatus(j, tgl) {
@@ -20,16 +20,21 @@ export function Kurikulum({ ro }) {
   const ok = slots.filter(j => get("absenKelas", L.absenKelasKey(j.id, tgl))).length;
   const kosong = slots.filter(j => { const d = get("absenKelas", L.absenKelasKey(j.id, tgl)); return !d || !d.materi; }).length;
   const izin = all("izinGuru").filter(i => i.tanggal === tgl).length;
-  return html`<${SubHeader} title="Kurikulum" sub=${ro ? "Pemantauan Mudir" : `Wadir Kurikulum · ${me().pendek}`} />
+  return html`<${SubHeader} title="Kurikulum" sub=${ro ? "Pemantauan Mudir" + (((L.mudirPondok(me()) || []).length === 1) ? " · Pondok " + L.mudirPondok(me())[0] : "") : `Wadir Kurikulum · ${me().pendek}`} />
     <div class="wrap"><${Card}><div class="stats"><${Stat} label="Terlaksana" value=${`${ok}/${slots.length}`} sub=${hari} /><${Stat} label="Jurnal kosong" value=${kosong} tone=${kosong ? "red" : ""} /><${Stat} label="Guru izin" value=${izin} tone=${izin ? "gold" : ""} /></div></${Card}>
-    <${Card} title="Menu Kurikulum"><div class="tiles">
+    ${ro ? html`<${MenuEvaluasi} ket="Pilih yang ingin dievaluasi" items=${[
+      { ic: "chart", w: "teal", t: "Rekap KBM & Jurnal", d: "Keterlaksanaan KBM, kehadiran santri di kelas, dan isi jurnal mengajar per guru & mapel.", go: () => nav.go("rekapMapel", { modul: "kurikulum" }) },
+      { ic: "award", w: "gold", t: "Rekap Nilai", d: "Nilai projek, PTS, dan PAS per mapel dan per kelas.", go: () => nav.go("rekapNilai") },
+      { ic: "calendar", w: "orange", t: "Jadwal & Pengampu", d: "Jadwal mengajar tiap hari dan guru pengampu tiap mapel.", go: () => nav.go("gabung", { jenis: "jadwalPengampu" }) },
+      { ic: "briefcase", w: "slate", t: "Izin Guru", d: "Guru yang izin tidak mengajar beserta alasannya.", n: izin, nl: "hari ini", tone: izin ? "gold" : "", go: () => nav.go("rekapIzinGuru") }]} />`
+    : html`<${Card} title="Menu Kurikulum"><div class="tiles">
       ${!ro ? html`<${Tile} icon="clock" label="Jam Pelajaran" color="teal" onClick=${() => nav.go("jamPelajaran")} />` : null}
       <${Tile} icon="calendar" label="Jadwal Mengajar" color="orange" onClick=${() => nav.go("jadwal", { ro })} />
       <${Tile} icon="layers" label="Mapel & Pengampu" color="blue" onClick=${() => nav.go("pengampu")} />
       <${Tile} icon="chart" label="Rekap KBM" color="teal" onClick=${() => nav.go("rekapMapel", { modul: "kurikulum" })} />
       <${Tile} icon="award" label="Rekap Nilai" color="gold" onClick=${() => nav.go("rekapNilai")} />
       <${Tile} icon="briefcase" label="Izin Guru" color="slate" onClick=${() => nav.go("rekapIzinGuru")} />
-      ${!ro ? html`<${Tile} icon="clock" label="Koreksi Input Mapel" color="coral" onClick=${() => nav.go("riwayatModul", { modul: "mapel" })} />` : null}</div></${Card}>
+      ${!ro ? html`<${Tile} icon="clock" label="Koreksi Input Mapel" color="coral" onClick=${() => nav.go("riwayatModul", { modul: "mapel" })} />` : null}</div></${Card}>`}
     <${Card} title="Keterlaksanaan hari ini" right=${html`<small>${hari}</small>`}>${slots.length ? html`<div class="list">${slots.map(j => { const [t, tone] = slotStatus(j, tgl), g = L.staffById(j.guru);
       return html`<${Row} name=${`${g.pendek} · ${L.mapelById(j.mapel).nama}`} sub=${`Kelas ${j.kelas} · ${L.jamById(j.jam).nama}`} right=${html`<${Pill} t=${t} tone=${tone} />`} />`; })}</div>` : html`<${Empty} t="Hari ini tidak ada jadwal pelajaran." icon="calendar" />`}</${Card}></div>`;
 }
@@ -42,7 +47,7 @@ export function JamPelajaran() {
     <p class="fab-note">Hari libur dan semester diatur di menu Kalender.</p></div>`;
 }
 
-export function Jadwal({ ro }) {
+export function Jadwal({ ro, gabung: g }) {
   useApp();
   const [hari, setHari] = useState(DATA.hari.includes(L.hariIni()) ? L.hariIni() : "Senin");
   const [edit, setEdit] = useState(null);
@@ -50,7 +55,7 @@ export function Jadwal({ ro }) {
   const cell = (jam, k) => js.find(j => j.jam === jam && j.kelas === k);
   const kelas = ["7", "8", "9A", "9B"];
   const nB = (() => { const all2 = L.jadwalAll(); return all2.filter(j => L.bentrok(j, j.id).length).length; })();
-  return html`<${SubHeader} title="Jadwal Mengajar" sub="Semester ganjil 2026/2027"><${Seg} small items=${DATA.hari.map(h => [h, h.slice(0, 3)])} value=${hari} onChange=${setHari} /></${SubHeader}>
+  return html`<${SubHeader} title=${g ? g.t : "Jadwal Mengajar"} sub="Semester ganjil 2026/2027">${g ? g.seg : null}<${Seg} small items=${DATA.hari.map(h => [h, h.slice(0, 3)])} value=${hari} onChange=${setHari} /></${SubHeader}>
     <div class="wrap">${!ro ? html`<button class="up-cta" onClick=${() => nav.go("imporJadwal")}><span class="up-ic"><${Icon} n="upload" s=${22} /></span><span><b>Impor jadwal dari dokumen</b><small>Excel, Word, PDF, atau foto · dibaca AI</small></span><${Icon} n="chev" s=${18} /></button>` : null}${nB ? html`<div class="note red"><${Icon} n="alert" s=${18} />Ada ${nB} jadwal bentrok. Periksa sel bergaris merah.</div>` : null}
     <${Card} title=${hari} right=${!ro ? html`<small>Ketuk sel untuk ubah</small>` : null}><div class="grid-j"><span class="hd">Jam</span>${kelas.map(k => html`<span class="hd">${k}</span>`)}
       ${DATA.jam.map(jm => html`<span class="hd" style="text-align:left;font-size:10.5px">${jm.nama}<br /><small>${jm.mulai}</small></span>${kelas.map(k => { const c = cell(jm.id, k), b = c && L.bentrok(c, c.id).length;
@@ -76,8 +81,8 @@ function EditSlot({ e, onClose }) {
     <div class="btn-row">${e.cur ? html`<${Btn} kind="ghost" onClick=${hapus}>Kosongkan</${Btn}>` : null}<${Btn} disabled=${!mapel || !g || bt.length} onClick=${save}>Simpan</${Btn}></div></${Sheet}>`;
 }
 
-export function Pengampu() {
-  return html`<${SubHeader} title="Mapel & Pengampu" sub="Semester ganjil 2026/2027" /><div class="wrap">${DATA.mapel.map(m => html`<${Card} title=${m.nama}><div class="list">
+export function Pengampu({ gabung: g }) {
+  return html`<${SubHeader} title=${g ? g.t : "Mapel & Pengampu"} sub="Semester ganjil 2026/2027">${g ? g.seg : null}</${SubHeader}><div class="wrap">${DATA.mapel.map(m => html`<${Card} title=${m.nama}><div class="list">
     ${["7", "8", "9A", "9B"].map(k => { const g = L.pengampu(m.id, k); return html`<${Row} name=${"Kelas " + k} sub=${g ? g.nama : "Belum ada pengampu"} icon=${html`<${Icon} n="users" s=${18} />`} />`; })}</div>
     <div class="chips mt8">${m.aspek.map(a => html`<${Pill} t=${a} tone="blue" />`)}</div></${Card}>`)}</div>`;
 }
