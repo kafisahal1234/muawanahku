@@ -11,7 +11,7 @@ import * as WA from "./s_wa.js";
 import * as WL from "./s_wali.js";
 import { kumpulRiwayat, entriRiwayat, KoreksiSheet } from "./s_koreksi.js";
 import { me, FotoAv, FotoLihat, fotoUser, fotoSantri } from "./common.js";
-import { Baris, RincianSantri } from "./s_akun.js";
+import { Baris } from "./s_akun.js";
 import { HafalanCard, RiwayatSetoran, KehadiranCard, CatatanCard } from "./s_santri.js";
 import { slotStatus } from "./s_kurikulum.js";
 import { VERSI } from "./s_system.js";
@@ -123,6 +123,7 @@ function tilesFor(st) {
     add("award", "Rapor", "gold", () => nav.go("raporList"));
   }
   if (r.some(x => ["mudir", "admin", "wadir_kurikulum"].includes(x))) add("cal2", "Kalender", "pink", () => nav.go("kalender"));
+  add("users", "Tim", "teal", () => nav.go("tim"));
   if (r.includes("guru_mapel")) [...new Set(st.ajar.map(([m]) => m))].forEach(m => add("layers", "Mapel " + L.mapelById(m).nama.replace("Pendidikan ", "").replace("Bahasa ", "B. "), MAPEL_COLOR[m], () => nav.go("mapel", { mapel: m })));
   return t;
 }
@@ -229,16 +230,15 @@ export function JadwalSaya() {
 
 export function CariSantri() {
   useApp();
-  const [q, setQ] = useState(""), [pilih, setPilih] = useState(null), k = q.trim().toLowerCase();
+  const [q, setQ] = useState(""), k = q.trim().toLowerCase();
   const list = L.santriList().filter(s => !k || `${s.nama} ${s.panggilan || ""} ${s.nis || ""}`.toLowerCase().includes(k));
   return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Cari Santri</h1><p>${k ? `${list.length} santri ditemukan` : `Semua santri · ${list.length} santri`}</p></div></div></div>
     <div class="wrap akun-wrap"><${SearchBox} value=${q} onInput=${setQ} ph="Cari nama santri atau NIS" />
       ${list.length ? L.kelompokPondok(list.slice(0, 200), s => L.pondokOfSantri(s)).filter(g => g.isi.length).map(g => html`<p class="akun-sec">${g.nama}${g.ket ? html` <span>· ${g.ket} (${g.isi.length})</span>` : null}</p>
         <div class="akun-list">${[...g.isi].sort((a, b) => String(a.kelas).localeCompare(String(b.kelas)) || a.nama.localeCompare(b.nama)).map(s => { const h = L.hafalan(s);
           return html`<${Baris} foto=${fotoSantri(s.id)} nama=${s.nama} jabatan=${`Kelas ${s.kelas} · ${L.asramaAman(s.asrama).nama}`}
-            kanan=${html`<span class="akun-pct ok rs-juz" title="Total hafalan">${L.fmtJumlah(h).replace(" (khatam)", "")}</span>`} onClick=${() => setPilih(s.id)} />`; })}</div>`)
-        : html`<${Card}><${Empty} t="Tidak ada santri yang cocok." icon="users" /></${Card}>`}</div>
-    ${pilih ? html`<${RincianSantri} id=${pilih} onClose=${() => setPilih(null)} />` : null}`;
+            kanan=${html`<span class="akun-pct ok rs-juz" title="Total hafalan">${L.fmtJumlah(h).replace(" (khatam)", "")}</span>`} onClick=${() => nav.go("profilAkun", { jenis: "santri", id: s.id })} />`; })}</div>`)
+        : html`<${Card}><${Empty} t="Tidak ada santri yang cocok." icon="users" /></${Card}>`}</div>`;
 }
 
 export function RiwayatSaya() {

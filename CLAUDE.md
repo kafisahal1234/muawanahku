@@ -22,6 +22,7 @@ PYTHONPATH=test/pwseed python3 test/rapor_layar.py      # rapor: gambar + PDF + 
 PYTHONPATH=test/pwseed python3 test/pantauan_layar.py   # Pantauan Santri: Mudir umum vs Mudir Pondok 21
 PYTHONPATH=test/pwseed python3 test/cari_layar.py       # menu Cari: daftar santri + rincian (kartu hafalan, peringkat) → test/out/cari/
 PYTHONPATH=test/pwseed python3 test/modul_mudir.py      # menu Mudir: isi Tahfidz/Kurikulum/Kesantrian + halaman gabungan → test/out/modul/
+PYTHONPATH=test/pwseed python3 test/profil_layar.py     # menu Tim + profil layar penuh ustadz & santri → test/out/profil/
 cd test/aturan && npm install && npm test             # uji firestore.rules di emulator (harus "gagal 0")
 ```
 
@@ -69,7 +70,7 @@ Preact + htm, dibundel esbuild; CSS = `theme.css + skin.css + dark.css + dark_ma
 
 **Rekap**: hanya **Bulanan, Tengah semester, Semester**. Satu halaman per rekap, tiap aspek kartu sendiri (angka besar + daftar berperingkat + bar), kehadiran **selalu persen**, **tanpa link** ke halaman lain, sederhana per peran. Data kosong = "Belum ada data".
 
-**Menu**: Tahfidz guru = Absen, Ziyadah, Murojaah, Tahsin, Manzil, Tasmi', Nilai Mid/Smt, Rekap Halaqah, Izin Guru, Riwayat. Mutaba'ah & Ceklis Musyrif hanya di dalam **Asrama Saya**. Mapel: Absen Kelas dan Jurnal Mengajar menu terpisah. Menu "Pesan ke Wali" sudah dihapus di semua akun (chat wali lewat rincian santri). Menu Cari = daftar SEMUA santri untuk semua akun staf (bukan hanya sesuai akses); rincian hanya punya tombol "Buka catatan lengkap santri" (tombol WA ada di dalamnya).
+**Menu**: Tahfidz guru = Absen, Ziyadah, Murojaah, Tahsin, Manzil, Tasmi', Nilai Mid/Smt, Rekap Halaqah, Izin Guru, Riwayat. Mutaba'ah & Ceklis Musyrif hanya di dalam **Asrama Saya**. Mapel: Absen Kelas dan Jurnal Mengajar menu terpisah. Menu "Pesan ke Wali" sudah dihapus di semua akun (chat wali lewat rincian santri). Menu Cari = daftar SEMUA santri untuk semua akun staf. Menu **Tim** (semua akun staf) = daftar ustadz per jabatan tertinggi (Yayasan, Mudir, Wadir, Admin, Wali Asrama, Guru Halaqah, Guru Mapel). Ketuk akun di Tim / Cari / Daftar Akun → **layar penuh** `profilAkun` (`src/s_akun.js`): kartu hijau berfoto paling atas, info di kartu tidak diulang di bawah; santri: tombol bawah hanya "Buka catatan lengkap santri"; bagian khusus Admin (kode akses, username, status) hanya tampil untuk Admin. Peran baru `yayasan` (Pengurus Yayasan) dipilih Admin di form akun.
 
 **Wali**: bahasa orang tua (tanpa "baris/sesi/H S I A"), kontak ustadz hanya lewat menu Akun → Hubungi ustadz (Wali Asrama, para Wadir, Mudir, Admin — guru mapel tidak tampil). Halaman detail santri tetap bertab.
 

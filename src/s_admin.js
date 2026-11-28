@@ -99,7 +99,7 @@ export function AkunAdmin() {
     <${Confirm} open=${!!baruSandi} title="Kata sandi awal" text=${baruSandi ? `Username ${baruSandi.u}, kata sandi awal ${baruSandi.pw}. Catat dan sampaikan langsung ke pemilik akun, lalu minta ia menggantinya lewat Akun → Ubah kata sandi. Sandi ini tidak bisa dilihat lagi setelah jendela ditutup.` : ""} yes="Sudah dicatat" onYes=${() => setBaruSandi(null)} onNo=${() => setBaruSandi(null)} />
     <${Confirm} open=${!!ask} danger title="Hapus akun ini?" text=${ask ? `${ask.nama} (${ask.username}) tidak akan bisa masuk lagi. Data yang pernah dicatatnya tetap tersimpan. Admin bisa memulihkannya.` : ""} yes="Hapus akun" onYes=${() => hapusAkun(ask)} onNo=${() => setAsk(null)} /></div>`;
 }
-const PERAN = ["mudir", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian", "guru_tahfidz", "musyrif", "guru_mapel", "admin"];
+const PERAN = ["yayasan", "mudir", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian", "guru_tahfidz", "musyrif", "guru_mapel", "admin"];
 function EditStaff({ e, onClose, onSandi }) {
   const [f, setF] = useState({ ...e, ajar: [...(e.ajar || [])], roles: [...(e.roles || [])], asrama: e.asrama || "" }); const [busy, setBusy] = useState(false);
   const set = (k, v) => setF({ ...f, [k]: v });

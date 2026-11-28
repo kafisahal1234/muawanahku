@@ -56,7 +56,7 @@ export const halaqahOf = staffId => HALAQAH.find(h => h.guru === staffId);
 export const halaqahSantri = s => halaqahById(s.halaqah) || null;
 export const namaHalaqah = s => { const h = halaqahSantri(s); return h ? h.nama : "Belum ada halaqah"; };
 export const guruHalaqah = s => { const h = halaqahSantri(s); return h ? staffById(h.guru) : null; };
-export const ROLE_LABEL = { mudir: "Mudir", wadir_tahfidz: "Wadir Tahfidz", wadir_kurikulum: "Wadir Kurikulum", wadir_kesantrian: "Wadir Kesantrian",
+export const ROLE_LABEL = { yayasan: "Yayasan", mudir: "Mudir", wadir_tahfidz: "Wadir Tahfidz", wadir_kurikulum: "Wadir Kurikulum", wadir_kesantrian: "Wadir Kesantrian",
   guru_tahfidz: "Guru Tahfidz", musyrif: "Wali Asrama", guru_mapel: "Guru Mapel", admin: "Admin", wali: "Wali Santri" };
 
 export function santriList() {

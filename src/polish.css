@@ -358,3 +358,27 @@ html[data-tema=gelap] .ev-row{border-color:var(--line)}html[data-tema=gelap] .ev
 html[data-tema=gelap] .ev-ic,html[data-tema=gelap] .ev-n{background:rgba(255,255,255,.07)}
 html[data-tema=gelap] .ev-n b{color:#E8F3EC}html[data-tema=gelap] .ev-n em{color:#AFC2B7}
 html[data-tema=gelap] .ev-n.red b{color:#f0a49a}html[data-tema=gelap] .ev-n.gold b{color:#f3d79c}
+/* v4.7 Profil layar penuh (Tim, Cari, Daftar Akun): kartu hijau berfoto di paling atas */
+.pf-wrap{padding-top:14px}
+.pf-kartu{margin:0 0 6px;padding:20px 16px 16px;animation:kartuNaik .5s cubic-bezier(.2,.8,.2,1) both}
+.pf-id{position:relative;text-align:center}
+.pf-id .foto-btn{display:block;margin:0 auto;width:max-content}
+.pf-id>.foto-av{display:flex;margin:0 auto}
+.pf-av{margin:0 auto;box-shadow:0 0 0 3px rgba(255,255,255,.95),0 0 0 7px #E2A93B,0 14px 30px -12px rgba(0,0,0,.6)}
+.pf-av.foto-av{background:linear-gradient(150deg,#2DB673,#0C7547);color:#fff}
+.pf-id h2{margin:16px 0 0;font-size:21px;font-weight:800;letter-spacing:-.015em;line-height:1.25;color:#fff}
+.pf-id p{margin:4px 0 0;font-size:13.5px;font-weight:600;color:#CFE9DA}
+.pf-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:12px}
+.pf-chips span{font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);color:#fff}
+.pf-chips span:first-child{background:#F2C14E;border-color:#F2C14E;color:#3A2A00}
+.pf-angka{position:relative;display:flex;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.14)}
+.pf-angka span{flex:1;text-align:center;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:9px 6px}
+.pf-angka b{display:block;font-size:22px;font-weight:800;line-height:1.1;color:#FFE08A}
+.pf-angka em{font-style:normal;font-size:11.5px;font-weight:700;color:#D6EDE0}
+.pf-hf{position:relative;display:flex;align-items:center;gap:14px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.14)}
+.pf-ring{width:88px;height:88px}.pf-ring b{font-size:22px}.pf-ring small{font-size:10.5px}
+.pf-hf .hf-big{font-size:27px;margin-bottom:6px}
+.pf-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;background:linear-gradient(160deg,#0C6B42,#074A2D);color:#fff;border:none;box-shadow:0 10px 22px -12px rgba(5,60,35,.8),inset 0 1px 0 rgba(255,255,255,.12)}
+.pf-btn:active{filter:brightness(.92)}
+html[data-tema=gelap] .pf-av{box-shadow:0 0 0 3px #1b1b1b,0 0 0 7px #C9932F}
+@media (prefers-reduced-motion:reduce){.pf-kartu{animation:none}}
