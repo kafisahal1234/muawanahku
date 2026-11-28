@@ -57,12 +57,14 @@ export function KontakWali({ s }) {
   const no = s.hpWali, ada = adaWa(s), m = me();
   if (!m) return null;
   const kirim = teks => { setPilih(false); bukaWaWali(no, teks); };
+  // "Kirim kabar" hanya untuk Admin dan Wali Asrama dari asrama santri ini
+  const asr = L.asramaOf(m.id), bolehKabar = (m.roles || []).includes("admin") || (!!asr && asr.id === s.asrama);
   return html`<${Card} title="Wali santri" right=${ada ? html`<${Pill} t="WhatsApp" tone="green" />` : null}>
     ${ada ? html`<p class="small" style="margin:0 0 10px">No. WA Bunda/Wali: <b>${no}</b></p>
       <div class="btn-row"><${Btn} icon="chat" onClick=${() => kirim(pesan.sapa(s))}>Chat wali</${Btn}>
-        <${Btn} kind="outline" icon="send" onClick=${() => setPilih(true)}>Kirim kabar</${Btn}></div>`
+        ${bolehKabar ? html`<${Btn} kind="outline" icon="send" onClick=${() => setPilih(true)}>Kirim kabar</${Btn}>` : null}</div>`
       : html`<p class="small" style="margin:0">Nomor WA Bunda/Wali belum diisi. ${m.roles.includes("admin") ? "Isi di Data Master → Santri, atau impor dari pesan pendataan." : "Minta Admin mengisinya di Data Master → Santri."}</p>`}
-    <${Sheet} open=${pilih} title="Kirim kabar ke wali" onClose=${() => setPilih(false)}>
+    <${Sheet} open=${pilih && bolehKabar} title="Kirim kabar ke wali" onClose=${() => setPilih(false)}>
       <p class="small" style="margin:0 0 10px">Pilih pesan. WhatsApp terbuka dengan teks siap kirim; bisa diubah dulu sebelum dikirim.</p>
       <div class="list">
         ${bolehKodeWali(s) ? html`<${Row} name="Kode akses aplikasi" sub=${`Kode: ${L.kodeAkses(s)} · beserta cara masuk`} icon=${html`<${Icon} n="lock" s=${18} />`} onClick=${() => kirim(pesan.kode(s))} />` : null}
