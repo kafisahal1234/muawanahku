@@ -6,7 +6,8 @@ import { all, get, toast } from "./store.js";
 import * as L from "./logic.js";
 import { me } from "./common.js";
 
-const SITUS = "https://muawanahku.santripay.com";
+// alamat aplikasi di pesan WA mengikuti alamat yang sedang dipakai (otomatis ikut saat pindah domain)
+const SITUS = /^https:$/.test(location.protocol) && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/claude|anthropic/.test(location.hostname) ? location.origin : "https://muawanahku.santripay.com";
 const PONDOK = "Pondok Tahfidz Modern Kampung Qur'an Al Muawanah";
 export const adaWa = s => !!(s && L.waNomor(s.hpWali));
 const panggil = s => (s.panggilan || L.tebakPanggilan(s.nama) || s.nama).trim();
