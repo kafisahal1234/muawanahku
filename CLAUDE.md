@@ -21,6 +21,7 @@ PYTHONPATH=test/pwseed python3 test/puasa_sunnah.py     # butir puasa hanya Seni
 PYTHONPATH=test/pwseed python3 test/rapor_layar.py      # rapor: gambar + PDF + Word → test/out/rapor/
 PYTHONPATH=test/pwseed python3 test/pantauan_layar.py   # Pantauan Santri: Mudir umum vs Mudir Pondok 21
 PYTHONPATH=test/pwseed python3 test/cari_layar.py       # menu Cari: daftar santri + rincian (kartu hafalan, peringkat) → test/out/cari/
+PYTHONPATH=test/pwseed python3 test/modul_mudir.py      # menu Mudir: Rekap Modul (Tahfidz, Kurikulum, Kesantrian) → test/out/modul/
 cd test/aturan && npm install && npm test             # uji firestore.rules di emulator (harus "gagal 0")
 ```
 
@@ -58,7 +59,7 @@ Preact + htm, dibundel esbuild; CSS = `theme.css + skin.css + dark.css + dark_ma
 - Jangan pernah menaruh data santri/guru asli, sandi, atau nomor HP pribadi di kode/repo (repo **publik**). Uji memakai `test/contoh/seed.json` (fiktif).
 - Jangan menulis ke Firebase produksi saat menguji.
 
-**Peran**: Admin (data master saja, tanpa rekap), Mudir (umum = semua pondok; atau khusus satu pondok lewat field `mudirPondok`, mis. Mudir Pondok 21 — hanya rekap/santri pondoknya; `L.mudirPondok(st)`, penanda tangan rapor/surat per pondok `L.mudirUntuk(p)`; menu **Pantauan Santri** `src/s_pantauan.js`), Wadir Tahfidz/Kurikulum/Kesantrian (Kesantrian per pondok 21/29), Wali Asrama (=musyrif), Guru Halaqah, Guru Mapel, Wali santri. Satu akun bisa banyak peran.
+**Peran**: Admin (data master saja, tanpa rekap), Mudir (umum = semua pondok; atau khusus satu pondok lewat field `mudirPondok`, mis. Mudir Pondok 21 — hanya rekap/santri pondoknya; `L.mudirPondok(st)`, penanda tangan rapor/surat per pondok `L.mudirUntuk(p)`; menu **Pantauan Santri** dan satu menu **Rekap Modul** berisi Tahfidz/Kurikulum/Kesantrian, keduanya di `src/s_pantauan.js`), Wadir Tahfidz/Kurikulum/Kesantrian (Kesantrian per pondok 21/29), Wali Asrama (=musyrif), Guru Halaqah, Guru Mapel, Wali santri. Satu akun bisa banyak peran.
 
 **Pondok**: Pondok 29 = kelas 7–8 (asrama a1–a6), Pondok 21 = kelas 9A–9B (a7–a11). Tampilan dikelompokkan per pondok (29 dulu).
 
@@ -68,7 +69,7 @@ Preact + htm, dibundel esbuild; CSS = `theme.css + skin.css + dark.css + dark_ma
 
 **Rekap**: hanya **Bulanan, Tengah semester, Semester**. Satu halaman per rekap, tiap aspek kartu sendiri (angka besar + daftar berperingkat + bar), kehadiran **selalu persen**, **tanpa link** ke halaman lain, sederhana per peran. Data kosong = "Belum ada data".
 
-**Menu**: Tahfidz guru = Absen, Ziyadah, Murojaah, Tahsin, Manzil, Tasmi', Nilai Mid/Smt, Rekap Halaqah, Izin Guru, Riwayat. Mutaba'ah & Ceklis Musyrif hanya di dalam **Asrama Saya**. Mapel: Absen Kelas dan Jurnal Mengajar menu terpisah.
+**Menu**: Tahfidz guru = Absen, Ziyadah, Murojaah, Tahsin, Manzil, Tasmi', Nilai Mid/Smt, Rekap Halaqah, Izin Guru, Riwayat. Mutaba'ah & Ceklis Musyrif hanya di dalam **Asrama Saya**. Mapel: Absen Kelas dan Jurnal Mengajar menu terpisah. Menu "Pesan ke Wali" sudah dihapus di semua akun (chat wali lewat rincian santri). Menu Cari = daftar santri; rincian hanya punya tombol "Buka catatan lengkap santri" (tombol WA ada di dalamnya).
 
 **Wali**: bahasa orang tua (tanpa "baris/sesi/H S I A"), kontak ustadz hanya lewat menu Akun → Hubungi ustadz (Wali Asrama, para Wadir, Mudir, Admin — guru mapel tidak tampil). Halaman detail santri tetap bertab.
 

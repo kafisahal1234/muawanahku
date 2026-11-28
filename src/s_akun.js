@@ -160,8 +160,6 @@ export function RincianSantri({ id, onClose }) {
     <${Bagian} ic="users" t="Orang tua / wali"><${Kv} k="Nama ayah" v=${s.ayah} /><${Kv} k="Nama ibu" v=${s.ibu} />${s.namaWali ? html`<${Kv} k="Nama wali" v=${s.namaWali} />` : null}
       <${Kv} k="No. WA wali" v=${hp} />${s.hpAyah ? html`<${Kv} k="No. HP ayah" v=${hpTampil(s.hpAyah)} />` : null}${s.hpIbu ? html`<${Kv} k="No. HP ibu" v=${hpTampil(s.hpIbu)} />` : null}</${Bagian}>
     ${lain.length || tambahan.length ? html`<${Bagian} ic="clipboard" t="Biodata dari wali">${lain.map(([k, l]) => html`<${Kv} k=${l} v=${s[k]} />`)}${tambahan.map(([l, v]) => html`<${Kv} k=${l} v=${v} />`)}</${Bagian}>` : null}
-    <button class="btn ghost full rs-lengkap" onClick=${() => { onClose(); nav.go("santri", { sid: s.id }); }}><${Icon} n="clipboard" s=${18} /> Buka catatan lengkap santri</button>
-    ${hp ? html`<button class="btn primary full akun-btn-wa" onClick=${() => bukaWaWali(s.hpWali, `Assalamu'alaikum Ayah/Bunda dari ananda *${s.nama}*, `)}><${Icon} n="chat" s=${19} /> Chat WhatsApp wali</button>`
-      : html`<p class="small rs-nowa">No. WA wali belum diisi.</p>`}
+    <button class="btn full rs-lengkap" onClick=${() => { onClose(); nav.go("santri", { sid: s.id }); }}><${Icon} n="clipboard" s=${19} /> Buka catatan lengkap santri<${Icon} n="right" s=${18} /></button>
   </${Sheet}>`;
 }

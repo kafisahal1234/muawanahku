@@ -334,3 +334,26 @@ html[data-tema=gelap] .pt-row{border-color:#26342C}
 .rs-lengkap{margin-top:14px}
 .rs-nowa{text-align:center;margin:14px 0 0}
 @media (prefers-reduced-motion:reduce){.rs-hf{animation:none}}
+/* v4.3 Rekap Modul (Mudir): satu pintu tiga modul */
+.mm-wrap{display:flex;flex-direction:column;gap:12px}
+.mm-kartu{position:relative;display:block;width:100%;text-align:left;border:1px solid #E3ECE6;border-radius:20px;padding:14px 14px 12px;background:#fff;cursor:pointer;overflow:hidden;box-shadow:0 1px 0 rgba(10,60,38,.04),0 8px 20px -14px rgba(10,60,38,.35);animation:kartuNaik .45s cubic-bezier(.2,.8,.2,1) both}
+.mm-kartu:nth-child(2){animation-delay:.06s}.mm-kartu:nth-child(3){animation-delay:.12s}
+.mm-kartu:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--mm)}
+.mm-kartu:active{transform:scale(.985)}
+.mm-head{display:flex;align-items:center;gap:12px;color:#9AB0A5}
+.mm-ic{width:52px;height:52px;border-radius:16px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--mm2)}
+.mm-t{flex:1;min-width:0;display:flex;flex-direction:column}
+.mm-t b{font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.mm-t small{font-size:12.5px;color:var(--mut);line-height:1.35;margin-top:2px}
+.mm-angka{display:flex;gap:8px;margin-top:12px}
+.mm-angka>span{flex:1;background:var(--mm2);border-radius:12px;padding:8px 10px}
+.mm-angka b{display:block;font-size:21px;font-weight:800;line-height:1.1;color:var(--mm);font-variant-numeric:tabular-nums}
+.mm-angka em{font-style:normal;font-size:11.5px;font-weight:600;color:#4A5A52}
+.rs-lengkap{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;background:linear-gradient(160deg,#0C6B42,#074A2D);color:#fff;border:none;box-shadow:0 10px 22px -12px rgba(5,60,35,.8),inset 0 1px 0 rgba(255,255,255,.12)}
+.rs-lengkap:active{filter:brightness(.92)}
+html[data-tema=gelap] .mm-kartu{background:var(--card);border-color:var(--line);box-shadow:none}
+html[data-tema=gelap] .mm-angka>span{background:rgba(255,255,255,.06)}
+html[data-tema=gelap] .mm-angka b{color:#E8F3EC}
+html[data-tema=gelap] .mm-angka em{color:#AFC2B7}
+html[data-tema=gelap] .mm-ic{background:rgba(255,255,255,.07)}
+@media (prefers-reduced-motion:reduce){.mm-kartu{animation:none}}

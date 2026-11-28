@@ -32,7 +32,6 @@ export function Kesantrian({ pondok }) {
       <${Tile} icon="edit" label="Riwayat & Koreksi" color="slate" onClick=${() => nav.go("riwayatModul", { modul: "kesantrian" })} />
       <${Tile} icon="user" label="Histori Santri" color="blue" onClick=${() => nav.go("histori", { pondok: p })} />
       <${Tile} icon="chart" label="Rekap Kesantrian" color="purple" onClick=${() => nav.go("rekapKesantrian", { pondok: p })} />
-      <${Tile} icon="chat" label="Pesan ke Wali" color="green" onClick=${() => nav.go("pesanWali")} />
       <${Tile} icon="moon" label="Rekap Asrama" color="indigo" onClick=${() => nav.go("rekapAsrama")} />
       <${Tile} icon="calendar" label="Rekap Izin" color="teal" onClick=${() => nav.go("rekapIzin", { pondok: p })} />
       <${Tile} icon="alert" label="Rekap Pelanggaran" color="pink" onClick=${() => nav.go("rekapPelanggaran", { pondok: p })} />
