@@ -28,19 +28,21 @@ if (args[0] === "--uji") {
   process.exit(0);
 }
 
-if (!process.env.FIREBASE_SA) { console.log("FIREBASE_SA belum diisi di GitHub Secrets — notifikasi dilewati."); process.exit(0); }
-const { initializeApp, cert } = await import("firebase-admin/app");
+// Kredensial: (1) tanpa kunci — Workload Identity Federation GitHub → Google (GOOGLE_APPLICATION_CREDENTIALS dari langkah auth), atau (2) secret FIREBASE_SA berisi JSON kunci
+let SA = null; try { const s = (process.env.FIREBASE_SA || "").trim(); if (s) { SA = JSON.parse(s); if (SA.type !== "service_account" || !SA.private_key) SA = null; } } catch (e) { SA = null; }
+if (!SA && !process.env.GOOGLE_APPLICATION_CREDENTIALS) { console.log("Belum ada akses ke Firebase (Workload Identity belum disiapkan dan FIREBASE_SA tidak berisi kunci JSON). Notifikasi dilewati."); process.exit(0); }
+const { initializeApp, cert, applicationDefault } = await import("firebase-admin/app");
 const { getFirestore } = await import("firebase-admin/firestore");
 const { getMessaging } = await import("firebase-admin/messaging");
-let SA; try { SA = JSON.parse(process.env.FIREBASE_SA.trim()); if (SA.type !== "service_account" || !SA.private_key) throw new Error("bukan service account"); }
-catch (e) { console.log("FIREBASE_SA keliru: harus berisi SELURUH isi file .json service account (diawali tanda { dan berisi \"type\": \"service_account\"). Notifikasi dilewati."); process.exit(0); }
-initializeApp({ credential: cert(SA) });
+initializeApp({ credential: SA ? cert(SA) : applicationDefault(), projectId: "muawanahku-15687" });
+console.log(SA ? "Masuk dengan kunci FIREBASE_SA." : "Masuk tanpa kunci (Workload Identity).");
 const db = getFirestore(), fcm = getMessaging(), now = new Date();
 const ambil = async (col, q) => { const snap = await (q ? q(db.collection("mk_" + col)) : db.collection("mk_" + col)).get(); const o = {}; snap.forEach(d => (o[d.id] = dec(d.data()))); return o; };
 
 // 1) data: koleksi kecil penuh + data hari ini saja
 const cols = {};
-for (const c of KECIL) cols[c] = await ambil(c);
+try { for (const c of KECIL) cols[c] = await ambil(c); }
+catch (e) { console.log("Belum bisa membaca database:", String(e.message || e).slice(0, 300)); process.exit(0); }
 I.isiData(cols);
 const T = I.hariIni();
 try { const jml = (await db.collection("mk_pushToken").count().get()).data().count; console.log(`Terhubung ke database. HP terdaftar: ${jml}. Kunci Web Push: ${(cols.kalender.setelan || {}).vapid ? "sudah diisi" : "BELUM diisi"}. Hari ${T}.`); } catch (e) { console.log("Cek pendaftaran HP gagal:", e.message); }

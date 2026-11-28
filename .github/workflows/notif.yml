@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write   # untuk masuk ke Google tanpa kunci (Workload Identity Federation)
 
 concurrency:
   group: notif
@@ -20,6 +21,13 @@ jobs:
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
+      - id: auth
+        name: Masuk ke Google (tanpa kunci)
+        continue-on-error: true
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/520791575014/locations/global/workloadIdentityPools/github/providers/muawanahku
+          service_account: firebase-adminsdk-fbsvc@muawanahku-15687.iam.gserviceaccount.com
       - uses: actions/setup-node@v4
         with:
           node-version: 20
