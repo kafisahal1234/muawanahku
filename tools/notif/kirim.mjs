@@ -32,7 +32,9 @@ if (!process.env.FIREBASE_SA) { console.log("FIREBASE_SA belum diisi di GitHub S
 const { initializeApp, cert } = await import("firebase-admin/app");
 const { getFirestore } = await import("firebase-admin/firestore");
 const { getMessaging } = await import("firebase-admin/messaging");
-initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SA)) });
+let SA; try { SA = JSON.parse(process.env.FIREBASE_SA.trim()); if (SA.type !== "service_account" || !SA.private_key) throw new Error("bukan service account"); }
+catch (e) { console.log("FIREBASE_SA keliru: harus berisi SELURUH isi file .json service account (diawali tanda { dan berisi \"type\": \"service_account\"). Notifikasi dilewati."); process.exit(0); }
+initializeApp({ credential: cert(SA) });
 const db = getFirestore(), fcm = getMessaging(), now = new Date();
 const ambil = async (col, q) => { const snap = await (q ? q(db.collection("mk_" + col)) : db.collection("mk_" + col)).get(); const o = {}; snap.forEach(d => (o[d.id] = dec(d.data()))); return o; };
 
