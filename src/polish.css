@@ -314,3 +314,23 @@ html[data-tema=gelap] .pt-ket{background:#1C2822;color:#C6D3CC}
 html[data-tema=gelap] .pt-tk{background:#3A2E14;color:#F2C46B}
 html[data-tema=gelap] .pt-pel{color:#F08A8A}
 html[data-tema=gelap] .pt-row{border-color:#26342C}
+/* v4.2 Rincian santri (menu Cari): kartu hafalan + peringkat */
+.rs-hero{border-bottom:none;padding-bottom:12px}
+.rs-hf{margin:2px 0 16px;animation:kartuNaik .5s cubic-bezier(.2,.8,.2,1) both}
+.rs-hf .hf-ring{width:96px;height:96px}
+.rs-pks{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.rs-pk{position:relative;display:flex;flex-direction:column;align-items:flex-start;padding:11px 12px 10px;border-radius:16px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.1);overflow:hidden}
+.rs-pk small{font-size:11.5px;font-weight:700;color:#CFE9DA;line-height:1.25;padding-right:26px}
+.rs-pk b{font-size:28px;font-weight:800;line-height:1.05;letter-spacing:-.02em;margin-top:4px;color:#fff}
+.rs-pk em{font-style:normal;font-size:12px;font-weight:600;color:#D6EDE0}
+.rs-pk-ic{position:absolute;top:9px;right:9px;width:26px;height:26px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.12);color:#F4D27A}
+.rs-pk.emas{background:linear-gradient(150deg,rgba(242,193,78,.38),rgba(0,0,0,.12));border-color:rgba(255,224,138,.45)}
+.rs-pk.emas b{color:#FFE08A}.rs-pk.emas .rs-pk-ic{background:#F2C14E;color:#3A2A00}
+.rs-pk.perak{background:linear-gradient(150deg,rgba(220,230,235,.26),rgba(0,0,0,.12));border-color:rgba(230,238,242,.35)}
+.rs-pk.perak .rs-pk-ic{background:#DDE6EA;color:#2E3B40}
+.rs-pk.perunggu{background:linear-gradient(150deg,rgba(214,140,82,.32),rgba(0,0,0,.12));border-color:rgba(230,160,110,.4)}
+.rs-pk.perunggu .rs-pk-ic{background:#D9915A;color:#3A1F0A}
+.rs-juz{white-space:nowrap}
+.rs-lengkap{margin-top:14px}
+.rs-nowa{text-align:center;margin:14px 0 0}
+@media (prefers-reduced-motion:reduce){.rs-hf{animation:none}}

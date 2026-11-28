@@ -4,7 +4,7 @@
 import { useState } from "preact/hooks";
 import { html, nav, useApp, Icon, SubHeader, Seg, Sheet, Empty } from "./ui.js";
 import * as L from "./logic.js";
-import { FotoAv, fotoSantri } from "./common.js";
+import { FotoAv, FotoLihat, fotoSantri } from "./common.js";
 import { get } from "./store.js";
 import { bukaWaWali } from "./s_wa.js";
 import { BIODATA } from "./biodata.js";
@@ -35,7 +35,7 @@ const statusAkun = st => { const o = L.akunOv(st.username) || {}; return o.hapus
 const DASAR = ["panggilan", "nis", "tempatLahir", "lahir", "hobi", "cita", "alamat", "ayah", "ibu", "hpWali"];
 export const persenBiodata = s => Math.round((DASAR.filter(k => s[k]).length / DASAR.length) * 100);
 
-function Baris({ foto, nama, jabatan, kanan, onClick }) {
+export function Baris({ foto, nama, jabatan, kanan, onClick }) {
   return html`<button class="akun-row" onClick=${onClick}>
     <${FotoAv} src=${foto} nama=${nama} size=${48} cls="akun-av" />
     <span class="akun-t"><b>${nama}</b><small>${jabatan}</small></span>
@@ -81,7 +81,7 @@ function RincianAkun({ jenis, id, onClose }) {
     const ajar = Object.entries((st.ajar || []).reduce((m, [mp, k]) => { const n = (L.mapelById(mp) || {}).nama || mp; (m[n] = m[n] || []).push(k); return m; }, {})).map(([n, ks]) => `${n} (kelas ${ks.join(", ")})`);
     const relevanWali = (st.roles || []).some(r => ["admin", "mudir", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian", "musyrif"].includes(r));
     return html`<${Sheet} open=${true} title="Rincian akun" onClose=${onClose}>
-      <div class="akun-hero"><${FotoAv} src=${fotoStaf(st)} nama=${st.nama} size=${104} cls="akun-av besar" />
+      <div class="akun-hero"><${FotoLihat} src=${fotoStaf(st)} nama=${st.nama} size=${104} cls="akun-av besar" />
         <h3>${st.nama}</h3><p>${jabatanStaf(st).join(" · ")}</p>
         <div class="akun-chips"><span class=${"pill " + tone}>${stt}</span>${pd.length === 1 ? html`<span class="pill muted">Pondok ${pd[0]}</span>` : pd.length > 1 ? html`<span class="pill muted">Lintas pondok</span>` : null}</div></div>
       <${Bagian} ic="user" t="Akun"><${Kv} k="Nama panggilan" v=${st.pendek} /><${Kv} k="Username" v=${st.username} /><${Kv} k="Peran" v=${(st.roles || []).map(r => L.ROLE_LABEL[r] || r).join(", ")} /></${Bagian}>
@@ -99,7 +99,7 @@ function RincianAkun({ jenis, id, onClose }) {
   const lain = BIODATA.filter(([k]) => !TAMPIL.includes(k) && s[k]), tambahan = Object.entries(s.tambahan || {}).filter(([, v]) => v);
   const ortu = [s.ibu && `Ibu ${s.ibu}`, s.ayah && `Ayah ${s.ayah}`].filter(Boolean).join(" · ");
   return html`<${Sheet} open=${true} title="Rincian akun wali" onClose=${onClose}>
-    <div class="akun-hero"><${FotoAv} src=${fotoSantri(s.id)} nama=${s.nama} size=${104} cls="akun-av besar" />
+    <div class="akun-hero"><${FotoLihat} src=${fotoSantri(s.id)} nama=${s.nama} size=${104} cls="akun-av besar" />
       <h3>${s.nama}</h3><p>Wali santri${ortu ? " · " + ortu : ""}</p>
       <div class="akun-chips"><span class="pill muted">Kelas ${s.kelas}</span><span class="pill muted">Pondok ${L.pondokOfSantri(s)}</span><span class=${"pill " + (p >= 80 ? "green" : p >= 50 ? "gold" : "red")}>Biodata ${p}%</span></div></div>
     <${Bagian} ic="lock" t="Akun wali">
@@ -113,5 +113,55 @@ function RincianAkun({ jenis, id, onClose }) {
       <${Kv} k="No. WA wali" v=${hp} />${s.hpAyah ? html`<${Kv} k="No. HP ayah" v=${hpTampil(s.hpAyah)} />` : null}${s.hpIbu ? html`<${Kv} k="No. HP ibu" v=${hpTampil(s.hpIbu)} />` : null}</${Bagian}>
     ${lain.length || tambahan.length ? html`<${Bagian} ic="clipboard" t="Biodata dari wali">${lain.map(([k, l]) => html`<${Kv} k=${l} v=${s[k]} />`)}${tambahan.map(([l, v]) => html`<${Kv} k=${l} v=${v} />`)}</${Bagian}>` : null}
     ${hp ? html`<button class="btn primary full akun-btn-wa" onClick=${() => bukaWaWali(s.hpWali, `Assalamu'alaikum Ayah/Bunda dari ananda *${s.nama}*, `)}><${Icon} n="chat" s=${19} /> Chat WhatsApp wali</button>` : null}
+  </${Sheet}>`;
+}
+
+// ================= RINCIAN SANTRI (menu Cari, akun pengurus) =================
+// Foto + nama, kartu hijau hafalan (total, juz selesai, peringkat kelas & umum), data ananda, orang tua, WA wali paling bawah.
+export function peringkatHafalan(s) {
+  const semua = L.santriList().map(x => ({ x, j: L.hafalan(x).jumlah })), saya = (semua.find(o => o.x.id === s.id) || { j: 0 }).j;
+  const kls = semua.filter(o => o.x.kelas === s.kelas), urut = l => 1 + l.filter(o => o.j > saya + 1e-9).length;
+  return { kelas: urut(kls), nKelas: kls.length, umum: urut(semua), nUmum: semua.length };
+}
+const medali = n => (n === 1 ? "emas" : n === 2 ? "perak" : n === 3 ? "perunggu" : "");
+function KartuHafalanSantri({ s }) {
+  const h = L.hafalan(s), r = peringkatHafalan(s), R = 50, K = 2 * Math.PI * R, persen = Math.min(1, h.jumlah / 30), hal = Math.floor(h.baris / 15);
+  const juz = [...h.selesai].sort((a, b) => a - b), jml = (Math.round(h.jumlah * 10) / 10).toLocaleString("id-ID");
+  const Pk = ({ t, n, dari }) => html`<div class=${"rs-pk " + medali(n)}><span class="rs-pk-ic"><${Icon} n="star" s=${16} /></span><small>${t}</small><b>#${n}</b><em>dari ${dari} santri</em></div>`;
+  return html`<div class="hf rs-hf">
+    <div class="hf-top">
+      <div class="hf-ring" role="img" aria-label=${`${jml} dari 30 juz`}>
+        <svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="rsg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE08A" /><stop offset="1" stop-color="#E0A52A" /></linearGradient></defs>
+          <circle cx="60" cy="60" r=${R} class="hf-trk" /><circle cx="60" cy="60" r=${R} class="hf-val" style="stroke:url(#rsg)" stroke-dasharray=${`${K * persen} ${K}`} transform="rotate(-90 60 60)" /></svg>
+        <span><b>${jml}</b><small>dari 30 juz</small></span></div>
+      <div class="hf-main"><small class="hf-lbl">Total hafalan</small>
+        <div class="hf-big">${h.khatam ? html`30 <em>juz</em>` : html`${h.selesai.length} <em>juz</em>${hal ? html` ${hal} <em>hal.</em>` : null}`}</div>
+        ${h.khatam ? html`<span class="hf-pill">Khatam 30 juz</span>` : html`<div class="hf-pos"><b>Juz ${h.aktif}</b><span>sedang dihafal</span></div>`}</div></div>
+    <div class="hf-sec"><div class="hf-row"><span>Juz yang sudah dihafal</span><b>${juz.length} juz</b></div>
+      ${juz.length ? html`<div class="hf-chips">${juz.map(j => html`<span>${j}</span>`)}</div>` : html`<p class="hf-kosong">Belum ada juz yang selesai. Sedang menghafal Juz ${h.aktif}.</p>`}</div>
+    <div class="rs-pks"><${Pk} t=${"Peringkat kelas " + s.kelas} n=${r.kelas} dari=${r.nKelas} /><${Pk} t="Peringkat umum" n=${r.umum} dari=${r.nUmum} /></div>
+  </div>`;
+}
+export function RincianSantri({ id, onClose }) {
+  useApp();
+  const s = L.santriById(id); if (!s) return null;
+  const a = L.asramaAman(s.asrama), h = L.halaqahSantri(s), hp = hpTampil(s.hpWali), mus = a.musyrif && L.staffById(a.musyrif);
+  const TAMPIL = ["panggilan", "nis", "tempatLahir", "lahir", "ayah", "ibu", "namaWali", "hpWali", "hpAyah", "hpIbu"];
+  const lain = BIODATA.filter(([k]) => !TAMPIL.includes(k) && s[k]), tambahan = Object.entries(s.tambahan || {}).filter(([, v]) => v);
+  return html`<${Sheet} open=${true} title="Rincian santri" onClose=${onClose}>
+    <div class="akun-hero rs-hero"><${FotoLihat} src=${fotoSantri(s.id)} nama=${s.nama} size=${104} cls="akun-av besar" />
+      <h3>${s.nama}</h3><p>${s.panggilan ? `Panggilan ${s.panggilan}` : "Santri"}${s.nis ? ` · NIS ${s.nis}` : ""}</p>
+      <div class="akun-chips"><span class="pill muted">Kelas ${s.kelas}</span><span class="pill muted">Pondok ${L.pondokOfSantri(s)}</span><span class="pill muted">${a.nama}</span></div></div>
+    <${KartuHafalanSantri} s=${s} />
+    <${Bagian} ic="user" t="Ananda"><${Kv} k="Nama panggilan" v=${s.panggilan} /><${Kv} k="NIS" v=${s.nis} />
+      <${Kv} k="Tempat, tanggal lahir" v=${[s.tempatLahir, s.lahir ? L.fmtTgl(s.lahir) : ""].filter(Boolean).join(", ")} />
+      <${Kv} k="Kelas" v=${"Kelas " + s.kelas} /><${Kv} k="Asrama" v=${a.nama + (mus ? " · " + (mus.pendek || mus.nama) : "")} />
+      <${Kv} k="Halaqah" v=${h ? h.nama : ""} /></${Bagian}>
+    <${Bagian} ic="users" t="Orang tua / wali"><${Kv} k="Nama ayah" v=${s.ayah} /><${Kv} k="Nama ibu" v=${s.ibu} />${s.namaWali ? html`<${Kv} k="Nama wali" v=${s.namaWali} />` : null}
+      <${Kv} k="No. WA wali" v=${hp} />${s.hpAyah ? html`<${Kv} k="No. HP ayah" v=${hpTampil(s.hpAyah)} />` : null}${s.hpIbu ? html`<${Kv} k="No. HP ibu" v=${hpTampil(s.hpIbu)} />` : null}</${Bagian}>
+    ${lain.length || tambahan.length ? html`<${Bagian} ic="clipboard" t="Biodata dari wali">${lain.map(([k, l]) => html`<${Kv} k=${l} v=${s[k]} />`)}${tambahan.map(([l, v]) => html`<${Kv} k=${l} v=${v} />`)}</${Bagian}>` : null}
+    <button class="btn ghost full rs-lengkap" onClick=${() => { onClose(); nav.go("santri", { sid: s.id }); }}><${Icon} n="clipboard" s=${18} /> Buka catatan lengkap santri</button>
+    ${hp ? html`<button class="btn primary full akun-btn-wa" onClick=${() => bukaWaWali(s.hpWali, `Assalamu'alaikum Ayah/Bunda dari ananda *${s.nama}*, `)}><${Icon} n="chat" s=${19} /> Chat WhatsApp wali</button>`
+      : html`<p class="small rs-nowa">No. WA wali belum diisi.</p>`}
   </${Sheet}>`;
 }

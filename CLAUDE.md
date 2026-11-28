@@ -20,6 +20,7 @@ PYTHONPATH=test/pwseed python3 test/laporan_ziyadah.py
 PYTHONPATH=test/pwseed python3 test/puasa_sunnah.py     # butir puasa hanya Senin & Kamis
 PYTHONPATH=test/pwseed python3 test/rapor_layar.py      # rapor: gambar + PDF + Word → test/out/rapor/
 PYTHONPATH=test/pwseed python3 test/pantauan_layar.py   # Pantauan Santri: Mudir umum vs Mudir Pondok 21
+PYTHONPATH=test/pwseed python3 test/cari_layar.py       # menu Cari: daftar santri + rincian (kartu hafalan, peringkat) → test/out/cari/
 cd test/aturan && npm install && npm test             # uji firestore.rules di emulator (harus "gagal 0")
 ```
 
