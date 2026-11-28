@@ -309,7 +309,16 @@ export function tahsinStatus(s) {
 }
 export const santriIqra = s => { const t = tahsinStatus(s); return !!t && !t.quran; };
 export function setoranSantri(sid, kecuali) { const l = indeksSetoran().get(sid) || []; return kecuali ? l.filter(r => r.id !== kecuali) : l.slice(); }
+// Hasil hafalan disimpan sementara; dihitung ulang hanya bila data setoran / data awal / santri berubah
+let _hafCache = { set: null, awal: null, santri: null, map: new Map() };
 export function hafalan(s, kecuali) {
+  if (kecuali) return hitungHafalan(s, kecuali);
+  const c = _hafCache;
+  if (c.set !== S.data.setoran || c.awal !== S.data.dataAwal || c.santri !== S.data.santriEdit) { c.set = S.data.setoran; c.awal = S.data.dataAwal; c.santri = S.data.santriEdit; c.map = new Map(); }
+  let r = c.map.get(s.id); if (!r) { r = hitungHafalan(s); c.map.set(s.id, r); }
+  return r;
+}
+function hitungHafalan(s, kecuali) {
   const aw = dataAwal(s);
   let selesai = [...(aw.selesai || [])], aktif = aw.aktif, baris = aw.baris || 0, khatam = false;
   for (const r of setoranSantri(s.id, kecuali)) {

@@ -403,3 +403,39 @@ html[data-tema=gelap] .pf-av{box-shadow:0 0 0 3px #1b1b1b,0 0 0 7px #C9932F}
 .bd-r>b{flex:none;min-width:64px;text-align:right;font-size:13.5px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
 html[data-tema=gelap] .bk{background:var(--card);border-color:var(--line);box-shadow:none}
 html[data-tema=gelap] .bk h3{color:#8fd3ae}html[data-tema=gelap] .bd{border-color:var(--line)}html[data-tema=gelap] .bd-bar{background:rgba(255,255,255,.08)}
+/* v5.2 Gerak halus (120 Hz): semua gerak hanya transform & opacity, tanpa gambar ulang terus-menerus */
+html{touch-action:pan-x pan-y}html.zoom-bebas{touch-action:auto}
+button,a,label,[role=button],.tile,.row{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.rpl-host{overflow:hidden}.rpl-host:where(.btn,button.row,.menu-row,.sched,.demo-acc,.rk,.pchip){position:relative}
+.rpl{will-change:transform,opacity}
+/* tekan: membal lembut seperti aplikasi asli */
+.tile,.ev-row,.akun-row,.menu-row,.strip,.pchip,button.row,.btn,.wl-peng,.mm-kartu{transition:transform .2s cubic-bezier(.2,.9,.3,1.25),background-color .18s ease,border-color .18s ease}
+.tile:active,.ev-row:active,.akun-row:active,.menu-row:active,.strip:active,.pchip:active,button.row:active,.wl-peng:active{transform:scale(.975);transition-duration:.08s}
+.btn:active{transform:scale(.96);transition-duration:.08s}
+.tile:active .tile-ic,.tile:active>span:first-child{transform:scale(.92) rotate(-3deg);transition:transform .12s ease}
+/* motif kepala halaman: diam (sebelumnya bergeser terus = gambar ulang tiap bingkai); bintang khatim tetap berputar di lapis GPU */
+.ht:before{animation:none!important}
+.ht:after,.sub-h:after,.hf:before{will-change:transform}
+/* titik "sedang menghafal": denyut lewat lapisan terpisah, bukan bayangan */
+.hf-now i{animation:none!important;position:relative;box-shadow:none!important}
+.hf-now i:after{content:"";position:absolute;inset:0;border-radius:inherit;background:#5FE39C;animation:denyutHalus 1.8s ease-out infinite}
+@keyframes denyutHalus{from{transform:scale(1);opacity:.55}to{transform:scale(2.8);opacity:0}}
+/* bilah capaian: mengisi dari kiri dengan skala (tanpa hitung ulang lebar tiap bingkai) */
+.hf-bar i,.bd-bar i,.bar i{transition:none!important;transform-origin:left center;animation:isiBilah .7s cubic-bezier(.2,.8,.2,1) both}
+/* lembar bawah: naik dari tepi layar seperti aplikasi asli */
+.sheet{animation:sheetNaik .36s cubic-bezier(.22,1,.36,1) both!important;will-change:transform}
+.sheet-bg{animation:fade .22s ease both!important}
+@keyframes sheetNaik{from{transform:translate3d(0,100%,0)}to{transform:none}}
+/* pindah layar: luncur lebih panjang dan halus */
+::view-transition-old(root),::view-transition-new(root){animation-duration:.32s!important;animation-timing-function:cubic-bezier(.22,1,.36,1)!important}
+.scr.dir-fwd{animation:inR .3s cubic-bezier(.22,1,.36,1)}.scr.dir-back{animation:inL .28s cubic-bezier(.22,1,.36,1)}
+/* tab bawah: ikon aktif sedikit "meloncat" */
+.bnav button.on i{animation:tabPop .4s cubic-bezier(.2,.9,.3,1.4)}
+@keyframes tabPop{0%{transform:scale(.8)}100%{transform:translateY(-1px)}}
+/* daftar panjang (Cari, Tim, Daftar Akun): baris di luar layar tidak digambar dulu */
+.akun-list>.akun-row,.pt-list>.pt-row{content-visibility:auto;contain-intrinsic-size:auto 72px}
+/* angka rapi sejajar, fokus keyboard terlihat */
+.stat b,.ev-n b,.yy-n b,.bd-r>b,.akun-pct,.pf-angka b{font-variant-numeric:tabular-nums}
+:focus-visible{outline:3px solid #E2A93B;outline-offset:2px}
+body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+@media (prefers-reduced-motion:reduce){.sheet,.hf-bar i,.bd-bar i,.bar i,.bnav button.on i,.hf-now i:after{animation:none!important}.tile,.ev-row,.akun-row,.menu-row,.btn{transition:none}}

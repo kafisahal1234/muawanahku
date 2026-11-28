@@ -81,6 +81,8 @@ Preact + htm, dibundel esbuild; CSS = `theme.css + skin.css + dark.css + dark_ma
 
 **Dokumen**: rapor & surat memakai kop/kaki pondok (`src/rapor_assets.js`, `src/surat_assets.js`). Rapor bisa PDF dan Word (Word tanpa proteksi, cukup page break per halaman). Rapor: nilai identitas tebal, keterangan di bawah tabel, kehadiran halaqah hanya persen, nama tanda tangan bergaris bawah tanpa kurung & tanpa "Ust." (`namaTtd`). Nilai mapel (`L.rumusNilai`): **PAS = 30% projek + 30% UTS + 40% UAS**; **Nilai akhir = 50% PAS + 35% rata-rata aspek + 15% kehadiran**; tabel mapel rapor: aspek → Kehadiran → PAS (Projek, UTS, UAS) → Nilai Akhir. Field data lama: `pts` = UTS, `pas` = UAS. Keterangan di rapor secukupnya (satu baris rumus + KKM).
 
+**Gerak & kinerja (v5.2, target 120 Hz)**: animasi hanya `transform`/`opacity` (jangan animasikan width, background-position, box-shadow terus-menerus); lapis gerak ada di blok "v5.2 Gerak halus" di `polish.css` (tekan membal, lembar naik, bilah isi dengan scaleX, `content-visibility` di daftar panjang, hormati `prefers-reduced-motion`). Listener sentuh di dokumen harus pasif; yang perlu `preventDefault` dipasang hanya saat gestur berlangsung (lihat `tarik.js`, `zoom.js`). Hitungan berat disimpan sementara dengan kunci identitas objek data (`L.hafalan`, indeks di `s_khidmah.js`) — `put()` mengganti objek koleksi sehingga cache otomatis basi. Cek dengan CPU diperlambat 4x: tiap pindah layar < 200 ms.
+
 ## Cara kerja dengan pengguna
 - Permintaan revisi teks/format = ubah teks saja, bukan sistem.
 - Kerjakan permintaan berurutan dari atas.

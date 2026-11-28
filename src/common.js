@@ -48,7 +48,7 @@ export const fotoUser = user => ((user && get("profil", kunciFoto(user))) || {})
 export const fotoSantri = sid => (get("profil", "s_" + sid) || {}).foto || null;
 export function FotoAv({ src, nama, size = 48, cls = "" }) {
   const t = initials((nama || "?").replace(/\([^)]*\)/g, "").replace(/^(Ust\.|Ustdzh\.|H\.)\s*/, "").trim() || "?");
-  return html`<span class=${"foto-av " + cls} style=${`width:${size}px;height:${size}px;font-size:${Math.round(size * 0.36)}px`}>${src ? html`<img src=${src} alt=${"Foto " + (nama || "")} />` : t}</span>`;
+  return html`<span class=${"foto-av " + cls} style=${`width:${size}px;height:${size}px;font-size:${Math.round(size * 0.36)}px`}>${src ? html`<img src=${src} alt=${"Foto " + (nama || "")} decoding="async" loading="lazy" />` : t}</span>`;
 }
 // potong tengah jadi persegi lalu kompres (foto profil ringan)
 export async function fotoPersegi(file, n = 320) {

@@ -1,7 +1,7 @@
 // Ceklis Musyrif: ceklis harian musyrif / wali asrama (ringkasan dari "Ceklis Harian Musyrif", 58 poin → 16 butir)
 import { useState } from "preact/hooks";
 import { html, nav, useApp, Icon, Tile, Card, SubHeader, Stat, Row, Pill, Btn, Empty, Seg, Hint, Angka } from "./ui.js";
-import { all, get, put, toast } from "./store.js";
+import { S, all, get, put, toast } from "./store.js";
 import * as L from "./logic.js";
 import { usePeriode } from "./s_rekap.js";
 import { Panel } from "./s_rekapmodul.js";
@@ -47,12 +47,22 @@ export function unitKhidmah(tgl) {
   return out;
 }
 // nilai otomatis dari data aplikasi: true (tercatat), false (belum), null (tidak bisa dicek → manual)
+// indeks setoran per tanggal & izin guru, dibangun sekali per perubahan data (rekap sebulan jadi ringan)
+let _ix = { set: null, iz: null, perTgl: null, izin: null };
+function indeks() {
+  if (_ix.set !== S.data.setoran || _ix.iz !== S.data.izinGuru) {
+    const perTgl = new Map(); all("setoran").forEach(r => { let o = perTgl.get(r.tanggal); if (!o) perTgl.set(r.tanggal, (o = { guru: new Set(), santri: new Set() })); o.guru.add(r.guru); o.santri.add(r.santri); });
+    const izin = new Set(all("izinGuru").map(i => i.guru + "|" + i.tanggal));
+    _ix = { set: S.data.setoran, iz: S.data.izinGuru, perTgl, izin };
+  }
+  return _ix;
+}
 export function autoKhidmah(gid, tgl) {
   const a = L.asramaOf(gid), hq = L.halaqahOf(gid), res = {};
   unitKhidmah(tgl).forEach(u => {
     const k = u.b.auto; if (!k) return;
     if (k === "halaqah") res[u.id] = hq ? (get("absenHalaqah", L.halaqahKey(hq.id, tgl, u.label)) ? true : false) : null;
-    if (k === "setoran") res[u.id] = hq ? all("setoran").some(r => r.tanggal === tgl && (r.guru === gid || L.santriHalaqah(hq.id).some(s => s.id === r.santri))) : null;
+    if (k === "setoran") { const o = indeks().perTgl.get(tgl); res[u.id] = hq ? !!o && (o.guru.has(gid) || L.santriHalaqah(hq.id).some(s => o.santri.has(s.id))) : null; }
     if (k === "motd") res[u.id] = a ? (get("motd", L.motdKey(a.id, tgl, WAKTU_MOTD[u.label])) ? true : false) : null;
     if (k === "mutabaah") res[u.id] = a ? L.santriAsrama(a.id).every(s => get("mutabaah", L.mutKey(s.id, tgl)) || L.alasanTidakDinilai(s.id, tgl)) : null;
   });
@@ -69,7 +79,7 @@ export function rekapKhidmah(gid, rg) {
   const hari = L.hariAktifDalam(rg, "asrama"); let total = 0, isi = 0, hariIsi = 0, dikecualikan = 0; const perButir = {};
   hari.forEach(t => {
     const h = hasilKhidmah(gid, t);
-    if (!h.doc && all("izinGuru").some(i => i.guru === gid && i.tanggal === t)) { dikecualikan++; return; }
+    if (!h.doc && indeks().izin.has(gid + "|" + t)) { dikecualikan++; return; }
     if (h.doc) hariIsi++;
     total += h.units.length; isi += h.selesai.size;
     h.units.forEach(u => { const k = u.b.id, o = perButir[k] || (perButir[k] = { t: u.b.t, n: 0, ok: 0 }); o.n++; if (h.selesai.has(u.id)) o.ok++; });

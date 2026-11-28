@@ -21,8 +21,12 @@ export function pasangZoom() {
   setViewport(KUNCI);
   // Safari iOS: gerakan cubit
   ["gesturestart", "gesturechange", "gestureend"].forEach(n => document.addEventListener(n, e => { if (!bebas) e.preventDefault(); }, { passive: false }));
-  // dua jari bergerak = cubit
-  document.addEventListener("touchmove", e => { if (!bebas && e.touches.length > 1 && e.cancelable) e.preventDefault(); }, { passive: false });
+  // dua jari bergerak = cubit. Pendengar penahan hanya dipasang selama ada dua jari, supaya gulir satu jari tidak pernah tertahan (mulus 120 Hz)
+  const cegah = e => { if (!bebas && e.touches.length > 1 && e.cancelable) e.preventDefault(); };
+  let terpasang = false;
+  document.addEventListener("touchstart", e => { if (e.touches.length > 1 && !terpasang) { document.addEventListener("touchmove", cegah, { passive: false }); terpasang = true; } }, { passive: true });
+  const lepasDua = e => { if (terpasang && e.touches.length < 2) { document.removeEventListener("touchmove", cegah); terpasang = false; } };
+  document.addEventListener("touchend", lepasDua, { passive: true }); document.addEventListener("touchcancel", lepasDua, { passive: true });
   // Ctrl + roda tetikus / pinch trackpad di laptop
   document.addEventListener("wheel", e => { if (!bebas && e.ctrlKey) e.preventDefault(); }, { passive: false });
   // ketuk 3 kali

@@ -173,8 +173,7 @@ try {
     if (!el || el.disabled) return;
     const r = el.getBoundingClientRect(), d = Math.max(r.width, r.height) * 2, sp = document.createElement("span");
     sp.className = "rpl"; sp.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - r.left - d / 2}px;top:${e.clientY - r.top - d / 2}px`;
-    if (getComputedStyle(el).position === "static") el.style.position = "relative";
-    el.style.overflow = "hidden"; el.appendChild(sp); setTimeout(() => sp.remove(), 600);
+    el.classList.add("rpl-host"); el.appendChild(sp); setTimeout(() => sp.remove(), 600);
   }, { passive: true });
   if ("serviceWorker" in navigator && location.protocol === "https:" && window.top === window && !/claude|anthropic/.test(location.hostname)) navigator.serviceWorker.register("sw.js").catch(() => {});
 } catch (e) { }

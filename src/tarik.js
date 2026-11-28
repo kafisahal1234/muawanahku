@@ -71,22 +71,24 @@ export function pasangTarik() {
     if (sibuk || e.touches.length !== 1) return;
     const g = gulirEl(), t = e.target;
     aktif = !!g && g.scrollTop <= 0 && !document.querySelector(".app.nonav") && !!isi() && !(t.closest && t.closest(DILEWATI));
-    if (aktif) siapkan();
+    if (aktif) { siapkan(); document.addEventListener("touchmove", gerak, { passive: false }); }
     terkunci = false; tarik = 0; y0 = e.touches[0].clientY; x0 = e.touches[0].clientX;
   }, { passive: true });
-  document.addEventListener("touchmove", e => {
+  // pendengar penahan hanya hidup selama tarikan dari puncak halaman; gulir biasa tidak pernah menunggu kode aplikasi
+  function gerak(e) {
     if (!aktif || sibuk) return;
     const dy = e.touches[0].clientY - y0, dx = e.touches[0].clientX - x0;
     if (!terkunci) {
       if (Math.abs(dy) < 6 && Math.abs(dx) < 6) return;
-      if (dy <= 0 || Math.abs(dx) > Math.abs(dy) || gulirEl().scrollTop > 0) { aktif = false; return; }
+      if (dy <= 0 || Math.abs(dx) > Math.abs(dy) || gulirEl().scrollTop > 0) { aktif = false; document.removeEventListener("touchmove", gerak); return; }
       terkunci = true;
     }
     if (e.cancelable) e.preventDefault();
     tarik = Math.min(MAKS, Math.max(0, dy) * .5);
     atur(tarik, false);
-  }, { passive: false });
+  }
   const lepas = () => {
+    document.removeEventListener("touchmove", gerak);
     if (!aktif) return; aktif = false;
     if (!terkunci) return;
     if (tarik >= BATAS) segarkan(); else atur(0, true);
