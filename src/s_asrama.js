@@ -160,7 +160,7 @@ export function AsramaSaya() {
     <div class="wrap"><${Card}><div class="stats"><${Stat} label="Ceklis hari ini" value=${(() => { const k = KH.hasilKhidmah(m.id, tgl); return k.pct == null ? "—" : k.pct + "%"; })()} /><${Stat} label="Mutaba'ah" value=${`${mut}/${list.length}`} tone=${mut < list.length ? "gold" : ""} /><${Stat} label="Sedang izin" value=${izin} tone=${izin ? "blue" : ""} /></div></${Card}>
       <${Card} title="Menu Asrama"><div class="tiles">
         <${Tile} icon="checksq" label="Mutaba'ah" color="teal" onClick=${() => nav.go("mutabaah")} />
-        <${Tile} icon="clipboard" label="Ceklis Musyrif" color="emerald" badge=${(() => { const k = KH.hasilKhidmah(m.id, tgl); return L.hariAktif(tgl, "asrama") && k.pct < 100 ? k.units.length - k.selesai.size : null; })() || null} onClick=${() => nav.go("khidmah")} />
+        <${Tile} icon="clipboard" label="Ceklis Musyrif" color="emerald" badge=${(() => { const k = KH.hasilKhidmah(m.id, tgl); return L.hariAktif(tgl, "mutabaah") && k.pct < 100 ? k.units.length - k.selesai.size : null; })() || null} onClick=${() => nav.go("khidmah")} />
         ${!m.roles.includes("wadir_kesantrian") ? html`<${Tile} icon="door" label="Izin & Catatan" color="coral" badge=${izin || null} onClick=${() => nav.go("izinCatatan")} />` : null}
         <${Tile} icon="chart" label="Rekap Asrama" color="purple" onClick=${() => nav.go("rekapAsrama")} />
         <${Tile} icon="edit" label="Riwayat & Koreksi" color="slate" onClick=${() => nav.go("riwayatModul", { modul: "asrama" })} /></div></${Card}></div>`;

@@ -83,7 +83,7 @@ async def main():
 
         # 4) Tombol AI lain: pengumuman (admin), rapor (kaafi), rekap, santri, BAP, wali
         pg = await page(); await login(pg, "khanza")
-        await pg.click(".ab-btn:not(.ab-ai)"); await pg.wait_for_timeout(300)
+        await pg.click(".ab-btn"); await pg.wait_for_timeout(300)
         await pg.fill(".card input.in", "pulang"); await pg.fill(".card textarea", "tgl 20 des jemput jam 8")
         await pg.click(".ai-btn"); await pg.wait_for_timeout(500); print("pengumuman AI:", await pg.locator(".card input.in").first.input_value(), "|", (await pg.locator(".card textarea").first.input_value())[:40])
         await pg.close()
@@ -105,7 +105,7 @@ async def main():
         await pg.close()
         # 5) Asisten AI (staf & wali), impor nilai, impor jadwal
         pg = await page(); await login(pg, "kaafi")
-        await pg.click(".ab-ai"); await pg.wait_for_timeout(300)
+        await pg.click(".tile:has-text(\"Asisten AI\")"); await pg.wait_for_timeout(300)
         await pg.locator(".chat-saran button").first.click(); await pg.wait_for_selector(".cm-a .cm-act", timeout=10000)
         await pg.fill(".chat-bar textarea", "Siapa yang perlu dibina?"); await pg.keyboard.press("Enter"); await pg.wait_for_timeout(700)
         print("chat:", [t.replace("\n", " / ") for t in await pg.locator(".bubble.me, .ai-jawab").all_inner_texts()])

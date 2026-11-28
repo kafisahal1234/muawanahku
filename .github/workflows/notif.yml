@@ -1,0 +1,33 @@
+name: Notifikasi HP
+
+# Tiap 5 menit pukul 04.00–21.59 WIB (jadwal GitHub memakai UTC; bisa terlambat beberapa menit)
+on:
+  schedule:
+    - cron: "*/5 21-23 * * *"
+    - cron: "*/5 0-14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: notif
+  cancel-in-progress: false
+
+jobs:
+  kirim:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm install --no-save --no-audit --no-fund firebase-admin@13
+      - name: Kirim notifikasi yang jatuh tempo
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SA }}
+          TZ: Asia/Jakarta
+        run: node tools/notif/kirim.mjs

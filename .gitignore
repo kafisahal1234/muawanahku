@@ -7,3 +7,4 @@ test/out/
 test/aturan/node_modules/
 test/aturan/*.log
 __pycache__/
+tools/notif/.inti.mjs

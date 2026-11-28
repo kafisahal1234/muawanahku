@@ -69,11 +69,23 @@ service cloud.firestore {
       allow create: if masuk();
       allow update, delete: if admin();
     }
+    // Alamat notifikasi HP: hanya didaftarkan untuk akun sendiri; tidak bisa dibaca dari aplikasi (pengirim memakai server)
+    match /mk_pushToken/{id} {
+      allow read: if false;
+      allow create, update: if request.resource.data.token is string && request.resource.data.uid is string && (
+        (staf() && request.resource.data.jenis == 'staff' && get(/databases/$(database)/documents/mk_staffEdit/$(request.resource.data.uid)).data.username == sesi().u)
+        || (wali() && request.resource.data.jenis == 'wali' && request.resource.data.uid == santriWali()));
+      allow delete: if masuk();
+    }
+    // Catatan notifikasi terkirim: hanya server
+    match /mk_notifLog/{id} {
+      allow read, write: if false;
+    }
     // Semua data pondok lainnya: dibaca yang sudah masuk, diubah hanya oleh staf
     // (koleksi khusus di atas dikecualikan agar aturannya tidak dilonggarkan oleh blok umum ini)
     match /{col}/{id} {
-      allow read: if !(col in ['mk_sesi', 'mk_akun', 'mk_kodeWali', 'mk_hapusAkun']) && masuk();
-      allow write: if !(col in ['mk_sesi', 'mk_akun', 'mk_kodeWali', 'mk_hapusAkun', 'mk_staffEdit', 'mk_santriEdit', 'mk_profil', 'mk_log']) && staf();
+      allow read: if !(col in ['mk_sesi', 'mk_akun', 'mk_kodeWali', 'mk_hapusAkun', 'mk_pushToken', 'mk_notifLog']) && masuk();
+      allow write: if !(col in ['mk_sesi', 'mk_akun', 'mk_kodeWali', 'mk_hapusAkun', 'mk_staffEdit', 'mk_santriEdit', 'mk_profil', 'mk_log', 'mk_pushToken', 'mk_notifLog']) && staf();
     }
   }
 }

@@ -2,7 +2,8 @@
 import { useState } from "preact/hooks";
 import { unduhPdf, tabelKePdf } from "./pdf.js";
 import { html, nav, useApp, Icon, Card, SubHeader, Row, Pill, Btn, Empty, Seg, Section, Sheet, Field, Confirm, Bar, Hint, Stat } from "./ui.js";
-import { all, get, put, del, toast, uid } from "./store.js";
+import { S, all, get, put, del, toast, uid } from "./store.js";
+const S_KAL = () => S.data.kalender;
 import { DATA } from "./data.js";
 import { LIBUR_NASIONAL } from "./libur.js";
 import * as L from "./logic.js";
@@ -194,6 +195,23 @@ export function RekapDetail({ jenis: j0, aid, hid, kelas, mapel, pondok, pj }) {
 }
 
 // ---------------- Kalender akademik (admin) ----------------
+// Jam pengingat notifikasi (dipakai pengirim notifikasi otomatis)
+function JamPengingat({ st, bisa }) {
+  const [f, setF] = useState(null), jm = v => String(v || "").replace(":", ".");
+  const ok = v => /^([01]?\d|2[0-3])[.:][0-5]\d$/.test(String(v || "").trim());
+  const simpan = async () => {
+    const jh = { Shubuh: jm(f.Shubuh), Dhuha: jm(f.Dhuha), Malam: jm(f.Malam) }, mt = jm(f.mut), td = Math.max(0, Math.min(60, Number(f.tunda) || 0));
+    if (![jh.Shubuh, jh.Dhuha, jh.Malam, mt].every(ok)) return toast("Tulis jam dengan format 05.15", "err");
+    if (await put("kalender", "setelan", { ...((S_KAL() || {}).setelan || {}), jamHalaqah: jh, jamMutabaah: mt, kbmTunda: td })) { logUbah("ubah", "kalender", "setelan", "Ubah jam pengingat"); toast("Jam pengingat disimpan"); setF(null); } };
+  const inp = (k, lab) => html`<${Field} label=${lab}><input class="in" inputmode="numeric" value=${f[k]} placeholder="05.15" onInput=${e => setF({ ...f, [k]: e.target.value })} /></${Field}>`;
+  return html`<${Card} title="Jam pengingat notifikasi" right=${bisa && !f ? html`<button class="link" onClick=${() => setF({ ...st.jamHalaqah, mut: st.jamMutabaah, tunda: st.kbmTunda })}>Ubah</button>` : null}>
+    ${f ? html`<div class="btn-row">${inp("Shubuh", "Halaqah Shubuh")}${inp("Dhuha", "Halaqah Dhuha")}</div><div class="btn-row">${inp("Malam", "Halaqah Malam")}${inp("mut", "Mutaba'ah")}</div>
+        <${Field} label="KBM: pengingat absen setelah jam masuk (menit)"><input class="in" type="number" min="0" max="60" value=${f.tunda} onInput=${e => setF({ ...f, tunda: e.target.value })} /></${Field}>
+        <div class="btn-row"><${Btn} kind="ghost" onClick=${() => setF(null)}>Batal</${Btn}><${Btn} onClick=${simpan}>Simpan</${Btn}></div>`
+      : html`<div class="kv"><span>Halaqah Shubuh · Dhuha · Malam</span><b>${st.jamHalaqah.Shubuh} · ${st.jamHalaqah.Dhuha} · ${st.jamHalaqah.Malam}</b></div>
+        <div class="kv"><span>KBM (bila belum diabsen)</span><b>${st.kbmTunda} menit setelah jam masuk</b></div><div class="kv"><span>Mutaba'ah</span><b>${st.jamMutabaah}</b></div>
+        <p class="small" style="margin:8px 0 0">Notifikasi dikirim ke HP ustadz yang mengaktifkan notifikasi, hanya bila input belum diisi.</p>`}</${Card}>`;
+}
 export function Kalender() {
   useApp();
   const st = L.setelan(), lp = L.liburPondok(); const [ed, setEd] = useState(null); const [f, setF] = useState(null); const [th, setTh] = useState(L.today().slice(0, 4));
@@ -215,6 +233,7 @@ export function Kalender() {
         : html`<div class="kv"><span>Semester ganjil</span><b>${L.fmtTgl(st.ganjilMulai, false)} – ${L.fmtTgl(st.ganjilSelesai, false)}</b></div><div class="kv"><span>Mid ganjil sampai</span><b>${L.fmtTgl(st.ganjilMid, false)}</b></div>
           <div class="kv"><span>Semester genap</span><b>${L.fmtTgl(st.genapMulai, false)} – ${L.fmtTgl(st.genapSelesai, false)}</b></div><div class="kv"><span>Mid genap sampai</span><b>${L.fmtTgl(st.genapMid, false)}</b></div>
           <div class="kv"><span>Mulai pakai aplikasi</span><b>${L.fmtTgl(st.mulaiPakai, false)}</b></div>`}</${Card}>
+    <${JamPengingat} st=${st} bisa=${bisa || me().roles.includes("wadir_tahfidz")} />
     <${Card} title="Libur pondok" right=${bisa ? html`<button class="link" onClick=${() => setEd({ baru: true, nama: "", mulai: L.today(), selesai: L.today(), jenis: "pondok" })}>+ Tambah</button>` : null}>
       ${lp.length ? html`<div class="list">${lp.map(l => html`<${Row} name=${l.nama} sub=${`${L.fmtTgl(l.mulai, false)} – ${L.fmtTgl(l.selesai, false)} · ${L.hariRentang(l.mulai, l.selesai).length} hari · ${l.jenis === "kbm" ? "libur KBM saja" : "semua kegiatan libur"}`}
           icon=${html`<${Icon} n="calendar" s=${18} />`} onClick=${bisa ? () => setEd({ ...l }) : null} />`)}</div>` : html`<${Empty} t="Belum ada libur pondok. Tambahkan libur panjang (misal libur semester) agar tidak masuk rekap." icon="calendar" />`}</${Card}>

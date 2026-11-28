@@ -67,6 +67,18 @@ await cek("wali foto profil anaknya", assertSucceeds(setDoc(doc(wl, "mk_profil/s
 await cek("wali tulis log", assertSucceeds(setDoc(doc(wl, "mk_log/l1"), { aksi: "ubah" })));
 await cek("wali ubah akun guru ditolak", assertFails(updateDoc(doc(wl, "mk_staffEdit/kaafi"), { nama: "x" })));
 await cek("wali tulis sesi palsu staf ditolak", assertFails(setDoc(doc(wl, "mk_sesi/wali1"), { jenis: "staff", u: "kafi", h: "x" })));
+// notifikasi HP (sesi staf baru karena sandi kafi sudah direset di atas)
+const st9 = env.authenticatedContext("staf9").firestore();
+await cek("sesi staf (sandi baru) diterima", assertSucceeds(setDoc(doc(st9, "mk_sesi/staf9"), { jenis: "staff", u: "kafi", h: H("kafi", "baru123"), sid: "kaafi" })));
+await cek("staf daftar notifikasi untuk dirinya", assertSucceeds(setDoc(doc(st9, "mk_pushToken/t1"), { token: "abc", jenis: "staff", uid: "kaafi", kat: {} })));
+await cek("staf daftar notifikasi atas nama guru lain ditolak", assertFails(setDoc(doc(st9, "mk_pushToken/t2"), { token: "abc", jenis: "staff", uid: "admin", kat: {} })));
+await cek("staf baca alamat notifikasi ditolak", assertFails(getDoc(doc(st9, "mk_pushToken/t1"))));
+await cek("staf daftar notifikasi lewat celah 'wali' ditolak", assertFails(setDoc(doc(st9, "mk_pushToken/t3"), { token: "abc", jenis: "wali", uid: "s001" })));
+await cek("staf tulis log notifikasi ditolak", assertFails(setDoc(doc(st9, "mk_notifLog/x"), { a: 1 })));
+await cek("wali daftar notifikasi untuk anaknya", assertSucceeds(setDoc(doc(wl, "mk_pushToken/w1"), { token: "def", jenis: "wali", uid: "s001", kat: {} })));
+await cek("wali daftar notifikasi anak lain ditolak", assertFails(setDoc(doc(wl, "mk_pushToken/w2"), { token: "def", jenis: "wali", uid: "s002" })));
+await cek("wali baca alamat notifikasi ditolak", assertFails(getDocs(collection(wl, "mk_pushToken"))));
+await cek("wali hapus alamat notifikasinya", assertSucceeds(deleteDoc(doc(wl, "mk_pushToken/w1"))));
 await cek("keluar: hapus sesi sendiri", assertSucceeds(deleteDoc(doc(wl, "mk_sesi/wali1"))));
 await cek("setelah keluar, baca ditolak", assertFails(getDocs(collection(wl, "mk_setoran"))));
 console.log(`lulus ${lulus}, gagal ${gagal}`);

@@ -6647,5 +6647,137 @@ export const KAMUS2 = {
 "perlu perhatian": [
 "needs attention",
 "يحتاج اهتمامًا"
+],
+"Notifikasi": [
+"Notifications",
+"الإشعارات"
+],
+"Pengingat & info terbaru di HP": [
+"Reminders & latest info on your phone",
+"التذكيرات وآخر الأخبار على الهاتف"
+],
+"Aktifkan notifikasi": [
+"Turn on notifications",
+"تفعيل الإشعارات"
+],
+"Aktifkan notifikasi di HP ini": [
+"Turn on notifications on this phone",
+"تفعيل الإشعارات على هذا الهاتف"
+],
+"Mengaktifkan…": [
+"Turning on…",
+"جارٍ التفعيل…"
+],
+"Coba notifikasi": [
+"Test notification",
+"تجربة الإشعار"
+],
+"Matikan": [
+"Turn off",
+"إيقاف"
+],
+"Yang dikirim": [
+"What gets sent",
+"ما يتم إرساله"
+],
+"Pengingat input": [
+"Input reminders",
+"تذكيرات الإدخال"
+],
+"Info terbaru": [
+"Latest info",
+"آخر الأخبار"
+],
+"Laporan terbit": [
+"Reports published",
+"التقارير الصادرة"
+],
+"Izin santri": [
+"Student leave",
+"استئذان الطلاب"
+],
+"Kabar harian ananda": [
+"Your child's daily news",
+"أخبار الابن اليومية"
+],
+"Jadwal pengingat": [
+"Reminder schedule",
+"جدول التذكير"
+],
+"Pengaturan Admin": [
+"Admin settings",
+"إعدادات المشرف"
+],
+"Simpan kunci": [
+"Save key",
+"حفظ المفتاح"
+],
+"Notifikasi aktif": [
+"Notifications on",
+"الإشعارات مفعلة"
+],
+"Notifikasi belum aktif": [
+"Notifications off",
+"الإشعارات غير مفعلة"
+],
+"Notifikasi diblokir": [
+"Notifications blocked",
+"الإشعارات محظورة"
+],
+"Pasang aplikasi dulu": [
+"Install the app first",
+"ثبّت التطبيق أولًا"
+],
+"Belum didukung di sini": [
+"Not supported here",
+"غير مدعوم هنا"
+],
+"Menunggu Admin": [
+"Waiting for Admin",
+"بانتظار المشرف"
+],
+"Jam pengingat notifikasi": [
+"Notification reminder times",
+"أوقات التذكير"
+],
+"Pasang aplikasi untuk notifikasi": [
+"Install the app for notifications",
+"ثبّت التطبيق لتلقي الإشعارات"
+],
+"Aktif di HP ini": [
+"On for this phone",
+"مفعّل على هذا الهاتف"
+],
+"Belum aktif": [
+"Not active",
+"غير مفعّل"
+],
+"Yang akan Anda terima": [
+"What you will receive",
+"ما ستتلقاه"
+],
+"Pantauan pimpinan": [
+"Leadership monitoring",
+"متابعة القيادة"
+],
+"Izin & kepulangan": [
+"Leave & return",
+"الاستئذان والعودة"
+],
+"Kabar gembira": [
+"Good news",
+"بشرى سارة"
+],
+"Info pondok": [
+"School info",
+"أخبار المعهد"
+],
+"Laporan perkembangan": [
+"Progress report",
+"تقرير التقدم"
+],
+"Asisten AI": [
+"AI Assistant",
+"المساعد الذكي"
 ]
 };

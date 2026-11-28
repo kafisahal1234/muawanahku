@@ -78,7 +78,7 @@ async def main():
         await pg.select_option("select.in", "p5"); await pg.fill("textarea >> nth=0", "Ditemukan HP di lemari"); await pg.click("text=Simpan BAP"); await pg.locator(".dialog .btn.primary").click(); await pg.wait_for_timeout(300)
         await pg.screenshot(path="test/f9_bap.png", full_page=True)
         # mudir announcement
-        await login(pg, "syamsul"); await pg.screenshot(path="test/f10_mudir.png", full_page=True); await pg.click(".ab-btn:not(.ab-ai)"); await pg.wait_for_timeout(250)
+        await login(pg, "syamsul"); await pg.screenshot(path="test/f10_mudir.png", full_page=True); await pg.click(".ab-btn"); await pg.wait_for_timeout(250)
         await pg.fill("input[placeholder^='Misal: Jadwal']", "Jadwal perpulangan akhir semester"); await pg.fill("textarea", "Perpulangan 20 Desember 2026."); await pg.click("text=Kirim pengumuman"); await pg.wait_for_timeout(300)
         # wali
         await loginWali(pg, "faiz kurniawan"); await pg.screenshot(path="test/f11_wali.png", full_page=True)

@@ -24,7 +24,7 @@ async def main():
         await pg.goto(U); await pg.evaluate("localStorage.clear()"); await pg.goto(U); await pg.wait_for_timeout(500)
         await pg.fill("input[autocomplete=username]", "kaafi"); await pg.fill(".pass-in input", "kaafi123"); await pg.click("button[type=submit]"); await pg.wait_for_timeout(1000)
         await pg.screenshot(path=f"{O}/a0_home.png")
-        await pg.locator(".ab-ai").first.click(); await pg.wait_for_timeout(700)
+        await pg.evaluate("[...document.querySelectorAll('.tile, .ai-wl')].find(x=>x.textContent.includes('Asisten AI')).click()"); await pg.wait_for_timeout(700)
         notes.append(("bnav on asisten", await pg.locator(".bnav").count()))
         await pg.screenshot(path=f"{O}/a1_hero.png")
         await pg.locator(".chat-hero .chat-saran button").first.click(); await pg.wait_for_timeout(1500)

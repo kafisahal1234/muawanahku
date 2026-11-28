@@ -113,8 +113,10 @@ export async function masukSesi(data) {
 // sesudah sandi sendiri diganti: sesi diperbarui lalu data didengar ulang (pendengar lama sempat ditolak server)
 export function dengarUlang() { if (S.cloud && S.sesi) { S.dengarUlang = false; dengar(S.sesi.jenis); } }
 export async function perbaruiSesi(extra) { if (!S.cloud || !S.sesi) return; const d = { ...S.sesi, ...extra }; await tulisSesi(d); S.sesi = d; }
+export const sebelumKeluar = new Set(); // dijalankan selagi sesi masih sah (mis. melepas notifikasi HP ini)
 export async function keluarSesi() {
   if (!S.cloud) return;
+  for (const f of sebelumKeluar) { try { await Promise.race([f(), new Promise(r => setTimeout(r, 4000))]); } catch (e) { } }
   berhentiDengar(); await hapusSesi();
   S.sesi = null; S.perluMasuk = true; S.sesiHabis = false; COLS.forEach(c => (S.data[c] = {})); S.ready = true; emit();
 }
@@ -156,3 +158,6 @@ export async function resetAll() {
   saveLocal(); emit();
 }
 export function uid(p = "r") { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+// Tulis/hapus satu dokumen langsung ke server tanpa ikut disimpan di data aplikasi (mis. alamat notifikasi HP)
+export async function tulisLangsung(col, id, obj) { if (!(S.mode === "db" && db)) throw new Error("Notifikasi hanya bisa diaktifkan di versi online."); await db.collection("mk_" + col).doc(id).set(obj); }
+export async function hapusLangsung(col, id) { if (S.mode === "db" && db) { try { await db.collection("mk_" + col).doc(id).delete(); } catch (e) { } } }

@@ -602,3 +602,33 @@ html[data-tema=gelap] .lu-semua{border-color:#22352B}
 .lap-head{flex-direction:column;align-items:stretch;gap:14px}
 .lap-hd-n{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.lap-hd-n span{min-width:0;padding:9px 6px}
 .lb-tabs button{padding:8px 12px;font-size:12.5px}
+/* ===== v5.5 Notifikasi ===== */
+.ajak-notif{display:flex;align-items:center;gap:12px;width:100%;padding:12px 10px 12px 12px;margin:0 0 14px;border-radius:18px;cursor:pointer;
+  background:linear-gradient(135deg,#FFF8E6,#FFF1D2);border:1px solid #F1DFB0;box-shadow:0 8px 20px -16px rgba(150,100,0,.5)}
+.an-ic{width:42px;height:42px;border-radius:14px;flex:none;display:grid;place-items:center;background:#F5C24E;color:#4A3200;animation:goyangLonceng 2.6s ease-in-out 1s 2}
+@keyframes goyangLonceng{0%,60%,100%{transform:rotate(0)}10%,30%{transform:rotate(-12deg)}20%,40%{transform:rotate(12deg)}}
+.an-t{flex:1;min-width:0;display:flex;flex-direction:column}.an-t b{font-size:14.5px;font-weight:800;color:#3B2C06}.an-t small{font-size:12.5px;color:#7A6224;line-height:1.35}
+.an-x{width:30px;height:30px;border-radius:50%;border:0;background:rgba(122,98,36,.1);color:#7A6224;display:grid;place-items:center;flex:none;cursor:pointer}
+.nt-wrap{display:flex;flex-direction:column;gap:14px;padding-bottom:28px}
+.nt-status{display:flex;gap:14px;align-items:flex-start;padding:16px;border-radius:22px;color:#fff;background:linear-gradient(150deg,#5B6F64,#3E4F46)}
+.nt-status.aktif{background:radial-gradient(160px 100px at 100% 0,rgba(245,194,78,.35),rgba(245,194,78,0) 70%),linear-gradient(150deg,#0F7149,#08452C)}
+.nt-status.mati,.nt-status.belum-siap{background:linear-gradient(150deg,#B98008,#8A5E00)}
+.nt-status.diblokir{background:linear-gradient(150deg,#C2372A,#8E2219)}
+.nt-ic{width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:rgba(255,255,255,.16)}
+.nt-status b{font-size:17px;font-weight:800}.nt-status p{margin:4px 0 0;font-size:13.5px;line-height:1.5;color:rgba(255,255,255,.86)}
+.nt-kat{display:flex;flex-direction:column}
+.nt-row{display:flex;align-items:center;gap:12px;padding:12px 2px;border-top:1px solid #EEF3F0;cursor:pointer}.nt-row:first-child{border-top:0;padding-top:2px}
+.nt-row>span{flex:1;min-width:0;display:flex;flex-direction:column}.nt-row b{font-size:14.5px;font-weight:800;color:var(--ink)}.nt-row small{font-size:12.5px;color:var(--mut);line-height:1.4}
+input.sw{appearance:none;-webkit-appearance:none;flex:none;width:48px;height:28px;border-radius:999px;background:#CBD8D0;position:relative;cursor:pointer;transition:background-color .2s;margin:0}
+input.sw:before{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .22s cubic-bezier(.2,.9,.3,1.3)}
+input.sw:checked{background:#0E8A52}input.sw:checked:before{transform:translateX(20px)}
+.nt-jadwal{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.nt-jadwal div{display:flex;flex-direction:column;padding:10px 12px;border-radius:14px;background:#F4F8F6}.nt-jadwal span{font-size:12px;color:var(--mut);font-weight:700}.nt-jadwal b{font-size:15px;font-weight:800;color:#0B5D3B;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){.an-ic{animation:none}}
+html[data-tema=gelap] .ajak-notif{background:#2A2414;border-color:#4A3D1C}html[data-tema=gelap] .an-t b{color:#F5E3B5}html[data-tema=gelap] .an-t small{color:#CDB98A}
+html[data-tema=gelap] .nt-row{border-color:#22352B}html[data-tema=gelap] .nt-jadwal div{background:#1A2A22}html[data-tema=gelap] .nt-jadwal b{color:#8FE0B5}html[data-tema=gelap] input.sw{background:#33463C}
+.nt-daftar{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.nt-daftar li{display:flex;gap:10px;align-items:flex-start}.nt-daftar li>span:last-child{display:flex;flex-direction:column}
+.nt-daftar b{font-size:14.5px;font-weight:800;color:var(--ink)}.nt-daftar small{font-size:12.5px;color:var(--mut);line-height:1.4}
+.nt-cek{width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;background:#DDF3E6;color:#0B7A45;margin-top:1px}
+html[data-tema=gelap] .nt-cek{background:#16352A;color:#8FE0B5}

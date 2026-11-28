@@ -17,7 +17,7 @@ async def main():
         await pg.add_init_script(MOCK)
         await pg.goto(URL_DIST); await pg.evaluate(SEED_KEGIATAN); await pg.goto(URL_DIST)
         for u in ["ugi", "syamsul"]:
-            await masuk(pg, u); await pg.locator(".ab-ai").first.click(); await pg.wait_for_timeout(900)
+            await masuk(pg, u); await pg.evaluate("[...document.querySelectorAll('.tile, .ai-wl')].find(x=>x.textContent.includes('Asisten AI')).click()"); await pg.wait_for_timeout(900)
             await pg.fill("textarea", "uji alat"); await pg.click(".chat-send"); await pg.wait_for_timeout(3000)
             h = await pg.evaluate("window.__hasil")
             if not h: print(u, "TIDAK ADA HASIL"); continue
@@ -30,7 +30,7 @@ async def main():
         await pg.evaluate("sessionStorage.clear(); localStorage.removeItem('mk_user')"); await pg.goto(URL_DIST); await pg.wait_for_timeout(600)
         await pg.locator("text=Wali Santri").first.click(); await pg.locator("text=Lihat semua akun demo").click(); await pg.wait_for_timeout(300)
         await pg.locator(".demo-acc").nth(3).click(); await pg.wait_for_timeout(4000)
-        await pg.locator(".ab-ai").first.click(); await pg.wait_for_timeout(900)
+        await pg.evaluate("[...document.querySelectorAll('.tile, .ai-wl')].find(x=>x.textContent.includes('Asisten AI')).click()"); await pg.wait_for_timeout(900)
         await pg.fill("textarea", "uji alat"); await pg.click(".chat-send"); await pg.wait_for_timeout(3000)
         h = await pg.evaluate("window.__hasil") or {}
         for k in ["cari_santri", "rincian_santri", "evaluasi_tahfidz", "data_guru", "izin_pelanggaran"]:

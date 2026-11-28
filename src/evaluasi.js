@@ -19,7 +19,8 @@ const nmPendek = n => String(n || "").split(" ").slice(0, 2).join(" ");
 const daftarNama = (xs, n = 3) => xs.slice(0, n).map(x => `${nmPendek(x.nama)} (${x.v})`).join(", ") + (xs.length > n ? `, dan ${xs.length - n} lainnya` : "");
 
 // ---------- periode ----------
-export const JENIS_LABEL = { harian: "Harian", pekanan: "Pekanan", bulanan: "Bulanan", mid: "Tengah Semester", semester: "Semester", tahunan: "Tahunan" };
+import { JENIS_LABEL } from "./terbit.js";
+export { JENIS_LABEL };
 export const LALU_LABEL = { harian: "kemarin", pekanan: "pekan lalu", bulanan: "bulan lalu", mid: "mid semester lalu", semester: "semester lalu" };
 export function rgSebelum(jenis, rg) {
   if (!rg || jenis === "tahunan") return null;

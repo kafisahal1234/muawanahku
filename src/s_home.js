@@ -25,6 +25,7 @@ import { temaSaatIni, setTema, BAHASA, bahasa, setBahasa } from "./i18n.js";
 import { aiAda } from "./ai.js";
 import { TahsinCard, JalurIqra } from "./s_tahsin.js";
 import { KartuLaporan } from "./s_laporan.js";
+import { AjakNotif, statusPush } from "./notif.js";
 import { bolehLaporan, belumDibaca } from "./laporan.js";
 const PrivasiIsi = () => html`<div class="prose"><p>Data dipakai hanya untuk administrasi pendidikan pondok: hafalan, absensi, nilai, perizinan, dan pembinaan santri. Data tidak dijual, tidak untuk iklan, dan tidak dibagikan ke pihak luar. Setiap pengguna hanya melihat data sesuai perannya; wali hanya melihat anaknya sendiri. Kebijakan lengkap ada di menu Akun setelah masuk.</p></div>`;
 
@@ -120,18 +121,19 @@ function tilesFor(st) {
   if (r.includes("wadir_kesantrian")) add("shield", "Kesantrian", "coral", () => nav.go("kesantrian"), L.izinAktif().filter(i => L.pondokOfSantri(L.santriById(i.santri)) === st.pondok).length || null);
   if (r.includes("admin")) { add("grid", "Data Master", "slate", () => nav.go("dataMaster")); add("users", "Daftar Akun", "teal", () => nav.go("daftarAkun")); }
   if (r.includes("guru_tahfidz") && hq) {
-    const belum = L.santriHalaqah(hq.id).filter(s => !L.kunci(s).sudah).length;
+    const belum = L.adaHalaqah() && !L.khususManzil() ? L.santriHalaqah(hq.id).filter(s => !L.kunci(s).sudah).length : 0;
     add("bookopen", r.includes("mudir") || r.includes("wadir_tahfidz") ? "Halaqah Saya" : "Tahfidz", "emerald", () => nav.go("tahfidz"), belum || null);
   }
   if (r.includes("musyrif") && a) {
     const ids = new Set(L.santriAsrama(a.id).map(s => s.id));
     // Mutaba'ah & Ceklis Musyrif ada di dalam Asrama Saya; lencana = tugas ceklis yang belum + izin aktif
-    const kh = KH.hasilKhidmah(st.id, L.today()), sisaCeklis = L.hariAktif(L.today(), "asrama") && kh.pct < 100 ? kh.units.length - kh.selesai.size : 0;
+    const kh = KH.hasilKhidmah(st.id, L.today()), sisaCeklis = L.hariAktif(L.today(), "mutabaah") && kh.pct < 100 ? kh.units.length - kh.selesai.size : 0;
     add("home", "Asrama Saya", "coral", () => nav.go("asramaSaya"), (sisaCeklis + (!r.includes("wadir_kesantrian") ? L.izinAktif().filter(i => ids.has(i.santri)).length : 0)) || null);
     add("award", "Rapor", "gold", () => nav.go("raporList"));
   }
   if (r.some(x => ["mudir", "admin", "wadir_kurikulum", "yayasan"].includes(x))) add("cal2", "Kalender", "pink", () => nav.go("kalender"));
   if (r.some(x => x !== "admin")) add("grafik", "Laporan", "indigo", () => nav.go("laporan"), belumDibaca().length || null);
+  if (aiAda()) add("obrolan", "Asisten AI", "purple", () => nav.go("asisten"));
   add("users", "Tim", "teal", () => nav.go("tim"));
   if (r.includes("guru_mapel")) [...new Set(st.ajar.map(([m]) => m))].forEach(m => add("layers", "Mapel " + L.mapelById(m).nama.replace("Pendidikan ", "").replace("Bahasa ", "B. "), MAPEL_COLOR[m], () => nav.go("mapel", { mapel: m })));
   return t;
@@ -177,7 +179,7 @@ function Summary({ st }) {
 
 function tasksFor(st) {
   const r = st.roles, tgl = L.today(), out = [];
-  if (r.includes("guru_tahfidz") && L.halaqahOf(st.id)) { const a = L.halaqahOf(st.id), l = L.santriHalaqah(a.id); const b = l.filter(s => !L.kunci(s).sudah).length; const ts = l.filter(s => L.hafalan(s).siapTasmi).length;
+  if (r.includes("guru_tahfidz") && L.halaqahOf(st.id)) { const a = L.halaqahOf(st.id), l = L.santriHalaqah(a.id); const b = L.adaHalaqah() && !L.khususManzil() ? l.filter(s => !L.kunci(s).sudah).length : 0; const ts = l.filter(s => L.hafalan(s).siapTasmi).length;
     if (b) out.push([`${b} santri belum setor ziyadah`, `Halaqah ${st.pendek} · hari ini`, "coral", () => nav.go("setorList", { jenis: "ziyadah" })]);
     if (ts) out.push([`${ts} santri siap tasmi'`, "Selesai satu juz", "gold", () => nav.go("tasmiList")]); }
   if (r.includes("guru_mapel")) { const sl = L.jadwalAll().filter(j => j.guru === st.id && j.hari === L.hariIni() && !(get("absenKelas", L.absenKelasKey(j.id, tgl)) || {}).materi);
@@ -203,7 +205,7 @@ function HomeTop({ nama, sub, bell, foto, children, cls }) {
   return html`<header class="ht"><div class="ht-row"><span class="ht-logo applogo"><img src=${APP_LOGO} alt="Logo MuawanahQu" /></span>
       <div class="ht-hi"><small>Assalamu'alaikum,</small><b>${nama}</b></div>
       <button class="ht-btn ab-btn" aria-label=${bell ? `Pengumuman, ${bell} baru` : "Pengumuman"} onClick=${() => nav.go("pengumuman")}><${Icon} n="bell" s=${23} w=${2.2} />${bell ? html`<b>${bell}</b>` : null}</button>
-      ${aiAda() ? html`<button class="ht-btn ab-btn ab-ai" aria-label="Asisten AI" onClick=${() => nav.go("asisten")}><${Icon} n="chat" s=${23} w=${2.2} /></button>` : null}
+
       <button class="ht-foto" aria-label="Akun saya" onClick=${() => nav.setTab("akun")}><${FotoAv} src=${foto} nama=${nama} size=${42} /></button></div>
       ${sub ? html`<div class="ht-sub">${sub}</div>` : html`<div class="ht-tgl"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="#F2C14E"/></svg>${tglHijriah()}</div>`}</header>
     <section class=${"hc" + (cls ? " " + cls : "")}>${children}</section>`;
@@ -226,6 +228,7 @@ export function Beranda() {
       <div class="sum"><${Summary} st=${st} /></div></${HomeTop}>
     <div class="wrap">
     ${strip ? html`<button class="strip" onClick=${strip.go}><span class="strip-ic" style=${`background:${WARNA[strip.w][2]}`}><${Ikon} n=${strip.ic} warna=${strip.w} s=${28} /></span><span class="strip-t"><b>${strip.t}</b><small>${strip.s}</small></span><span class="strip-go">Lihat <${Icon} n="right" s=${16} w=${2.4} /></span></button>` : null}
+    <${AjakNotif} />
     <${KartuLaporan} />
     <${Card} title="Menu"><div class="tiles">${tiles.map(t => html`<${Tile} icon=${t.icon} label=${t.label} color=${t.color} badge=${t.badge} onClick=${t.go} />`)}</div></${Card}>
     ${tasks.length > 1 ? html`<${Card} title="Perlu diperhatikan"><div class="list">${tasks.slice(1).map(([t, s, c, go]) => html`<button class="row" onClick=${go}><span class="row-ic" style=${`background:${c === "coral" ? "#FDE7E3" : c === "gold" ? "#FDF0D3" : "#E6EEFC"};color:${c === "coral" ? "#B3261E" : c === "gold" ? "#8A5A00" : "#1F56B5"}`}><${Icon} n="alert" s=${18} /></span>
@@ -279,8 +282,8 @@ export function Akun() {
     <div class="wrap">
       <div class="acc-head"><${FotoLihat} src=${fotoUser(u)} nama=${st ? st.pendek : sa.nama} size=${58} />
         <span class="acc-t"><b>${st ? st.nama : "Wali " + sa.nama}</b><small>${st ? st.roles.map(r => L.ROLE_LABEL[r]).join(" · ") : `Kelas ${sa.kelas} · ${L.asramaAman(sa.asrama).nama}`}</small></span></div>
-      ${st ? html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil", pr ? "Biodata & foto profil" : "Lengkapi biodata & foto profil", () => nav.go("profil"), "green")}${item("lock", "Keamanan", "Username & kata sandi", () => nav.go("keamanan"), "blue")}${!tabStaf(st).some(x => x[0] === "riwayat") && st.roles.some(r => !["yayasan", "admin"].includes(r)) ? item("clock", "Riwayat input saya", "Absen, setoran & catatan yang Anda input", () => nav.go("riwayatSaya"), "slate") : null}${st.roles.some(r => L.TTD_ROLES.includes(r)) ? item("pen", "Tanda Tangan", get("ttd", st.id) ? "Tersimpan · otomatis di rapor & surat" : "Belum ada · tulis di layar atau foto dari kertas", () => nav.go("tandaTangan"), "purple") : null}</div>`
-        : html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil Ananda", fotoUser(u) ? "Biodata & foto profil" : "Biodata · tambahkan foto profil", () => nav.go("waliProfil"), "green")}${item("chat", "Hubungi ustadz", "Wali Asrama, para Wadir, Mudir, Admin", () => nav.go("kontakUstadz"), "teal")}</div>`}
+      ${st ? html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil", pr ? "Biodata & foto profil" : "Lengkapi biodata & foto profil", () => nav.go("profil"), "green")}${item("lock", "Keamanan", "Username & kata sandi", () => nav.go("keamanan"), "blue")}${item("bell", "Notifikasi", { aktif: "Aktif di HP ini", diblokir: "Diblokir di pengaturan HP", "ios-pasang": "Pasang aplikasi dulu", "tidak-didukung": "Tidak didukung browser ini", "belum-siap": "Menunggu Admin" }[statusPush()] || "Belum aktif", () => nav.go("notifikasi"), "gold")}${!tabStaf(st).some(x => x[0] === "riwayat") && st.roles.some(r => !["yayasan", "admin"].includes(r)) ? item("clock", "Riwayat input saya", "Absen, setoran & catatan yang Anda input", () => nav.go("riwayatSaya"), "slate") : null}${st.roles.some(r => L.TTD_ROLES.includes(r)) ? item("pen", "Tanda Tangan", get("ttd", st.id) ? "Tersimpan · otomatis di rapor & surat" : "Belum ada · tulis di layar atau foto dari kertas", () => nav.go("tandaTangan"), "purple") : null}</div>`
+        : html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil Ananda", fotoUser(u) ? "Biodata & foto profil" : "Biodata · tambahkan foto profil", () => nav.go("waliProfil"), "green")}${item("bell", "Notifikasi", { aktif: "Aktif di HP ini", diblokir: "Diblokir di pengaturan HP", "ios-pasang": "Pasang aplikasi dulu", "tidak-didukung": "Tidak didukung browser ini", "belum-siap": "Menunggu Admin" }[statusPush()] || "Belum aktif", () => nav.go("notifikasi"), "gold")}${item("chat", "Hubungi ustadz", "Wali Asrama, para Wadir, Mudir, Admin", () => nav.go("kontakUstadz"), "teal")}</div>`}
       <div class="group mt8">${item("clipboard", "Log perubahan data", st ? "Koreksi & penghapusan oleh akun ini" : "Perubahan biodata ananda", () => nav.go("logUbah"), "gold")}</div>
       <${Section} t="Tampilan & bahasa" /><div class="group">${item(tema === "gelap" ? "moon" : "sun", "Tema", { terang: "Mode terang", gelap: "Mode gelap", sistem: "Ikuti pengaturan HP" }[tema], () => setPilih("tema"), "indigo")}${item("globe", "Bahasa", (BAHASA.find(x => x[0] === bahasa()) || BAHASA[0])[1], () => setPilih("bahasa"), "teal")}</div>
       <${Section} t="Informasi" /><div class="group">${item("bookopen", "Bantuan", null, () => nav.go("bantuan"), "teal")}${item("shield", "Kebijakan Privasi", null, () => nav.go("privasi"), "purple")}${item("settings", "Tentang aplikasi", VERSI, () => nav.go("tentang"), "slate")}</div>
@@ -345,9 +348,11 @@ export function WaliBeranda() {
       <${KartuHafalan} h=${h} c=${c} t=${L.tahsinStatus(s)} /></${HomeTop}>
     <div class="wrap wl-wrap">
       <${WL.KabarHariIni} s=${s} />
+      <${AjakNotif} />
       <${KartuLaporan} />
       ${peng ? html`<button type="button" class="wl-peng" onClick=${() => nav.go("pengumuman")}><span class="wl-ic emas"><${Icon} n="megaphone" s=${18} /></span><span class="wl-kt"><small>Pengumuman pondok · ${L.fmtTgl(L.ymd(new Date(peng.ts)))}</small><b>${peng.judul || "Pengumuman"}</b></span><${Icon} n="right" s=${18} /></button>` : null}
       <${WL.BulanIni} s=${s} />
+      ${aiAda() ? html`<button type="button" class="wl-peng lap-wl ai-wl" onClick=${() => nav.go("asisten")}><span class="wl-ic"><${Icon} n="sparkle" s=${18} /></span><span class="wl-kt"><small>Tanya perkembangan ananda kapan saja</small><b>Asisten AI</b></span><${Icon} n="right" s=${18} c="#9AB0A5" /></button>` : null}
       <button type="button" class="wl-peng lap-wl" onClick=${() => nav.go("laporan")}><span class="wl-ic"><${Icon} n="chart" s=${18} /></span><span class="wl-kt"><small>Terbit setiap Sabtu dan akhir bulan</small><b>Laporan perkembangan ananda</b></span><${Icon} n="right" s=${18} c="#9AB0A5" /></button>
       <${KartuAI} judul="Ringkasan untuk Ayah/Bunda" tombol="Buat ringkasan perkembangan" ket="AI merangkum perkembangan ananda dari data pondok dalam bahasa yang mudah dipahami." buat=${() => ringkasWali(s)} />
     </div>`;

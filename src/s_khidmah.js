@@ -78,7 +78,7 @@ export function hasilKhidmah(gid, tgl) {
 }
 // rekap periode: hari berlaku = hari aktif asrama; hari wali asrama izin (Izin Guru) tidak dihitung bila kosong
 export function rekapKhidmah(gid, rg) {
-  const hari = L.hariAktifDalam(rg, "asrama"); let total = 0, isi = 0, hariIsi = 0, dikecualikan = 0; const perButir = {};
+  const hari = L.hariAktifDalam(rg, "mutabaah"); let total = 0, isi = 0, hariIsi = 0, dikecualikan = 0; const perButir = {};
   hari.forEach(t => {
     const h = hasilKhidmah(gid, t);
     if (!h.doc && indeks().izin.has(gid + "|" + t)) { dikecualikan++; return; }
@@ -103,7 +103,7 @@ export function Khidmah({ tgl: t0, gid: g0 }) {
   const boleh = milik && (tgl === L.today() || tgl === L.addDays(L.today(), -1));
   const h = hasilKhidmah(gid, tgl);
   const [cek, setCek] = useState(() => new Set(h.cek));
-  if (!L.hariAktif(tgl, "asrama")) return html`<${SubHeader} title="Ceklis Musyrif" sub=${L.fmtTgl(tgl)} /><div class="wrap"><${Card}><${Empty} t="Hari ini libur pondok. Tidak ada ceklis musyrif." icon="calendar" /></${Card}></div>`;
+  if (!L.hariAktif(tgl, "mutabaah")) return html`<${SubHeader} title="Ceklis Musyrif" sub=${L.fmtTgl(tgl)} /><div class="wrap"><${Card}><${Empty} t=${[0, 6].includes(L.parseYmd(tgl).getDay()) ? "Sabtu & Ahad libur. Tidak ada ceklis musyrif." : "Hari ini libur pondok. Tidak ada ceklis musyrif."} icon="calendar" /></${Card}></div>`;
   const selesai = new Set(h.units.filter(u => h.au[u.id] === true || (!u.b.wajibAuto && cek.has(u.id))).map(u => u.id));
   const pct = h.units.length ? Math.round((selesai.size / h.units.length) * 100) : 0;
   const simpan = async n => {
@@ -138,7 +138,7 @@ export function Khidmah({ tgl: t0, gid: g0 }) {
 export function KhidmahRiwayat({ gid: g0 }) {
   useApp();
   const gid = g0 || me().id, g = L.staffAman(gid), [per, setPer] = useState("bulanan"), rg = L.periodeRange(per), rk = rekapKhidmah(gid, rg);
-  const hari = Array.from({ length: 14 }, (_, i) => L.addDays(L.today(), -i)).filter(t => L.hariAktif(t, "asrama") && t >= L.setelan().mulaiPakai);
+  const hari = Array.from({ length: 14 }, (_, i) => L.addDays(L.today(), -i)).filter(t => L.hariAktif(t, "mutabaah") && t >= L.setelan().mulaiPakai);
   const lemah = Object.values(rk.perButir).filter(o => o.n).map(o => ({ ...o, p: Math.round((o.ok / o.n) * 100) })).sort((x, y) => x.p - y.p).slice(0, 4);
   return html`<${SubHeader} title="Riwayat Ceklis" sub=${g.nama}><${Seg} small items=${L.PERIODE.filter(([k]) => ["pekanan", "bulanan", "semester"].includes(k))} value=${per} onChange=${setPer} /></${SubHeader}>
     <div class="wrap">

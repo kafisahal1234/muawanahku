@@ -33,7 +33,7 @@ json.dump({"name": "MuawanahQu", "short_name": "MuawanahQu", "description": "Apl
               {"src": "icon-maskable-512.png?v=3", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}], "id": "./"},
     open("dist/manifest.webmanifest", "w"))
 open("dist/sw.js", "w").write("""// Service worker: utamakan jaringan (selalu versi terbaru), cadangan cache saat offline
-const C = "mk-v6", FB = "mk-firebase-v1";
+const C = "mk-v7", FB = "mk-firebase-v1";
 self.addEventListener("install", e => { self.skipWaiting(); e.waitUntil(caches.open(C).then(c => c.addAll(["./", "./index.html", "./icon-192.png"]))); });
 self.addEventListener("activate", e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== C && k !== FB).map(k => caches.delete(k)))).then(() => self.clients.claim())));
 self.addEventListener("fetch", e => {
@@ -45,6 +45,20 @@ self.addEventListener("fetch", e => {
   if (e.request.method !== "GET" || u.origin !== location.origin) return;
   const nav = e.request.mode === "navigate" || /\/(index\.html)?$/.test(new URL(e.request.url).pathname);
   e.respondWith(fetch(nav ? new Request(e.request, { cache: "no-store" }) : e.request).then(r => { const k = r.clone(); caches.open(C).then(c => c.put(e.request, k)); return r; }).catch(() => caches.match(e.request).then(r => r || caches.match("./index.html"))));
+});
+// Notifikasi (FCM web push): tampilkan, lalu buka layar yang dituju saat diketuk
+self.addEventListener("push", e => {
+  let d = {}; try { d = e.data ? e.data.json() : {}; } catch (x) { d = { data: { isi: e.data && e.data.text() } }; }
+  const x = Object.assign({}, d.notification || {}, d.data || {});
+  const judul = x.judul || x.title || "MuawanahQu", opsi = { body: x.isi || x.body || "", icon: "icon-192.png", badge: "icon-192.png", tag: x.tag || undefined, renotify: !!x.tag, data: { buka: x.buka || "" }, timestamp: Date.now() };
+  e.waitUntil(self.registration.showNotification(judul, opsi));
+});
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  let b = e.notification.data && e.notification.data.buka; if (typeof b === "string" && b) { try { b = JSON.parse(b); } catch (x) { b = null; } }
+  const url = self.registration.scope + (b && b.s ? "#buka=" + encodeURIComponent(JSON.stringify(b)) : "");
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(ws => { const w = ws.find(c => c.url.startsWith(self.registration.scope));
+    if (w) { if (b && b.s) w.postMessage({ buka: b }); return w.focus(); } return self.clients.openWindow(url); }));
 });
 """)
 html = f"""<!DOCTYPE html>

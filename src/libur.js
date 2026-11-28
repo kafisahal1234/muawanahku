@@ -23,4 +23,6 @@ export const LIBUR_NASIONAL = [
 // Tim IT pondok: pembuat & pengelola aplikasi (tampil di Bantuan, Tentang, dan halaman masuk)
 export const TIM_IT = { label: "Tim IT Pondok", nama: "Ust. M. Kafi Sahal Muhtar, S.Pd" };
 export const SETELAN_DEFAULT = { waPondok: "6289636117171", tp: "2026/2027", ganjilMulai: "2026-07-13", ganjilMid: "2026-09-26", ganjilSelesai: "2026-12-19",
-  genapMulai: "2027-01-04", genapMid: "2027-03-27", genapSelesai: "2027-06-19", mulaiPakai: "2026-11-16", abaikan: [] };
+  genapMulai: "2027-01-04", genapMid: "2027-03-27", genapSelesai: "2027-06-19", mulaiPakai: "2026-11-16", abaikan: [],
+  // jam pengingat notifikasi (Kalender → Jam pengingat)
+  jamHalaqah: { Shubuh: "05.15", Dhuha: "08.45", Malam: "20.15" }, jamMutabaah: "20.30", kbmTunda: 15 };

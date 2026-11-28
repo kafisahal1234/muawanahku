@@ -35,6 +35,7 @@ import * as TT from "./s_ttd.js";
 import * as TS from "./s_tahsin.js";
 import * as KH from "./s_khidmah.js";
 import * as LP from "./s_laporan.js";
+import * as NT from "./notif.js";
 import { me } from "./common.js";
 import { LOGO } from "./data.js";
 import { APP_LOGO } from "./logo_app.js";
@@ -55,7 +56,7 @@ const SCREENS = {
   dataMaster: AD.DataMaster, santriAdmin: AD.SantriAdmin, akunAdmin: AD.AkunAdmin, asramaAdmin: AD.AsramaAdmin, kelasAdmin: AD.KelasAdmin, impor: AI.ImporSantri, imporAwal: AI.ImporAwal, asisten: AS.Asisten, imporJadwal: AI.ImporJadwal, pengumuman: AD.Pengumuman,
   ubahSandi: SY.UbahSandi, privasi: SY.Privasi, bantuan: SY.Bantuan, tentang: SY.Tentang,
   pantauan: PT.PantauanSantri, gabung: GB.Gabung, riwayatSaya: HM.RiwayatSaya, yyTahfidz: YY.YyTahfidz, yyKurikulum: YY.YyKurikulum, yyKesantrian: YY.YyKesantrian, yySdm: YY.YySdm, santri: SA.SantriDetail, raporList: SA.RaporList, raporView: SA.RaporView, kinerjaAll: SA.KinerjaAll,
-  profil: PF.Profil, keamanan: PF.Keamanan, waliProfil: PF.WaliProfil, laporan: LP.Laporan, laporanBaca: LP.LaporanBaca, laporanBagian: LP.LaporanBagian,
+  profil: PF.Profil, keamanan: PF.Keamanan, waliProfil: PF.WaliProfil, laporan: LP.Laporan, laporanBaca: LP.LaporanBaca, laporanBagian: LP.LaporanBagian, notifikasi: NT.Notifikasi,
   halaqahAdmin: HQ.HalaqahAdmin, halaqahEdit: HQ.HalaqahEdit,
   rekap: RM.RekapPintu, waliRekap: RK.WaliRekap, rekapDetail: RM.RekapDetailPintu, rekapTahfidz: RM.RekapTahfidz, rekapMapel: RM.RekapMapel, rekapAsrama: RM.RekapAsrama, rekapKesantrian: RM.RekapKesantrian, kalender: RK.Kalender, logUbah: KO.LogPerubahan, riwayatModul: KO.RiwayatModul,
 };
@@ -176,6 +177,7 @@ try {
     sp.className = "rpl"; sp.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - r.left - d / 2}px;top:${e.clientY - r.top - d / 2}px`;
     el.classList.add("rpl-host"); el.appendChild(sp); setTimeout(() => sp.remove(), 600);
   }, { passive: true });
+  NT.pasangBukaNotif(SCREENS); setTimeout(() => NT.segarkanPush(), 8000);
   if ("serviceWorker" in navigator && location.protocol === "https:" && window.top === window && !/claude|anthropic/.test(location.hostname)) navigator.serviceWorker.register("sw.js").catch(() => {});
 } catch (e) { }
 terapkanTema(); terapkanBahasa(); try { pasangTarik(); } catch (e) { } try { pasangZoom(); } catch (e) { } try { pasangHitung(); } catch (e) { }
