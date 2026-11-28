@@ -10,7 +10,7 @@ import * as L from "./logic.js";
 import { me, has } from "./common.js";
 
 // Versi aplikasi: naikkan angka belakang untuk pembaruan biasa (v1.5 → v1.6), angka depan untuk perubahan besar (v2.0)
-export const VERSI = "v4.7";
+export const VERSI = "v4.8";
 const BUILD = typeof __BUILD__ !== "undefined" ? __BUILD__ : "";
 // tanggal pembaruan dari kode build (DDMMYY.HHMM) → "27 Nov 2026"; dipakai untuk memastikan aplikasi sudah versi terbaru
 export const TGL_PEMBARUAN = (() => { const m = /^(\d{2})(\d{2})(\d{2})\.(\d{2})(\d{2})$/.exec(BUILD); if (!m) return ""; const bl = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"][+m[2] - 1]; return `${+m[1]} ${bl} 20${m[3]}, ${m[4]}.${m[5]}`; })();

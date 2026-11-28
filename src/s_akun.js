@@ -163,7 +163,7 @@ export function ProfilAkun({ jenis, id }) {
 // ================= TIM =================
 // Semua ustadz & pengurus, dikelompokkan per jabatan tertinggi (tiap orang hanya muncul sekali).
 const KELOMPOK = [["yayasan", "Yayasan", st => st.roles.includes("yayasan")], ["mudir", "Mudir", st => st.roles.includes("mudir")],
-  ["wadir", "Wakil Direktur", st => st.roles.some(r => r.startsWith("wadir_"))], ["admin", "Admin Pondok", st => st.roles.includes("admin")],
+  ["wadir", "Wakil Mudir", st => st.roles.some(r => r.startsWith("wadir_"))], ["admin", "Admin Pondok", st => st.roles.includes("admin")],
   ["musyrif", "Wali Asrama", st => st.roles.includes("musyrif")], ["halaqah", "Guru Halaqah", st => st.roles.includes("guru_tahfidz")],
   ["mapel", "Guru Mapel", st => st.roles.includes("guru_mapel") || (st.ajar || []).length], ["lain", "Lainnya", () => true]];
 export function Tim() {
