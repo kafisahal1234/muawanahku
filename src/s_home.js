@@ -95,6 +95,7 @@ export function Login() {
 
 // ---------------- beranda guru ----------------
 const MAPEL_COLOR = { fiqih: "green", it: "blue", bing: "orange", karakter: "purple" };
+const yayasanSaja = st => st.roles.includes("yayasan") && st.roles.every(r => r === "yayasan");
 function tilesFor(st) {
   const r = st.roles, t = [], add = (icon, label, color, go, badge) => { if (!t.find(x => x.label === label)) t.push({ icon, label, color, go, badge }); };
   const a = L.asramaOf(st.id), hq = L.halaqahOf(st.id);
@@ -122,7 +123,7 @@ function tilesFor(st) {
     add("home", "Asrama Saya", "coral", () => nav.go("asramaSaya"), (sisaCeklis + (!r.includes("wadir_kesantrian") ? L.izinAktif().filter(i => ids.has(i.santri)).length : 0)) || null);
     add("award", "Rapor", "gold", () => nav.go("raporList"));
   }
-  if (r.some(x => ["mudir", "admin", "wadir_kurikulum"].includes(x))) add("cal2", "Kalender", "pink", () => nav.go("kalender"));
+  if (r.some(x => ["mudir", "admin", "wadir_kurikulum", "yayasan"].includes(x))) add("cal2", "Kalender", "pink", () => nav.go("kalender"));
   add("users", "Tim", "teal", () => nav.go("tim"));
   if (r.includes("guru_mapel")) [...new Set(st.ajar.map(([m]) => m))].forEach(m => add("layers", "Mapel " + L.mapelById(m).nama.replace("Pendidikan ", "").replace("Bahasa ", "B. "), MAPEL_COLOR[m], () => nav.go("mapel", { mapel: m })));
   return t;
@@ -203,14 +204,44 @@ function chipsFor(st) {
   return c;
 }
 
+// ---------- Yayasan: garis besar per pondok (tanpa rincian nama) ----------
+function angkaPondok(p, jenis) {
+  const rg = L.periodeRange(jenis, L.today()), rh = L.rentangHitung(rg), dalam = t => !rh.kosong && t >= rh.dari && t <= rh.sampai;
+  const ss = L.santriList().filter(x => L.pondokOfSantri(x) === p), ids = new Set(ss.map(x => x.id));
+  let h = 0, n = 0; all("absenHalaqah").filter(d => dalam(d.tanggal)).forEach(d => Object.entries(d.status || {}).forEach(([sid, v]) => { if (!ids.has(sid)) return; n++; if (v === "H") h++; }));
+  const haf = ss.map(x => L.hafalan(x).jumlah), rata = haf.length ? haf.reduce((a, b) => a + b, 0) / haf.length : null;
+  const cap = ss.length ? Math.round(ss.reduce((a, x) => a + L.capaianJuz(x).pct, 0) / ss.length) : null;
+  let sl = 0, ok = 0; L.hariAktifDalam(rg, "kbm").forEach(t => { const hr = L.HARI_ID[L.parseYmd(t).getDay()];
+    L.jadwalAll().filter(j => j.hari === hr && L.pondokKelas(j.kelas) === p).forEach(j => { sl++; if (get("absenKelas", L.absenKelasKey(j.id, t))) ok++; }); });
+  const luar = L.izinAktif().filter(i => ids.has(i.santri)).length, pel = all("bap").filter(b => ids.has(b.santri) && dalam(b.tanggal)).length;
+  return { n: ss.length, hadir: n ? Math.round((h / n) * 100) : null, rata, cap, kbm: sl ? Math.round((ok / sl) * 100) : null, luar, pel, label: rg.label };
+}
+function PilihPeriodeYayasan({ jenis, setJenis }) {
+  return html`<div class="yy-h"><span><small>Garis besar pondok</small><b>${L.periodeRange(jenis, L.today()).label.replace(/^Semester g/, "G")}</b></span><${Seg} small items=${[["bulanan", "Bulan ini"], ["semester", "Semester ini"]]} value=${jenis} onChange=${setJenis} /></div>`;
+}
+function RingkasYayasan({ jenis }) {
+  const P = [["29", "Kelas 7 & 8"], ["21", "Kelas 9A & 9B"]].map(([p, k]) => ({ p, k, a: angkaPondok(p, jenis) }));
+  const pr = v => (v == null ? "—" : v + "%"), fx = v => (v == null ? "—" : (Math.round(v * 10) / 10).toLocaleString("id-ID"));
+  return html`<div class="yy">
+    ${P.map(({ p, k, a }) => html`<section class="yy-k">
+      <div class="yy-top"><span class="yy-p">Pondok ${p}</span><span class="yy-ket">${k} · ${a.n} santri</span></div>
+      <div class="yy-g"><p>Tahfidz</p><div class="yy-n"><span><b>${pr(a.hadir)}</b><em>kehadiran halaqah</em></span><span><b>${fx(a.rata)}</b><em>rata hafalan (juz)</em></span><span><b>${pr(a.cap)}</b><em>capaian target semester</em></span></div></div>
+      <div class="yy-g"><p>Kurikulum</p><div class="yy-n"><span><b>${pr(a.kbm)}</b><em>KBM terlaksana</em></span></div></div>
+      <div class="yy-g"><p>Kesantrian</p><div class="yy-n"><span class=${a.luar ? "gold" : ""}><b>${a.luar}</b><em>sedang di luar pondok</em></span><span class=${a.pel ? "red" : ""}><b>${a.pel}</b><em>pelanggaran</em></span></div></div>
+    </section>`)}
+    <p class="yy-cat">Rincian per santri, halaqah, dan guru ada pada Mudir dan para Wadir.</p></div>`;
+}
+
 export function Beranda() {
   useApp();
-  const st = me(), tiles = tilesFor(st), tasks = tasksFor(st), peng = all("pengumuman").sort((a, b) => b.ts - a.ts)[0];
+  const [jenisYy, setJenisYy] = useState("bulanan");
+  const st = me(), yy = yayasanSaja(st), tiles = tilesFor(st), tasks = tasksFor(st), peng = all("pengumuman").sort((a, b) => b.ts - a.ts)[0];
   const strip = tasks[0] ? { t: tasks[0][0], s: tasks[0][1], go: tasks[0][3], ic: "bap", w: tasks[0][2] === "coral" ? "coral" : "gold" } : peng ? { t: peng.judul, s: "Pengumuman terbaru", go: () => nav.go("pengumuman"), ic: "toa", w: "gold" } : null;
   return html`<${HomeTop} nama=${st.pendek || st.nama} bell=${newPeng()} foto=${fotoUser(nav.user)}>
-      <div class="sum"><${Summary} st=${st} /></div></${HomeTop}>
+      <div class="sum">${yy ? html`<${PilihPeriodeYayasan} jenis=${jenisYy} setJenis=${setJenisYy} />` : html`<${Summary} st=${st} />`}</div></${HomeTop}>
     <div class="wrap">
     ${strip ? html`<button class="strip" onClick=${strip.go}><span class="strip-ic" style=${`background:${WARNA[strip.w][2]}`}><${Ikon} n=${strip.ic} warna=${strip.w} s=${28} /></span><span class="strip-t"><b>${strip.t}</b><small>${strip.s}</small></span><span class="strip-go">Lihat <${Icon} n="right" s=${16} w=${2.4} /></span></button>` : null}
+    ${yy ? html`<${RingkasYayasan} jenis=${jenisYy} />` : null}
     <${Card} title="Menu"><div class="tiles">${tiles.map(t => html`<${Tile} icon=${t.icon} label=${t.label} color=${t.color} badge=${t.badge} onClick=${t.go} />`)}</div></${Card}>
     ${tasks.length > 1 ? html`<${Card} title="Perlu diperhatikan"><div class="list">${tasks.slice(1).map(([t, s, c, go]) => html`<button class="row" onClick=${go}><span class="row-ic" style=${`background:${c === "coral" ? "#FDE7E3" : c === "gold" ? "#FDF0D3" : "#E6EEFC"};color:${c === "coral" ? "#B3261E" : c === "gold" ? "#8A5A00" : "#1F56B5"}`}><${Icon} n="alert" s=${18} /></span>
       <span class="row-t"><b style="white-space:normal">${t}</b><small>${s}</small></span><${Icon} n="right" s=${18} c="#9AB0A5" /></button>`)}</div></${Card}>` : null}
