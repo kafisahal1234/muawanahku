@@ -230,8 +230,8 @@ export function JadwalSaya() {
 export function CariSantri() {
   useApp();
   const [q, setQ] = useState(""), [pilih, setPilih] = useState(null), k = q.trim().toLowerCase();
-  const list = L.santriScope(nav.user).filter(s => !k || `${s.nama} ${s.panggilan || ""} ${s.nis || ""}`.toLowerCase().includes(k));
-  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Cari Santri</h1><p>${list.length} santri sesuai akses Anda</p></div></div></div>
+  const list = L.santriList().filter(s => !k || `${s.nama} ${s.panggilan || ""} ${s.nis || ""}`.toLowerCase().includes(k));
+  return html`<div class="sub-h bigt"><div class="sub-row"><div class="sub-t"><h1>Cari Santri</h1><p>${k ? `${list.length} santri ditemukan` : `Semua santri · ${list.length} santri`}</p></div></div></div>
     <div class="wrap akun-wrap"><${SearchBox} value=${q} onInput=${setQ} ph="Cari nama santri atau NIS" />
       ${list.length ? L.kelompokPondok(list.slice(0, 200), s => L.pondokOfSantri(s)).filter(g => g.isi.length).map(g => html`<p class="akun-sec">${g.nama}${g.ket ? html` <span>· ${g.ket} (${g.isi.length})</span>` : null}</p>
         <div class="akun-list">${[...g.isi].sort((a, b) => String(a.kelas).localeCompare(String(b.kelas)) || a.nama.localeCompare(b.nama)).map(s => { const h = L.hafalan(s);
