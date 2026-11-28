@@ -234,8 +234,8 @@ export function Kalender() {
           <div class="kv"><span>Semester genap</span><b>${L.fmtTgl(st.genapMulai, false)} – ${L.fmtTgl(st.genapSelesai, false)}</b></div><div class="kv"><span>Mid genap sampai</span><b>${L.fmtTgl(st.genapMid, false)}</b></div>
           <div class="kv"><span>Mulai pakai aplikasi</span><b>${L.fmtTgl(st.mulaiPakai, false)}</b></div>`}</${Card}>
     <${JamPengingat} st=${st} bisa=${bisa || me().roles.includes("wadir_tahfidz")} />
-    <${Card} title="Libur pondok" right=${bisa ? html`<button class="link" onClick=${() => setEd({ baru: true, nama: "", mulai: L.today(), selesai: L.today(), jenis: "pondok" })}>+ Tambah</button>` : null}>
-      ${lp.length ? html`<div class="list">${lp.map(l => html`<${Row} name=${l.nama} sub=${`${L.fmtTgl(l.mulai, false)} – ${L.fmtTgl(l.selesai, false)} · ${L.hariRentang(l.mulai, l.selesai).length} hari · ${l.jenis === "kbm" ? "libur KBM saja" : "semua kegiatan libur"}`}
+    <${Card} title="Libur & jadwal khusus" right=${bisa ? html`<button class="link" onClick=${() => setEd({ baru: true, nama: "", mulai: L.today(), selesai: L.today(), jenis: "atur" })}>+ Tambah</button>` : null}>
+      ${lp.length ? html`<div class="list">${lp.map(l => html`<${Row} name=${l.nama} sub=${`${L.fmtTgl(l.mulai, false)} – ${L.fmtTgl(l.selesai, false)} · ${L.hariRentang(l.mulai, l.selesai).length} hari · ${l.jenis === "kbm" ? "libur KBM saja" : l.jenis === "atur" ? L.teksLiburSebagian(l) + ((l.hari || []).length ? " (" + l.hari.map(d => HARI_PIL.find(x => x[0] === d)[1]).join(", ") + ")" : "") : "semua kegiatan libur"}`}
           icon=${html`<${Icon} n="calendar" s=${18} />`} onClick=${bisa ? () => setEd({ ...l }) : null} />`)}</div>` : html`<${Empty} t="Belum ada libur pondok. Tambahkan libur panjang (misal libur semester) agar tidak masuk rekap." icon="calendar" />`}</${Card}>
     <${Card} title="Libur nasional & cuti bersama" right=${html`<div class="seg small" style="width:120px">${["2026", "2027"].map(y => html`<button class=${y === th ? "on" : ""} onClick=${() => setTh(y)}>${y}</button>`)}</div>`}>
       <p class="small" style="margin-top:0">Sesuai SKB 3 Menteri. Pada tanggal ini KBM dan halaqah tidak dihitung. Jika pondok tetap berkegiatan, ketuk untuk menandai "tetap masuk".</p>
@@ -243,19 +243,36 @@ export function Kalender() {
         icon=${html`<${Icon} n="calendar" s=${18} />`} right=${html`<${Pill} t=${ab ? "Tetap masuk" : "Libur"} tone=${ab ? "green" : "red"} />`} onClick=${bisa ? () => togAbaikan(l.tgl) : null} />`; })}</div></${Card}></div>
     ${ed ? html`<${EditLibur} e=${ed} onClose=${() => setEd(null)} />` : null}`;
 }
+const HARI_PIL = [[1, "Sen"], [2, "Sel"], [3, "Rab"], [4, "Kam"], [5, "Jum"], [6, "Sab"]];
+function Pil({ items, nilai, onUbah }) {
+  const s = new Set(nilai || []), tog = k => { const n = new Set(s); n.has(k) ? n.delete(k) : n.add(k); onUbah(items.map(x => x[0]).filter(x => n.has(x))); };
+  return html`<div class="lbr-pil">${items.map(([k, lab, ket]) => html`<button type="button" class=${s.has(k) ? "on" : ""} aria-pressed=${s.has(k)} onClick=${() => tog(k)}>${s.has(k) ? html`<${Icon} n="check" s=${14} w=${3} />` : null}${lab}${ket ? html`<small>${ket}</small>` : null}</button>`)}</div>`;
+}
 function EditLibur({ e, onClose }) {
-  const [f, setF] = useState(e); const [ask, setAsk] = useState(false);
-  const ok = f.nama.trim() && f.mulai && f.selesai && f.selesai >= f.mulai;
-  const save = async () => { const id = e.baru ? uid("lb") : e.id; const d = { nama: f.nama.trim(), mulai: f.mulai, selesai: f.selesai, jenis: f.jenis, oleh: me().id, ts: Date.now() };
-    if (await put("kalender", id, d)) { logUbah(e.baru ? "tambah" : "ubah", "kalender", id, `Libur pondok: ${d.nama}`); toast("Libur pondok disimpan. Rekap otomatis menyesuaikan."); onClose(); } };
+  const [f, setF] = useState({ hari: [], halaqah: [], jam: [], mutabaah: false, ...e }); const [ask, setAsk] = useState(false);
+  const atur = f.jenis === "atur", isiAtur = (f.halaqah || []).length || (f.jam || []).length || f.mutabaah;
+  const ok = f.nama.trim() && f.mulai && f.selesai && f.selesai >= f.mulai && (!atur || isiAtur);
+  const hariKena = f.mulai && f.selesai >= f.mulai ? L.hariRentang(f.mulai, f.selesai).filter(t => !atur || !(f.hari || []).length || f.hari.includes(L.parseYmd(t).getDay())).length : 0;
+  const save = async () => { const id = e.baru ? uid("lb") : e.id; const d = { nama: f.nama.trim(), mulai: f.mulai, selesai: f.selesai, jenis: f.jenis, oleh: me().id, ts: Date.now(),
+      ...(atur ? { hari: f.hari || [], halaqah: f.halaqah || [], jam: f.jam || [], mutabaah: !!f.mutabaah } : {}) };
+    if (await put("kalender", id, d)) { logUbah(e.baru ? "tambah" : "ubah", "kalender", id, `Libur pondok: ${d.nama}`); toast(e.baru ? "Libur disimpan. Pemberitahuan dikirim ke HP ustadz & wali." : "Libur diperbarui. Rekap otomatis menyesuaikan."); onClose(); } };
   const hapus = async () => { setAsk(false); await logUbah("hapus", "kalender", e.id, `Libur pondok: ${e.nama}`, e); await del("kalender", e.id); toast("Libur dihapus"); onClose(); };
-  return html`<${Sheet} open=${true} title=${e.baru ? "Tambah libur pondok" : "Ubah libur pondok"} onClose=${onClose}>
-    <${Field} label="Nama libur"><input class="in" value=${f.nama} placeholder="Misal: Libur akhir semester ganjil" onInput=${x => setF({ ...f, nama: x.target.value })} /></${Field}>
+  const hariIni = () => setF({ ...f, mulai: L.today(), selesai: L.today() }), besok = () => setF({ ...f, mulai: L.addDays(L.today(), 1), selesai: L.addDays(L.today(), 1) }), pekan = () => { const w = L.weekStart(L.today()), n = L.today() > L.addDays(w, 4) ? L.addDays(w, 7) : w; setF({ ...f, mulai: n, selesai: L.addDays(n, 4) }); };
+  return html`<${Sheet} open=${true} title=${e.baru ? "Tambah libur" : "Ubah libur"} onClose=${onClose}>
+    <${Field} label="Jenis libur"><${Seg} small items=${[["atur", "Sebagian"], ["kbm", "KBM saja"], ["pondok", "Semua libur"]]} value=${f.jenis} onChange=${v => setF({ ...f, jenis: v })} /></${Field}>
+    <p class="small lbr-ket">${atur ? "Pilih kegiatan yang libur, misalnya saat UAS: Halaqah Dhuha libur, KBM jam 1 diganti ujian." : f.jenis === "kbm" ? "Semua jam KBM mapel libur; halaqah & asrama tetap berjalan." : "Semua kegiatan libur (santri pulang): halaqah, KBM, mutaba'ah."}</p>
+    <${Field} label="Nama / keterangan"><input class="in" value=${f.nama} placeholder=${atur ? "Misal: UAS Ganjil" : "Misal: Libur akhir semester ganjil"} onInput=${x => setF({ ...f, nama: x.target.value })} /></${Field}>
+    <div class="lbr-cepat"><button type="button" onClick=${hariIni}>Hari ini</button><button type="button" onClick=${besok}>Besok</button><button type="button" onClick=${pekan}>Senin–Jumat ${L.today() > L.addDays(L.weekStart(L.today()), 4) ? "depan" : "ini"}</button></div>
     <div class="btn-row"><${Field} label="Mulai"><input class="in" type="date" value=${f.mulai} onInput=${x => setF({ ...f, mulai: x.target.value })} /></${Field}>
       <${Field} label="Selesai"><input class="in" type="date" value=${f.selesai} onInput=${x => setF({ ...f, selesai: x.target.value })} /></${Field}></div>
-    <${Field} label="Jenis"><${Seg} small items=${[["pondok", "Semua libur (santri pulang)"], ["kbm", "Libur KBM saja"]]} value=${f.jenis} onChange=${v => setF({ ...f, jenis: v })} /></${Field}>
-    <p class="small">${f.mulai && f.selesai >= f.mulai ? `${L.hariRentang(f.mulai, f.selesai).length} hari tidak dihitung di rekap ${f.jenis === "kbm" ? "KBM" : "halaqah, MOTD, mutaba'ah, dan KBM"}.` : "Tanggal selesai harus sama atau setelah tanggal mulai."}</p>
-    <div class="btn-row mt8">${!e.baru ? html`<${Btn} kind="outline" icon="trash" onClick=${() => setAsk(true)}>Hapus</${Btn}>` : null}<${Btn} disabled=${!ok} onClick=${save}>Simpan</${Btn}></div>
+    ${atur ? html`
+      <${Field} label="Berlaku pada hari" hint="Kosongkan = setiap hari dalam rentang tanggal"><${Pil} items=${HARI_PIL} nilai=${f.hari} onUbah=${v => setF({ ...f, hari: v })} /></${Field}>
+      <${Field} label="Halaqah yang libur"><${Pil} items=${L.SESI.map(s => [s, s, (L.setelan().jamHalaqah || {})[s]])} nilai=${f.halaqah} onUbah=${v => setF({ ...f, halaqah: v })} /></${Field}>
+      <${Field} label="KBM mapel yang libur"><${Pil} items=${L.JAM.map(j => [j.id, j.nama, `${j.mulai}–${j.selesai}`])} nilai=${f.jam} onUbah=${v => setF({ ...f, jam: v })} /></${Field}>
+      <label class="nt-row lbr-mut"><span><b>Mutaba'ah & ceklis musyrif libur</b><small>Tidak diisi dan tidak dihitung di rekap</small></span><input type="checkbox" class="sw" checked=${!!f.mutabaah} onChange=${x => setF({ ...f, mutabaah: x.target.checked })} /></label>
+      <div class="lbr-ringkas"><${Icon} n="calendar" s=${16} /><span>${L.teksLiburSebagian(f)}${hariKena ? ` · ${hariKena} hari` : ""}</span></div>` : null}
+    <p class="small">${!(f.mulai && f.selesai >= f.mulai) ? "Tanggal selesai harus sama atau setelah tanggal mulai." : atur ? "Kegiatan yang libur tidak muncul di absen, tidak dihitung di rekap, dan tidak dikirim pengingat." : `${hariKena} hari tidak dihitung di rekap ${f.jenis === "kbm" ? "KBM" : "halaqah, mutaba'ah, dan KBM"}.`}</p>
+    <div class="btn-row mt8">${!e.baru ? html`<${Btn} kind="outline" icon="trash" onClick=${() => setAsk(true)}>Hapus</${Btn}>` : null}<${Btn} disabled=${!ok} onClick=${save}>Simpan & beri tahu</${Btn}></div>
     <${Confirm} open=${ask} danger title="Hapus libur ini?" text="Hari-hari ini akan kembali dihitung sebagai hari aktif di rekap." yes="Hapus" onYes=${hapus} onNo=${() => setAsk(false)} /></${Sheet}>`;
 }
 

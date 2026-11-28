@@ -102,9 +102,13 @@ export function acara(now = new Date()) {
     tambah(`tsm:${x.id}`, "info", [{ jenis: "wali", uid: s.id }], "Alhamdulillah, lulus tasmi'", `${panggil(s)} lulus tasmi' Juz ${x.juz}${x.nilai != null ? ` dengan nilai ${x.nilai}` : ""}. Barakallahu fiik.`, null);
     tambah(`tsms:${x.id}`, "info", L.STAFF.filter(g => (g.roles || []).includes("wadir_tahfidz") || (L.mudirPondok(g) || []).includes(L.pondokOfSantri(s))).filter(g => g.id !== x.guru).map(g => ({ jenis: "staff", uid: g.id })), `Lulus tasmi': ${s.nama}`, `Juz ${x.juz}${x.nilai != null ? `, nilai ${x.nilai}` : ""} · ${L.namaHalaqah(s)}.`, null);
   });
-  // 10) Libur besok (19.00)
+  // 10) Pemberitahuan libur baru/diubah (segera) + pengingat libur besok (19.00)
+  const rentangT = (a, b) => (a === b ? L.fmtTgl(a) : `${L.fmtTgl(a, false)} – ${L.fmtTgl(b, false)}`);
+  const isiLibur = l => (l.jenis === "atur" ? L.teksLiburSebagian(l) : l.jenis === "kbm" ? "KBM mapel libur; halaqah & asrama tetap berjalan" : "Semua kegiatan libur");
+  L.liburPondok().filter(l => l.ts && l.ts >= sejak && l.selesai >= T).forEach(l =>
+    tambah(`lbr:${l.id}:${l.ts}`, "info", [{ semua: "staff" }, { semua: "wali" }], `Pemberitahuan: ${l.nama}`, `${rentangT(l.mulai, l.selesai)}${(l.hari || []).length ? ` (${l.hari.map(d => ["Ahad", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"][d]).join(", ")})` : ""}. ${isiLibur(l)}.`, { s: "kalender" }));
   const besok = L.addDays(T, 1), lb = L.liburPada(besok);
-  if (dalam(n, menit("19.00"), menit("19.40")) && lb.length) tambah(`lb:${besok}`, "info", [{ semua: "staff" }, { semua: "wali" }], `Besok libur: ${lb[0].nama}`, lb.some(l => l.jenis === "kbm") ? "KBM mapel libur besok; kegiatan lain mengikuti jadwal pondok." : "Kegiatan pondok besok libur sesuai kalender akademik.", { s: "kalender" });
+  if (dalam(n, menit("19.00"), menit("19.40")) && lb.length) tambah(`lb:${besok}`, "info", [{ semua: "staff" }, { semua: "wali" }], `Besok: ${lb.map(l => l.nama).join(", ")}`, lb.map(l => (l.jenis === "nasional" || l.jenis === "cuti" ? "Libur nasional" : isiLibur(l))).join(". ") + ".", { s: "kalender" });
   // 11) Ringkasan harian untuk pimpinan (21.30, Senin–Jumat)
   // Sabtu setelah 10.00 & Ahad bebas tugas: ringkasan hanya Senin–Jumat
   if (dalam(n, menit("21.30"), menit("21.59")) && L.parseYmd(T).getDay() >= 1 && L.parseYmd(T).getDay() <= 5 && (L.hariAktif(T, "halaqah") || L.hariAktif(T, "kbm"))) L.STAFF.filter(g => (g.roles || []).some(r => ["mudir", "wadir_tahfidz", "wadir_kurikulum", "wadir_kesantrian", "yayasan"].includes(r))).forEach(g => {

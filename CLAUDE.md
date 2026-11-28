@@ -72,6 +72,8 @@ Preact + htm, dibundel esbuild; CSS = `theme.css + skin.css + dark.css + dark_ma
 
 **Tahfidz**: 15 baris = 1 halaman, 20 halaman = 1 juz; target 2 juz/semester. Urutan: Juz 30, 29, lalu 1, 2, … Santri Iqro' → Tahsin; ujian kenaikan jilid hanya Wadir Tahfidz (Lulus / Belum lulus).
 
+**Libur & jadwal khusus** (Kalender → Tambah libur): jenis **Sebagian** (`jenis: "atur"`: rentang tanggal + hari tertentu (`hari` = angka getDay, kosong = semua) + sesi halaqah libur (`halaqah`), jam KBM libur (`jam`), `mutabaah` (+ceklis musyrif)), **KBM saja**, **Semua libur**. Diterapkan global lewat `L.liburPada`/`liburSebagian` → `sesiHari`, `jadwalHari`, `hariAktif` (absen, rekap, laporan, notifikasi ikut). Info libur hari ini/besok tampil di Beranda; simpan libur → notifikasi "Pemberitahuan: …" ke semua HP (+ pengingat "Besok: …" 19.00).
+
 **Jadwal**: KBM Senin–Jumat; halaqah Senin–Sabtu (Sabtu hanya Shubuh, manzil); mutaba'ah libur Sabtu & Ahad; butir "Puasa sunnah" hanya muncul & dinilai Senin (Puasa sunnah Senin) dan Kamis (Puasa sunnah Kamis) — `L.ibadahHari(tgl)`. Pakai "Ahad", bukan "Minggu".
 
 **Rekap**: hanya **Bulanan, Tengah semester, Semester**. Paling atas tiap rekap = blok **Evaluasi** (angka + naik/turun dibanding periode lalu → Kesimpulan → Perlu tindak lanjut → Kabar baik → Rincian lengkap), lalu "Rincian per aspek" (kartu `Panel`). Satu halaman per rekap, tiap aspek kartu sendiri (angka besar + daftar berperingkat + bar), kehadiran **selalu persen**, **tanpa link** ke halaman lain, sederhana per peran. Data kosong = "Belum ada data".

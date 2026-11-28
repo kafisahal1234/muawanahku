@@ -6779,5 +6779,61 @@ export const KAMUS2 = {
 "Asisten AI": [
 "AI Assistant",
 "المساعد الذكي"
+],
+"Libur & jadwal khusus": [
+"Holidays & special schedule",
+"العطل والجدول الخاص"
+],
+"Tambah libur": [
+"Add holiday",
+"إضافة عطلة"
+],
+"Ubah libur": [
+"Edit holiday",
+"تعديل العطلة"
+],
+"Jenis libur": [
+"Holiday type",
+"نوع العطلة"
+],
+"Sebagian": [
+"Partial",
+"جزئية"
+],
+"KBM saja": [
+"Lessons only",
+"الحصص فقط"
+],
+"Semua libur": [
+"Full holiday",
+"عطلة كاملة"
+],
+"Nama / keterangan": [
+"Name / note",
+"الاسم / الملاحظة"
+],
+"Besok": [
+"Tomorrow",
+"غدًا"
+],
+"Berlaku pada hari": [
+"Applies on days",
+"يسري في الأيام"
+],
+"Halaqah yang libur": [
+"Halaqah off",
+"الحلقات المعطلة"
+],
+"KBM mapel yang libur": [
+"Lessons off",
+"الحصص المعطلة"
+],
+"Mutaba'ah & ceklis musyrif libur": [
+"Mutaba'ah & supervisor checklist off",
+"تعطيل المتابعة وقائمة المشرف"
+],
+"Simpan & beri tahu": [
+"Save & notify",
+"حفظ وإشعار"
 ]
 };

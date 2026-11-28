@@ -632,3 +632,17 @@ html[data-tema=gelap] .nt-row{border-color:#22352B}html[data-tema=gelap] .nt-jad
 .nt-daftar b{font-size:14.5px;font-weight:800;color:var(--ink)}.nt-daftar small{font-size:12.5px;color:var(--mut);line-height:1.4}
 .nt-cek{width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;background:#DDF3E6;color:#0B7A45;margin-top:1px}
 html[data-tema=gelap] .nt-cek{background:#16352A;color:#8FE0B5}
+/* ===== v5.7 Libur sebagian ===== */
+.info-libur{display:flex;flex-direction:column;gap:8px;margin:0 0 14px;padding:12px;border-radius:18px;background:linear-gradient(135deg,#EEF4FF,#E3ECFF);border:1px solid #CFDDFB}
+.il-row{display:flex;align-items:center;gap:10px}.il-ic{width:34px;height:34px;border-radius:11px;flex:none;display:grid;place-items:center;background:#fff;color:#1F56B5}
+.il-t{display:flex;flex-direction:column;min-width:0}.il-t small{font-size:12px;font-weight:700;color:#4A63A0}.il-t b{font-size:14px;font-weight:800;color:#1B2E5C;line-height:1.3}
+.lbr-pil{display:flex;flex-wrap:wrap;gap:8px}
+.lbr-pil button{display:inline-flex;align-items:center;gap:6px;border:1.5px solid #D5E2DA;background:#fff;color:var(--ink);font:inherit;font-size:13.5px;font-weight:700;padding:8px 12px;border-radius:12px;cursor:pointer;transition:background-color .15s,border-color .15s}
+.lbr-pil button small{font-size:11.5px;font-weight:600;color:var(--mut)}
+.lbr-pil button.on{background:#E3F4EA;border-color:#0E8A52;color:#0B5D3B}
+.lbr-cepat{display:flex;gap:8px;margin:2px 0 10px;flex-wrap:wrap}.lbr-cepat button{border:0;background:#EEF4F0;color:#0B5D3B;font:inherit;font-size:12.5px;font-weight:800;padding:7px 12px;border-radius:999px;cursor:pointer}
+.lbr-ket{margin:-4px 0 10px}.lbr-mut{border-top:0;padding:6px 0 10px}
+.lbr-ringkas{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:#FFF6E2;color:#7A5300;font-size:13px;font-weight:700;margin:4px 0}
+html[data-tema=gelap] .info-libur{background:#16203A;border-color:#26355E}html[data-tema=gelap] .il-ic{background:#1E2B4D;color:#9BB8FF}html[data-tema=gelap] .il-t b{color:#DCE6FF}html[data-tema=gelap] .il-t small{color:#9BB0DD}
+html[data-tema=gelap] .lbr-pil button{background:#13201A;border-color:#2A4034}html[data-tema=gelap] .lbr-pil button.on{background:#16352A;border-color:#2FB57A;color:#8FE0B5}
+html[data-tema=gelap] .lbr-cepat button{background:#1A2A22;color:#8FE0B5}html[data-tema=gelap] .lbr-ringkas{background:#2A2414;color:#F5D58A}

@@ -219,6 +219,14 @@ function chipsFor(st) {
   return c;
 }
 
+
+// Info libur hari ini & besok (termasuk libur sebagian, mis. UAS: halaqah Dhuha libur)
+function InfoLibur() {
+  const T = L.today(), B = L.addDays(T, 1), teks = l => (l.jenis === "atur" ? L.teksLiburSebagian(l) : l.jenis === "kbm" ? "KBM mapel libur" : l.jenis === "nasional" || l.jenis === "cuti" ? "Libur nasional" : "Semua kegiatan libur");
+  const baris = [...L.liburPada(T).map(l => ["Hari ini", l]), ...L.liburPada(B).map(l => ["Besok", l])];
+  if (!baris.length) return null;
+  return html`<div class="info-libur">${baris.slice(0, 3).map(([k, l]) => html`<div class="il-row"><span class="il-ic"><${Icon} n="calendar" s=${17} /></span><span class="il-t"><small>${k} · ${l.nama}</small><b>${teks(l)}</b></span></div>`)}</div>`;
+}
 export function Beranda() {
   useApp();
   const st = me(), diNav = new Set(tabStaf(st).map(x => x[0])), TAB_MENU = { Tim: "tim", Kalender: "kalender", "Daftar Akun": "daftarAkun", "Data Master": "dataMaster" };
@@ -228,6 +236,7 @@ export function Beranda() {
       <div class="sum"><${Summary} st=${st} /></div></${HomeTop}>
     <div class="wrap">
     ${strip ? html`<button class="strip" onClick=${strip.go}><span class="strip-ic" style=${`background:${WARNA[strip.w][2]}`}><${Ikon} n=${strip.ic} warna=${strip.w} s=${28} /></span><span class="strip-t"><b>${strip.t}</b><small>${strip.s}</small></span><span class="strip-go">Lihat <${Icon} n="right" s=${16} w=${2.4} /></span></button>` : null}
+    <${InfoLibur} />
     <${AjakNotif} />
     <${KartuLaporan} />
     <${Card} title="Menu"><div class="tiles">${tiles.map(t => html`<${Tile} icon=${t.icon} label=${t.label} color=${t.color} badge=${t.badge} onClick=${t.go} />`)}</div></${Card}>
@@ -348,6 +357,7 @@ export function WaliBeranda() {
       <${KartuHafalan} h=${h} c=${c} t=${L.tahsinStatus(s)} /></${HomeTop}>
     <div class="wrap wl-wrap">
       <${WL.KabarHariIni} s=${s} />
+      <${InfoLibur} />
       <${AjakNotif} />
       <${KartuLaporan} />
       ${peng ? html`<button type="button" class="wl-peng" onClick=${() => nav.go("pengumuman")}><span class="wl-ic emas"><${Icon} n="megaphone" s=${18} /></span><span class="wl-kt"><small>Pengumuman pondok · ${L.fmtTgl(L.ymd(new Date(peng.ts)))}</small><b>${peng.judul || "Pengumuman"}</b></span><${Icon} n="right" s=${18} /></button>` : null}

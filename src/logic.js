@@ -218,20 +218,38 @@ export const waNomor = n => { let d = String(n || "").replace(/\D/g, ""); if (d.
 export const waLink = (n, teks) => { const d = waNomor(n); return d ? `https://wa.me/${d}${teks ? "?text=" + encodeURIComponent(teks) : ""}` : ""; };
 export const setelan = () => { const st = (S.data.kalender || {}).setelan || {}; return { ...SETELAN_DEFAULT, ...st, waPondok: st.waPondok || SETELAN_DEFAULT.waPondok, jamHalaqah: { ...SETELAN_DEFAULT.jamHalaqah, ...(st.jamHalaqah || {}) } }; };
 export const liburPondok = () => Object.entries(S.data.kalender || {}).filter(([id]) => id !== "setelan").map(([id, v]) => ({ id, ...v })).sort((a, b) => a.mulai.localeCompare(b.mulai));
+// Libur per tanggal (disimpan sementara selama data kalender tidak berubah).
+// jenis: nasional | cuti | pondok (semua libur) | kbm (KBM saja) | atur (libur sebagian: hari tertentu, sesi halaqah, jam KBM, mutaba'ah)
+let _lbr = { kal: undefined, map: new Map() };
 export function liburPada(tgl) {
-  const st = setelan(), out = [];
+  if (_lbr.kal !== S.data.kalender) _lbr = { kal: S.data.kalender, map: new Map() };
+  let r = _lbr.map.get(tgl); if (r) return r;
+  const st = setelan(), out = [], dw = parseYmd(tgl).getDay();
   LIBUR_NASIONAL.forEach(l => { if (l.tgl === tgl && !(st.abaikan || []).includes(tgl)) out.push({ nama: l.nama, jenis: l.jenis }); });
-  liburPondok().forEach(l => { if (tgl >= l.mulai && tgl <= l.selesai) out.push({ nama: l.nama, jenis: l.jenis || "pondok" }); });
-  return out;
+  liburPondok().forEach(l => { if (tgl >= l.mulai && tgl <= l.selesai && (l.jenis !== "atur" || !(l.hari || []).length || l.hari.includes(dw))) out.push({ id: l.id, nama: l.nama, jenis: l.jenis || "pondok", ...(l.jenis === "atur" ? { halaqah: l.halaqah || [], jam: l.jam || [], mutabaah: !!l.mutabaah } : {}) }); });
+  _lbr.map.set(tgl, out); return out;
+}
+// Ringkasan libur sebagian pada satu tanggal: sesi halaqah, jam KBM, mutaba'ah
+export function liburSebagian(tgl) {
+  const a = liburPada(tgl).filter(l => l.jenis === "atur");
+  return { sesi: new Set(a.flatMap(l => l.halaqah)), jam: new Set(a.flatMap(l => l.jam)), mutabaah: a.some(l => l.mutabaah), nama: a.map(l => l.nama) };
+}
+export function teksLiburSebagian(l) {
+  const b = [];
+  if ((l.halaqah || []).length) b.push(l.halaqah.length === 3 ? "semua halaqah" : "halaqah " + l.halaqah.join(" & "));
+  if ((l.jam || []).length) b.push(l.jam.length >= JAM.length ? "KBM mapel" : "KBM " + l.jam.map(j => (jamById(j) || { nama: j }).nama).join(" & "));
+  if (l.mutabaah) b.push("mutaba'ah & ceklis musyrif");
+  return b.length ? "Libur " + b.join(", ") : "Belum dipilih";
 }
 // jenis: "kbm" (Sen–Jum), "halaqah" (Sen–Sab, Sabtu hanya Shubuh), "asrama" (MOTD & mutaba'ah, setiap hari)
 export function hariAktif(tgl, jenis) {
   const d = parseYmd(tgl).getDay(), lb = liburPada(tgl);
   if (lb.some(l => l.jenis === "pondok")) return false;
   if (jenis === "asrama") return true;
-  if (jenis === "mutabaah") return d >= 1 && d <= 5; // Sabtu & Ahad libur mutaba'ah
+  if (jenis === "mutabaah") return d >= 1 && d <= 5 && !lb.some(l => l.jenis === "atur" && l.mutabaah); // Sabtu & Ahad libur mutaba'ah
   if (lb.some(l => l.jenis === "nasional" || l.jenis === "cuti")) return false;
-  if (jenis === "kbm") return d >= 1 && d <= 5 && !lb.some(l => l.jenis === "kbm");
+  if (jenis === "kbm") return d >= 1 && d <= 5 && !lb.some(l => l.jenis === "kbm") && (() => { const js = new Set(lb.filter(l => l.jenis === "atur").flatMap(l => l.jam)); return !JAM.every(j => js.has(j.id)); })();
+  if (jenis === "halaqah" && d >= 1 && d <= 6) { const ss = new Set(lb.filter(l => l.jenis === "atur").flatMap(l => l.halaqah)); return (d === 6 ? ["Shubuh"] : SESI).some(se => !ss.has(se)); }
   return d >= 1 && d <= 6;
 }
 // Sabtu: halaqah Shubuh khusus manzil (tanpa ziyadah & murojaah); Ahad libur
@@ -425,7 +443,7 @@ export function terlambat(i) { return i.status === "aktif" && i.kembali && new D
 // ---------------- absen ----------------
 export const SESI = ["Shubuh", "Dhuha", "Malam"];
 // Halaqah Senin–Sabtu; hari Sabtu hanya Halaqah Shubuh; Ahad libur
-export function sesiHari(tgl = today()) { const d = parseYmd(tgl).getDay(); return d === 0 ? [] : d === 6 ? ["Shubuh"] : SESI; }
+export function sesiHari(tgl = today()) { const d = parseYmd(tgl).getDay(), dasar = d === 0 ? [] : d === 6 ? ["Shubuh"] : SESI; if (!dasar.length) return dasar; const lb = liburSebagian(tgl).sesi; return lb.size ? dasar.filter(se => !lb.has(se)) : dasar; }
 export const adaHalaqah = (tgl = today()) => sesiHari(tgl).length > 0;
 export const sesiHariNama = hari => (hari === "Sabtu" ? ["Shubuh"] : hari === "Minggu" || hari === "Ahad" ? [] : SESI);
 export const sesiNow = () => { const ss = sesiHari(); if (ss.length <= 1) return "Shubuh"; const h = new Date().getHours(); return h < 7 ? "Shubuh" : h < 15 ? "Dhuha" : "Malam"; };
@@ -477,7 +495,7 @@ export function bentrok(slot, exceptId) {
 }
 export const pengampu = (mapel, kelas) => STAFF.find(s => s.ajar.some(([m, k]) => m === mapel && k === kelas));
 export const absenKelasKey = (jid, tgl) => `${jid}_${tgl}`;
-export function jadwalHari(tgl) { const h = HARI_ID[parseYmd(tgl).getDay()], l = jadwalAll(); let r = _jdw.hari.get(h); if (!r) { r = l.filter(j => j.hari === h); _jdw.hari.set(h, r); } return r.slice(); }
+export function jadwalHari(tgl) { const h = HARI_ID[parseYmd(tgl).getDay()], l = jadwalAll(); let r = _jdw.hari.get(h); if (!r) { r = l.filter(j => j.hari === h); _jdw.hari.set(h, r); } const lj = liburSebagian(tgl).jam; return lj.size ? r.filter(j => !lj.has(j.jam)) : r.slice(); }
 export function kehadiranKelas(sid, mapel, rg = rgSemester()) {
   const s = santriById(sid); if (!s) return { pct: null, tot: 0, sesi: 0 };
   const c = { H: 0, S: 0, I: 0, A: 0 }; let sesi = 0, terisi = 0;
