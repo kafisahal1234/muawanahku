@@ -120,7 +120,7 @@ export function Perkembangan({ s }) {
     <section class="wl-card"><header class="wl-h"><div><small>Sekolah</small><b>Nilai tugas projek</b></div><span class="wl-hic emas"><${Icon} n="award" s=${18} /></span></header>
       ${nilai.some(x => x.v != null) ? nilai.map(x => html`<${Baris} lab=${x.m.nama} nilai=${x.v == null ? "–" : x.v} pct=${x.v} k=${x.v == null ? ["Belum dinilai", "mut"] : [nilaiKata(x.v), x.v >= 80 ? "hijau" : x.v >= 70 ? "emas" : "merah"]} />`)
         : html`<p class="wl-note" style="margin:2px 0 6px">Belum ada nilai projek pada periode ini.</p>`}
-      <p class="wl-note">Nilai PTS, PAS, dan rapor dibagikan saat pembagian rapor.</p></section>
+      <p class="wl-note">Nilai UTS, UAS, dan rapor dibagikan saat pembagian rapor.</p></section>
     <section class="wl-card"><header class="wl-h"><div><small>Kedisiplinan</small><b>${jmlPl ? `${jmlPl} catatan pelanggaran` : "Alhamdulillah, tidak ada catatan"}</b></div><span class=${"wl-hic " + (jmlPl ? "merah" : "hijau")}><${Icon} n="shield" s=${18} /></span></header>
       <${Baris} lab="Izin keluar/pulang" nilai=${iz.n ? `${iz.n} kali` : "Tidak ada"} k=${iz.telat ? [`${iz.telat}× terlambat kembali`, "merah"] : null} />
       ${jmlPl ? html`<${Baris} lab="Catatan pelanggaran" nilai=${`${jmlPl} catatan · ${pl.poinRingan + pl.poinSB} poin`} k=${["Mohon dibimbing", "merah"]} ket="Rinciannya ada di menu Izin" />` : null}</section>`;

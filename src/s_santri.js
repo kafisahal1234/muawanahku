@@ -64,7 +64,7 @@ export function SantriDetail({ sid, tab: t0 }) {
 
 function NilaiCard({ s }) {
   return html`<${Card} title="Nilai mapel"><div class="list">${DATA.mapel.map(m => { const n = L.nilaiAkhir(s.id, m.id) || {}; const p = L.predikat(n.akhir);
-    return html`<${Row} name=${m.nama} sub=${`Projek ${n.pj ?? "—"} · PTS ${n.pts ?? "—"} · PAS ${n.pas ?? "—"} · hadir ${n.hadir == null ? "—" : n.hadir + "%"}`} icon=${html`<${Icon} n="award" s=${18} />`} right=${n.akhir == null ? "—" : html`<${Pill} t=${`${n.akhir} · ${p.h}`} tone=${p.c} />`} />`; })}</div></${Card}>`;
+    return html`<${Row} name=${m.nama} sub=${`Projek ${n.pj ?? "—"} · UTS ${n.uts ?? "—"} · UAS ${n.uas ?? "—"} · PAS ${n.pas ?? "—"} · hadir ${n.hadir == null ? "—" : n.hadir + "%"}`} icon=${html`<${Icon} n="award" s=${18} />`} right=${n.akhir == null ? "—" : html`<${Pill} t=${`${n.akhir} · ${p.h}`} tone=${p.c} />`} />`; })}</div></${Card}>`;
 }
 
 export function RaporList() {

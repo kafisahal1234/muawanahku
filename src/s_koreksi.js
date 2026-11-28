@@ -39,7 +39,7 @@ export function entriRiwayat(col, list) {
   if (col === "absenKelas") return { jud: `Absen kelas ${r.kelas} · ${L.mapelById(r.mapel).nama}`, det: `${L.fmtTgl(r.tanggal)} · ${r.materi ? "Jurnal: " + r.materi : "Jurnal belum diisi"}`, ic: "users" };
   if (col === "izin") return { jud: `Surat izin · ${(L.santriById(r.santri) || {}).nama}`, det: r.jenis, ic: "file" };
   if (col === "bap") return { jud: `BAP · ${(L.santriById(r.santri) || {}).nama}`, det: r.pelanggaranNama, ic: "clipboard" };
-  if (col === "nilaiMapel") return { jud: `Nilai ${L.mapelById(r.mapel).nama} · ${r.kelas}`, det: "Nilai projek, PTS, PAS & aspek", ic: "edit" };
+  if (col === "nilaiMapel") return { jud: `Nilai ${L.mapelById(r.mapel).nama} · ${r.kelas}`, det: "Nilai projek, UTS, UAS & aspek", ic: "edit" };
   if (col === "pengumuman") return { jud: "Pengumuman", det: r.judul, ic: "megaphone" };
   if (col === "izinGuru") return { jud: `Izin guru · ${r.jenis}`, det: L.fmtTgl(r.tanggal), ic: "briefcase" };
   return { jud: col, det: "", ic: "clipboard" };

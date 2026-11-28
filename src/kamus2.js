@@ -6319,5 +6319,25 @@ export const KAMUS2 = {
 "Rekap": [
 "Reports",
 "التقارير"
+],
+"UTS, UAS & PAS": [
+"Midterm, Final & PAS",
+"منتصف الفصل والنهائي وPAS"
+],
+"PAS = 30% projek + 30% UTS + 40% UAS. Nilai akhir = 50% PAS + 35% rata-rata aspek + 15% kehadiran · KKM 70": [
+"PAS = 30% project + 30% midterm (UTS) + 40% final exam (UAS). Final score = 50% PAS + 35% average aspects + 15% attendance · KKM 70",
+""
+],
+"Nilai projek, UTS, UAS, PAS, dan nilai akhir per mapel dan per kelas.": [
+"Project, midterm (UTS), final exam (UAS), PAS, and final grades per subject and class.",
+""
+],
+"Nilai projek, UTS, UAS & aspek": [
+"Project, UTS, UAS grades & aspects",
+"درجات المشاريع والاختبارات والجوانب"
+],
+"Nilai UTS, UAS, dan rapor dibagikan saat pembagian rapor.": [
+"UTS, UAS, and report card grades are shared at the report card distribution.",
+""
 ]
 };

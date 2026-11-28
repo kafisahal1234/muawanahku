@@ -79,10 +79,17 @@ export function raporHTML(sid, periode) {
   // Bahasa Inggris memakai istilah Inggris; urutan tampil: Reading & Listening, Speaking, Writing, Attitude, Attendance, Final Score
   const mp = id => { const m = L.mapelById(id), nm = get("nilaiMapel", L.nilaiKey(id, s.kelas)) || {}, asp = ((nm.aspek || {})[sid]) || {}, ak = (L.nilaiAkhir(sid, id) || {}).akhir;
     const en = id === "bing", urut = en ? [2, 0, 1, 3].filter(i => i < m.aspek.length) : m.aspek.map((_, i) => i), kh = L.kehadiranKelas(sid, id).pct;
-    return { m, en, rows: urut.map(i => [m.aspek[i], asp[i]]), hadir: [en ? "Attendance" : "Kehadiran", kh], ak, lab: en ? ["Aspect", "Score", "Grade", "Final Score"] : ["Aspek", "Nilai", "Predikat", "Nilai Akhir"] }; };
-  const pair = ids => { const P = ids.map(mp), n = Math.max(...P.map(p => p.rows.length)) + 1;
-    let body = ""; for (let i = 0; i < n; i++) body += `<tr class="${i % 2 ? "qz" : ""}">` + P.map(p => i === p.rows.length ? `<td>${p.hadir[0]}</td><td class="qc qv">${p.hadir[1] == null ? "" : p.hadir[1] + "%"}</td><td class="qc">${p.hadir[1] == null ? "" : L.predikatMut(p.hadir[1]).h}</td>` : p.rows[i] ? `<td>${esc(p.rows[i][0])}</td><td class="qc qv">${d(p.rows[i][1])}</td><td class="qc">${p.rows[i][1] === "" || p.rows[i][1] == null ? "" : L.predikat(Number(p.rows[i][1])).h}</td>` : "<td></td><td></td><td></td>").join("") + "</tr>";
-
+    const pasN = (L.nilaiAkhir(sid, id) || {}).pas;
+    return { m, en, rows: urut.map(i => [m.aspek[i], asp[i]]), hadir: [en ? "Attendance" : "Kehadiran", kh], pas: [en ? "Final Assessment (PAS)" : "PAS (Projek, UTS, UAS)", pasN], ak, lab: en ? ["Aspect", "Score", "Grade", "Final Score"] : ["Aspek", "Nilai", "Predikat", "Nilai Akhir"] }; };
+  // tiap mapel: aspek-aspek, kehadiran, PAS, lalu Nilai Akhir. Baris kosong mengisi agar dua tabel sejajar.
+  const isiNilai = v => `<td class="qc qv">${d(v)}</td><td class="qc">${v === "" || v == null ? "" : L.predikat(Number(v)).h}</td>`;
+  const pair = ids => { const P = ids.map(mp);
+    // isi tiap tabel: aspek → kehadiran → PAS; baris kosong (bila ada) di paling bawah agar dua tabel tetap sejajar
+    const isi = P.map(p => [...p.rows.map(r => `<td>${esc(r[0])}</td>${isiNilai(r[1])}`),
+      `<td>${p.hadir[0]}</td><td class="qc qv">${p.hadir[1] == null ? "" : p.hadir[1] + "%"}</td><td class="qc">${p.hadir[1] == null ? "" : L.predikatMut(p.hadir[1]).h}</td>`,
+      `<td class="qk">${p.pas[0]}</td>${isiNilai(p.pas[1])}`]);
+    const n = Math.max(...isi.map(x => x.length));
+    let body = ""; for (let i = 0; i < n; i++) body += `<tr class="${i % 2 ? "qz" : ""}">` + isi.map(x => x[i] || "<td></td><td></td><td></td>").join("") + "</tr>";
     return `<table><colgroup>${"<col style='width:173px'><col style='width:67px'><col style='width:66px'>".repeat(2)}</colgroup>
       <tr>${ids.map(id => `<th colspan="3">${MAPEL_RAPOR.find(x => x[0] === id)[1]}</th>`).join("")}</tr><tr class="qh2">${P.map(p => `<th>${p.lab[0]}</th><th>${p.lab[1]}</th><th>${p.lab[2]}</th>`).join("")}</tr>${body}
       <tr>${P.map(p => `<td class="qtot">${p.lab[3]}</td><td class="qtot qc">${p.ak ?? ""}</td><td class="qtot qc">${p.ak == null ? "" : L.predikat(p.ak).h}</td>`).join("")}</tr></table>`; };
@@ -90,7 +97,7 @@ export function raporHTML(sid, periode) {
   const p2 = `<div class="rp-page">${head}<div class="qsec" style="margin-top:0">B. PENILAIAN MATA PELAJARAN</div>
     ${pair(["fiqih", "it"])}<div style="height:16px"></div>${pair(["karakter", "bing"])}<div style="height:16px"></div>
     <table><colgroup><col style="width:173px"><col style="width:67px"><col style="width:66px"><col style="width:173px"><col></colgroup><tr><td class="qtot">Jumlah nilai akhir</td><td class="qc qb">${aks.length ? jak : ""}</td><td></td><td class="qtot">Rata-rata</td><td class="qc qb">${aks.length ? Math.round(jak / aks.length) : ""}</td></tr></table>
-    <p class="qnote">Nilai per aspek diisi guru mapel; kehadiran dihitung otomatis dari absen kelas. Nilai akhir = 10% kehadiran + 30% projek + 25% PTS + 35% PAS (projek, PTS, dan PAS sudah termasuk di nilai akhir). KKM 70.</p>${foot}</div>`;
+    <p class="qnote">PAS = 30% projek + 30% UTS + 40% UAS. Nilai akhir = 50% PAS + 35% rata-rata aspek + 15% kehadiran. KKM 70.</p>${foot}</div>`;
   // ---------- halaman 3: mutaba'ah ----------
   const mt = (items, pcts) => { const half = Math.ceil(items.length / 2); let b = "";
     for (let r = 0; r < half; r++) b += `<tr class="${r % 2 ? "qz" : ""}">` + [r, r + half].map(i => items[i] ? `<td class="qc qs">${i + 1}</td><td class="qs">${esc(items[i])}</td><td class="qc qv">${pcts[i] == null ? "" : L.predikatMut(pcts[i]).h}</td>` : "<td></td><td></td><td></td>").join("") + "</tr>";
@@ -128,13 +135,13 @@ export function raporMidHTML(sid) {
     <td class="qtot">Kehadiran halaqah</td><td>${kh.pct == null ? "—" : `<b>${kh.pct}%</b> · ${L.predikatMut(kh.pct).h} (${L.predikatMut(kh.pct).t})`}</td></tr></table>`;
   const mrows = MAPEL_RAPOR.map(([id, nm], i) => { const n = L.nilaiAkhir(sid, id) || {}, v = n.pts === "" ? null : n.pts;
     return `<tr class="${i % 2 ? "qz" : ""}"><td class="qc">${i + 1}</td><td>${id === "it" ? "Teknologi Informasi (IT)" : esc(L.mapelById(id).nama)}</td><td class="qc">${n.hadir == null ? "—" : n.hadir + "%"}</td><td class="qc qv">${v ?? "—"}</td><td class="qc">${v == null ? "—" : L.predikat(Number(v)).h + " · " + L.predikat(Number(v)).t}</td></tr>`; }).join("");
-  const B = `<table><colgroup><col style="width:34px"><col><col style="width:100px"><col style="width:120px"><col style="width:150px"></colgroup><tr><th>No</th><th>Mata Pelajaran</th><th>Kehadiran</th><th>Nilai PTS</th><th>Predikat</th></tr>${mrows}</table>`;
+  const B = `<table><colgroup><col style="width:34px"><col><col style="width:100px"><col style="width:120px"><col style="width:150px"></colgroup><tr><th>No</th><th>Mata Pelajaran</th><th>Kehadiran</th><th>Nilai UTS</th><th>Predikat</th></tr>${mrows}</table>`;
   const mr = (nm, v) => { const p = L.predikatMut(v); return `<td class="qtot">${nm}</td><td class="qc qv">${v == null ? "—" : v + "%"}</td><td class="qc">${v == null ? "—" : p.h + " · " + p.t}</td>`; };
   const C = `<table><colgroup><col style="width:130px"><col style="width:70px"><col style="width:105px"><col style="width:130px"><col style="width:70px"><col></colgroup><tr><th>Aspek</th><th>Capaian</th><th>Predikat</th><th>Aspek</th><th>Capaian</th><th>Predikat</th></tr><tr>${mr(`Ibadah (${DATA.ibadah.length} butir)`, mp.ibadah)}${mr(`Adab (${DATA.adab.length} butir)`, mp.adab)}</tr></table>`;
   const tgl = new Date(), tg = `${tgl.getDate()} ${["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][tgl.getMonth()]} ${tgl.getFullYear()}`;
   return `<div class="rp-page rp-mid">${head}<h1>LAPORAN TENGAH SEMESTER</h1><p class="qsub">PONDOK TAHFIDZ MODERN KAMPUNG QUR'AN AL MUAWANAH</p><div class="qgaris"></div>${ident}
     <div class="qsec">A. CAPAIAN TAHFIDZ AL-QUR'AN</div>${A}
-    <div class="qsec">B. MATA PELAJARAN</div>${B}<p class="qnote">Nilai tengah semester (PTS). Nilai akhir lengkap per aspek ada di rapor akhir semester. KKM 70.</p>
+    <div class="qsec">B. MATA PELAJARAN</div>${B}<p class="qnote">Nilai Ujian Tengah Semester (UTS). Nilai akhir disampaikan pada rapor akhir semester. KKM 70.</p>
     <div class="qsec">C. MUTABA'AH IBADAH DAN ADAB</div>${C}<p class="qnote">Persentase dari hari yang mutaba'ahnya terisi (${mp.isi || 0} hari). A 90–100% · B 75–89% · C 60–74% · D di bawah 60%.</p>
     <div class="qsec">D. CATATAN WALI ASRAMA</div><div class="qbox" style="min-height:50px">${esc(cat)}</div>
     <div class="qttd3" style="margin-top:12px"><div></div><div></div><div>Metro, ${tg}</div></div>

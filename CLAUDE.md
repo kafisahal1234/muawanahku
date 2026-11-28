@@ -79,7 +79,7 @@ Preact + htm, dibundel esbuild; CSS = `theme.css + skin.css + dark.css + dark_ma
 
 **Wali**: bahasa orang tua (tanpa "baris/sesi/H S I A"), kontak ustadz hanya lewat menu Akun → Hubungi ustadz (Wali Asrama, para Wadir, Mudir, Admin — guru mapel tidak tampil). Halaman detail santri tetap bertab.
 
-**Dokumen**: rapor & surat memakai kop/kaki pondok (`src/rapor_assets.js`, `src/surat_assets.js`). Rapor bisa PDF dan Word (Word tanpa proteksi, cukup page break per halaman). Rapor: nilai identitas tebal, keterangan di bawah tabel, kehadiran halaqah hanya persen, nama tanda tangan bergaris bawah tanpa kurung & tanpa "Ust." (`namaTtd`).
+**Dokumen**: rapor & surat memakai kop/kaki pondok (`src/rapor_assets.js`, `src/surat_assets.js`). Rapor bisa PDF dan Word (Word tanpa proteksi, cukup page break per halaman). Rapor: nilai identitas tebal, keterangan di bawah tabel, kehadiran halaqah hanya persen, nama tanda tangan bergaris bawah tanpa kurung & tanpa "Ust." (`namaTtd`). Nilai mapel (`L.rumusNilai`): **PAS = 30% projek + 30% UTS + 40% UAS**; **Nilai akhir = 50% PAS + 35% rata-rata aspek + 15% kehadiran**; tabel mapel rapor: aspek → Kehadiran → PAS (Projek, UTS, UAS) → Nilai Akhir. Field data lama: `pts` = UTS, `pas` = UAS. Keterangan di rapor secukupnya (satu baris rumus + KKM).
 
 ## Cara kerja dengan pengguna
 - Permintaan revisi teks/format = ubah teks saja, bukan sistem.

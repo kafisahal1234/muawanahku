@@ -476,15 +476,27 @@ export function kinerjaMapel(guruId, rg, kelas) {
   return { sesi, absen, jurnal, pct: pct(absen, sesi), pctJ: pct(jurnal, sesi) };
 }
 export const nilaiKey = (mapel, kelas) => `${mapel}_${kelas}`;
+// Rumus nilai mapel (rapor akhir semester):
+//   PAS (Penilaian Akhir Semester) = 30% rata-rata projek + 30% UTS + 40% UAS
+//   Nilai akhir = 50% PAS + 35% rata-rata aspek rapor + 15% kehadiran kelas
+// Data lama: field "pts" = UTS, field "pas" = UAS (nama field tidak diubah agar data tersimpan tetap terbaca).
+export const BOBOT_PAS = { projek: 0.3, uts: 0.3, uas: 0.4 }, BOBOT_AKHIR = { pas: 0.5, aspek: 0.35, hadir: 0.15 };
+const adaNilai = x => x !== "" && x != null && !isNaN(Number(x));
+export function rumusNilai({ pj, uts, uas, aspek = [], hadir }) {
+  const pas = [pj, uts, uas].every(adaNilai) ? Math.round(Number(pj) * BOBOT_PAS.projek + Number(uts) * BOBOT_PAS.uts + Number(uas) * BOBOT_PAS.uas) : null;
+  const as = aspek.filter(adaNilai).map(Number), rataAspek = as.length ? Math.round(as.reduce((a, b) => a + b, 0) / as.length) : null;
+  const h = hadir == null ? 100 : hadir;
+  const akhir = pas != null && rataAspek != null ? Math.round(pas * BOBOT_AKHIR.pas + rataAspek * BOBOT_AKHIR.aspek + h * BOBOT_AKHIR.hadir) : null;
+  return { pas, rataAspek, akhir };
+}
 export function nilaiAkhir(sid, mapel) {
   const s = santriById(sid); if (!s) return null;
-  const n = get("nilaiMapel", nilaiKey(mapel, s.kelas)) || {};
-  const pj = n.projek && n.projek[sid], pts = n.pts && n.pts[sid], pas = n.pas && n.pas[sid];
+  const n = get("nilaiMapel", nilaiKey(mapel, s.kelas)) || {}, m = mapelById(mapel) || { aspek: [] };
+  const pj = n.projek && n.projek[sid], pts = n.pts && n.pts[sid], uas = n.pas && n.pas[sid], asp = (n.aspek || {})[sid] || {};
   const kh = kehadiranKelas(sid, mapel).pct;
-  const hadir = kh == null ? 100 : kh;
-  if (pj == null || pts == null || pas == null || pj === "" || pts === "" || pas === "") return { pj, pts, pas, hadir: kh, akhir: null };
-  const akhir = Math.round(hadir * 0.1 + Number(pj) * 0.3 + Number(pts) * 0.25 + Number(pas) * 0.35);
-  return { pj, pts, pas, hadir: kh, akhir };
+  const r = rumusNilai({ pj, uts: pts, uas, aspek: m.aspek.map((_, i) => asp[i]), hadir: kh });
+  // pas = nilai PAS gabungan; uas = nilai ujian akhir semester
+  return { pj, pts, uts: pts, uas, pas: r.pas, rataAspek: r.rataAspek, hadir: kh, akhir: r.akhir };
 }
 
 // ---------------- mutabaah ----------------

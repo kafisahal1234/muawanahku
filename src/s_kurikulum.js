@@ -24,7 +24,7 @@ export function Kurikulum({ ro }) {
     <div class="wrap"><${Card}><div class="stats"><${Stat} label="Terlaksana" value=${`${ok}/${slots.length}`} sub=${hari} /><${Stat} label="Jurnal kosong" value=${kosong} tone=${kosong ? "red" : ""} /><${Stat} label="Guru izin" value=${izin} tone=${izin ? "gold" : ""} /></div></${Card}>
     ${ro ? html`<${MenuEvaluasi} ket="Pilih yang ingin dievaluasi" items=${[
       { ic: "chart", w: "teal", t: "Rekap KBM & Jurnal", d: "Keterlaksanaan KBM, kehadiran santri di kelas, dan isi jurnal mengajar per guru & mapel.", go: () => nav.go("rekapMapel", { modul: "kurikulum" }) },
-      { ic: "award", w: "gold", t: "Rekap Nilai", d: "Nilai projek, PTS, dan PAS per mapel dan per kelas.", go: () => nav.go("rekapNilai") },
+      { ic: "award", w: "gold", t: "Rekap Nilai", d: "Nilai projek, UTS, UAS, PAS, dan nilai akhir per mapel dan per kelas.", go: () => nav.go("rekapNilai") },
       { ic: "calendar", w: "orange", t: "Jadwal & Pengampu", d: "Jadwal mengajar tiap hari dan guru pengampu tiap mapel.", go: () => nav.go("gabung", { jenis: "jadwalPengampu" }) },
       { ic: "briefcase", w: "slate", t: "Izin Guru", d: "Guru yang izin tidak mengajar beserta alasannya.", n: izin, nl: "hari ini", tone: izin ? "gold" : "", go: () => nav.go("rekapIzinGuru") }]} />`
     : html`<${Card} title="Menu Kurikulum"><div class="tiles">

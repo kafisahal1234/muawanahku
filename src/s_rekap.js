@@ -263,5 +263,5 @@ export function WaliRekap() {
         <div class="rk-g mb8"><div><span>Ringan (teguran)</span><b class="t-gold">${pl.ringan}</b></div><div><span>Sedang</span><b class="t-orange">${pl.sedang}</b></div><div><span>Berat</span><b class="t-red">${pl.berat}</b></div></div>
         ${pl.bap.length || motd.length ? html`<div class="list">${pl.bap.map(b => html`<${Row} name=${b.pelanggaranNama} sub=${`${L.fmtTgl(b.tanggal)} · ${b.tingkat} · ketuk untuk kronologi & bukti`} icon=${html`<${Icon} n="clipboard" s=${18} />`} right=${html`<${Pill} t=${b.poin + " poin"} tone="red" />`} onClick=${() => nav.go("bapView", { id: b.id })} />`)}
           ${motd.map(x => html`<${Row} name=${`${x.st === "A" ? "Alpa" : "Masbuq"} sholat ${(L.WAKTU.find(w => w[0] === x.waktu) || [, x.waktu])[1]}`} sub=${L.fmtTgl(x.tanggal) + " · ringan, teguran dari wali asrama"} icon=${html`<${Icon} n="moon" s=${18} />`} right=${html`<${Pill} t=${x.poin + " poin"} tone="gold" />`} />`)}</div>` : html`<${Empty} t="Alhamdulillah, tidak ada pelanggaran pada periode ini." icon="check" />`}</${Card}>
-      <p class="fab-note">Rekap hanya berisi data ananda. Nilai PTS, PAS, dan rapor dibagikan saat pembagian rapor.</p></div>`;
+      <p class="fab-note">Rekap hanya berisi data ananda. Nilai UTS, UAS, dan rapor dibagikan saat pembagian rapor.</p></div>`;
 }

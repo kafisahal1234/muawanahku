@@ -16,7 +16,7 @@ export const PANDUAN = `Panduan aplikasi MuawanahQu (pakai nama menu persis sepe
 - Tahsin (Iqro' KH. As'ad Humam, jilid 1–6 ±32 halaman, lalu Al-Qur'an): santri yang masih Iqro' dicatat bacaannya (halaman, Lancar/Kurang lancar/Ulang) dan ujian kenaikan jilid di menu Tahsin, bukan di Ziyadah hafalan. Rekap Tahsin bisa diunduh PDF.
 - Wadir Tahfidz → Pengelolaan Tahfidz: Data Awal Hafalan, Target Hafalan, Kelola Halaqah, Rekap Tahfidz, Perolehan Bulanan, Rekap Tahsin, Peringkat Santri, Rekap Tasmi', Koreksi Input Tahfidz.
 - Wadir Kurikulum → Kurikulum: Jam Pelajaran, Jadwal Mengajar, Mapel & Pengampu, Rekap KBM (kinerja guru: pertemuan terlaksana & jurnal, kehadiran kelas, unduh PDF), Rekap Nilai, Izin Guru, Koreksi Input Mapel. Juga Kalender di Beranda.
-- Guru mapel → Beranda → Mapel <nama>: Absen Kelas, Jurnal Mengajar (menu terpisah; jurnal diisi setelah absen pertemuan itu), Input Nilai (Projek bisa banyak, PTS, PAS, Aspek), Rekap Kelas, Izin Guru, Riwayat & Koreksi. KBM Senin–Jumat, Jam 1 10.15–11.45, Jam 2 13.00–14.30. Nilai akhir = 10% hadir + 30% projek + 25% PTS + 35% PAS, KKM 70.
+- Guru mapel → Beranda → Mapel <nama>: Absen Kelas, Jurnal Mengajar (menu terpisah; jurnal diisi setelah absen pertemuan itu), Input Nilai (Projek bisa banyak, UTS, UAS, Aspek; PAS = 30% projek + 30% UTS + 40% UAS; nilai akhir = 50% PAS + 35% rata aspek + 15% hadir), Rekap Kelas, Izin Guru, Riwayat & Koreksi. KBM Senin–Jumat, Jam 1 10.15–11.45, Jam 2 13.00–14.30. Nilai akhir = 10% hadir + 30% projek + 25% PTS + 35% PAS, KKM 70.
 - Wali asrama (musyrif): Mutaba'ah dan Ceklis Musyrif di Beranda, serta menu Asrama Saya (Mutaba'ah, Ceklis Musyrif, Izin & Catatan, Rekap Asrama, Perolehan Hafalan, Riwayat & Koreksi).
 - Wadir Kesantrian → Kesantrian: Surat Izin, Catat Kembali, Form BAP (surat pemberitahuan/SP/skorsing dibuat otomatis), Rekap Kesantrian, Rekap Izin, Rekap Pelanggaran, Histori Santri, Riwayat & Koreksi.
 - Mudir: Tahfidz, Kurikulum, Kesantrian (lihat semua), Rapor, Rekap Ceklis Musyrif (hanya Mudir), Kalender. Admin: Data Master (santri, guru & akun, asrama, kelas, halaqah, Impor Data dengan AI), Pengumuman.
@@ -44,7 +44,7 @@ function blokGuruMapel(guru, r) {
     const iz = all("izinGuru").filter(i => i.guru === g.id && dalam(i.tanggal, r.bl));
     const nilai = (g.ajar || []).map(([m, k]) => {
       const n = get("nilaiMapel", L.nilaiKey(m, k)) || {}, tot = L.santriKelas(k).length, isi = key => Object.values(n[key] || {}).filter(v => v !== "" && v != null).length;
-      return `${L.mapelById(m).nama} ${k}: projek ${isi("projek")}/${tot}${n.projekList ? ` (${n.projekList.length} projek)` : ""}, PTS ${isi("pts")}/${tot}, PAS ${isi("pas")}/${tot}`;
+      return `${L.mapelById(m).nama} ${k}: projek ${isi("projek")}/${tot}${n.projekList ? ` (${n.projekList.length} projek)` : ""}, UTS ${isi("pts")}/${tot}, UAS ${isi("pas")}/${tot}`;
     }).join("; ") || "-";
     const hariIni = L.jadwalHari(r.t).filter(j => j.guru === g.id).map(j => `${L.jamById(j.jam).nama} ${L.mapelById(j.mapel).nama} ${j.kelas}: ${slotStatus(j, r.t)[0]}`).join(", ");
     const akhir = all("absenKelas").filter(d => d.guru === g.id).map(d => d.tanggal).sort().pop();

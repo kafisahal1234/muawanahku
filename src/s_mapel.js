@@ -124,8 +124,8 @@ export function NilaiMapel({ mapel, kelas }) {
   const setP = (pid, id, val) => setPn({ ...pn, [pid]: { ...(pn[pid] || {}), [id]: clamp(val) } });
   const setA = (id, i, val) => setAsp({ ...asp, [id]: { ...(asp[id] || {}), [i]: clamp(val) } });
   const rataProjek = id => { const xs = pl.map(p => (pn[p.id] || {})[id]).filter(x => x !== "" && x != null).map(Number); return xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null; };
-  const akhir = id => { const pj = rataProjek(id), pts = v.pts[id], pas = v.pas[id]; if (pj == null || [pts, pas].some(x => x === "" || x == null)) return null;
-    const kh = L.kehadiranKelas(id, mapel).pct; return Math.round((kh == null ? 100 : kh) * 0.1 + pj * 0.3 + pts * 0.25 + pas * 0.35); };
+  const hitung = id => L.rumusNilai({ pj: rataProjek(id), uts: v.pts[id], uas: v.pas[id], aspek: m.aspek.map((_, i) => (asp[id] || {})[i]), hadir: L.kehadiranKelas(id, mapel).pct });
+  const akhir = id => hitung(id).akhir;
   const save = async () => { const projek = {}; list.forEach(s => { const r = rataProjek(s.id); if (r != null) projek[s.id] = r; });
     if (await put("nilaiMapel", key, { mapel, kelas, projekList: pl.map(x => (x.tgl ? x : { ...x, tgl: L.today() })), projekNilai: pn, projek, ...v, aspek: asp, guru: me().id, ts: Date.now() })) { toast("Nilai tersimpan"); nav.back(); } };
   const tambah = () => { const id = "p" + (Math.max(0, ...pl.map(p => Number(p.id.slice(1)) || 0)) + 1); setEd({ id, nama: `Projek ${pl.length + 1}`, tgl: L.today(), baru: true }); };
@@ -146,7 +146,7 @@ export function NilaiMapel({ mapel, kelas }) {
     setImp(false);
     toast(`Nilai ${info.cocok} santri terisi dari ${info.dok}${info.lewat.length ? ` · ${info.lewat.length} nama tidak dikenali` : ""}. Periksa lalu Simpan nilai.`);
   };
-  return html`<${SubHeader} title=${`Nilai ${m.nama} · ${kelas}`} sub="Kehadiran dihitung otomatis dari absen kelas"><${Seg} items=${[["projek", `Projek (${pl.length})`], ["komponen", "PTS & PAS"], ["aspek", "Aspek rapor"]]} value=${tab} onChange=${setTab} /></${SubHeader}>
+  return html`<${SubHeader} title=${`Nilai ${m.nama} · ${kelas}`} sub="Kehadiran dihitung otomatis dari absen kelas"><${Seg} items=${[["projek", `Projek (${pl.length})`], ["komponen", "UTS, UAS & PAS"], ["aspek", "Aspek rapor"]]} value=${tab} onChange=${setTab} /></${SubHeader}>
     <div class="wrap"><button class="up-cta" onClick=${() => setImp(true)}><span class="up-ic"><${Icon} n="upload" s=${22} /></span><span><b>Isi nilai dari dokumen</b><small>Excel, foto daftar nilai, PDF · dibaca AI</small></span><${Icon} n="chev" s=${18} /></button>
     ${imp ? html`<${ImporNilai} mapel=${mapel} kelas=${kelas} onClose=${() => setImp(false)} onHasil=${pakaiImpor} />` : null}
     ${tab === "projek" ? html`<${Hint}>Tambahkan setiap projek yang diberikan semester ini. Nilai projek di rapor = rata-rata semua projek yang sudah dinilai.</${Hint}>
@@ -155,10 +155,10 @@ export function NilaiMapel({ mapel, kelas }) {
       ${cur ? html`<${Card} title=${cur.nama} right=${html`<small>${Object.values(pn[cur.id] || {}).filter(x => x !== "" && x != null).length}/${list.length} dinilai</small>`}><div class="scroll-x"><table class="tbl"><thead><tr><th>Santri</th><th class="c">Nilai</th><th class="c">Rata projek</th></tr></thead><tbody>
         ${list.map(s => { const r = rataProjek(s.id); return html`<tr>${nm(s)}<td class="c">${num((pn[cur.id] || {})[s.id], cur.nama + " " + s.nama, x => setP(cur.id, s.id, x))}</td><td class="c"><b class=${r == null ? "" : r < 70 ? "t-red" : "t-green"}>${r ?? "—"}</b></td></tr>`; })}</tbody></table></div></${Card}>`
         : html`<${Card}><${Empty} t="Belum ada projek. Ketuk + Projek." icon="layers" /></${Card}>`}`
-    : tab === "komponen" ? html`<${Hint}>Nilai akhir = 10% hadir + 30% rata-rata projek + 25% PTS + 35% PAS · KKM 70</${Hint}>
-    <${Card}><div class="scroll-x"><table class="tbl"><thead><tr><th>Santri</th><th class="c">Hadir</th><th class="c">Projek</th><th class="c">PTS</th><th class="c">PAS</th><th class="c">Akhir</th></tr></thead><tbody>
-      ${list.map(s => { const a = akhir(s.id), kh = L.kehadiranKelas(s.id, mapel).pct, r = rataProjek(s.id);
-        return html`<tr>${nm(s)}<td class="c">${kh == null ? "—" : kh + "%"}</td><td class="c"><b>${r ?? "—"}</b></td><td class="c">${num(v.pts[s.id], "PTS " + s.nama, x => set("pts", s.id, x))}</td><td class="c">${num(v.pas[s.id], "PAS " + s.nama, x => set("pas", s.id, x))}</td>
+    : tab === "komponen" ? html`<${Hint}>PAS = 30% projek + 30% UTS + 40% UAS. Nilai akhir = 50% PAS + 35% rata-rata aspek + 15% kehadiran · KKM 70</${Hint}>
+    <${Card}><div class="scroll-x"><table class="tbl"><thead><tr><th>Santri</th><th class="c">Hadir</th><th class="c">Projek</th><th class="c">UTS</th><th class="c">UAS</th><th class="c">PAS</th><th class="c">Akhir</th></tr></thead><tbody>
+      ${list.map(s => { const hs = hitung(s.id), a = hs.akhir, kh = L.kehadiranKelas(s.id, mapel).pct, r = rataProjek(s.id);
+        return html`<tr>${nm(s)}<td class="c">${kh == null ? "—" : kh + "%"}</td><td class="c"><b>${r ?? "—"}</b></td><td class="c">${num(v.pts[s.id], "UTS " + s.nama, x => set("pts", s.id, x))}</td><td class="c">${num(v.pas[s.id], "UAS " + s.nama, x => set("pas", s.id, x))}</td><td class="c">${hs.pas ?? "—"}</td>
           <td class="c"><b class=${a == null ? "" : a < 70 ? "t-red" : "t-green"}>${a ?? "—"}</b></td></tr>`; })}</tbody></table></div></${Card}>`
     : html`<${Hint}>Nilai tiap aspek tampil di rapor bagian B beserta predikatnya. ${m.aspek.map((t, i) => `A${i + 1} = ${t}`).join(" · ")}</${Hint}>
     <${Card}><div class="scroll-x"><table class="tbl"><thead><tr><th>Santri</th>${m.aspek.map((t, i) => html`<th class="c" title=${t}>A${i + 1}</th>`)}</tr></thead><tbody>

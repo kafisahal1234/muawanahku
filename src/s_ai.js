@@ -408,7 +408,7 @@ export function ImporNilai({ mapel, kelas, onHasil, onClose }) {
         j = await tanyaAI({ sistem: SISTEM_DASAR, json: true, berkas: d.berkas, teks: `Tugas: baca dokumen nilai mapel ${m.nama} kelas ${kelas} dan ubah ke JSON.
 Santri kelas ini (id|nama):
 ${list.map(s => `${s.id}|${s.nama}`).join("\n")}
-Komponen yang dicari: nilai projek (bisa lebih dari satu projek/tugas, beri nama sesuai dokumen), PTS (UTS/tengah semester), PAS (UAS/akhir semester), dan aspek rapor: ${m.aspek.map((a, i) => `A${i + 1}=${a}`).join(", ")}.
+Komponen yang dicari: nilai projek (bisa lebih dari satu projek/tugas, beri nama sesuai dokumen), UTS (ujian tengah semester, kolom pts), UAS (ujian akhir semester, kolom pas), dan aspek rapor: ${m.aspek.map((a, i) => `A${i + 1}=${a}`).join(", ")}.
 Aturan: santri_id dari daftar (ejaan boleh beda), null bila tidak ada. Nilai skala 0–100; bila dokumen memakai skala 0–10, kalikan 10. Kolom yang tidak ada diisi null. Jangan mengarang nilai.
 Jawab hanya JSON: {"projek_nama":["Projek 1"],"baris":[{"nama":"","santri_id":null,"projek":[null],"pts":null,"pas":null,"aspek":[${m.aspek.map(() => "null").join(",")}]}]}` + isiDok(d) });
       } else j = nilaiLokal(d.tabel || [], m);
@@ -428,7 +428,7 @@ Jawab hanya JSON: {"projek_nama":["Projek 1"],"baris":[{"nama":"","santri_id":nu
   };
   return html`<${Sheet} open=${true} title="Isi nilai dari dokumen" onClose=${onClose}>
     <p class="small" style="margin:0 0 4px">Unggah daftar nilai ${m.nama} kelas ${kelas} (Excel, foto daftar nilai, PDF, Word). Nilai masuk ke tabel dulu; periksa lalu tekan <b>Simpan nilai</b>.</p>
-    <${PilihDokumen} onBaca=${baca} busy=${busy} langkah=${langkah} contoh=${"Nama | Projek Poster | PTS | PAS\nAdiyatma | 85 | 78 | 80"} /></${Sheet}>`;
+    <${PilihDokumen} onBaca=${baca} busy=${busy} langkah=${langkah} contoh=${"Nama | Projek Poster | UTS | UAS\nAdiyatma | 85 | 78 | 80"} /></${Sheet}>`;
 }
 
 // ================= IMPOR JADWAL MENGAJAR =================
