@@ -10,6 +10,8 @@ import { AiBtn, useAIRun } from "./s_ai.js";
 import { tanyaAI, SISTEM_DASAR } from "./ai.js";
 import { TombolKoreksi } from "./s_koreksi.js";
 import { TombolKabarIzin, TombolKabarBap } from "./s_wa.js";
+import { Evaluasi } from "./s_laporan.js";
+import { evKesantrian, denganLalu } from "./evaluasi.js";
 import { logUbah, hapusData } from "./s_koreksi.js";
 import { TINDAKAN, tindakanById, namaTindakan, saranTindakan, suratUntukBap, buatSurat, nomorIzin, nomorBap, selesaiSkorsing } from "./surat.js";
 
@@ -233,6 +235,8 @@ export function RekapPelanggaran({ pondok, gabung: g }) {
   const rows = L.santriList().filter(s => !pondok || L.pondokOfSantri(s) === pondok).map(s => ({ s, p: L.poinSantri(s.id) })).filter(x => x.p.total).sort((a, b) => b.p.total - a.p.total);
   const bap = all("bap").filter(b => inPondok(pondok, b.santri)).sort((a, b) => b.ts - a.ts).slice(0, 15);
   return html`<${SubHeader} title=${g ? g.t : "Rekap Pelanggaran"} sub=${pondok ? "Dari BAP · Pondok " + pondok : "Dari BAP · semua pondok"}>${g ? g.seg : null}</${SubHeader}><div class="wrap">
+    <p class="rp-sekat">Evaluasi ${L.periodeRange("bulanan").label}</p>
+    <${Evaluasi} judulLuar=${false} ev=${denganLalu(x => evKesantrian(L.santriList().filter(s => !pondok || L.pondokOfSantri(s) === pondok), x), "bulanan", L.periodeRange("bulanan"))} />
     <${Section} t="Poin tertinggi" /><${Card}>${rows.length ? html`<div class="list">${rows.map(({ s, p }) => html`<${Row} name=${s.nama} sub=${`BAP ${p.bap} poin · MOTD ${p.motd} poin`} right=${html`<${Pill} t=${p.total + " poin"} tone="red" />`} onClick=${() => nav.go("santri", { sid: s.id, tab: "catatan" })} />`)}</div>` : html`<${Empty} t="Belum ada pelanggaran tercatat." icon="check" />`}</${Card}>
     <${Section} t="BAP terbaru" /><${Card}>${bap.length ? html`<div class="list">${bap.map(b => html`<${Row} name=${L.santriAman(b.santri).nama} sub=${`${b.pelanggaranNama} · ${L.fmtTgl(b.tanggal)}`} right=${html`<${Pill} t=${b.poin + " poin"} tone="red" />`} onClick=${() => nav.go("bapView", { id: b.id })} />`)}</div>` : html`<${Empty} t="Belum ada BAP." />`}</${Card}></div>`;
 }

@@ -7,6 +7,10 @@ import { AbsenSelesai } from "./common.js";
 import { logUbah } from "./s_koreksi.js";
 import { me } from "./common.js";
 import { ImporNilai } from "./s_ai.js";
+import { usePeriode } from "./s_rekap.js";
+import { Panel } from "./s_rekapmodul.js";
+import { Evaluasi } from "./s_laporan.js";
+import { evMapel, denganLalu } from "./evaluasi.js";
 
 const kelasAjar = (st, mapel) => st.ajar.filter(([m]) => m === mapel).map(([, k]) => k);
 
@@ -178,8 +182,10 @@ export function RekapKelasPilih({ mapel }) {
 }
 export function RekapKelas({ mapel, kelas }) {
   useApp();
-  const list = L.santriKelas(kelas), pert = all("absenKelas").filter(d => d.kelas === kelas && (!mapel || d.mapel === mapel)).length;
-  return html`<${SubHeader} title=${`Kehadiran Kelas ${kelas}`} sub=${(mapel ? L.mapelById(mapel).nama : "Semua mapel") + ` · ${pert} pertemuan tercatat`} />
-    <div class="wrap"><${Card}><div class="list">${list.map(s => { const k = L.kehadiranKelas(s.id, mapel);
-      return html`<${Row} name=${s.nama} sub=${k.tot ? `${k.tot} pertemuan` : "Belum ada data"} right=${k.pct == null ? "—" : html`<${Pill} t=${k.pct + "%"} tone=${k.pct >= 80 ? "green" : "red"} />`} />`; })}</div></${Card}></div>`;
+  const p = usePeriode("bulanan", null, "kbm"), list = L.santriKelas(kelas);
+  return html`<${SubHeader} title=${`Kehadiran Kelas ${kelas}`} sub=${(mapel ? L.mapelById(mapel).nama : "Semua mapel") + ` · ${list.length} santri`} />
+    <div class="wrap rp-wrap">${p.bar}
+      ${mapel ? html`<${Evaluasi} judulLuar=${false} ev=${denganLalu(x => evMapel([[mapel, kelas]], x, { nilai: p.jenis !== "bulanan" }), p.jenis, p.rg)} /><p class="rp-sekat">Rincian per santri</p>` : null}
+      <${Panel} ic="users" warna="hijau" judul="Kehadiran santri" ket="Dari pertemuan yang sudah diabsen" persen besar=${(v => (v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) + "%" : null))(list.map(s => L.kehadiranKelas(s.id, mapel, p.rg).pct).filter(x => x != null))}
+        rows=${list.map(s => { const k = L.kehadiranKelas(s.id, mapel, p.rg); return { nama: s.nama, sub: k.tot ? `${k.tot} pertemuan${k.A ? ` · alpa ${k.A}` : ""}` : "", nilai: k.pct, v: k.pct == null ? "—" : k.pct + "%" }; })} /></div>`;
 }

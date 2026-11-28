@@ -24,6 +24,8 @@ import { APP_LOGO } from "./logo_app.js";
 import { temaSaatIni, setTema, BAHASA, bahasa, setBahasa } from "./i18n.js";
 import { aiAda } from "./ai.js";
 import { TahsinCard, JalurIqra } from "./s_tahsin.js";
+import { KartuLaporan } from "./s_laporan.js";
+import { bolehLaporan, belumDibaca } from "./laporan.js";
 const PrivasiIsi = () => html`<div class="prose"><p>Data dipakai hanya untuk administrasi pendidikan pondok: hafalan, absensi, nilai, perizinan, dan pembinaan santri. Data tidak dijual, tidak untuk iklan, dan tidak dibagikan ke pihak luar. Setiap pengguna hanya melihat data sesuai perannya; wali hanya melihat anaknya sendiri. Kebijakan lengkap ada di menu Akun setelah masuk.</p></div>`;
 
 // ---------------- lupa kata sandi (lewat email pemulihan) ----------------
@@ -129,6 +131,7 @@ function tilesFor(st) {
     add("award", "Rapor", "gold", () => nav.go("raporList"));
   }
   if (r.some(x => ["mudir", "admin", "wadir_kurikulum", "yayasan"].includes(x))) add("cal2", "Kalender", "pink", () => nav.go("kalender"));
+  if (r.some(x => x !== "admin")) add("grafik", "Laporan", "indigo", () => nav.go("laporan"), belumDibaca().length || null);
   add("users", "Tim", "teal", () => nav.go("tim"));
   if (r.includes("guru_mapel")) [...new Set(st.ajar.map(([m]) => m))].forEach(m => add("layers", "Mapel " + L.mapelById(m).nama.replace("Pendidikan ", "").replace("Bahasa ", "B. "), MAPEL_COLOR[m], () => nav.go("mapel", { mapel: m })));
   return t;
@@ -223,6 +226,7 @@ export function Beranda() {
       <div class="sum"><${Summary} st=${st} /></div></${HomeTop}>
     <div class="wrap">
     ${strip ? html`<button class="strip" onClick=${strip.go}><span class="strip-ic" style=${`background:${WARNA[strip.w][2]}`}><${Ikon} n=${strip.ic} warna=${strip.w} s=${28} /></span><span class="strip-t"><b>${strip.t}</b><small>${strip.s}</small></span><span class="strip-go">Lihat <${Icon} n="right" s=${16} w=${2.4} /></span></button>` : null}
+    <${KartuLaporan} />
     <${Card} title="Menu"><div class="tiles">${tiles.map(t => html`<${Tile} icon=${t.icon} label=${t.label} color=${t.color} badge=${t.badge} onClick=${t.go} />`)}</div></${Card}>
     ${tasks.length > 1 ? html`<${Card} title="Perlu diperhatikan"><div class="list">${tasks.slice(1).map(([t, s, c, go]) => html`<button class="row" onClick=${go}><span class="row-ic" style=${`background:${c === "coral" ? "#FDE7E3" : c === "gold" ? "#FDF0D3" : "#E6EEFC"};color:${c === "coral" ? "#B3261E" : c === "gold" ? "#8A5A00" : "#1F56B5"}`}><${Icon} n="alert" s=${18} /></span>
       <span class="row-t"><b style="white-space:normal">${t}</b><small>${s}</small></span><${Icon} n="right" s=${18} c="#9AB0A5" /></button>`)}</div></${Card}>` : null}
@@ -341,8 +345,10 @@ export function WaliBeranda() {
       <${KartuHafalan} h=${h} c=${c} t=${L.tahsinStatus(s)} /></${HomeTop}>
     <div class="wrap wl-wrap">
       <${WL.KabarHariIni} s=${s} />
+      <${KartuLaporan} />
       ${peng ? html`<button type="button" class="wl-peng" onClick=${() => nav.go("pengumuman")}><span class="wl-ic emas"><${Icon} n="megaphone" s=${18} /></span><span class="wl-kt"><small>Pengumuman pondok · ${L.fmtTgl(L.ymd(new Date(peng.ts)))}</small><b>${peng.judul || "Pengumuman"}</b></span><${Icon} n="right" s=${18} /></button>` : null}
       <${WL.BulanIni} s=${s} />
+      <button type="button" class="wl-peng lap-wl" onClick=${() => nav.go("laporan")}><span class="wl-ic"><${Icon} n="chart" s=${18} /></span><span class="wl-kt"><small>Terbit setiap Sabtu dan akhir bulan</small><b>Laporan perkembangan ananda</b></span><${Icon} n="right" s=${18} c="#9AB0A5" /></button>
       <${KartuAI} judul="Ringkasan untuk Ayah/Bunda" tombol="Buat ringkasan perkembangan" ket="AI merangkum perkembangan ananda dari data pondok dalam bahasa yang mudah dipahami." buat=${() => ringkasWali(s)} />
     </div>`;
 }

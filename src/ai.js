@@ -108,7 +108,7 @@ export async function tanyaAI({ teks, sistem = "", berkas = [], json = false }) 
 
 // ---------- Percakapan bergaya Gemini: multi-giliran, jawaban mengalir (streaming), bisa dihentikan ----------
 // riwayat: [{ r: "u" | "a", t }] (tanpa pesan galat); berkas: lampiran giliran ini; onTeks(teksSejauhIni); berhenti() → true untuk menghentikan
-async function chatGemini({ sistem, riwayat, teks, berkas, onTeks, berhenti }) {
+async function chatGemini({ sistem, riwayat, teks, berkas, onTeks, berhenti, alat, onTahap }) {
   const app = firebaseApp(); if (!app) throw new Error("Database belum tersambung, AI belum bisa dipakai.");
   if (!aiMod) aiMod = imp(`https://www.gstatic.com/firebasejs/${V}/firebase-ai.js`);
   const ai = await aiMod, inst = ai.getAI(app, { backend: new ai.GoogleAIBackend() });
@@ -124,7 +124,26 @@ async function chatGemini({ sistem, riwayat, teks, berkas, onTeks, berhenti }) {
     for (const pakai of pk ? [true, false] : [false]) {
       let out = "";
       try {
-        const model = ai.getGenerativeModel(inst, { model: m, ...(sistem ? { systemInstruction: sistem } : {}), generationConfig: { temperature: 0.6, ...(pakai ? { thinkingConfig: pk } : {}) } });
+        const gc = { temperature: 0.6, ...(pakai ? { thinkingConfig: pk } : {}) };
+        if (alat) {
+          // Alat (function calling): AI boleh membaca database sendiri, beberapa putaran, lalu menjawab
+          const model = ai.getGenerativeModel(inst, { model: m, ...(sistem ? { systemInstruction: sistem } : {}), generationConfig: gc, tools: alat.deklarasi(ai) });
+          const chat = model.startChat({ history: contents.slice(0, -1) });
+          let kirim = contents[contents.length - 1].parts;
+          for (let putaran = 0; putaran < 7; putaran++) {
+            const r = await chat.sendMessageStream(kirim);
+            for await (const ch of r.stream) { if (berhenti && berhenti()) break; let d = ""; try { d = ch.text(); } catch (e) { } if (d) { out += d; onTeks && onTeks(out); } }
+            if (berhenti && berhenti()) break;
+            const resp = await r.response, calls = (resp.functionCalls && resp.functionCalls()) || [];
+            if (!calls.length) break;
+            kirim = [];
+            for (const c of calls) { onTahap && onTahap(alat.tahap[c.name] || "Membaca data…"); await new Promise(z => setTimeout(z, 0)); kirim.push({ functionResponse: { ...(c.id ? { id: c.id } : {}), name: c.name, response: { hasil: alat.jalankan(c.name, c.args) } } }); }
+            onTahap && onTahap("Menyusun jawaban…");
+          }
+          try { localStorage.setItem(LS, m); } catch (e) { }
+          return out.trim();
+        }
+        const model = ai.getGenerativeModel(inst, { model: m, ...(sistem ? { systemInstruction: sistem } : {}), generationConfig: gc });
         const r = await model.generateContentStream({ contents });
         for await (const ch of r.stream) { if (berhenti && berhenti()) break; let d = ""; try { d = ch.text(); } catch (e) { } if (d) { out += d; onTeks && onTeks(out); } }
         try { localStorage.setItem(LS, m); } catch (e) { }
@@ -140,13 +159,21 @@ async function chatGemini({ sistem, riwayat, teks, berkas, onTeks, berhenti }) {
   }
   throw akhir || new Error("Model AI tidak ditemukan.");
 }
-export async function ngobrolAI({ sistem = "", riwayat = [], teks, berkas = [], onTeks, berhenti }) {
+export async function ngobrolAI({ sistem = "", riwayat = [], teks, berkas = [], onTeks, berhenti, alat, onTahap }) {
   const mesin = aiMesin();
   try {
-    if (mesin === "gemini") return await chatGemini({ sistem, riwayat, teks, berkas, onTeks, berhenti });
+    if (mesin === "gemini") {
+      // Alat database dipakai bila tidak pernah ditolak server; bila gagal, ulangi tanpa alat (konteks data tetap ada)
+      const LS_ALAT = "mk_ai_alat_tolak", tolak = (() => { try { return Number(localStorage.getItem(LS_ALAT) || 0) > Date.now(); } catch (e) { return false; } })();
+      if (alat && !tolak) {
+        try { return await chatGemini({ sistem, riwayat, teks, berkas, onTeks, berhenti, alat, onTahap }); }
+        catch (e) { if (/\b400\b|INVALID_ARGUMENT|function|tool|thought/i.test(String(e && e.message))) try { localStorage.setItem(LS_ALAT, String(Date.now() + 864e5)); } catch (x) { } console.warn("AI dengan alat gagal, ulang tanpa alat", e); }
+      }
+      return await chatGemini({ sistem, riwayat, teks, berkas, onTeks, berhenti });
+    }
     const datar = riwayat.length ? `Percakapan sebelumnya:\n${riwayat.map(x => `${x.r === "u" ? "Pengguna" : "Asisten"}: ${x.t}`).join("\n")}\n\n` : "";
     let t;
-    if (mesin === "mock") t = await window.__AI_MOCK({ teks: datar + "Pertanyaan: " + teks, sistem, berkas, json: false });
+    if (mesin === "mock") t = await window.__AI_MOCK({ teks: datar + "Pertanyaan: " + teks, sistem, berkas, json: false, alat });
     else if (mesin === "claude") t = await viaClaude({ teks: datar + "Pertanyaan: " + teks, sistem, gambar: berkas.filter(b => /^image\//.test(b.mime)) });
     else throw new Error("AI hanya tersedia saat aplikasi tersambung ke database (versi online).");
     onTeks && onTeks(t); return t;

@@ -8,6 +8,10 @@ import { unduh } from "./s_system.js";
 import { ttdUntukPdf } from "./s_ttd.js";
 import { usePeriode, lingkup } from "./s_rekap.js";
 import { unduhLaporanZiyadah } from "./s_hafalanbulan.js";
+import { EvaluasiTunda } from "./s_laporan.js";
+import { evTahfidz, evMapel, evAsrama, evKesantrian, denganLalu } from "./evaluasi.js";
+// Rekap = evaluasi dulu (angka + perbandingan, kesimpulan, perlu tindak lanjut, kabar baik), lalu rincian per aspek
+const EvalRekap = ({ buat, kunci }) => html`<${EvaluasiTunda} buat=${buat} kunci=${kunci} judulLuar=${false} /><p class="rp-sekat">Rincian per aspek</p>`;
 
 const P = v => (v == null ? "—" : v + "%");
 const nada = v => (v == null ? "mut" : v >= 90 ? "hijau" : v >= 75 ? "biru" : v >= 60 ? "emas" : "merah");
@@ -86,6 +90,7 @@ export function RekapTahfidz({ hid }) {
   const tasmiRows = d.filter(o => o.x.tasmiLulus.length), perJuz = Object.entries(tasmiRows.reduce((m, o) => { o.x.tasmiLulus.forEach(j => { m[j] = (m[j] || 0) + 1; }); return m; }, {})).sort((a, b) => b[0] - a[0]);
   return html`<${SubHeader} title=${judul} sub=${satu ? `${(L.staffById(hqs[0].guru) || {}).pendek || ""} · ${semua.length} santri` : `${hqs.length} halaqah · ${semua.length} santri`} />
     <div class="wrap rp-wrap">${p.bar}
+      <${EvalRekap} kunci=${p.jenis + p.rg.dari + 1} buat=${() => denganLalu(x => evTahfidz(semua, x, { jenis: p.jenis, kinerjaHalaqah: hqs.map(h => h.id) }), p.jenis, p.rg)} />
       <${Panel} ic="users" warna="hijau" judul="Kehadiran santri" ket=${absenGuru == null ? "Absen guru belum ada" : `Absen guru terisi ${absenGuru}% sesi`} besar=${r.kh == null ? null : r.kh + "%"} besarNada=${nada(r.kh)} persen
         rows=${satu ? d.map(o => ({ nama: o.s.nama, sub: subS(o), nilai: o.x.kh.pct, v: P(o.x.kh.pct) }))
           : perH(dd => ({ nilai: rata(dd.map(o => o.x.kh.pct)) })).map(x => ({ nama: x.h.nama, sub: subH(x.h, x.dd), nilai: x.nilai, v: P(x.nilai) }))}
@@ -130,6 +135,7 @@ export function RekapMapel({ mapel, kelas, modul }) {
     const [mp, k] = pairs[0], x = dataKelas(mp, k, p.rg), adaPj = x.d.filter(o => o.pj != null);
     return html`<${SubHeader} title=${`${namaMapel(mp)} · Kelas ${k}`} sub=${`${(L.staffById(x.g) || {}).pendek || "—"} · ${x.d.length} santri`} />
       <div class="wrap rp-wrap">${p.bar}
+        <${EvalRekap} kunci=${p.jenis + p.rg.dari + 2} buat=${() => denganLalu(x => evMapel([[mp, k]], x, { nilai: p.jenis !== "bulanan" }), p.jenis, p.rg)} />
         <${Panel} ic="users" warna="hijau" judul="Kehadiran santri" ket="Rata-rata kelas" besar=${x.kh == null ? null : x.kh + "%"} besarNada=${nada(x.kh)} persen
           rows=${x.d.map(o => ({ nama: o.s.nama, sub: o.kh.sesi ? `${o.kh.sesi} pertemuan` : "", nilai: o.kh.pct, v: P(o.kh.pct) }))}
         />
@@ -144,6 +150,7 @@ export function RekapMapel({ mapel, kelas, modul }) {
   const khAll = rata(semua.map(x => x.kh)), pjAll = semua.filter(x => x.pj.length);
   return html`<${SubHeader} title=${modul === "kurikulum" ? "Rekap KBM" : "Rekap Mapel"} sub=${`${pairs.length} kelas · ${new Set(pairs.map(([mp]) => mp)).size} mapel`} />
     <div class="wrap rp-wrap">${p.bar}
+      <${EvalRekap} kunci=${p.jenis + p.rg.dari + 3} buat=${() => denganLalu(x => evMapel(pairs, x, { nilai: p.jenis !== "bulanan" }), p.jenis, p.rg)} />
       <${Panel} ic="users" warna="hijau" judul="Kehadiran santri" ket="Rata-rata per mapel & kelas" besar=${khAll == null ? null : khAll + "%"} besarNada=${nada(khAll)} persen
         rows=${semua.map(x => ({ nama: nm(x), sub: sub(x), nilai: x.kh, v: P(x.kh) }))} catatan="Pertemuan yang belum diabsen dihitung tidak hadir." />
       <${Panel} ic="checksq" warna="biru" judul="Pertemuan terlaksana" ket=${`${terl} dari ${ses} pertemuan sudah diabsen`} besar=${pct(terl, ses) == null ? null : pct(terl, ses) + "%"} besarNada=${nada(pct(terl, ses))} persen
@@ -176,6 +183,7 @@ export function RekapAsrama({ aid }) {
   const judul = satu ? "Rekap Asrama " + asr[0].nama : "Rekap Asrama";
   return html`<${SubHeader} title=${judul} sub=${satu ? `${(L.staffById(asr[0].musyrif) || {}).pendek || ""} · ${semua.length} santri` : `${asr.length} asrama · ${semua.length} santri`} />
     <div class="wrap rp-wrap">${p.bar}
+      <${EvalRekap} kunci=${p.jenis + p.rg.dari + 4} buat=${() => denganLalu(x => evAsrama(semua, x, { asrama: asr }), p.jenis, p.rg)} />
       <${Panel} ic="moon" warna="hijau" judul="Ibadah" ket="Rata-rata capaian mutaba'ah ibadah" besar=${ib == null ? null : ib + "%"} besarNada=${nada(ib)} persen
         rows=${satu ? d.map(o => ({ nama: o.s.nama, sub: subS(o), nilai: o.m.ibadah, v: P(o.m.ibadah) })) : perA(dd => rata(dd.map(o => o.m.ibadah))).map(x => ({ nama: "Asrama " + x.a.nama, sub: subA(x), nilai: x.nilai, v: P(x.nilai) }))} />
       <${Panel} ic="heart" warna="biru" judul="Adab" ket="Rata-rata capaian mutaba'ah adab" besar=${ad == null ? null : ad + "%"} besarNada=${nada(ad)} persen
@@ -205,6 +213,7 @@ export function RekapKesantrian({ pondok, aid }) {
   const ALH = "Alhamdulillah, tidak ada catatan pada periode ini.";
   return html`<${SubHeader} title=${judul} sub=${`Izin & pelanggaran · ${d.length} santri`} />
     <div class="wrap rp-wrap">${p.bar}
+      <${EvalRekap} kunci=${p.jenis + p.rg.dari + 5} buat=${() => denganLalu(x => evKesantrian(asr.flatMap(a => L.santriAsrama(a.id)), x), p.jenis, p.rg)} />
       <${Panel} ic="door" warna="biru" judul="Izin keluar" ket=${`${d.filter(o => o.iz.n).length} santri izin`} besar=${`${izin}×`}
         rows=${satu ? d.filter(o => o.iz.n).map(o => ({ nama: o.s.nama, sub: subS(o), nilai: o.iz.n, v: `${o.iz.n}×` })) : perA(dd => ({ n: jml(dd, o => o.iz.n) })).map(x => ({ nama: "Asrama " + x.a.nama, sub: subA(x), nilai: x.n, v: `${x.n}×` }))} kosongT=${ALH} />
       <${Panel} ic="clock" warna="merah" judul="Terlambat kembali" ket=${izin ? `${pct(telat, izin)}% dari izin` : "Dari izin keluar"} besar=${`${telat}×`} besarNada=${telat ? "merah" : "hijau"}

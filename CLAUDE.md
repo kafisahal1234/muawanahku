@@ -24,6 +24,8 @@ PYTHONPATH=test/pwseed python3 test/cari_layar.py       # menu Cari: daftar sant
 PYTHONPATH=test/pwseed python3 test/modul_mudir.py      # menu Mudir: isi Tahfidz/Kurikulum/Kesantrian + halaman gabungan → test/out/modul/
 PYTHONPATH=test/pwseed python3 test/profil_layar.py     # menu Tim + profil layar penuh ustadz & santri → test/out/profil/
 PYTHONPATH=test/pwseed python3 test/yayasan_layar.py    # akun Yayasan + tab bawah per peran → test/out/yayasan/
+PYTHONPATH=test/pwseed python3 test/laporan_layar.py    # Laporan Berkala per peran (guru, Wadir, Mudir, wali) → test/out/laporan/
+PYTHONPATH=test/pwseed python3 test/ai_alat.py          # alat database Asisten AI + batas hak akses (AI tiruan)
 cd test/aturan && npm install && npm test             # uji firestore.rules di emulator (harus "gagal 0")
 ```
 
@@ -46,6 +48,9 @@ Preact + htm, dibundel esbuild; CSS = `theme.css + skin.css + dark.css + dark_ma
 | `src/s_*.js` | layar per modul (tahfidz, asrama, mapel, kurikulum, kesantrian, wadir, admin, rapor, wali, dll.) |
 | `src/s_rekapmodul.js` | semua rekap modul — komponen `Panel` (satu aspek = satu kartu) |
 | `src/s_rekap.js` | `usePeriode` (pemilih periode: Bulanan / Tengah semester / Semester) |
+| `src/evaluasi.js` | **satu sumber angka evaluasi**: `evTahfidz`, `evAsrama`, `evKesantrian`, `evMapel`, `evKinerja`, `evAnanda` + `denganLalu` (banding periode lalu) — dipakai Laporan, Rekap, dan AI |
+| `src/laporan.js`, `src/s_laporan.js` | Laporan Berkala (jadwal terbit, isi per peran, layar daftar/baca, PDF) + komponen `Evaluasi` / `EvaluasiTunda` |
+| `src/ai_alat.js` | alat database Asisten AI (function calling Gemini) + hak baca |
 | `src/s_wali.js` | tampilan akun wali (bahasa orang tua) |
 | `src/s_wa.js` | WhatsApp: kontak ustadz untuk wali (`TUPOKSI`), pesan ke wali |
 | `src/biodata.js` | kamus kolom biodata + pembaca impor (tabel/teks berlabel) |
@@ -69,7 +74,11 @@ Preact + htm, dibundel esbuild; CSS = `theme.css + skin.css + dark.css + dark_ma
 
 **Jadwal**: KBM Senin–Jumat; halaqah Senin–Sabtu (Sabtu hanya Shubuh, manzil); mutaba'ah libur Sabtu & Ahad; butir "Puasa sunnah" hanya muncul & dinilai Senin (Puasa sunnah Senin) dan Kamis (Puasa sunnah Kamis) — `L.ibadahHari(tgl)`. Pakai "Ahad", bukan "Minggu".
 
-**Rekap**: hanya **Bulanan, Tengah semester, Semester**. Satu halaman per rekap, tiap aspek kartu sendiri (angka besar + daftar berperingkat + bar), kehadiran **selalu persen**, **tanpa link** ke halaman lain, sederhana per peran. Data kosong = "Belum ada data".
+**Rekap**: hanya **Bulanan, Tengah semester, Semester**. Paling atas tiap rekap = blok **Evaluasi** (angka + naik/turun dibanding periode lalu → Kesimpulan → Perlu tindak lanjut → Kabar baik → Rincian lengkap), lalu "Rincian per aspek" (kartu `Panel`). Satu halaman per rekap, tiap aspek kartu sendiri (angka besar + daftar berperingkat + bar), kehadiran **selalu persen**, **tanpa link** ke halaman lain, sederhana per peran. Data kosong = "Belum ada data".
+
+**Laporan Berkala** (`laporan.js`): terbit otomatis, dihitung di perangkat dari data terbaru (tanpa server): **Pekanan Sabtu 10.00**, **Bulanan tgl 29 10.00** (Feb: tgl terakhir), Mid, Semester, Tahunan (tanggal dari setelan Kalender). Semua akun kecuali Admin-saja; isi per peran: guru halaqah (halaqahnya), wali asrama (mutaba'ah + izin/pelanggaran asramanya), guru mapel (kelasnya), Wadir (bidangnya + kinerja guru bidangnya), Mudir (per pondok: tahfidz, KBM, mutaba'ah, kesantrian, kinerja ustadz), Yayasan (Pondok 29 vs 21 tanpa nama), wali santri (perkembangan ananda, bahasa orang tua). Kartu "sudah terbit" di Beranda + menu Laporan; tombol "Bahas dengan Asisten AI" & Unduh PDF. "Tidak setor" = hari halaqah Senin–Jumat santri hadir tapi tanpa ziyadah/murojaah; target ziyadah dibagi rata sesuai hari aktif berjalan.
+
+**Asisten AI** (`ai_alat.js`): selain konteks akun, Gemini memakai **alat** (function calling) untuk membaca database sendiri: cari_santri, rincian_santri, evaluasi, riwayat_setoran, absensi, data_guru, jadwal, nilai, izin_pelanggaran, laporan_berkala (periode apa pun). Hak baca (keputusan pengguna): semua ustadz boleh data santri mana pun lintas modul; **kinerja guru lain & rincian BAP hanya pimpinan** (Wadir, Mudir, Yayasan, Admin; wali asrama boleh BAP santri asramanya); wali santri hanya ananda. Bila server menolak alat, otomatis diulang tanpa alat.
 
 **Menu**: Tahfidz guru = Absen, Ziyadah, Murojaah, Tahsin, Manzil, Tasmi', Nilai Mid/Smt, Rekap Halaqah, Izin Guru, Riwayat. Mutaba'ah & Ceklis Musyrif hanya di dalam **Asrama Saya**. Mapel: Absen Kelas dan Jurnal Mengajar menu terpisah. Menu "Pesan ke Wali" sudah dihapus di semua akun (chat wali lewat rincian santri). Menu Cari = daftar SEMUA santri untuk semua akun staf. Menu **Tim** (semua akun staf) = daftar ustadz per jabatan tertinggi (Yayasan, Mudir, Wakil Mudir (Wadir = wakil Mudir, BUKAN wakil direktur), Admin, Wali Asrama, Guru Halaqah, Guru Mapel). Ketuk akun di Tim / Cari / Daftar Akun → **layar penuh** `profilAkun` (`src/s_akun.js`): kartu hijau berfoto paling atas, info di kartu tidak diulang di bawah; santri: tombol bawah hanya "Buka catatan lengkap santri"; bagian khusus Admin (kode akses, username, status) hanya tampil untuk Admin. Peran `yayasan` (Pengurus Yayasan) dipilih Admin di form akun; Akun Yayasan (`src/s_yayasan.js`): Beranda ringkas + menu Tahfidz, Kurikulum, Kesantrian, Ustadz & Guru; tiap halaman membandingkan **Pondok 29 vs Pondok 21** (bar berdampingan), Bulan ini / Semester ini, tanpa nama santri/guru.
 

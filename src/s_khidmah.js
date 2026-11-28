@@ -8,6 +8,8 @@ import { Panel } from "./s_rekapmodul.js";
 import { me } from "./common.js";
 import { unduhPdf, tabelKePdf } from "./pdf.js";
 import { ttdUntukPdf } from "./s_ttd.js";
+import { Evaluasi } from "./s_laporan.js";
+import { evKinerja, denganLalu } from "./evaluasi.js";
 
 const sesiAda = (tgl, se) => L.sesiHari(tgl).includes(se);
 const kerja = tgl => L.parseYmd(tgl).getDay() >= 1 && L.parseYmd(tgl).getDay() <= 5;
@@ -162,6 +164,7 @@ export function RekapKhidmah({ pondok }) {
   }));
   return html`<${SubHeader} title="Rekap Ceklis Musyrif" sub=${`Ceklis harian wali asrama${p ? " · Pondok " + p : ""}`} />
     <div class="wrap rp-wrap">${pr.bar}
+      <${Evaluasi} judulLuar=${false} ev=${denganLalu(x => evKinerja(rows.map(r => r.g), x, { judul: "Kinerja wali asrama" }), per, rg)} /><p class="rp-sekat">Rincian per wali asrama</p>
       <${Panel} ic="checksq" warna="hijau" judul="Tugas harian terlaksana" ket=${`${rows.length} wali asrama${avg != null ? ` · ${kurang} di bawah 75%` : ""}`} besar=${avg == null ? null : avg + "%"} besarNada=${avg == null ? "" : avg >= 90 ? "hijau" : avg >= 75 ? "biru" : avg >= 60 ? "emas" : "merah"} persen
         rows=${rows.map(x => ({ nama: x.g.nama, sub: `Asrama ${x.a.nama} · Pondok ${x.a.pondok}${x.rk ? ` · diisi ${x.rk.hariIsi} dari ${x.rk.hari} hari` : ""}`, nilai: x.v, v: x.v == null ? "" : x.v + "%" }))}
         catatan="Sebagian tugas terisi otomatis dari data aplikasi (absen halaqah, setoran, mutaba'ah), jadi tidak bisa dicentang tanpa bukti." />

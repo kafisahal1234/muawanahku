@@ -5,6 +5,9 @@ import { DATA } from "./data.js";
 import * as L from "./logic.js";
 import { me, MenuEvaluasi } from "./common.js";
 import { Panel } from "./s_rekapmodul.js";
+import { usePeriode } from "./s_rekap.js";
+import { Evaluasi } from "./s_laporan.js";
+import { evKinerja, evMapel, denganLalu } from "./evaluasi.js";
 
 export function slotStatus(j, tgl) {
   const d = get("absenKelas", L.absenKelasKey(j.id, tgl));
@@ -87,19 +90,18 @@ export function Pengampu({ gabung: g }) {
     <div class="chips mt8">${m.aspek.map(a => html`<${Pill} t=${a} tone="blue" />`)}</div></${Card}>`)}</div>`;
 }
 
+const rataP = xs => { const v = xs.filter(x => x != null); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
 export function KinerjaGuru() {
   useApp();
-  const wk = L.weekStart(L.today()), end = L.addDays(wk, 6);
-  const guru = L.STAFF.filter(s => s.roles.includes("guru_mapel"));
-  const rows = guru.map(g => {
-    const jad = L.jadwalAll().filter(j => j.guru === g.id);
-    const ab = all("absenKelas").filter(d => d.guru === g.id && d.tanggal >= wk && d.tanggal <= end);
-    const jur = ab.filter(d => d.materi).length; const iz = all("izinGuru").filter(i => i.guru === g.id && i.tanggal >= wk && i.tanggal <= end).length;
-    return { g, jad: jad.length, ab: ab.length, jur, iz };
-  });
-  return html`<${SubHeader} title="Kinerja Guru Mapel" sub=${`Pekan ${L.fmtShort(wk)} – ${L.fmtShort(end)}`} /><div class="wrap"><${Card}><div class="list">
-    ${rows.map(r => html`<div class="row"><span class="av">${L.initials(r.g.pendek.replace(/^Ust(dzh)?\.\s*/, ""))}</span><span class="row-t"><b>${r.g.nama}</b>
-      <small>${r.jad} jadwal/pekan · ${r.ab} terlaksana · ${r.jur} jurnal · ${r.iz} izin</small><span style="display:block;margin-top:6px"><${Bar} v=${(r.ab / Math.max(1, r.jad)) * 100} /></span></span></div>`)}</div></${Card}></div>`;
+  const p = usePeriode("bulanan", null, "kbm"), guru = L.staffAktif().filter(s => (s.ajar || []).length || L.jadwalAll().some(j => j.guru === s.id));
+  const rows = guru.map(g => { const k = L.kinerjaMapel(g.id, p.rg), iz = all("izinGuru").filter(i => i.guru === g.id && i.tanggal >= p.rg.dari && i.tanggal <= p.rg.sampai).length; return { g, k, iz }; });
+  return html`<${SubHeader} title="Kinerja Guru Mapel" sub=${`${guru.length} guru · absen & jurnal per pertemuan`} />
+    <div class="wrap rp-wrap">${p.bar}
+      <${Evaluasi} judulLuar=${false} ev=${denganLalu(x => evKinerja(guru, x, { judul: "Kinerja guru mapel" }), p.jenis, p.rg)} /><p class="rp-sekat">Rincian per guru</p>
+      <${Panel} ic="checksq" warna="biru" judul="Pertemuan terlaksana" ket="Pertemuan yang sudah diabsen dibanding jadwal" persen besar=${(v => (v == null ? null : v + "%"))(rataP(rows.map(r => r.k.pct)))}
+        rows=${rows.map(r => ({ nama: r.g.nama, sub: `${r.k.absen}/${r.k.sesi} pertemuan · jurnal ${r.k.jurnal}${r.iz ? ` · izin ${r.iz}×` : ""}`, nilai: r.k.pct, v: r.k.pct == null ? "—" : r.k.pct + "%" }))} />
+      <${Panel} ic="edit" warna="ungu" judul="Jurnal mengajar terisi" ket="Pertemuan yang ada materinya" persen besar=${(v => (v == null ? null : v + "%"))(rataP(rows.map(r => r.k.pctJ)))}
+        rows=${rows.map(r => ({ nama: r.g.nama, sub: `${r.k.jurnal}/${r.k.sesi} pertemuan`, nilai: r.k.pctJ, v: r.k.pctJ == null ? "—" : r.k.pctJ + "%" }))} /></div>`;
 }
 
 export function RekapKehadiran() {
@@ -113,7 +115,9 @@ export function RekapNilai() {
   useApp();
   const avg = xs => (xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null);
   const nd = v => (v == null ? "" : v >= 90 ? "hijau" : v >= 75 ? "biru" : v >= 60 ? "emas" : "merah");
-  return html`<${SubHeader} title="Rekap Nilai" sub="Rata-rata nilai akhir per kelas · KKM 70" /><div class="wrap rp-wrap">${["7", "8", "9A", "9B"].map(k => {
+  const pasang = [...new Map(L.jadwalAll().map(j => [`${j.mapel}|${j.kelas}`, [j.mapel, j.kelas]])).values()];
+  return html`<${SubHeader} title="Rekap Nilai" sub="Rata-rata nilai akhir per kelas · KKM 70" /><div class="wrap rp-wrap">
+    <${Evaluasi} judulLuar=${false} ev=${evMapel(pasang, L.periodeRange("semester"), { nilai: true })} /><p class="rp-sekat">Rincian per kelas</p>${["7", "8", "9A", "9B"].map(k => {
     const per = DATA.mapel.map(m => { const v = L.santriKelas(k).map(s => (L.nilaiAkhir(s.id, m.id) || {}).akhir).filter(x => x != null); return { m, v, a: avg(v), low: v.filter(x => x < 70).length }; });
     const semua = avg(per.filter(x => x.a != null).map(x => x.a)), low = per.reduce((n, x) => n + x.low, 0);
     return html`<${Panel} ic="award" warna="emas" judul=${"Kelas " + k} ket=${`${L.santriKelas(k).length} santri${semua != null ? ` · ${low} nilai di bawah KKM` : ""}`} besar=${semua} besarNada=${nd(semua)} persen

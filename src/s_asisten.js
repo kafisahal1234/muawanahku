@@ -6,6 +6,7 @@ import { html, nav, useApp, Icon, SubHeader, Sheet, Confirm, SearchBox } from ".
 import { toast, uid } from "./store.js";
 import * as L from "./logic.js";
 import { me, compressImage, FotoBesar } from "./common.js";
+import { deklarasiAlat, jalankanAlat, TAHAP_ALAT, ATURAN_ALAT } from "./ai_alat.js";
 import { ngobrolAI, aiAda, aiNama, siapkanAI } from "./ai.js";
 import { TeksAI, teksPolos } from "./s_ai.js";
 import { bacaBerkas, TERIMA } from "./berkas.js";
@@ -37,11 +38,11 @@ const sesiKey = () => "mk_ai_buka_" + (nav.user && nav.user.id);
 function saranPeran() {
   if (nav.user && nav.user.kind === "wali") return ["Bagaimana perkembangan hafalan anak saya bulan ini?", "Apa yang bisa saya lakukan agar hafalannya lebih lancar?", "Bagaimana cara mengajukan izin?", "Bantu saya menulis pesan untuk wali asrama"];
   const r = (me() || { roles: [] }).roles, s = [];
-  if (r.some(x => ["mudir", "admin"].includes(x))) s.push("Ringkas kondisi pondok pekan ini: guru, halaqah, asrama, kesantrian");
+  if (r.some(x => ["mudir", "admin", "yayasan"].includes(x))) s.push("Bahas laporan pekanan terbaru: 3 hal terpenting untuk dievaluasi", "Ringkas kondisi pondok pekan ini: guru, halaqah, asrama, kesantrian");
   if (r.includes("wadir_kurikulum")) s.push("Guru mana yang perlu perhatian khusus pekan ini?", "Kelas dan mapel mana yang nilainya banyak di bawah KKM?", "Apakah KBM hari ini sudah terlaksana semua?");
   if (r.includes("wadir_tahfidz")) s.push("Halaqah mana yang absennya paling rendah bulan ini?", "Siapa santri yang ziyadah bulan ini paling sedikit?");
   if (r.includes("wadir_kesantrian")) s.push("Santri mana yang terlambat kembali dari izin?", "Rangkum pelanggaran bulan ini");
-  if (r.includes("guru_tahfidz")) s.push("Siapa santri halaqah saya yang belum setor hari ini?", "Rangkum perolehan hafalan halaqah saya bulan ini");
+  if (r.includes("guru_tahfidz")) s.push("Siapa santri halaqah saya yang tidak setor ziyadah pekan ini, berapa kali?", "Bandingkan halaqah saya bulan ini dengan bulan lalu");
   if (r.includes("musyrif")) s.push("Bagaimana mutaba'ah asrama saya pekan ini?", "Siapa santri asrama saya yang ibadahnya paling perlu dibina?");
   if (r.includes("guru_mapel")) s.push("Nilai kelas saya yang belum lengkap apa saja?");
   s.push("Bantu buatkan pengumuman untuk wali santri", "Bagaimana cara mengoreksi input yang salah?");
@@ -100,7 +101,7 @@ function RiwayatChat({ open, onClose, aktif, onBuka }) {
     <${Confirm} open=${!!hapus} danger title=${hapus === "semua" ? "Hapus semua riwayat?" : "Hapus percakapan ini?"} text="Percakapan yang dihapus tidak bisa dikembalikan." yes="Hapus" onYes=${lakukan} onNo=${() => setHapus(null)} /></${Sheet}>`;
 }
 
-export function Asisten() {
+export function Asisten({ tanya, lampiran: lampAwal } = {}) {
   useApp();
   const wali = nav.user && nav.user.kind === "wali", ada = aiAda();
   const [cid, setCid] = useState(() => { const id = sessionStorage.getItem(sesiKey()); return id && muatChat().some(c => c.id === id) ? id : null; });
@@ -110,6 +111,13 @@ export function Asisten() {
   const stopRef = useRef(false), akhir = useRef(null), inp = useRef(null), fKam = useRef(null), fGal = useRef(null), fDok = useRef(null), rec = useRef(null), ikuti = useRef(true);
   useEffect(() => { try { cid ? sessionStorage.setItem(sesiKey(), cid) : sessionStorage.removeItem(sesiKey()); } catch (e) { } }, [cid]);
   useEffect(() => { siapkanAI(); }, []);
+  // dibuka dari Laporan Berkala: percakapan baru berisi lampiran laporan, langsung ditanyakan sekali
+  useEffect(() => {
+    if (!tanya || !ada) return; const k = "mk_ai_tanya_" + (lampAwal ? lampAwal.nama : tanya);
+    try { if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, "1"); } catch (e) { }
+    const lp = lampAwal ? [{ id: uid("f"), nama: lampAwal.nama, gambar: false, thumb: null, teks: lampAwal.teks, berkas: [] }] : [];
+    jalankan([], { id: uid("m"), r: "u", t: tanya, ts: Date.now(), ...(lp.length ? { file: [{ nama: lampAwal.nama }], ctx: lampAwal.teks.slice(0, 12000) } : {}) }, lp, uid("c"));
+  }, [tanya]);
   useEffect(() => { if (akhir.current && ikuti.current) akhir.current.scrollIntoView({ behavior: busy ? "auto" : "smooth", block: "end" }); }, [msgs, busy]);
   useEffect(() => { const f = () => { ikuti.current = dekatBawah(160); }; document.addEventListener("scroll", f, { passive: true, capture: true }); return () => { document.removeEventListener("scroll", f, true); if (rec.current) try { rec.current.stop(); } catch (e) { } }; }, []);
   const tinggi = el => { if (!el) return; el.style.height = "auto"; el.style.height = Math.min(140, el.scrollHeight) + "px"; };
@@ -131,19 +139,20 @@ export function Asisten() {
   };
   const tempel = e => { const fs = [...((e.clipboardData && e.clipboardData.files) || [])].filter(f => /^image\//.test(f.type)); if (fs.length) { e.preventDefault(); tambahBerkas(fs); } };
 
-  const jalankan = async (riwayatMsgs, userMsg, lampiran) => {
-    const id = cid || uid("c"); if (!cid) setCid(id);
+  const jalankan = async (riwayatMsgs, userMsg, lampiran, idBaru) => {
+    const id = idBaru || cid || uid("c"); if (idBaru || !cid) setCid(id);
     const awal = [...riwayatMsgs, userMsg], idA = uid("m");
     setMsgs([...awal, { id: idA, r: "a", t: "", stream: true, ts: Date.now() }]); setBusy(true); stopRef.current = false; ikuti.current = true;
     let hasil;
     try {
       setTahap("Membaca data akun…"); await new Promise(r => setTimeout(r, 30));
       const k = konteksAkun(); setTahap("Menyusun jawaban…");
-      const sistem = `Kamu "Asisten MuawanahQu", asisten AI (seperti Gemini) di aplikasi Pondok Tahfidz Modern Kampung Qur'an Al Muawanah, Kota Metro, Lampung. Jawab dalam Bahasa Indonesia yang santun dan hangat. Jawaban jelas dan langsung ke inti; rapikan dengan **tebal**, butir "- ", daftar bernomor, dan tabel Markdown bila membandingkan beberapa orang/angka. Pengguna: ${k.nama} (${k.peran}). ${k.aturan} Jangan mengarang data. Bila pengguna melampirkan foto atau berkas, baca isinya dengan teliti (misalnya jadwal, daftar nilai, surat, tulisan tangan) lalu kerjakan permintaannya. Untuk pertanyaan agama, jawab secara umum dan sarankan bertanya kepada ustadz untuk fatwa. Jangan meminta kata sandi.\n\n${PANDUAN}\n\n=== DATA YANG BISA DILIHAT AKUN INI (dibaca langsung dari aplikasi, ${L.fmtTgl(L.today())} pukul ${jamPendek(Date.now())}) ===\n${k.data}`;
-      const riwayat = riwayatMsgs.filter(m => !m.err && (m.t || m.img || m.file)).slice(-16).map(m => ({ r: m.r, t: (m.t || "") + (m.img && m.img.length ? `\n[melampirkan ${m.img.length} foto]` : "") + (m.file && m.file.length ? `\n[melampirkan berkas: ${m.file.map(f => f.nama).join(", ")}]` : "") }));
+      const sistem = `Kamu "Asisten MuawanahQu", asisten AI (seperti Gemini) di aplikasi Pondok Tahfidz Modern Kampung Qur'an Al Muawanah, Kota Metro, Lampung. Jawab dalam Bahasa Indonesia yang santun dan hangat. Jawaban jelas dan langsung ke inti; rapikan dengan **tebal**, butir "- ", daftar bernomor, dan tabel Markdown bila membandingkan beberapa orang/angka. Pengguna: ${k.nama} (${k.peran}). ${k.aturan} Jangan mengarang data. Bila pengguna melampirkan foto atau berkas, baca isinya dengan teliti (misalnya jadwal, daftar nilai, surat, tulisan tangan) lalu kerjakan permintaannya. ${ATURAN_ALAT} Untuk pertanyaan agama, jawab secara umum dan sarankan bertanya kepada ustadz untuk fatwa. Jangan meminta kata sandi.\n\n${PANDUAN}\n\n=== DATA YANG BISA DILIHAT AKUN INI (dibaca langsung dari aplikasi, ${L.fmtTgl(L.today())} pukul ${jamPendek(Date.now())}) ===\n${k.data}`;
+      const riwayat = riwayatMsgs.filter(m => !m.err && (m.t || m.img || m.file)).slice(-16).map(m => ({ r: m.r, t: (m.t || "") + (m.img && m.img.length ? `\n[melampirkan ${m.img.length} foto]` : "") + (m.ctx ? `\n\n[Isi lampiran]\n${m.ctx}` : "") + (m.file && m.file.length ? `\n[melampirkan berkas: ${m.file.map(f => f.nama).join(", ")}]` : "") }));
       const teksBerkas = lampiran.filter(x => x.teks).map(x => `\n\n[Isi berkas "${x.nama}"]\n${x.teks.slice(0, 40000)}`).join("");
       const teks = (userMsg.t || (lampiran.length ? "Tolong baca lampiran ini dan jelaskan isinya." : "")) + teksBerkas;
       const t = await ngobrolAI({ sistem, riwayat, teks, berkas: lampiran.flatMap(x => x.berkas), berhenti: () => stopRef.current,
+        alat: { deklarasi: deklarasiAlat, jalankan: jalankanAlat, tahap: TAHAP_ALAT }, onTahap: setTahap,
         onTeks: s => setMsgs(ms => ms.map(m => (m.id === idA ? { ...m, t: s } : m))) });
       hasil = { id: idA, r: "a", t: t || (stopRef.current ? "" : "Maaf, AI tidak memberi jawaban. Coba ubah pertanyaannya."), ts: Date.now(), ...(stopRef.current ? { berhenti: true } : {}), ...(!t && !stopRef.current ? { err: true } : {}) };
     } catch (e) { hasil = { id: idA, r: "a", t: e.message || "Maaf, AI sedang tidak bisa menjawab.", err: true, ts: Date.now() }; }
@@ -155,7 +164,7 @@ export function Asisten() {
     const t = (teks != null ? teks : q).trim();
     if ((!t && !lamp.length) || busy || baca) return;
     if (dengar && rec.current) try { rec.current.stop(); } catch (e) { }
-    const lampiran = lamp, userMsg = { id: uid("m"), r: "u", t, ts: Date.now(), ...(lampiran.some(x => x.thumb) ? { img: lampiran.filter(x => x.thumb).map(x => x.thumb) } : {}), ...(lampiran.some(x => !x.gambar) ? { file: lampiran.filter(x => !x.gambar).map(x => ({ nama: x.nama })) } : {}) };
+    const lampiran = lamp, userMsg = { id: uid("m"), r: "u", t, ts: Date.now(), ...(lampiran.some(x => x.thumb) ? { img: lampiran.filter(x => x.thumb).map(x => x.thumb) } : {}), ...(lampiran.some(x => !x.gambar) ? { file: lampiran.filter(x => !x.gambar).map(x => ({ nama: x.nama })) } : {}), ...(lampiran.some(x => x.teks) ? { ctx: lampiran.filter(x => x.teks).map(x => x.teks).join("\n\n").slice(0, 12000) } : {}) };
     setQ(""); setLamp([]);
     await jalankan(msgs, userMsg, lampiran);
   };
@@ -181,7 +190,7 @@ export function Asisten() {
     <div class="wrap chat">
       ${!msgs.length ? html`<div class="chat-hero"><span class="ai-ic big"><${Icon} n="sparkle" s=${26} /></span>
           <h2><span>Assalamu'alaikum${sapa ? ", " + sapa : ""}</span>Ada yang bisa dibantu?</h2>
-          <p>${wali ? "Tanyakan perkembangan ananda, cara memakai aplikasi, atau kirim foto untuk dibaca." : "Saya membaca data yang bisa dilihat akun Anda: santri, guru, halaqah, asrama, nilai, izin, dan lainnya. Bisa juga membaca foto dan dokumen."}</p>
+          <p>${wali ? "Tanyakan perkembangan ananda, cara memakai aplikasi, atau kirim foto untuk dibaca." : "Saya bisa mencari sendiri ke database aplikasi: semua santri (hafalan, setoran, absen, mutaba'ah, nilai, izin), jadwal, ustadz, dan laporan berkala, untuk periode apa pun. Bisa juga membaca foto dan dokumen."}</p>
           <div class="chat-saran">${saranPeran().map(s => html`<button type="button" disabled=${!ada} onClick=${() => kirim(s)}><${Icon} n="sparkle" s=${16} /><span>${s}</span></button>`)}</div>
           ${muatChat().length ? html`<button type="button" class="link" style="margin-top:6px" onClick=${() => setRiw(true)}>Lihat riwayat percakapan (${muatChat().length})</button>` : null}</div>` : null}
       ${msgs.map((m, i) => html`<${Pesan} key=${m.id || i} m=${m} akhirAI=${i === iA && i === msgs.length - 1 && !busy} akhirUser=${i === iU && !busy} onUlang=${ulangi} onUbah=${ubah} />`)}

@@ -458,7 +458,15 @@ export function poinSantri(sid) {
   const bap = all("bap").filter(b => b.santri === sid).reduce((n, b) => n + (b.poin || 0), 0), motd = motdCatatan(sid).reduce((n, x) => n + x.poin, 0);
   return { bap, motd, total: bap + motd };
 }
+// Disimpan sementara selama data jadwal tidak berubah (put() mengganti objek koleksi). Hasil dibekukan agar tidak diubah di tempat.
+let _jdw = { ov: undefined, l: null, hari: new Map() };
 export function jadwalAll() {
+  const ov0 = S.data.jadwal;
+  if (_jdw.l && _jdw.ov === ov0) return _jdw.l;
+  _jdw = { ov: ov0, l: Object.freeze(hitungJadwal()), hari: new Map() };
+  return _jdw.l;
+}
+function hitungJadwal() {
   const ov = S.data.jadwal || {};
   const base = DATA.jadwal.filter(j => !(ov[j.id] && ov[j.id].hapus)).map(j => (ov[j.id] ? { ...j, ...ov[j.id] } : j));
   const extra = Object.entries(ov).filter(([id, v]) => !DATA.jadwal.find(j => j.id === id) && !v.hapus).map(([id, v]) => ({ id, ...v }));
@@ -469,7 +477,7 @@ export function bentrok(slot, exceptId) {
 }
 export const pengampu = (mapel, kelas) => STAFF.find(s => s.ajar.some(([m, k]) => m === mapel && k === kelas));
 export const absenKelasKey = (jid, tgl) => `${jid}_${tgl}`;
-export function jadwalHari(tgl) { const h = HARI_ID[parseYmd(tgl).getDay()]; return jadwalAll().filter(j => j.hari === h); }
+export function jadwalHari(tgl) { const h = HARI_ID[parseYmd(tgl).getDay()], l = jadwalAll(); let r = _jdw.hari.get(h); if (!r) { r = l.filter(j => j.hari === h); _jdw.hari.set(h, r); } return r.slice(); }
 export function kehadiranKelas(sid, mapel, rg = rgSemester()) {
   const s = santriById(sid); if (!s) return { pct: null, tot: 0, sesi: 0 };
   const c = { H: 0, S: 0, I: 0, A: 0 }; let sesi = 0, terisi = 0;

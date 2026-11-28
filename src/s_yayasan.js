@@ -5,6 +5,8 @@ import { html, useApp, Icon, SubHeader, Seg } from "./ui.js";
 import { all, get } from "./store.js";
 import { DATA } from "./data.js";
 import * as L from "./logic.js";
+import { Evaluasi } from "./s_laporan.js";
+import { yayasanBagian } from "./laporan.js";
 
 export const PONDOK = [["29", "Kelas 7 & 8"], ["21", "Kelas 9A & 9B"]];
 const pct = (a, b) => (b ? Math.round((a / b) * 100) : null);
@@ -13,7 +15,7 @@ const satuDesimal = v => (v == null ? "—" : (Math.round(v * 10) / 10).toLocale
 const persen = v => (v == null ? "—" : v + "%");
 
 function konteks(p, jenis) {
-  const rg = L.periodeRange(jenis, L.today()), rh = L.rentangHitung(rg), dalam = t => !rh.kosong && t && t.slice(0, 10) >= rh.dari && t.slice(0, 10) <= rh.sampai;
+  const rg = typeof jenis === "string" ? L.periodeRange(jenis, L.today()) : jenis, rh = L.rentangHitung(rg), dalam = t => !rh.kosong && t && t.slice(0, 10) >= rh.dari && t.slice(0, 10) <= rh.sampai;
   const ss = L.santriList().filter(x => L.pondokOfSantri(x) === p), ids = new Set(ss.map(x => x.id));
   return { p, rg, rh, dalam, ss, ids };
 }
@@ -87,6 +89,7 @@ export function YyTahfidz() {
   const [j, pil] = usePil(), A = PONDOK.map(([p]) => angkaTahfidz(p, j)), rg = L.periodeRange(j, L.today());
   return html`<${Kerangka} judul="Tahfidz" sub="Garis besar per pondok">${pil}</${Kerangka}>
     <div class="wrap bd-wrap"><${Legenda} />
+      <${Evaluasi} judulLuar=${false} ev=${yayasanBagian("yy_tahfidz", j)} />
       <${Kelompok} ic="users" t="Kehadiran & hafalan">
         <${Banding} t="Kehadiran halaqah" ket="persen hadir" v=${A.map(a => a.hadir)} maks=${100} />
         <${Banding} t="Rata-rata total hafalan" ket="juz per santri" v=${A.map(a => a.rataHafalan)} fmt=${x => satuDesimal(x) + " juz"} />
@@ -105,6 +108,7 @@ export function YyKurikulum() {
   const [j, pil] = usePil(), A = PONDOK.map(([p]) => angkaKurikulum(p, j)), rg = L.periodeRange(j, L.today());
   return html`<${Kerangka} judul="Kurikulum" sub="Garis besar per pondok">${pil}</${Kerangka}>
     <div class="wrap bd-wrap"><${Legenda} />
+      <${Evaluasi} judulLuar=${false} ev=${yayasanBagian("yy_kurikulum", j)} />
       <${Kelompok} ic="calendar" t="Kegiatan belajar mengajar">
         <${Banding} t="KBM terlaksana" ket="dari jadwal pada hari KBM" v=${A.map(a => a.kbm)} maks=${100} />
         <${Banding} t="Jurnal mengajar terisi" ket="dari KBM yang terlaksana" v=${A.map(a => a.jurnal)} maks=${100} />
@@ -119,6 +123,7 @@ export function YyKesantrian() {
   const [j, pil] = usePil(), A = PONDOK.map(([p]) => angkaKesantrian(p, j)), rg = L.periodeRange(j, L.today());
   return html`<${Kerangka} judul="Kesantrian" sub="Garis besar per pondok">${pil}</${Kerangka}>
     <div class="wrap bd-wrap"><${Legenda} />
+      <${Evaluasi} judulLuar=${false} ev=${yayasanBagian("yy_kesantrian", j)} />
       <${Kelompok} ic="door" t="Izin & perpulangan">
         <${Banding} t="Sedang di luar pondok" ket="saat ini" v=${A.map(a => a.luar)} fmt=${x => x + " santri"} />
         <${Banding} t="Izin keluar & pulang" ket="periode ini" v=${A.map(a => a.izin)} fmt=${x => x + " kali"} />
@@ -137,6 +142,7 @@ export function YySdm() {
   const [j, pil] = usePil(), A = PONDOK.map(([p]) => angkaSdm(p, j)), rg = L.periodeRange(j, L.today());
   return html`<${Kerangka} judul="Ustadz & Guru" sub="Garis besar per pondok">${pil}</${Kerangka}>
     <div class="wrap bd-wrap"><${Legenda} />
+      <${Evaluasi} judulLuar=${false} ev=${yayasanBagian("yy_sdm", j)} />
       <${Kelompok} ic="users" t="Jumlah ustadz">
         <${Banding} t="Ustadz & pengurus" v=${A.map(a => a.total)} fmt=${x => x + " orang"} />
         <${Banding} t="Wali asrama" v=${A.map(a => a.musyrif)} fmt=${x => x + " orang"} />

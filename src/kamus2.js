@@ -6339,5 +6339,229 @@ export const KAMUS2 = {
 "Nilai UTS, UAS, dan rapor dibagikan saat pembagian rapor.": [
 "UTS, UAS, and report card grades are shared at the report card distribution.",
 ""
+],
+"Laporan Berkala": [
+"Periodic Reports",
+"التقارير الدورية"
+],
+"Laporan": [
+"Reports",
+"التقارير"
+],
+"Bahan evaluasi yang terbit otomatis": [
+"Evaluation material published automatically",
+"مواد تقييم تصدر تلقائيًا"
+],
+"Baru terbit": [
+"Just published",
+"صدر حديثًا"
+],
+"Terbaru": [
+"Latest",
+"الأحدث"
+],
+"Baca laporan": [
+"Read report",
+"اقرأ التقرير"
+],
+"Pekanan": [
+"Weekly",
+"أسبوعي"
+],
+"Bulanan": [
+"Monthly",
+"شهري"
+],
+"Tahunan": [
+"Yearly",
+"سنوي"
+],
+"Tengah semester": [
+"Mid-semester",
+"منتصف الفصل"
+],
+"Kesimpulan": [
+"Conclusions",
+"الخلاصة"
+],
+"Perlu tindak lanjut": [
+"Needs follow-up",
+"يحتاج متابعة"
+],
+"Kabar baik": [
+"Good news",
+"أخبار طيبة"
+],
+"Tutup rincian": [
+"Close details",
+"إغلاق التفاصيل"
+],
+"Rincian per aspek": [
+"Details per aspect",
+"التفاصيل حسب الجانب"
+],
+"Rincian per guru": [
+"Details per teacher",
+"التفاصيل حسب المعلم"
+],
+"Rincian per wali asrama": [
+"Details per dorm guardian",
+"التفاصيل حسب مشرف السكن"
+],
+"Rincian per kelas": [
+"Details per class",
+"التفاصيل حسب الصف"
+],
+"Rincian per santri": [
+"Details per student",
+"التفاصيل حسب الطالب"
+],
+"Bahas dengan Asisten AI": [
+"Discuss with AI Assistant",
+"ناقش مع المساعد الذكي"
+],
+"Tidak ada yang perlu ditindaklanjuti.": [
+"Nothing needs follow-up.",
+"لا شيء يحتاج إلى متابعة."
+],
+"Laporan perkembangan ananda": [
+"Your child's progress report",
+"تقرير تقدم الابن"
+],
+"Terbit setiap Sabtu dan akhir bulan": [
+"Published every Saturday and at month end",
+"يصدر كل سبت وفي نهاية الشهر"
+],
+"Ketuk untuk membaca hasil evaluasi": [
+"Tap to read the evaluation",
+"اضغط لقراءة التقييم"
+],
+"Perlu perhatian bersama": [
+"Needs our attention",
+"يحتاج إلى اهتمامنا"
+],
+"bagian": [
+"sections",
+"أقسام"
+],
+"perlu tindak lanjut": [
+"need follow-up",
+"تحتاج متابعة"
+],
+"Baru": [
+"New",
+"جديد"
+],
+"Setiap Sabtu, 10.00": [
+"Every Saturday, 10.00",
+"كل سبت، 10.00"
+],
+"Tanggal 29, 10.00": [
+"29th, 10.00",
+"يوم 29، 10.00"
+],
+"Saat mid semester": [
+"At mid-semester",
+"في منتصف الفصل"
+],
+"Akhir tahun pelajaran": [
+"End of school year",
+"نهاية العام الدراسي"
+],
+"Belum ada laporan jenis ini.": [
+"No reports of this type yet.",
+"لا توجد تقارير من هذا النوع بعد."
+],
+"Belum ada laporan yang terbit.": [
+"No reports published yet.",
+"لم يصدر أي تقرير بعد."
+],
+"Kehadiran halaqah": [
+"Halaqah attendance",
+"حضور الحلقة"
+],
+"Tidak setor ziyadah": [
+"No new memorization",
+"لم يُسمّع الحفظ الجديد"
+],
+"Terlambat kembali": [
+"Returned late",
+"عاد متأخرًا"
+],
+"Poin baru": [
+"New points",
+"نقاط جديدة"
+],
+"Kehadiran kelas": [
+"Class attendance",
+"حضور الفصل"
+],
+"Pertemuan terlaksana": [
+"Lessons held",
+"الحصص المنفذة"
+],
+"Jurnal terisi": [
+"Journal filled",
+"الدفتر المعبأ"
+],
+"Nilai di bawah KKM": [
+"Grades below minimum",
+"درجات دون الحد الأدنى"
+],
+"Rata-rata tugas terisi": [
+"Average tasks done",
+"متوسط المهام المنجزة"
+],
+"Guru 90% ke atas": [
+"Teachers at 90%+",
+"معلمون 90% فأكثر"
+],
+"Hafalan baru": [
+"New memorization",
+"الحفظ الجديد"
+],
+"Hadir halaqah": [
+"Halaqah attendance",
+"حضور الحلقة"
+],
+"Hadir kelas": [
+"Class attendance",
+"حضور الفصل"
+],
+"Laporan Pekanan": [
+"Weekly Report",
+"التقرير الأسبوعي"
+],
+"Laporan Bulanan": [
+"Monthly Report",
+"التقرير الشهري"
+],
+"Laporan Tengah Semester": [
+"Mid-semester Report",
+"تقرير منتصف الفصل"
+],
+"Laporan Semester": [
+"Semester Report",
+"تقرير الفصل"
+],
+"Laporan Tahunan": [
+"Yearly Report",
+"التقرير السنوي"
+],
+"Hari ini": [
+"Today",
+"اليوم"
+],
+"Pertemuan yang sudah diabsen dibanding jadwal": [
+"Lessons recorded vs. schedule",
+"الحصص المسجلة مقارنة بالجدول"
+],
+"Pertemuan yang ada materinya": [
+"Lessons with material",
+"حصص بها مادة"
+],
+"Dari pertemuan yang sudah diabsen": [
+"From recorded lessons",
+"من الحصص المسجلة"
 ]
 };

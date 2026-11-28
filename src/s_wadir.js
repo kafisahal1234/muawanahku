@@ -5,6 +5,9 @@ import { DATA } from "./data.js";
 import * as L from "./logic.js";
 import { me, MenuEvaluasi } from "./common.js";
 import { AwalSheet } from "./s_ai.js";
+import { usePeriode } from "./s_rekap.js";
+import { Evaluasi } from "./s_laporan.js";
+import { evKinerja, denganLalu } from "./evaluasi.js";
 
 export const target = () => L.targetSemester();
 export function halaqahStat(a) {
@@ -83,13 +86,15 @@ export function TargetHafalan() {
 
 export function KinerjaTahfidz() {
   useApp();
-  const tgl = L.today();
-  return html`<${SubHeader} title="Kinerja Guru Tahfidz" sub=${L.fmtTgl(tgl)} /><div class="wrap"><${Card}><div class="list">
-    ${L.ASRAMA.map(a => { const g = L.staffById(a.musyrif), ss = L.sesiHari(tgl).map(s => !!get("absenHalaqah", L.halaqahKey(a.id, tgl, s)));
-      const set = all("setoran").filter(r => r.guru === g.id && r.tanggal === tgl).length, iz = all("izinGuru").some(i => i.guru === g.id && i.tanggal === tgl);
-      return html`<div class="row"><span class="av">${L.initials(g.pendek.replace(/^Ust\.\s*/, ""))}</span><span class="row-t"><b>${g.pendek} · ${a.nama}</b><small>${set} setoran dicatat hari ini${iz ? " · izin" : ""}</small>
-        <span style="display:flex;gap:4px;margin-top:6px">${L.sesiHari(tgl).map((s, i) => html`<${Pill} t=${(ss[i] ? "✓ " : "") + s} tone=${ss[i] ? "green" : "muted"} />`)}</span></span></div>`; })}</div></${Card}>
-    <p class="fab-note">Sesi yang tidak diabsen tercatat "tidak terlaksana" untuk kinerja guru.</p></div>`;
+  const tgl = L.today(), p = usePeriode("bulanan", null, "halaqah"), guru = L.staffAktif().filter(s => L.HALAQAH.some(h => h.guru === s.id));
+  return html`<${SubHeader} title="Kinerja Guru Tahfidz" sub=${`${L.HALAQAH.length} halaqah · absen per sesi`} />
+    <div class="wrap rp-wrap">
+      ${L.adaHalaqah(tgl) ? html`<${Card} title="Hari ini" right=${html`<small>${L.fmtShort(tgl)}</small>`}><div class="list">
+        ${L.HALAQAH.map(h => { const g = L.staffAman(h.guru), ss = L.sesiHari(tgl).map(s => !!get("absenHalaqah", L.halaqahKey(h.id, tgl, s))), set = all("setoran").filter(r => r.tanggal === tgl && L.santriHalaqah(h.id).some(s => s.id === r.santri)).length;
+          return html`<div class="row"><span class="av">${L.initials(String(g.pendek || g.nama).replace(/^Ust(dzh)?\.\s*/, ""))}</span><span class="row-t"><b>${h.nama}</b><small>${g.nama} · ${set} setoran hari ini</small>
+            <span style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">${L.sesiHari(tgl).map((s, i) => html`<${Pill} t=${(ss[i] ? "✓ " : "") + s} tone=${ss[i] ? "green" : "muted"} />`)}</span></span></div>`; })}</div></${Card}>` : null}
+      ${p.bar}
+      <${Evaluasi} judulLuar=${false} ev=${denganLalu(x => evKinerja(guru, x, { judul: "Kinerja guru halaqah" }), p.jenis, p.rg)} /></div>`;
 }
 
 export function RekapHalaqah() {
