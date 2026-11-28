@@ -129,7 +129,7 @@ export function Card({ title, right, children, cls = "" }) {
   return html`<section class=${"card " + cls}>${title ? html`<div class="card-h"><h3>${title}</h3>${right || null}</div>` : null}${children}</section>`;
 }
 export function SubHeader({ title, sub, right, children }) {
-  return html`<header class="sub-h"><div class="sub-row"><button class="back" aria-label="Kembali" onClick=${() => nav.back()}><${Icon} n="left" s=${24} /></button><div class="sub-t"><h1>${title}</h1>${sub ? html`<p>${sub}</p>` : null}</div>${right || null}</div>${children || null}</header>`;
+  return html`<header class=${"sub-h" + (nav.top ? "" : " akar")}><div class="sub-row">${nav.top ? html`<button class="back" aria-label="Kembali" onClick=${() => nav.back()}><${Icon} n="left" s=${24} /></button>` : null}<div class="sub-t"><h1>${title}</h1>${sub ? html`<p>${sub}</p>` : null}</div>${right || null}</div>${children || null}</header>`;
 }
 // Angka yang "menghitung naik" saat pertama tampil (mengikuti pengaturan kurangi gerakan)
 const KURANGI = (() => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return true; } })();

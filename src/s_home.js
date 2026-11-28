@@ -15,6 +15,7 @@ import { Baris } from "./s_akun.js";
 import { HafalanCard, RiwayatSetoran, KehadiranCard, CatatanCard } from "./s_santri.js";
 import { slotStatus } from "./s_kurikulum.js";
 import { VERSI } from "./s_system.js";
+import { tabStaf } from "./tab_peran.js";
 import { KartuAI, ringkasWali } from "./s_ai.js";
 import { KartuAsisten } from "./s_asisten.js";
 import { Ikon, WARNA } from "./ikon.js";
@@ -99,6 +100,10 @@ const yayasanSaja = st => st.roles.includes("yayasan") && st.roles.every(r => r 
 function tilesFor(st) {
   const r = st.roles, t = [], add = (icon, label, color, go, badge) => { if (!t.find(x => x.label === label)) t.push({ icon, label, color, go, badge }); };
   const a = L.asramaOf(st.id), hq = L.halaqahOf(st.id);
+  if (r.includes("yayasan") && !r.includes("mudir")) {
+    add("bookopen", "Tahfidz", "emerald", () => nav.go("yyTahfidz")); add("calendar", "Kurikulum", "orange", () => nav.go("yyKurikulum"));
+    add("shield", "Kesantrian", "coral", () => nav.go("yyKesantrian")); add("users", "Ustadz & Guru", "blue", () => nav.go("yySdm"));
+  }
   if (r.includes("mudir")) {
     const mp = L.mudirPondok(st), pk = mp.length === 1 ? mp[0] : "all";
     const luar = L.izinAktif().filter(i => { const s = L.santriById(i.santri); return s && mp.includes(L.pondokOfSantri(s)); }).length;
@@ -131,6 +136,11 @@ function tilesFor(st) {
 
 function Summary({ st }) {
   const r = st.roles, tgl = L.today(), sesi = L.sesiNow(), hari = L.hariIni();
+  if (yayasanSaja(st)) {
+    const ss = L.santriList(); let h = 0, n = 0; all("absenHalaqah").filter(d => d.tanggal === tgl).forEach(d => Object.values(d.status || {}).forEach(v => { n++; if (v === "H") h++; }));
+    const luar = L.izinAktif().length;
+    return html`<${Card} title="Ringkasan pondok" right=${html`<small>${L.fmtShort(tgl)}</small>`}><div class="stats"><${Stat} label="Santri" value=${ss.length} sub="Pondok 29 & 21" /><${Stat} label="Hadir halaqah" value=${n ? Math.round((h / n) * 100) + "%" : "—"} sub="hari ini" /><${Stat} label="Di luar pondok" value=${luar} sub="saat ini" tone=${luar ? "gold" : ""} /></div></${Card}>`;
+  }
   if (r.includes("mudir")) {
     const mp = L.mudirPondok(st), diP = sid => { const s = L.santriById(sid); return !!s && mp.includes(L.pondokOfSantri(s)); }, ss = L.santriList().filter(s => mp.includes(L.pondokOfSantri(s)));
     const docs = all("absenHalaqah").filter(d => d.tanggal === tgl); let h = 0, n = 0; docs.forEach(d => Object.entries(d.status).forEach(([sid, v]) => { if (!diP(sid)) return; n++; if (v === "H") h++; }));
@@ -204,44 +214,15 @@ function chipsFor(st) {
   return c;
 }
 
-// ---------- Yayasan: garis besar per pondok (tanpa rincian nama) ----------
-function angkaPondok(p, jenis) {
-  const rg = L.periodeRange(jenis, L.today()), rh = L.rentangHitung(rg), dalam = t => !rh.kosong && t >= rh.dari && t <= rh.sampai;
-  const ss = L.santriList().filter(x => L.pondokOfSantri(x) === p), ids = new Set(ss.map(x => x.id));
-  let h = 0, n = 0; all("absenHalaqah").filter(d => dalam(d.tanggal)).forEach(d => Object.entries(d.status || {}).forEach(([sid, v]) => { if (!ids.has(sid)) return; n++; if (v === "H") h++; }));
-  const haf = ss.map(x => L.hafalan(x).jumlah), rata = haf.length ? haf.reduce((a, b) => a + b, 0) / haf.length : null;
-  const cap = ss.length ? Math.round(ss.reduce((a, x) => a + L.capaianJuz(x).pct, 0) / ss.length) : null;
-  let sl = 0, ok = 0; L.hariAktifDalam(rg, "kbm").forEach(t => { const hr = L.HARI_ID[L.parseYmd(t).getDay()];
-    L.jadwalAll().filter(j => j.hari === hr && L.pondokKelas(j.kelas) === p).forEach(j => { sl++; if (get("absenKelas", L.absenKelasKey(j.id, t))) ok++; }); });
-  const luar = L.izinAktif().filter(i => ids.has(i.santri)).length, pel = all("bap").filter(b => ids.has(b.santri) && dalam(b.tanggal)).length;
-  return { n: ss.length, hadir: n ? Math.round((h / n) * 100) : null, rata, cap, kbm: sl ? Math.round((ok / sl) * 100) : null, luar, pel, label: rg.label };
-}
-function PilihPeriodeYayasan({ jenis, setJenis }) {
-  return html`<div class="yy-h"><span><small>Garis besar pondok</small><b>${L.periodeRange(jenis, L.today()).label.replace(/^Semester g/, "G")}</b></span><${Seg} small items=${[["bulanan", "Bulan ini"], ["semester", "Semester ini"]]} value=${jenis} onChange=${setJenis} /></div>`;
-}
-function RingkasYayasan({ jenis }) {
-  const P = [["29", "Kelas 7 & 8"], ["21", "Kelas 9A & 9B"]].map(([p, k]) => ({ p, k, a: angkaPondok(p, jenis) }));
-  const pr = v => (v == null ? "—" : v + "%"), fx = v => (v == null ? "—" : (Math.round(v * 10) / 10).toLocaleString("id-ID"));
-  return html`<div class="yy">
-    ${P.map(({ p, k, a }) => html`<section class="yy-k">
-      <div class="yy-top"><span class="yy-p">Pondok ${p}</span><span class="yy-ket">${k} · ${a.n} santri</span></div>
-      <div class="yy-g"><p>Tahfidz</p><div class="yy-n"><span><b>${pr(a.hadir)}</b><em>kehadiran halaqah</em></span><span><b>${fx(a.rata)}</b><em>rata hafalan (juz)</em></span><span><b>${pr(a.cap)}</b><em>capaian target semester</em></span></div></div>
-      <div class="yy-g"><p>Kurikulum</p><div class="yy-n"><span><b>${pr(a.kbm)}</b><em>KBM terlaksana</em></span></div></div>
-      <div class="yy-g"><p>Kesantrian</p><div class="yy-n"><span class=${a.luar ? "gold" : ""}><b>${a.luar}</b><em>sedang di luar pondok</em></span><span class=${a.pel ? "red" : ""}><b>${a.pel}</b><em>pelanggaran</em></span></div></div>
-    </section>`)}
-    <p class="yy-cat">Rincian per santri, halaqah, dan guru ada pada Mudir dan para Wadir.</p></div>`;
-}
-
 export function Beranda() {
   useApp();
-  const [jenisYy, setJenisYy] = useState("bulanan");
-  const st = me(), yy = yayasanSaja(st), tiles = tilesFor(st), tasks = tasksFor(st), peng = all("pengumuman").sort((a, b) => b.ts - a.ts)[0];
+  const st = me(), diNav = new Set(tabStaf(st).map(x => x[0])), TAB_MENU = { Tim: "tim", Kalender: "kalender", "Daftar Akun": "daftarAkun", "Data Master": "dataMaster" };
+  const tiles = tilesFor(st).filter(t => !diNav.has(TAB_MENU[t.label])), tasks = tasksFor(st), peng = all("pengumuman").sort((a, b) => b.ts - a.ts)[0];
   const strip = tasks[0] ? { t: tasks[0][0], s: tasks[0][1], go: tasks[0][3], ic: "bap", w: tasks[0][2] === "coral" ? "coral" : "gold" } : peng ? { t: peng.judul, s: "Pengumuman terbaru", go: () => nav.go("pengumuman"), ic: "toa", w: "gold" } : null;
   return html`<${HomeTop} nama=${st.pendek || st.nama} bell=${newPeng()} foto=${fotoUser(nav.user)}>
-      <div class="sum">${yy ? html`<${PilihPeriodeYayasan} jenis=${jenisYy} setJenis=${setJenisYy} />` : html`<${Summary} st=${st} />`}</div></${HomeTop}>
+      <div class="sum"><${Summary} st=${st} /></div></${HomeTop}>
     <div class="wrap">
     ${strip ? html`<button class="strip" onClick=${strip.go}><span class="strip-ic" style=${`background:${WARNA[strip.w][2]}`}><${Ikon} n=${strip.ic} warna=${strip.w} s=${28} /></span><span class="strip-t"><b>${strip.t}</b><small>${strip.s}</small></span><span class="strip-go">Lihat <${Icon} n="right" s=${16} w=${2.4} /></span></button>` : null}
-    ${yy ? html`<${RingkasYayasan} jenis=${jenisYy} />` : null}
     <${Card} title="Menu"><div class="tiles">${tiles.map(t => html`<${Tile} icon=${t.icon} label=${t.label} color=${t.color} badge=${t.badge} onClick=${t.go} />`)}</div></${Card}>
     ${tasks.length > 1 ? html`<${Card} title="Perlu diperhatikan"><div class="list">${tasks.slice(1).map(([t, s, c, go]) => html`<button class="row" onClick=${go}><span class="row-ic" style=${`background:${c === "coral" ? "#FDE7E3" : c === "gold" ? "#FDF0D3" : "#E6EEFC"};color:${c === "coral" ? "#B3261E" : c === "gold" ? "#8A5A00" : "#1F56B5"}`}><${Icon} n="alert" s=${18} /></span>
       <span class="row-t"><b style="white-space:normal">${t}</b><small>${s}</small></span><${Icon} n="right" s=${18} c="#9AB0A5" /></button>`)}</div></${Card}>` : null}
@@ -294,7 +275,7 @@ export function Akun() {
     <div class="wrap">
       <div class="acc-head"><${FotoLihat} src=${fotoUser(u)} nama=${st ? st.pendek : sa.nama} size=${58} />
         <span class="acc-t"><b>${st ? st.nama : "Wali " + sa.nama}</b><small>${st ? st.roles.map(r => L.ROLE_LABEL[r]).join(" · ") : `Kelas ${sa.kelas} · ${L.asramaAman(sa.asrama).nama}`}</small></span></div>
-      ${st ? html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil", pr ? "Biodata & foto profil" : "Lengkapi biodata & foto profil", () => nav.go("profil"), "green")}${item("lock", "Keamanan", "Username & kata sandi", () => nav.go("keamanan"), "blue")}${st.roles.some(r => L.TTD_ROLES.includes(r)) ? item("pen", "Tanda Tangan", get("ttd", st.id) ? "Tersimpan · otomatis di rapor & surat" : "Belum ada · tulis di layar atau foto dari kertas", () => nav.go("tandaTangan"), "purple") : null}</div>`
+      ${st ? html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil", pr ? "Biodata & foto profil" : "Lengkapi biodata & foto profil", () => nav.go("profil"), "green")}${item("lock", "Keamanan", "Username & kata sandi", () => nav.go("keamanan"), "blue")}${!tabStaf(st).some(x => x[0] === "riwayat") && st.roles.some(r => !["yayasan", "admin"].includes(r)) ? item("clock", "Riwayat input saya", "Absen, setoran & catatan yang Anda input", () => nav.go("riwayatSaya"), "slate") : null}${st.roles.some(r => L.TTD_ROLES.includes(r)) ? item("pen", "Tanda Tangan", get("ttd", st.id) ? "Tersimpan · otomatis di rapor & surat" : "Belum ada · tulis di layar atau foto dari kertas", () => nav.go("tandaTangan"), "purple") : null}</div>`
         : html`<${Section} t="Akun saya" /><div class="group">${item("user", "Profil Ananda", fotoUser(u) ? "Biodata & foto profil" : "Biodata · tambahkan foto profil", () => nav.go("waliProfil"), "green")}${item("chat", "Hubungi ustadz", "Wali Asrama, para Wadir, Mudir, Admin", () => nav.go("kontakUstadz"), "teal")}</div>`}
       <div class="group mt8">${item("clipboard", "Log perubahan data", st ? "Koreksi & penghapusan oleh akun ini" : "Perubahan biodata ananda", () => nav.go("logUbah"), "gold")}</div>
       <${Section} t="Tampilan & bahasa" /><div class="group">${item(tema === "gelap" ? "moon" : "sun", "Tema", { terang: "Mode terang", gelap: "Mode gelap", sistem: "Ikuti pengaturan HP" }[tema], () => setPilih("tema"), "indigo")}${item("globe", "Bahasa", (BAHASA.find(x => x[0] === bahasa()) || BAHASA[0])[1], () => setPilih("bahasa"), "teal")}</div>
@@ -305,7 +286,7 @@ export function Akun() {
       ${pilih === "tema" ? [["terang", "sun", "Mode terang", "Latar putih, cocok di siang hari"], ["gelap", "moon", "Mode gelap", "Latar gelap, nyaman di malam hari & hemat baterai"], ["sistem", "settings", "Ikuti pengaturan HP", "Berganti otomatis mengikuti HP"]].map(([k, ic, t, sub]) =>
         html`<button class=${"menu-row pilih " + (tema === k ? "on" : "")} onClick=${() => { setTema(k); setTemaS(k); setPilih(null); }}><span class="mr-ic indigo"><${Icon} n=${ic} s=${20} /></span><span class="mr-t">${t}<small>${sub}</small></span>${tema === k ? html`<${Icon} n="check" s=${20} c="#0E8F52" />` : null}</button>`)
       : BAHASA.map(([k, t]) => html`<button class=${"menu-row pilih " + (bahasa() === k ? "on" : "")} onClick=${() => { if (k !== bahasa()) setBahasa(k); else setPilih(null); }}><span class="mr-ic teal"><${Icon} n="globe" s=${20} /></span><span class="mr-t" dir=${k === "ar" ? "rtl" : "ltr"}>${t}<small>${{ id: "Tampilan aplikasi dalam Bahasa Indonesia", en: "Menus and buttons in English", ar: "القوائم والأزرار باللغة العربية" }[k]}</small></span>${bahasa() === k ? html`<${Icon} n="check" s=${20} c="#0E8F52" />` : null}</button>`)}
-      ${pilih === "bahasa" ? html`<p class="small" style="margin:10px 4px 0">Menu, tombol dan judul ikut berganti bahasa. Data santri, rekap rinci, rapor dan surat resmi tetap berbahasa Indonesia.</p>` : null}</${Sheet}>
+      ${pilih === "bahasa" ? html`<p class="small" style="margin:10px 4px 0">Seperti pengaturan bahasa di HP: menu, tombol, judul, dan pesan aplikasi berganti bahasa. Isi data (nama, catatan, pengumuman, rapor, dan surat resmi) tetap Bahasa Indonesia.</p>` : null}</${Sheet}>
     <${Confirm} open=${ask} danger title="Keluar dari akun?" text=${st ? "Anda perlu memasukkan username dan kata sandi lagi untuk masuk." : "Anda perlu memasukkan kode akses lagi untuk masuk."} yes="Keluar" onYes=${async () => { setAsk(false); await L.keluarAkun(); nav.setUser(null); }} onNo=${() => setAsk(false)} /></div>`;
 }
 

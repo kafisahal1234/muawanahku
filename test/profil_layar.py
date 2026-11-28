@@ -17,7 +17,7 @@ async def main():
         c = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, reduced_motion="reduce"); pg = await c.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
         await pg.goto(URL_DIST); await pg.wait_for_timeout(800); await pg.evaluate(SEED_KEGIATAN); await pg.evaluate(FOTO); await pg.evaluate(YAYASAN); await pg.goto(URL_DIST); await pg.wait_for_timeout(800)
         await masuk(pg, "affan")
-        await pg.click(".tiles >> text=Tim"); await pg.wait_for_timeout(700)
+        await pg.locator(".tiles .tile:has-text(\"Tim\"), .bnav button:has-text(\"Tim\")").first.click(); await pg.wait_for_timeout(700)
         await pg.screenshot(path=str(D / "tim.png")); print("grup:", await pg.locator(".akun-sec").all_inner_texts())
         await pg.click(".akun-row >> text=Kaafi"); await pg.wait_for_timeout(700)
         await pg.screenshot(path=str(D / "profil_ustadz.png"), full_page=True)
@@ -28,7 +28,7 @@ async def main():
         if await pg.locator(".pf-id .foto-btn").count():
             await pg.locator(".pf-id .foto-btn").click(); await pg.wait_for_timeout(400); await pg.screenshot(path=str(D / "foto_besar.png")); await pg.keyboard.press("Escape")
         await masuk(pg, "admin123", "contoh123")
-        await pg.click(".tiles >> text=Daftar Akun"); await pg.wait_for_timeout(600)
+        await pg.click(".bnav >> text=Daftar Akun"); await pg.wait_for_timeout(600)
         await pg.locator(".akun-row").nth(0).click(); await pg.wait_for_timeout(700)
         await pg.screenshot(path=str(D / "admin_ustadz.png"), full_page=True)
         await pg.go_back(); await pg.wait_for_timeout(400)

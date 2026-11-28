@@ -174,7 +174,7 @@ export function RaporView({ sid }) {
       <div style="display:flex;justify-content:space-between;align-items:center;margin:0 2px 8px"><b style="font-size:14px">Pratinjau rapor · ${hal} halaman</b>
         <button class="link" onClick=${() => setZoom(!zoom)}>${zoom ? "Muat ke layar" : "Perbesar"}</button></div>
       <div style=${`overflow:${zoom ? "auto" : "hidden"};margin:0 -16px;padding:0 16px`}>
-        <div style=${`width:${794 * k}px;height:${(1123 + 16) * hal * k}px`}><div class="rp" style=${`width:794px;transform:scale(${k});transform-origin:0 0`} dangerouslySetInnerHTML=${{ __html: periode === "mid" ? raporMidHTML(sid) : raporHTML(sid, periode) }}></div></div></div>
+        <div style=${`width:${794 * k}px;height:${(1123 + 16) * hal * k}px`}><div class="rp" data-asli="1" style=${`width:794px;transform:scale(${k});transform-origin:0 0`} dangerouslySetInnerHTML=${{ __html: periode === "mid" ? raporMidHTML(sid) : raporHTML(sid, periode) }}></div></div></div>
       <div class="sticky-act"><div class="btn-row"><${Btn} icon="download" onClick=${() => unduhPdf(`Rapor ${s.nama} ${periode === "mid" ? "Tengah Semester" : "Semester Ganjil"}`, () => htmlKePdf(raporDoc(sid, periode), ".rp-page"))}>Unduh PDF</${Btn}>
         <${Btn} kind="outline" icon="file" onClick=${() => unduhWord(`Rapor ${s.nama} ${periode === "mid" ? "Tengah Semester" : "Semester Ganjil"}`, () => htmlKeDocx(raporDoc(sid, periode), ".rp-page"))}>Unduh Word</${Btn}></div></div>
       <p class="fab-note" style="margin-bottom:0">PDF untuk dicetak langsung. Word bisa diedit (misalnya memperbaiki nilai) sebelum dicetak.</p>

@@ -1,5 +1,7 @@
 import { render, Component } from "preact";
 import * as GB from "./s_gabung.js";
+import * as YY from "./s_yayasan.js";
+import { tabStaf } from "./tab_peran.js";
 import * as PT from "./s_pantauan.js";
 import { pasangTarik } from "./tarik.js";
 import { pasangZoom } from "./zoom.js";
@@ -51,7 +53,7 @@ const SCREENS = {
   pengelolaan: W.Pengelolaan, dataAwal: W.DataAwal, targetHafalan: W.TargetHafalan, kinerjaTahfidz: W.KinerjaTahfidz, rekapHalaqah: W.RekapHalaqah, peringkat: W.Peringkat, rekapTasmi: W.RekapTasmi, bawahKkm: W.BawahKkm,
   dataMaster: AD.DataMaster, santriAdmin: AD.SantriAdmin, akunAdmin: AD.AkunAdmin, asramaAdmin: AD.AsramaAdmin, kelasAdmin: AD.KelasAdmin, impor: AI.ImporSantri, imporAwal: AI.ImporAwal, asisten: AS.Asisten, imporJadwal: AI.ImporJadwal, pengumuman: AD.Pengumuman,
   ubahSandi: SY.UbahSandi, privasi: SY.Privasi, bantuan: SY.Bantuan, tentang: SY.Tentang,
-  pantauan: PT.PantauanSantri, gabung: GB.Gabung, santri: SA.SantriDetail, raporList: SA.RaporList, raporView: SA.RaporView, kinerjaAll: SA.KinerjaAll,
+  pantauan: PT.PantauanSantri, gabung: GB.Gabung, riwayatSaya: HM.RiwayatSaya, yyTahfidz: YY.YyTahfidz, yyKurikulum: YY.YyKurikulum, yyKesantrian: YY.YyKesantrian, yySdm: YY.YySdm, santri: SA.SantriDetail, raporList: SA.RaporList, raporView: SA.RaporView, kinerjaAll: SA.KinerjaAll,
   profil: PF.Profil, keamanan: PF.Keamanan, waliProfil: PF.WaliProfil,
   halaqahAdmin: HQ.HalaqahAdmin, halaqahEdit: HQ.HalaqahEdit,
   rekap: RM.RekapPintu, waliRekap: RK.WaliRekap, rekapDetail: RM.RekapDetailPintu, rekapTahfidz: RM.RekapTahfidz, rekapMapel: RM.RekapMapel, rekapAsrama: RM.RekapAsrama, rekapKesantrian: RM.RekapKesantrian, kalender: RK.Kalender, logUbah: KO.LogPerubahan, riwayatModul: KO.RiwayatModul,
@@ -62,13 +64,14 @@ Object.assign(SCREENS, {
   rekapKehadiran: () => html`<${RM.RekapMapel} modul="kurikulum" />`, rekapMotd: () => html`<${RM.RekapAsrama} />`, motdAll: () => html`<${RM.RekapAsrama} />`,
   rekapKelas: () => html`<${RM.RekapMapel} modul="mapel" />`,
 });
-const STAFF_TABS = { home: HM.Beranda, jadwal: HM.JadwalSaya, cari: HM.CariSantri, riwayat: HM.RiwayatSaya, akun: HM.Akun };
+const STAFF_TABS = { home: HM.Beranda, jadwal: HM.JadwalSaya, cari: HM.CariSantri, riwayat: HM.RiwayatSaya, akun: HM.Akun,
+  pantauan: PT.PantauanSantri, tim: AK.Tim, kalender: RK.Kalender, dataMaster: AD.DataMaster, daftarAkun: AK.DaftarAkun };
 const WALI_TABS = { home: HM.WaliBeranda, hafalan: HM.WaliHafalan, ananda: HM.WaliAnanda, izin: HM.WaliIzin, akun: HM.Akun };
 
 function BottomNav({ wali }) {
   // 5 tab; tab tengah tampil sebagai tombol bulat menonjol (pola aplikasi dompet/santri)
   const items = wali ? [["home", "Beranda", "home"], ["hafalan", "Hafalan", "bookopen"], ["ananda", "Ananda", "heart"], ["izin", "Izin", "door"], ["akun", "Akun", "user"]]
-    : [["home", "Beranda", "home"], ["jadwal", "Jadwal", "calendar"], ["cari", "Cari", "search"], ["riwayat", "Riwayat", "clock"], ["akun", "Akun", "user"]];
+    : tabStaf(L.staffAman(nav.user.id));
   return html`<nav class="bnav" aria-label="Navigasi utama">${items.map(([k, lab, ic], i) => i === 2
     ? html`<button class=${"fab-tab " + (nav.tab === k ? "on" : "")} aria-current=${nav.tab === k ? "page" : null} onClick=${() => nav.setTab(k)}><span class="fab"><${Icon} n=${ic} s=${28} w=${2.4} /></span><em>${lab}</em></button>`
     : html`<button class=${nav.tab === k ? "on" : ""} aria-current=${nav.tab === k ? "page" : null} onClick=${() => nav.setTab(k)}><i><${Icon} n=${ic} s=${26} /></i><em>${lab}</em></button>`)}</nav>`;
@@ -78,7 +81,7 @@ function SideNav({ wali }) {
   const u = nav.user, nama = wali ? "Wali " + L.santriAman(u.id).nama : L.staffAman(u.id).nama;
   const peran = wali ? "Wali santri" : L.staffAman(u.id).roles.map(r => L.ROLE_LABEL[r]).join(" · ");
   const items = wali ? [["home", "Beranda", "home"], ["hafalan", "Hafalan", "bookopen"], ["ananda", "Ananda", "heart"], ["izin", "Izin", "door"], ["akun", "Akun", "user"]]
-    : [["home", "Beranda", "home"], ["jadwal", "Jadwal", "calendar"], ["cari", "Cari santri", "search"], ["riwayat", "Riwayat", "clock"], ["akun", "Akun", "user"]];
+    : tabStaf(L.staffAman(u.id)).map(x => (x[0] === "cari" ? ["cari", "Cari santri", "search"] : x));
   const baru = all("pengumuman").filter(p => Date.now() - p.ts < 7 * 864e5).length, aktif = !nav.top;
   return html`<aside class="side" aria-label="Navigasi">
     <div class="side-brand"><span class="ht-logo applogo"><img src=${APP_LOGO} alt="" /></span><div><b>Muawanah<i>Qu</i></b><small>Kampung Qur'an Al Muawanah</small></div></div>
@@ -136,7 +139,8 @@ function App() {
   if (hilang && S.ready) { nav.setUser(null); L.keluarAkun(); return null; }
   if (hilang) return html`<div class="app nonav"><div class="loadpill" role="status">Memuat data…</div></div>`;
   const wali = u.kind === "wali", top = nav.top;
-  const Screen = top ? SCREENS[top.screen] : (wali ? WALI_TABS : STAFF_TABS)[nav.tab];
+  const tabOk = wali || tabStaf(L.staffAman(u.id)).some(x => x[0] === nav.tab);
+  const Screen = top ? SCREENS[top.screen] : (wali ? WALI_TABS : STAFF_TABS)[tabOk ? nav.tab : "home"];
   const key = top ? top.screen + JSON.stringify(top.params) + nav.depth : "tab-" + nav.tab;
   return html`<div class=${"app" + (top ? " sub" : "")}><${SideNav} wali=${wali} /><div class=${"scr dir-" + nav.dir} key=${key}><${Boundary}>${Screen ? html`<${Screen} ...${top ? top.params : {}} />` : null}</${Boundary}></div>
     ${nav.splash ? html`<${Splash} nama=${wali ? "Wali " + L.santriAman(u.id).nama : L.staffAman(u.id).pendek} />` : null}
