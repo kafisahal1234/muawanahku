@@ -41,6 +41,7 @@ const cols = {};
 for (const c of KECIL) cols[c] = await ambil(c);
 I.isiData(cols);
 const T = I.hariIni();
+try { const jml = (await db.collection("mk_pushToken").count().get()).data().count; console.log(`Terhubung ke database. HP terdaftar: ${jml}. Kunci Web Push: ${(cols.kalender.setelan || {}).vapid ? "sudah diisi" : "BELUM diisi"}. Hari ${T}.`); } catch (e) { console.log("Cek pendaftaran HP gagal:", e.message); }
 for (const c of ["absenHalaqah", "absenKelas", "izinGuru"]) cols[c] = await ambil(c, r => r.where("tanggal", "==", T));
 cols.izin = await ambil("izin", r => r.where("status", "==", "aktif"));
 // kejadian baru 20 menit terakhir (izin, santri kembali, BAP, izin guru, setoran tasmi')
